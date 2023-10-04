@@ -1,0 +1,168 @@
+package weddellseal.markrecap
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
+import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
+
+const val ACCESS_COARSE_LOCATION = 0
+
+class MainActivity : ComponentActivity() {
+    lateinit var permissionManager: PermissionManager
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        permissionManager = (application as PhotoLogApplication).permissions
+
+        // register data access callback
+
+        // create the viewModel
+        //val viewModel: ObservationViewModel by viewModels()
+        // ensure the location permissions support GPS data gathering
+        //val lm = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        setContent {
+            WeddellSealMarkRecapTheme {
+               // viewModel.onPopGPS(getLatLong(lm = lm, context = this))
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+/*
+                    val startNavigation = HomeScreen(navController = navController, startd)
+                        if (permissionManager.hasAllPermissions) {
+                            Screens.Home.route
+                        } else {
+                            Screens.Permissions.route
+                        }
+*/
+                    NavHost(navController = navController, startDestination = Screens.ObservationScreen.route) {
+                        composable(Screens.HomeScreen.route) { HomeScreen(navController) }
+                    }
+
+                   // ObservationEntryScreen()
+                }
+            }
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            permissionManager.checkPermissions()
+        }
+    }
+
+    // TODO: Step 1. Create Data Access Audit Listener Object
+}
+
+sealed class Screens(val route: String) {
+    object HomeScreen : Screens("home")
+    object ObservationScreen : Screens ("observations")
+    object AddLog : Screens("add_log")
+    object Camera : Screens("camera")
+}
+
+data class Seal(val speNo: String, val age: String)
+
+class ObservationViewModel : ViewModel() {
+    private val _gps: MutableLiveData<String> = MutableLiveData("")
+    val gps: LiveData<String> = _gps
+
+    private val _tagId: MutableLiveData<String> = MutableLiveData("")
+    val tagId: LiveData<String> = _tagId
+
+    fun onPopGPS (newGPS: String) {
+        _gps.value = newGPS
+    }
+
+    fun onTagIdChange (newTag: String) {
+        _tagId.value = newTag
+    }
+}
+
+@Composable
+fun ObservationEntryScreen(observationViewModel: ObservationViewModel = viewModel()){
+    val gps : String by observationViewModel.gps.observeAsState(initial = "")
+    val tagId : String by observationViewModel.tagId.observeAsState(initial = "")
+    SealCard(gps = gps, tagId = tagId) { observationViewModel.onPopGPS(it); observationViewModel.onTagIdChange(it) }
+}
+
+@Composable
+fun SealCard(gps: String, tagId: String, onTagIdChange: (String) -> Unit) {
+    Column (modifier = Modifier.padding(all = 16.dp)) {
+        // field label
+        OutlinedTextField(
+            value = tagId,
+            onValueChange = onTagIdChange,
+            label = {Text("TagId")}
+        )
+
+        // Add a vertical space between the speNo and age texts
+        Spacer(modifier = Modifier.height(4.dp))
+        Text (
+            text = "Data entered",
+            modifier = Modifier.padding(all = 16.dp),
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = "TagId: $tagId",
+            modifier = Modifier.padding(all = 4.dp),
+            style = MaterialTheme.typography.labelMedium
+        )
+        Text(
+            text = "GPS: $gps",
+            modifier = Modifier.padding(all = 4.dp),
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+}
+/*
+@Composable
+fun getLatLong(lm: LocationManager, context: Context): String {
+    var longitude: Double = 0.0
+    var latitude: Double = 0.0
+    val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER) as Location
+    longitude = loc.longitude
+    latitude = loc.latitude
+
+    val long = longitude.toString()
+    val lat = latitude.toString()
+    return lat.plus(", ").plus(long)
+}
+*/
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
+@Composable
+fun PreviewSealCard() {
+    WeddellSealMarkRecapTheme {
+        ObservationEntryScreen()
+    }
+}
+
