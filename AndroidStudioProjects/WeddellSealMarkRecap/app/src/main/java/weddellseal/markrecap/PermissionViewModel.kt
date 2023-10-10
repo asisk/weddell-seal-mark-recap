@@ -36,7 +36,7 @@ class PermissionViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val app =
-            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PhotoLogApplication
+            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
         return PermissionViewModel(app.permissions) as T
     }
 }

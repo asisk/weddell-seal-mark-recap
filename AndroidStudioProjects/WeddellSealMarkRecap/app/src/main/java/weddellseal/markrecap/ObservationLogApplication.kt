@@ -18,7 +18,7 @@ package weddellseal.markrecap
 
 import android.app.Application
 
-class PhotoLogApplication : Application() {
+class ObservationLogApplication : Application() {
     lateinit var photoSaver: PhotoSaverRepository
     lateinit var permissions: PermissionManager
 

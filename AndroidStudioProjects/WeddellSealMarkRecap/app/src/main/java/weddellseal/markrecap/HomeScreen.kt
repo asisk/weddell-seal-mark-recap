@@ -46,7 +46,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -62,7 +61,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
 ) {
 
-    LaunchedEffect(Unit) { viewModel.loadLogs() }
+    //LaunchedEffect(Unit) { viewModel.loadLogs() }
 
     val state = viewModel.uiState
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -71,7 +70,7 @@ fun HomeScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("My Logs", fontFamily = FontFamily.Serif) },
+                title = { Text("Observations", fontFamily = FontFamily.Serif) },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -119,9 +118,9 @@ fun EmptyLogMessage(modifier: Modifier) {
             style = MaterialTheme.typography.headlineMedium,
             fontFamily = FontFamily.Serif
         )
-        Spacer(Modifier.height(16.dp))
+       Spacer(Modifier.height(16.dp))
         Text(
-            "Create a log by clicking the ✚ icon below \uD83D\uDC47",
+            "Create a seal observation log by clicking the ✚ icon below \uD83D\uDC47",
             style = MaterialTheme.typography.bodyLarge
         )
     }

@@ -74,6 +74,7 @@ dependencies {
 
 
     implementation("androidx.fragment:fragment-ktx:1.7.0-alpha05")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     val lifecycle_version = "2.6.2"
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")

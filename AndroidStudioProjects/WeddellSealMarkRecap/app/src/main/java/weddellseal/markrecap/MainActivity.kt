@@ -3,40 +3,23 @@ package weddellseal.markrecap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
-const val ACCESS_COARSE_LOCATION = 0
+//const val ACCESS_COARSE_LOCATION = 0
 
 class MainActivity : ComponentActivity() {
     lateinit var permissionManager: PermissionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        permissionManager = (application as PhotoLogApplication).permissions
+        permissionManager = (application as ObservationLogApplication).permissions
 
         // register data access callback
 
@@ -53,28 +36,22 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-/*
-                    val startNavigation = HomeScreen(navController = navController, startd)
-                        if (permissionManager.hasAllPermissions) {
-                            Screens.Home.route
-                        } else {
-                            Screens.Permissions.route
-                        }
-*/
-                    NavHost(navController = navController, startDestination = Screens.ObservationScreen.route) {
-                        composable(Screens.HomeScreen.route) { HomeScreen(navController) }
+                    val startNavigation = Screens.HomeScreen.route
+                    NavHost(navController = navController, startDestination = startNavigation) {
+                        composable(Screens.HomeScreen.route) { HomeScreen(navController)}
+                        composable(Screens.AddLog.route) { AddLogScreen(navController) }
+                        //composable(Screens.Camera.route) { CameraScreen(navController) }
                     }
 
-                   // ObservationEntryScreen()
                 }
             }
         }
     }
     override fun onResume() {
         super.onResume()
-        lifecycleScope.launch {
+/*        lifecycleScope.launch {
             permissionManager.checkPermissions()
-        }
+        }*/
     }
 
     // TODO: Step 1. Create Data Access Audit Listener Object
@@ -82,11 +59,10 @@ class MainActivity : ComponentActivity() {
 
 sealed class Screens(val route: String) {
     object HomeScreen : Screens("home")
-    object ObservationScreen : Screens ("observations")
     object AddLog : Screens("add_log")
-    object Camera : Screens("camera")
+    //object Camera : Screens("camera")
 }
-
+/*
 data class Seal(val speNo: String, val age: String)
 
 class ObservationViewModel : ViewModel() {
@@ -141,7 +117,7 @@ fun SealCard(gps: String, tagId: String, onTagIdChange: (String) -> Unit) {
         )
     }
 }
-/*
+*//*
 @Composable
 fun getLatLong(lm: LocationManager, context: Context): String {
     var longitude: Double = 0.0
@@ -154,7 +130,7 @@ fun getLatLong(lm: LocationManager, context: Context): String {
     val lat = latitude.toString()
     return lat.plus(", ").plus(long)
 }
-*/
+*//*
 @Preview(
     showBackground = true,
     showSystemUi = true
@@ -164,5 +140,5 @@ fun PreviewSealCard() {
     WeddellSealMarkRecapTheme {
         ObservationEntryScreen()
     }
-}
+}*/
 

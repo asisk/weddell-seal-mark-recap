@@ -18,9 +18,6 @@ package weddellseal.markrecap
 
 import android.content.ContentResolver
 import android.content.Context
-import android.net.Uri
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class PhotoSaverRepository(context: Context, private val contentResolver: ContentResolver) {
@@ -29,7 +26,8 @@ class PhotoSaverRepository(context: Context, private val contentResolver: Conten
 
     fun getPhotos() = _photos.toList()
     fun isEmpty() = _photos.isEmpty()
-    fun canAddPhoto() = _photos.size < MAX_LOG_PHOTOS_LIMIT
+    fun canAddPhoto() = true
+    /*fun canAddPhoto() = _photos.size < MAX_LOG_PHOTOS_LIMIT
 
     private val cacheFolder = File(context.cacheDir, "photos").also { it.mkdir() }
     val photoFolder = File(context.filesDir, "photos").also { it.mkdir() }
@@ -86,5 +84,5 @@ class PhotoSaverRepository(context: Context, private val contentResolver: Conten
 
             savedPhotos
         }
-    }
+    }*/
 }
