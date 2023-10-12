@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
                     val startNavigation = Screens.HomeScreen.route
                     NavHost(navController = navController, startDestination = startNavigation) {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController)}
-                        composable(Screens.AddLog.route) { AddLogScreen(navController) }
+                        composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController) }
                         //composable(Screens.Camera.route) { CameraScreen(navController) }
                     }
 
@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
 
 sealed class Screens(val route: String) {
     object HomeScreen : Screens("home")
-    object AddLog : Screens("add_log")
+    object AddObservationLog : Screens("add_log")
     //object Camera : Screens("camera")
 }
 /*

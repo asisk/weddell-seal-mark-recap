@@ -31,14 +31,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -75,8 +73,8 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screens.AddLog.route) }) {
-                Icon(Icons.Filled.Add, "Add log")
+            FloatingActionButton(onClick = { navController.navigate(Screens.AddObservationLog.route) }) {
+                Icon(Icons.Filled.Add, "Add observation")
             }
         }
     ) { innerPadding ->
@@ -86,17 +84,17 @@ fun HomeScreen(
                 .padding(innerPadding),
             contentPadding = PaddingValues(8.dp)
         ) {
-            if (!state.loading && state.logs.isEmpty()) {
+            if (!state.loading && state.observationLogs.isEmpty()) {
                 item {
                     EmptyLogMessage(Modifier.fillParentMaxSize())
                 }
             }
-            items(state.logs, key = { it.date }) { log ->
+            items(state.observationLogs, key = { it.date }) { log ->
                 LogCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateItemPlacement(),
-                    log = log,
+                    observationLog = log,
                     formattedDate = viewModel.formatDateTime(log.timeInMillis),
                     onDelete = viewModel::delete
                 )
@@ -128,26 +126,26 @@ fun EmptyLogMessage(modifier: Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LogCard(modifier: Modifier, log: Log, formattedDate: String, onDelete: (log: Log) -> Unit) {
+fun LogCard(modifier: Modifier, observationLog: ObservationLog, formattedDate: String, onDelete: (observationLog: ObservationLog) -> Unit) {
     Card(modifier) {
-        Row(Modifier.padding(8.dp, 0.dp), verticalAlignment = Alignment.CenterVertically) {
+/*        Row(Modifier.padding(8.dp, 0.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = formattedDate,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.headlineSmall
             )
-            IconButton(onClick = { onDelete(log) }) {
+            IconButton(onClick = { onDelete(observationLog) }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Delete log"
+                    contentDescription = "Delete observationLog"
                 )
             }
-        }
+        }*/
         Row(Modifier.padding(8.dp, 0.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.Explore, null)
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text(log.place)
+            Text(observationLog.currentLocation)
         }
-        //PhotoGrid(Modifier.padding(16.dp), photos = log.photos)
+        //PhotoGrid(Modifier.padding(16.dp), photos = observationLog.photos)
     }
 }
