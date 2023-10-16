@@ -17,8 +17,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.room.Room
-import weddellseal.markrecap.AppDatabase.Companion.DB_NAME
 
 class HomeViewModel(
     application: Application,
@@ -29,7 +27,7 @@ class HomeViewModel(
         get() = getApplication()
 
     // set up a new instance of the observations database
-    private val db = Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME).build()
+    //private val db = Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME).build()
 
     data class UiState(val loading: Boolean = true, val observationLogs: List<ObservationLog> = emptyList())
 

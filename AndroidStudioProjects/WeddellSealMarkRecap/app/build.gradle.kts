@@ -23,8 +23,12 @@ android {
             }
         }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         vectorDrawables {
             useSupportLibrary = true
+        }
+        testOptions {
+            unitTests.isIncludeAndroidResources
         }
     }
 
@@ -82,6 +86,9 @@ dependencies {
 
     implementation("androidx.fragment:fragment-ktx:1.7.0-alpha06")
     implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("androidx.test:runner:1.5.2")
+    implementation("androidx.test:core:1.5.0")
+    implementation("androidx.test.ext:junit:1.2.0-alpha01")
 
     val lifecycle_version = "2.6.2"
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
@@ -113,18 +120,30 @@ dependencies {
     // optional - Guava support for Room, including Optional and ListenableFuture
     implementation("androidx.room:room-guava:$room_version")
 
-    // optional - Test helpers
-    testImplementation("androidx.room:room-testing:$room_version")
-
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$room_version")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation(files("androidx.test.core"))
+    // optional - Test helpers
+    testImplementation("androidx.room:room-testing:$room_version")
+    //testImplementation(files("androidx.arch.core:core-testing:2.1.0"))
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+//    androidTestImplementation(files("androidx.test.ext.junit.runners.AndroidJUnit4"))
+//    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+//    androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.00"))
+//    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    // Optional -- UI testing with Espresso
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    // Optional -- UI testing with UI Automator
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha04")
+
+    // Optional -- UI testing with Compose
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.3")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

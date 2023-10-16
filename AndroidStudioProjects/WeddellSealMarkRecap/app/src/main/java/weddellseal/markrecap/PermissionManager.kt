@@ -1,5 +1,10 @@
 package weddellseal.markrecap
 
+/*
+ObservationLog mainly accesses user data when we access the user's location
+at the beginning of the AddObservationLogScreen load. This class tracks and manages
+the permissions associated with the application.
+*/
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.Manifest.permission.CAMERA
