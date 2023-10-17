@@ -19,23 +19,17 @@ package weddellseal.markrecap
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Explore
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -44,13 +38,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
+
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -60,50 +61,141 @@ fun HomeScreen(
 ) {
 
     //LaunchedEffect(Unit) { viewModel.loadLogs() }
-
     val state = viewModel.uiState
+    val lifecycleOwner = LocalLifecycleOwner.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
+    LaunchedEffect(Unit) {
+
+    }
+
+    mainScaffold(navController, viewModel)
+}
+//    Scaffold(
+//        topBar = { TopAppBar(title = { Text("Observations") }) },
+//        floatingActionButtonPosition = FabPosition.End,
+//        floatingActionButton = { FloatingActionButton(onClick = {}) { Text("X") } },
+//        floatingActionButton = { FloatingActionButton(onClick = {}) { Text("X") } },
+//        content = { innerPadding ->
+//            Column(
+//                Modifier
+//                    .fillMaxSize()
+//                    .padding(innerPadding))
+//            {
+//                Card {
+//                    Row(Modifier.padding(8.dp, 0.dp), verticalAlignment = Alignment.CenterVertically) {
+//                        Text(
+//                            text = "text",
+//                            modifier = Modifier.weight(1f),
+//                            style = MaterialTheme.typography.headlineSmall
+//                        )
+//                        IconButton(onClick = { navController.navigate(Screens.WriteObservationsToCSV.route)  }) {
+//                            Icon(
+//                                imageVector = Icons.Filled.Build,
+//                                contentDescription = "Build CSV File"
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        },
+//        bottomBar = { BottomAppBar() { Text("BottomAppBar") } })
+//    }
+//    Scaffold(
+//        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+//        topBar = { TopAppBar( title = { Text("Observations", fontFamily = FontFamily.Serif) }, scrollBehavior = scrollBehavior) },
+//        content = {
+//            LogCard(
+//            modifier = Modifier
+//                .fillMaxWidth(),
+//            observationLog = log,
+//            formattedDate = viewModel.formatDateTime(log.timeInMillis),
+//            onDelete = viewModel::delete
+//        ) },
+//        floatingActionButton = {
+//            FloatingActionButton(onClick = { navController.navigate(Screens.AddObservationLog.route) }) {
+//                Icon(Icons.Filled.Add, "Add observation")
+//            }
+//        })
+//    ) { innerPadding ->
+//        LazyColumn(
+//            Modifier
+//                .fillMaxSize()
+//                .padding(innerPadding),
+//            contentPadding = PaddingValues(8.dp)
+//        ) {
+//            if (!state.loading && state.observationLogs.isEmpty()) {
+//                item {
+//                    EmptyLogMessage(Modifier.fillParentMaxSize())
+//                }
+//            }
+//            items(state.observationLogs, key = { it.date }) { log ->
+//                LogCard(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .animateItemPlacement(),
+//                    observationLog = log,
+//                    formattedDate = viewModel.formatDateTime(log.timeInMillis),
+//                    onDelete = viewModel::delete
+//                )
+//                Spacer(Modifier.height(16.dp))
+//            }
+//        }
+//    }
+//}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun mainScaffold(navController: NavHostController, viewModel: HomeViewModel) {
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("Observations", fontFamily = FontFamily.Serif) },
-                scrollBehavior = scrollBehavior
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                ),
+                title = { Text("Observations", maxLines = 1, overflow = TextOverflow.Ellipsis) }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screens.AddObservationLog.route) }) {
-                Icon(Icons.Filled.Add, "Add observation")
-            }
+            ExtendedFloatingActionButton(
+                modifier = Modifier.padding(16.dp),
+                onClick = { (viewModel.exportLogs())},
+                icon = {Icon(Icons.Filled.Build, "Build CSV File")},
+                text = {Text(text = "Build CSV File")}
+            )
+        },
+        floatingActionButtonPosition = FabPosition.Start,
+        bottomBar = {
+            Text(
+                text = "",
+            )
         }
     ) { innerPadding ->
-        LazyColumn(
-            Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(8.dp)
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (!state.loading && state.observationLogs.isEmpty()) {
-                item {
-                    EmptyLogMessage(Modifier.fillParentMaxSize())
-                }
+            Row {
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
+                    icon = { Icon(Icons.Filled.PostAdd, "Add Observation") },
+                    text = { Text(text = "Add Observation") })
             }
-            items(state.observationLogs, key = { it.date }) { log ->
-                LogCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateItemPlacement(),
-                    observationLog = log,
-                    formattedDate = viewModel.formatDateTime(log.timeInMillis),
-                    onDelete = viewModel::delete
-                )
-                Spacer(Modifier.height(16.dp))
+            Row (
+                verticalAlignment = Alignment.Bottom
+            ){
             }
         }
     }
+
+
 }
 
+
+//PhotoGrid(Modifier.padding(16.dp), photos = observationLog.photos)
 @Composable
 fun EmptyLogMessage(modifier: Modifier) {
     Column(
@@ -124,28 +216,12 @@ fun EmptyLogMessage(modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Preview
 @Composable
-fun LogCard(modifier: Modifier, observationLog: ObservationLog, formattedDate: String, onDelete: (observationLog: ObservationLog) -> Unit) {
-    Card(modifier) {
-/*        Row(Modifier.padding(8.dp, 0.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = formattedDate,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineSmall
-            )
-            IconButton(onClick = { onDelete(observationLog) }) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = "Delete observationLog"
-                )
-            }
-        }*/
-        Row(Modifier.padding(8.dp, 0.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Filled.Explore, null)
-            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text(observationLog.currentLocation)
-        }
-        //PhotoGrid(Modifier.padding(16.dp), photos = observationLog.photos)
+fun HomeScreen() {
+    WeddellSealMarkRecapTheme {
+        val navController = rememberNavController()
+        val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
+        mainScaffold(navController, viewModel)
     }
 }

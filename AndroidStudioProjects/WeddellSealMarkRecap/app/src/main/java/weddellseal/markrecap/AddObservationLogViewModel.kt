@@ -60,9 +60,7 @@ class AddObservationLogViewModel(
     private val context: Context
         get() = getApplication()
 
-    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    private val db = AppDatabase.getDatabase(context)
-//    private val db = Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME).build()
+    private val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     // endregion
 
     // region UI state
@@ -283,7 +281,7 @@ class AddObservationLogViewModel(
 */
             )
 
-            db.observationDao().insert(log)
+            observationSaver.writeObservationtoDB(log)
             uiState = uiState.copy(isSaved = true)
         }
     }

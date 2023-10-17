@@ -16,20 +16,23 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import kotlinx.coroutines.launch
+
 
 class HomeViewModel(
     application: Application,
-    private val observationSaver: ObservationSaverRepository
+    private val observationSaver: ObservationSaverRepository,
 ) : AndroidViewModel(application) {
-
     private val context: Context
         get() = getApplication()
 
-    // set up a new instance of the observations database
-    //private val db = Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME).build()
-
-    data class UiState(val loading: Boolean = true, val observationLogs: List<ObservationLog> = emptyList())
+    data class UiState(
+        val loading: Boolean = true,
+        val observationLogs: List<ObservationLog> = emptyList(),
+        var uriForCSVWrite : String = ""
+    )
 
     var uiState by mutableStateOf(UiState())
         private set
@@ -37,16 +40,16 @@ class HomeViewModel(
     fun formatDateTime(timeInMillis: Long): String {
         return DateUtils.formatDateTime(context, timeInMillis, DateUtils.FORMAT_ABBREV_ALL)
     }
-/*
-    fun loadLogs() {
+
+    fun exportLogs() {
         viewModelScope.launch {
+            val savedFile = observationSaver.saveObservations()
             uiState = uiState.copy(
                 loading = false,
-                observationLogs = db.logDao().getAllWithFiles(photoSaver.photoFolder)
             )
         }
     }
-*/
+
     fun delete(observationLog: ObservationLog) {
        // viewModelScope.launch {
        //     db.logDao().delete(observationLog.toLogEntry())
@@ -63,3 +66,40 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
         return HomeViewModel(app, app.observationSaver) as T
     }
 }
+//
+//class CSVLogWriter(private val registry : ActivityResultRegistry) : DefaultLifecycleObserver {
+//
+//    var fileUriForCSV : Uri? = null
+//    private lateinit var createDoc : ActivityResultLauncher<String>
+//    override fun onStart(owner: LifecycleOwner) {
+//        super.onStart(owner)
+//
+//        println("onStart: $owner")
+//        val savedFile = photoSaver.generatePhotoCacheFile()
+//
+//        var createDoc = registry.register("key", owner, ActivityResultContracts.CreateDocument("csv")) { uri : Uri? ->
+//            uri?.let {
+//                fileUriForCSV = uri
+//            }
+//        }
+//    }
+//
+//    //ask the user to pick the place to create the document
+//    fun writeLogs() {
+//        createDoc.launch("observations.csv")
+//    }
+//
+//    private fun createFileIntent(): Intent {
+//        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+//            addCategory(Intent.CATEGORY_OPENABLE)
+//            type = "application/pdf"
+//            putExtra(Intent.EXTRA_TITLE, "invoice.pdf")
+//
+//            // Optionally, specify a URI for the directory that should be opened in
+//            // the system file picker before your app creates the document.
+//            putExtra(DocumentsContract.EXTRA_INITIAL_URI, fileUriForCSV)
+//        }
+//
+//        return intent
+//    }
+//}

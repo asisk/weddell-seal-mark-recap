@@ -21,6 +21,8 @@ interface ObservationDao {
     //this uses LiveData which may not be implemented in the UI
     @Query("SELECT * FROM observationLogs")
     fun loadAllObservations(): LiveData<List<ObservationLogEntry?>?>?
+    @Query("SELECT * FROM observationLogs")
+    fun getObservationsForCSVWrite(): List<ObservationLogEntry?>
 
     @Query("select * from observationLogs where id = :obsId")
     fun loadObservation(obsId: Int): LiveData<ObservationLogEntry?>?

@@ -89,6 +89,8 @@ dependencies {
     implementation("androidx.test:runner:1.5.2")
     implementation("androidx.test:core:1.5.0")
     implementation("androidx.test.ext:junit:1.2.0-alpha01")
+    implementation("com.opencsv:opencsv:5.8")
+    implementation("commons-io:commons-io:2.6")
 
     val lifecycle_version = "2.6.2"
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
@@ -122,6 +124,7 @@ dependencies {
 
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$room_version")
+    implementation("androidx.documentfile:documentfile:1.0.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation(files("androidx.test.core"))

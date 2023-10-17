@@ -35,6 +35,7 @@ data class ObservationLog(
         )
     }
 
+
     companion object {
         fun fromLogEntry(observationLogEntry: ObservationLogEntry): ObservationLog {
             return ObservationLog(

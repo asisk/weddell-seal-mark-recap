@@ -21,15 +21,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         permissionManager = (application as ObservationLogApplication).permissions
 
-        // register data access callback
-
-        // create the viewModel
-        //val viewModel: ObservationViewModel by viewModels()
-        // ensure the location permissions support GPS data gathering
-        //val lm = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         setContent {
             WeddellSealMarkRecapTheme {
-               // viewModel.onPopGPS(getLatLong(lm = lm, context = this))
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -42,11 +35,12 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController) }
                         //composable(Screens.Camera.route) { CameraScreen(navController) }
                     }
-
                 }
             }
         }
     }
+
+
     override fun onResume() {
         super.onResume()
 /*        lifecycleScope.launch {
