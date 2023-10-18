@@ -56,6 +56,7 @@ class AddObservationLogViewModel(
     application: Application,
     private val observationSaver: ObservationSaverRepository
 ) : AndroidViewModel(application) {
+
     // region ViewModel setup
     private val context: Context
         get() = getApplication()
@@ -74,11 +75,26 @@ class AddObservationLogViewModel(
         var hasGooglePlay: Int,
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
-        val latLong: String = "gps data empty"
+        val latLong: String = "gps data empty",
+        val speno: String = "",
+        val tagId: String = "",
+        val age : String = ""
+
         //val savedPhotos: List<File> = emptyList(),
         //val localPickerPhotos: List<Uri> = emptyList()
     )
-
+    fun updateSpeno (input : String) {
+        uiState = uiState.copy(speno = input)
+    }
+    fun updateAge (input : String) {
+        uiState = uiState.copy(age = input)
+    }
+    fun updateTagId (input : String) {
+        uiState = uiState.copy(tagId = input)
+    }
+//    public fun updateSpeno (input : String) {
+//        uiState = uiState.copy(speno = input)
+//    }
     var uiState by mutableStateOf(
         UiState(
             hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -212,7 +228,6 @@ class AddObservationLogViewModel(
                                 "long : ${lon}\n" +
                                 "fetched at ${System.currentTimeMillis()}"
                     )
-
                 }
             }
         }

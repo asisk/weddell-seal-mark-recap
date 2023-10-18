@@ -66,7 +66,15 @@ fun HomeScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
-
+//        val fileProvider = viewModel.getFileProvider()
+//        try {
+//            fileProvider.unbindAll()
+//            fileProvider.bindToLifecycle(
+//                lifecycleOwner,
+//            )
+//        } catch (ex: Exception) {
+//            Log.e("FileCapture", "Failed to bind camera use cases", ex)
+//        }
     }
 
     mainScaffold(navController, viewModel)

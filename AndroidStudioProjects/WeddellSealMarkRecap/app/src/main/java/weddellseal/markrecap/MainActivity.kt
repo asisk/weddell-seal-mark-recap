@@ -16,10 +16,14 @@ import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 class MainActivity : ComponentActivity() {
     lateinit var permissionManager: PermissionManager
+//    lateinit var logWriter : CSVLogWriter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         permissionManager = (application as ObservationLogApplication).permissions
+//        logWriter = CSVLogWriter((this as MainActivity).activityResultRegistry)
+//        lifecycle.addObserver(logWriter)
+        // register data access callback
 
         setContent {
             WeddellSealMarkRecapTheme {

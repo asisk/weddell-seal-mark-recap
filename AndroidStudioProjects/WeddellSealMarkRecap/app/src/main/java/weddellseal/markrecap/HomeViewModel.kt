@@ -9,7 +9,9 @@ package weddellseal.markrecap
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.text.format.DateUtils
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,6 +29,7 @@ class HomeViewModel(
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
+    private lateinit var createDoc : ActivityResultLauncher<String>
 
     data class UiState(
         val loading: Boolean = true,
@@ -36,6 +39,13 @@ class HomeViewModel(
 
     var uiState by mutableStateOf(UiState())
         private set
+//    suspend fun getCameraProvider(): ActivityResultRegistry {
+//        return suspendCoroutine { continuation ->
+//            ActivityResultRegistryOwner .getInstance(context).apply {
+//                addListener({ continuation.resume(get()) }, cameraExecutor)
+//            }
+//        }
+//    }
 
     fun formatDateTime(timeInMillis: Long): String {
         return DateUtils.formatDateTime(context, timeInMillis, DateUtils.FORMAT_ABBREV_ALL)
@@ -43,6 +53,7 @@ class HomeViewModel(
 
     fun exportLogs() {
         viewModelScope.launch {
+
             val savedFile = observationSaver.saveObservations()
             uiState = uiState.copy(
                 loading = false,
@@ -56,6 +67,21 @@ class HomeViewModel(
        //     loadLogs()
        // }
     }
+
+        private fun createFileIntent(): Intent {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_TITLE, "invoice.pdf")
+
+            // Optionally, specify a URI for the directory that should be opened in
+            // the system file picker before your app creates the document.
+//            putExtra(DocumentsContract.EXTRA_INITIAL_URI, fileUriForCSV)
+        }
+
+        return intent
+    }
+
 }
 
 class HomeViewModelFactory : ViewModelProvider.Factory {
@@ -71,9 +97,8 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
 //
 //    var fileUriForCSV : Uri? = null
 //    private lateinit var createDoc : ActivityResultLauncher<String>
-//    override fun onStart(owner: LifecycleOwner) {
-//        super.onStart(owner)
-//
+////    override fun onStart(owner: LifecycleOwner) {
+////        super.onStart(owner)
 //        println("onStart: $owner")
 //        val savedFile = photoSaver.generatePhotoCacheFile()
 //
