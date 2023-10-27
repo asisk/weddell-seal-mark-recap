@@ -1,67 +1,120 @@
 package weddellseal.markrecap
 
 /*
- * Copyright (C) 2022 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+Provide access to observations database and csv files.
+*/
 
 import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.liveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-
+import java.io.IOException
 
 const val CSV_FILE_PATH = "./result.csv"
 class ObservationSaverRepository(context: Context, private val contentResolver: ContentResolver) {
     private val db = AppDatabase.getDatabase(context)
-
     var _observations = mutableListOf<ObservationLogEntry>()
     fun getObservations() = _observations.toList()
+
+    /**
+     * Fetch a list of Observations from the database.
+     * Returns a LiveData-wrapped List of Observations.
+     */
+    val observations: LiveData<List<ObservationLogEntry>> = liveData<List<ObservationLogEntry>> {
+        // Observe observations from the database (just like a normal LiveData + Room return)
+        val observationsLiveData = db.observationDao().loadAllObservations()
+
+        // Map the LiveData, applying the sort criteria
+        emitSource(observationsLiveData)
+    }
+
     private val obsFolder = File(context.filesDir, "observations").also { it.mkdir() }
     private fun generateFileName() = "${System.currentTimeMillis()}.csv"
     fun generateObservationLogFile() = File(obsFolder, generateFileName())
-    suspend fun saveObservations(): Boolean {
-        return withContext(Dispatchers.IO) {
-            var success = false
-            try {
-                _observations = selectAllObservationsfromDB()
-                if (_observations.isEmpty()) {
-//                    success = false
-                } else {
-                    success = writeObservationsToCSV(generateObservationLogFile(),_observations)
-                }
-            } catch (e : Exception) {
-                println(e)
-//                success = false
-            }
-            success
-        }
-    }
+//
+//    fun writeDataToFile(uri: Uri) {
+//        try {
+//            val outputStream = contentResolver.openOutputStream(uri)
+//
+//            // Write your data to the output stream
+//            val dataToWrite = "Hello, this is some data to write to the file."
+//            outputStream?.write(dataToWrite.toByteArray())
+//
+//            outputStream?.close()
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//            // Handle any exceptions
+//        }
+//    }
 
+suspend fun writeDataToFile(uri: Uri) {
+    try {
+        val data: List<ObservationLogEntry> = withContext(Dispatchers.IO) {
+            selectAllObservationsfromDB() // Assuming this function returns a list of observations
+        }
+
+        contentResolver.openOutputStream(uri)?.use { outputStream ->
+            for (obs in data) {
+                val obsFields = "${obs?.date ?: ""},${obs?.currentLocation ?: ""},${obs?.lastKnownLocation ?: ""}"
+                outputStream.write("$obsFields\n".toByteArray()) // Add a newline character
+            }
+        }
+    } catch (e: IOException) {
+        e.printStackTrace()
+        // Handle any exceptions
+    }
+}
+
+
+//    suspend fun saveObservations(file: File): Boolean {
+//        return withContext(Dispatchers.IO) {
+//            var success = false
+//            try {
+//                _observations = selectAllObservationsfromDB()
+//                if (_observations.isNotEmpty()) {
+//                    success = writeObservationsToCSV(file,_observations)
+////                    success = false
+//                } else {
+////                    success = writeObservationsToCSV(uriForCSVWrite,_observations)
+//                }
+//            } catch (e : Exception) {
+//                println(e)
+////                success = false
+//            }
+//            success
+//        }
+//    }
+
+    // Function to write data to the selected file
+//    fun writeToFile(uri: Uri, contentResolver: ContentResolver, data: String): Boolean {
+//        var success = false
+//        try {
+//            val outputStream: OutputStream? = contentResolver.openOutputStream(uri)
+//            if (outputStream != null) {
+//                outputStream.write(data.toByteArray())
+//                outputStream.close()
+//                success = true
+//            }
+//        } catch (e: Exception) {
+//            success = false
+//            e.printStackTrace()
+//        }
+//        return success
+//    }
     fun writeObservationsToCSV(file: File, obsList: List<ObservationLogEntry>) : Boolean {
         val data: MutableList<Array<String>> = ArrayList()
 
         for (obs in obsList) {
-            val obsFields = StringBuilder().append(obs?.date ?: "")
-                .append(obs?.currentLocation ?: "")
-                .append(obs?.lastKnownLocation ?: "").toString()
+            val obsFields = "${obs?.date ?: ""},${obs?.currentLocation ?: ""},${obs?.lastKnownLocation ?: ""}"
             data.add(arrayOf(obsFields))
         }
 
         return try {
-            CSVUtils().writeDataAtOnce(file.path, data)
+            CSVUtils().writeDataAtOnce(file, data)
             true
         }catch (e : Exception){
             false
@@ -70,10 +123,9 @@ class ObservationSaverRepository(context: Context, private val contentResolver: 
 
     fun isEmpty() = _observations.isEmpty()
     fun canAddObservation() = true
-    suspend fun writeObservationtoDB(log: ObservationLogEntry) {
+    suspend fun addObservation(log: ObservationLogEntry) {
         db.observationDao().insert(log)
     }
-
     private fun selectAllObservationsfromDB() : MutableList<ObservationLogEntry> {
         val logs : List<ObservationLogEntry?> = db.observationDao().getObservationsForCSVWrite()
         var list = mutableListOf<ObservationLogEntry>()

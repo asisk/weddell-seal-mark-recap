@@ -183,6 +183,7 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
+    //send the user back to the home screen when a log is saved
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
             navController.navigate(Screens.HomeScreen.route) {
@@ -201,6 +202,9 @@ fun AddObservationLogScreen(
     fun canSaveLog(callback: () -> Unit) {
         if (viewModel.isValid()) {
             callback()
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Successfully saved!")
+            }
         } else {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar("You haven't completed all details")
@@ -297,7 +301,6 @@ fun AddObservationLogScreen(
                             }
                         }
                     }
-
                 ListItem(
                     headlineContent = { Text("Date") },
                     trailingContent = {

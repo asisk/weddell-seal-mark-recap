@@ -18,20 +18,20 @@ interface ObservationDao {
 //    @Query("SELECT * FROM observationLogs ORDER BY date DESC")
 //    suspend fun getAll(): Any?
 
-    //this uses LiveData which may not be implemented in the UI
-    @Query("SELECT * FROM observationLogs")
-    fun loadAllObservations(): LiveData<List<ObservationLogEntry?>?>?
+    //this uses LiveData which is used by the Home Screen to display database entries for observations
+    @Query("SELECT * FROM observationLogs ORDER BY id DESC")
+    fun loadAllObservations(): LiveData<List<ObservationLogEntry>>
     @Query("SELECT * FROM observationLogs")
     fun getObservationsForCSVWrite(): List<ObservationLogEntry?>
 
     @Query("select * from observationLogs where id = :obsId")
-    fun loadObservation(obsId: Int): LiveData<ObservationLogEntry?>?
+    fun loadObsById(obsId: Int): LiveData<ObservationLogEntry?>?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) //the suspend keyword means that coroutines are supported
     suspend fun insert(log: ObservationLogEntry)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAll(logs: List<ObservationLogEntry?>?)
+//    @Insert(onConflict = OnConflictStrategy.REPLACE)
+//    fun insertAll(logs: List<ObservationLogEntry?>?)
 
 //  TODO, consider replacing insert with upsert to support a user
 //   editing a record that's been submitted to the database

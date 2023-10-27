@@ -25,7 +25,9 @@ data class ObservationLog(
     val lastKnownLocation: String,
 ) {
     val timeInMillis = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date)!!.time
-
+    override fun toString(): String {
+        return "$date, $currentLocation, $lastKnownLocation"
+    }
     fun toLogEntry(): ObservationLogEntry {
         return ObservationLogEntry(
             id = 1,
@@ -34,7 +36,6 @@ data class ObservationLog(
             lastKnownLocation = lastKnownLocation,
         )
     }
-
 
     companion object {
         fun fromLogEntry(observationLogEntry: ObservationLogEntry): ObservationLog {

@@ -16,8 +16,10 @@ import androidx.room.RoomDatabase
 @Database(entities = [ObservationLogEntry::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao
+
+    //companion is visible to other classes
     companion object {
-       const val DB_NAME = "DailyWeddellSealObservations"
+//       const val DB_NAME = "DailyWeddellSealObservations"
         // Singleton prevents multiple instances of database opening at the
         // same time.
         @Volatile
@@ -37,7 +39,5 @@ abstract class AppDatabase : RoomDatabase() {
                 instance
             }
         }
-
     }
-
 }

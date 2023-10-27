@@ -9,56 +9,114 @@ package weddellseal.markrecap
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
+import android.net.Uri
+import android.os.Environment
 import android.text.format.DateUtils
-import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import java.io.File
 
 
 class HomeViewModel(
     application: Application,
-    private val observationSaver: ObservationSaverRepository,
+    val observationSaver: ObservationSaverRepository,
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
-    private lateinit var createDoc : ActivityResultLauncher<String>
+    // allows the home screen to observe LiveData as observations are saved
+    val observationsFlow: Flow<List<ObservationLogEntry>> = observationSaver.observations.asFlow()
 
     data class UiState(
         val loading: Boolean = true,
-        val observationLogs: List<ObservationLog> = emptyList(),
-        var uriForCSVWrite : String = ""
+        var uriForCSVWrite: Uri? = null,
+        var observations: List<ObservationLogEntry> = emptyList()
     )
 
-    var uiState by mutableStateOf(UiState())
+    var uiState by mutableStateOf(UiState(
+        observations = observationSaver._observations
+        )
+    )
         private set
-//    suspend fun getCameraProvider(): ActivityResultRegistry {
-//        return suspendCoroutine { continuation ->
-//            ActivityResultRegistryOwner .getInstance(context).apply {
-//                addListener({ continuation.resume(get()) }, cameraExecutor)
-//            }
-//        }
-//    }
 
     fun formatDateTime(timeInMillis: Long): String {
         return DateUtils.formatDateTime(context, timeInMillis, DateUtils.FORMAT_ABBREV_ALL)
     }
+    fun updateURI(uri: Uri) {
+        uiState = uiState.copy(
+            uriForCSVWrite = uri
+        )
+        // may need to throw an error if no uri returned from file picker call on the home screen
+    }
+
+//    fun exportLogs() {
+//        viewModelScope.launch {
+//            val file = uriToFile(context, uiState.uriForCSVWrite!!)
+//
+//            if (file != null) {
+//                observationSaver.saveObservations(file)
+//            } else {
+//                throw NoUriSelectedException("No URI was selected")
+//            }
+//
+//            uiState = uiState.copy(
+//                loading = false,
+//            )
+//        }
+//
+//    }
 
     fun exportLogs() {
         viewModelScope.launch {
+            try {
+                // Ensure there's a URI selected for writing the CSV file
+                val uriForCSVWrite = uiState.uriForCSVWrite
+                if (uriForCSVWrite == null) {
+                    throw NoUriSelectedException("No URI was selected")
+                }
 
-            val savedFile = observationSaver.saveObservations()
-            uiState = uiState.copy(
-                loading = false,
-            )
+                // Convert the URI to a file
+                val file = uriToFile(context, uriForCSVWrite)
+
+                // Check if the file is not null
+                if (file != null) {
+                    // Create an Intent to share the file
+                    // Save observations to the file
+                    observationSaver.writeDataToFile(uriForCSVWrite)
+
+                } else {
+                    throw NoUriSelectedException("No file found for the selected URI")
+                }
+
+                // Update the UI state (e.g., loading state)
+                uiState = uiState.copy(
+                    loading = false,
+                )
+            } catch (e: Exception) {
+                // Handle any exceptions, e.g., log an error message or show a user-friendly error
+                e.printStackTrace()
+            }
         }
+    }
+
+
+    fun uriToFile(context: Context, uri: Uri): File? {
+        val documentFile = DocumentFile.fromSingleUri(context, uri)
+        if (documentFile != null) {
+            val displayName = documentFile.name
+            val externalDir = Environment.getExternalStorageDirectory() // or another appropriate directory
+            return File(externalDir, displayName)
+        }
+        return null
     }
 
     fun delete(observationLog: ObservationLog) {
@@ -67,22 +125,9 @@ class HomeViewModel(
        //     loadLogs()
        // }
     }
-
-        private fun createFileIntent(): Intent {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "application/pdf"
-            putExtra(Intent.EXTRA_TITLE, "invoice.pdf")
-
-            // Optionally, specify a URI for the directory that should be opened in
-            // the system file picker before your app creates the document.
-//            putExtra(DocumentsContract.EXTRA_INITIAL_URI, fileUriForCSV)
-        }
-
-        return intent
-    }
-
 }
+
+class NoUriSelectedException(message: String = "No URI was selected") : IllegalArgumentException(message)
 
 class HomeViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
@@ -92,39 +137,3 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
         return HomeViewModel(app, app.observationSaver) as T
     }
 }
-//
-//class CSVLogWriter(private val registry : ActivityResultRegistry) : DefaultLifecycleObserver {
-//
-//    var fileUriForCSV : Uri? = null
-//    private lateinit var createDoc : ActivityResultLauncher<String>
-////    override fun onStart(owner: LifecycleOwner) {
-////        super.onStart(owner)
-//        println("onStart: $owner")
-//        val savedFile = photoSaver.generatePhotoCacheFile()
-//
-//        var createDoc = registry.register("key", owner, ActivityResultContracts.CreateDocument("csv")) { uri : Uri? ->
-//            uri?.let {
-//                fileUriForCSV = uri
-//            }
-//        }
-//    }
-//
-//    //ask the user to pick the place to create the document
-//    fun writeLogs() {
-//        createDoc.launch("observations.csv")
-//    }
-//
-//    private fun createFileIntent(): Intent {
-//        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-//            addCategory(Intent.CATEGORY_OPENABLE)
-//            type = "application/pdf"
-//            putExtra(Intent.EXTRA_TITLE, "invoice.pdf")
-//
-//            // Optionally, specify a URI for the directory that should be opened in
-//            // the system file picker before your app creates the document.
-//            putExtra(DocumentsContract.EXTRA_INITIAL_URI, fileUriForCSV)
-//        }
-//
-//        return intent
-//    }
-//}

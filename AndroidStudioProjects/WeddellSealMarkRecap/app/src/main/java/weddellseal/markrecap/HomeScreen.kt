@@ -16,7 +16,11 @@ package weddellseal.markrecap
  * limitations under the License.
  */
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,12 +28,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.PostAdd
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -41,14 +50,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
@@ -66,94 +80,37 @@ fun HomeScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
-//        val fileProvider = viewModel.getFileProvider()
-//        try {
-//            fileProvider.unbindAll()
-//            fileProvider.bindToLifecycle(
-//                lifecycleOwner,
-//            )
-//        } catch (ex: Exception) {
-//            Log.e("FileCapture", "Failed to bind camera use cases", ex)
-//        }
+        viewModel.observationsFlow.collect {
+            state.observations = it
+        }
     }
 
-    mainScaffold(navController, viewModel)
+    mainScaffold(navController, viewModel, lifecycleOwner)
 }
-//    Scaffold(
-//        topBar = { TopAppBar(title = { Text("Observations") }) },
-//        floatingActionButtonPosition = FabPosition.End,
-//        floatingActionButton = { FloatingActionButton(onClick = {}) { Text("X") } },
-//        floatingActionButton = { FloatingActionButton(onClick = {}) { Text("X") } },
-//        content = { innerPadding ->
-//            Column(
-//                Modifier
-//                    .fillMaxSize()
-//                    .padding(innerPadding))
-//            {
-//                Card {
-//                    Row(Modifier.padding(8.dp, 0.dp), verticalAlignment = Alignment.CenterVertically) {
-//                        Text(
-//                            text = "text",
-//                            modifier = Modifier.weight(1f),
-//                            style = MaterialTheme.typography.headlineSmall
-//                        )
-//                        IconButton(onClick = { navController.navigate(Screens.WriteObservationsToCSV.route)  }) {
-//                            Icon(
-//                                imageVector = Icons.Filled.Build,
-//                                contentDescription = "Build CSV File"
-//                            )
-//                        }
-//                    }
-//                }
-//            }
-//        },
-//        bottomBar = { BottomAppBar() { Text("BottomAppBar") } })
-//    }
-//    Scaffold(
-//        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-//        topBar = { TopAppBar( title = { Text("Observations", fontFamily = FontFamily.Serif) }, scrollBehavior = scrollBehavior) },
-//        content = {
-//            LogCard(
-//            modifier = Modifier
-//                .fillMaxWidth(),
-//            observationLog = log,
-//            formattedDate = viewModel.formatDateTime(log.timeInMillis),
-//            onDelete = viewModel::delete
-//        ) },
-//        floatingActionButton = {
-//            FloatingActionButton(onClick = { navController.navigate(Screens.AddObservationLog.route) }) {
-//                Icon(Icons.Filled.Add, "Add observation")
-//            }
-//        })
-//    ) { innerPadding ->
-//        LazyColumn(
-//            Modifier
-//                .fillMaxSize()
-//                .padding(innerPadding),
-//            contentPadding = PaddingValues(8.dp)
-//        ) {
-//            if (!state.loading && state.observationLogs.isEmpty()) {
-//                item {
-//                    EmptyLogMessage(Modifier.fillParentMaxSize())
-//                }
-//            }
-//            items(state.observationLogs, key = { it.date }) { log ->
-//                LogCard(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .animateItemPlacement(),
-//                    observationLog = log,
-//                    formattedDate = viewModel.formatDateTime(log.timeInMillis),
-//                    onDelete = viewModel::delete
-//                )
-//                Spacer(Modifier.height(16.dp))
-//            }
-//        }
-//    }
-//}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun mainScaffold(navController: NavHostController, viewModel: HomeViewModel) {
+fun mainScaffold(
+    navController: NavHostController,
+    viewModel: HomeViewModel,
+    lifecycleOwner: LifecycleOwner
+) {
+    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        // Handle the selected file URI
+        if (uri != null) {
+            // Do something with the selected file URI
+            viewModel.updateURI(uri)
+        }
+    }
+
+    val createDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
+        // Handle the created document URI
+        if (uri != null) {
+            viewModel.updateURI(uri)
+            viewModel.exportLogs()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -167,7 +124,9 @@ fun mainScaffold(navController: NavHostController, viewModel: HomeViewModel) {
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier = Modifier.padding(16.dp),
-                onClick = { (viewModel.exportLogs())},
+                onClick = {
+                        createDocument.launch("observations.csv")
+                          },
                 icon = {Icon(Icons.Filled.Build, "Build CSV File")},
                 text = {Text(text = "Build CSV File")}
             )
@@ -192,15 +151,33 @@ fun mainScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     icon = { Icon(Icons.Filled.PostAdd, "Add Observation") },
                     text = { Text(text = "Add Observation") })
             }
+            Text(text = "Observations Collected", modifier = Modifier.padding(15.dp), style = MaterialTheme.typography.headlineSmall)
             Row (
-                verticalAlignment = Alignment.Bottom
-            ){
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(350.dp)
+                    .padding(20.dp)
+                    .border(1.dp, Color.Black)
+                    .clip(RoundedCornerShape(16.dp, 0.dp, 0.dp, 16.dp)) // 16dp for top-left and bottom-right corners
+            ) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    if (viewModel.uiState.observations.isEmpty()) {
+                        populateObsView(viewModel)
+                    }
+                    items(viewModel.uiState.observations) { observation ->
+                        Text(text = observation.toString(), modifier = Modifier.padding(8.dp,))
+                        HorizontalDivider()
+                    }
+                }
             }
         }
     }
-
-
 }
+
+
+
 
 
 //PhotoGrid(Modifier.padding(16.dp), photos = observationLog.photos)
@@ -216,11 +193,67 @@ fun EmptyLogMessage(modifier: Modifier) {
             style = MaterialTheme.typography.headlineMedium,
             fontFamily = FontFamily.Serif
         )
-       Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
         Text(
             "Create a seal observation log by clicking the ✚ icon below \uD83D\uDC47",
             style = MaterialTheme.typography.bodyLarge
         )
+    }
+}
+
+@Composable
+fun CreateDocumentScreen() {
+    val createDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
+        // Handle the created document URI
+        if (uri != null) {
+            // Do something with the created document URI
+        }
+    }
+
+    fun saveFile(suggestedFileName: String) {
+        createDocument.launch(suggestedFileName)
+    }
+
+
+    Column {
+        Button(
+            onClick = {
+                createDocument.launch("observations.csv")
+            }
+        ) {
+            Text("Create Document")
+        }
+    }
+}
+
+@Composable
+fun FilePickerScreen(viewModel: HomeViewModel) {
+    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        // Handle the selected file URI
+        if (uri != null) {
+            // Do something with the selected file URI
+            viewModel.updateURI(uri)
+        }
+    }
+
+    Column {
+        Button(
+            onClick = {
+                openFilePicker.launch("file/*")
+            }
+        ) {
+            Text("Open File Picker")
+        }
+    }
+}
+
+fun populateObsView (viewModel: HomeViewModel) {
+    viewModel.viewModelScope.launch {
+        // Fetch observations only if it's not already available
+        if (viewModel.observationSaver._observations.isEmpty()) {
+            val observations = viewModel.observationSaver.getObservations()
+            viewModel.uiState.observations = observations
+        }
     }
 }
 
@@ -230,6 +263,16 @@ fun HomeScreen() {
     WeddellSealMarkRecapTheme {
         val navController = rememberNavController()
         val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
-        mainScaffold(navController, viewModel)
+        val lifecycleOwner = LocalLifecycleOwner.current
+        mainScaffold(navController, viewModel, lifecycleOwner)
+    }
+}
+
+@Preview
+@Composable
+fun FilePicker() {
+    WeddellSealMarkRecapTheme {
+        val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
+        FilePickerScreen(viewModel)
     }
 }

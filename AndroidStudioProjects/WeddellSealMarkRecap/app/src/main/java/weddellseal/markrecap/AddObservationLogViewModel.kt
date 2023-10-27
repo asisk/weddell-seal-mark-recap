@@ -60,6 +60,7 @@ class AddObservationLogViewModel(
     // region ViewModel setup
     private val context: Context
         get() = getApplication()
+//    val observationDao = AppDatabase.getDatabase(application).observationDao()
 
     private val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     // endregion
@@ -92,9 +93,7 @@ class AddObservationLogViewModel(
     fun updateTagId (input : String) {
         uiState = uiState.copy(tagId = input)
     }
-//    public fun updateSpeno (input : String) {
-//        uiState = uiState.copy(speno = input)
-//    }
+
     var uiState by mutableStateOf(
         UiState(
             hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -284,19 +283,15 @@ class AddObservationLogViewModel(
            // ObservationLog.e("date is ", uiState.date.toString())
 
             val log = ObservationLogEntry(
-                id = 1,
+                // passing zero, but Room entity will autopopulate the id
+                id = 0,
                 date = getIsoDate(uiState.date),
                 currentLocation = uiState.currentLocation,
                 lastKnownLocation = uiState.lastKnownLocation
-/*
-                place = uiState.place!!,
-                photo1 = photos[0].name,
-                photo2 = photos.getOrNull(1)?.name,
-                photo3 = photos.getOrNull(2)?.name,
-*/
             )
-
-            observationSaver.writeObservationtoDB(log)
+            //TODO, consider a validation check to see if fields are populated before inserting to database
+            observationSaver.addObservation(log)
+            //saving state triggers the navigation to route to home
             uiState = uiState.copy(isSaved = true)
         }
     }
