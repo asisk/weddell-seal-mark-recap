@@ -9,10 +9,12 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
+import com.opencsv.CSVWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.io.OutputStreamWriter
 
 const val CSV_FILE_PATH = "./result.csv"
 class ObservationSaverRepository(context: Context, private val contentResolver: ContentResolver) {
@@ -50,24 +52,40 @@ class ObservationSaverRepository(context: Context, private val contentResolver: 
 //            // Handle any exceptions
 //        }
 //    }
+// create CSVWriter object filewriter object as parameter
 
-suspend fun writeDataToFile(uri: Uri) {
-    try {
-        val data: List<ObservationLogEntry> = withContext(Dispatchers.IO) {
-            selectAllObservationsfromDB() // Assuming this function returns a list of observations
-        }
 
-        contentResolver.openOutputStream(uri)?.use { outputStream ->
-            for (obs in data) {
-                val obsFields = "${obs?.date ?: ""},${obs?.currentLocation ?: ""},${obs?.lastKnownLocation ?: ""}"
-                outputStream.write("$obsFields\n".toByteArray()) // Add a newline character
+    suspend fun writeDataToFile(uri: Uri) {
+        try {
+            val data: List<ObservationLogEntry> = withContext(Dispatchers.IO) {
+                selectAllObservationsfromDB() // Assuming this function returns a list of observations
             }
+
+            contentResolver.openOutputStream(uri)?.use { outputStream ->
+                val writer = OutputStreamWriter(outputStream)
+                val csvWriter = CSVWriter(writer)
+
+                // Define the header row if needed
+//                val header = arrayOf("Date", "Current Location", "Last Known Location")
+//                csvWriter.writeNext(header)
+
+                for (obs in data) {
+                    // Create a String array for the data
+                    val obsFields = arrayOf(
+                        obs?.date ?: "",
+                        obs?.currentLocation ?: "",
+                        obs?.lastKnownLocation ?: ""
+                    )
+                    csvWriter.writeNext(obsFields)
+                }
+
+                csvWriter.close()
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            // Handle any exceptions
         }
-    } catch (e: IOException) {
-        e.printStackTrace()
-        // Handle any exceptions
     }
-}
 
 
 //    suspend fun saveObservations(file: File): Boolean {
