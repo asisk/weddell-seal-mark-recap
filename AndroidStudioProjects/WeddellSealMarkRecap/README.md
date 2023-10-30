@@ -1,6 +1,11 @@
 # weddell-seal-mark-recap-app
 Next generation Android app to support data capture in the field
 
+October 27, 2023
+Test Version: app-debug-db-view
+Addition of scrollable database view to the home page that will populate after observations are saved
+Build CSV File displays a file picker, allowing the user to create a new file in Internal Storage on the Android device. A database query to select all records is executed once a file is created and the results are written to the file (currently in BIN format - known bug).
+
 October 18, 2023
 Test Version : app-debug-csvWriter-obsScreen
 Home screen displays two action options, add observation and write to csv
