@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(
+fun RecentObservationsScreen(
     navController: NavHostController,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
 ) {
