@@ -1,141 +1,85 @@
 package weddellseal.markrecap
 
-/*
- * Copyright (C) 2022 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.PostAdd
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
+import weddellseal.markrecap.entryfields.DropdownField
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
-
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(
-    navController: NavHostController,
-    viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
-) {
-
-    //LaunchedEffect(Unit) { viewModel.loadLogs() }
-    val state = viewModel.uiState
+fun HomeScreen (navController: NavHostController){
     val lifecycleOwner = LocalLifecycleOwner.current
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    LaunchedEffect(Unit) {
-        viewModel.observationsFlow.collect {
-            state.observations = it
-        }
-    }
-
-    mainScaffold(navController, viewModel, lifecycleOwner)
+    homeScaffold(navController)
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun mainScaffold(
-    navController: NavHostController,
-    viewModel: HomeViewModel,
-    lifecycleOwner: LifecycleOwner
-) {
-    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        // Handle the selected file URI
-        if (uri != null) {
-            // Do something with the selected file URI
-            viewModel.updateURI(uri)
-        }
-    }
-
-    val createDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
-        // Handle the created document URI
-        if (uri != null) {
-            viewModel.updateURI(uri)
-            viewModel.exportLogs()
-        }
-    }
-
+fun homeScaffold(navController: NavHostController) {
     Scaffold(
+        // region UI - Top Bar & Action Button
         topBar = {
             TopAppBar(
+                modifier = Modifier.height(60.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
                 ),
-                title = { Text("Observations", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                title = {
+                    Row(
+                        Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .padding(14.dp),
+                            text = "Weddell Seal Mark Recap",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                }
             )
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                modifier = Modifier.padding(16.dp),
-                onClick = {
-                        createDocument.launch("observations.csv")
-                          },
-                icon = {Icon(Icons.Filled.Build, "Build CSV File")},
-                text = {Text(text = "Build CSV File")}
-            )
-        },
-        floatingActionButtonPosition = FabPosition.Start,
         bottomBar = {
-            Text(
-                text = "",
-            )
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.primary,
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    text = "Bottom app bar",
+                )
+            }
         }
     ) { innerPadding ->
         Column(
@@ -144,135 +88,224 @@ fun mainScaffold(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+//            Row {
+//                ExtendedFloatingActionButton(
+//                    modifier = Modifier.padding(16.dp),
+//                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
+//                    icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
+//                    text = { Text(text = "Start Observation") })
+//            }
             Row {
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
-                    icon = { Icon(Icons.Filled.PostAdd, "Add Observation") },
-                    text = { Text(text = "Add Observation") })
+                val image = painterResource(R.drawable.pup1_2)
+                Image(painter = image, contentDescription = null)
             }
-            Text(text = "Observations Collected", modifier = Modifier.padding(15.dp), style = MaterialTheme.typography.headlineSmall)
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(350.dp)
-                    .padding(20.dp)
-                    .border(1.dp, Color.Black)
-                    .clip(RoundedCornerShape(16.dp, 0.dp, 0.dp, 16.dp)) // 16dp for top-left and bottom-right corners
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                Card(
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 6.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                    modifier = Modifier
+                        .padding(8.dp)
+//                        .fillMaxWidth(.5f)
+//                        .size(width = 240.dp, height = 100.dp)
                 ) {
-                    if (viewModel.uiState.observations.isEmpty()) {
-                        populateObsView(viewModel)
+                    // Content of the Census Carde
+                    Text(
+                        text = "Census",
+                        modifier = Modifier
+                            .padding(4.dp),
+                    )
+
+                    val censusOptions = listOf("0", "1", "2", "3", "4")
+                    var selection = "0"
+                    Row() {
+                        Column(modifier = Modifier.padding(4.dp)) {
+                            Text(text = "Census #")
+                        }
+                        Column(modifier = Modifier.padding(4.dp)) {
+                            DropdownField(censusOptions) { newText ->
+                                selection = newText
+                            }
+                        }
                     }
-                    items(viewModel.uiState.observations) { observation ->
-                        Text(text = observation.toString(), modifier = Modifier.padding(8.dp,))
-                        HorizontalDivider()
+                    FloatingActionButton(
+                        onClick = { /*TODO*/ },
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(CenterHorizontally),
+                    contentColor = LocalContentColor.current
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Start",
+                            tint = MaterialTheme.colorScheme.surfaceTint
+                        )
+                    }
+                }
+                Card(
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 6.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                    modifier = Modifier
+                        .padding(8.dp)
+//                        .size(width = 240.dp, height = 100.dp)
+                ) {
+                    // Content of the Observation Card
+                    Text(
+                        text = "Observation",
+                        modifier = Modifier
+                            .padding(4.dp)
+//                            .fillMaxWidth()
+                    )
+                    FloatingActionButton(
+                        onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(CenterHorizontally),
+                        contentColor = LocalContentColor.current
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Start",
+                            tint = MaterialTheme.colorScheme.surfaceTint
+                        )
+                    }
+                }
+            }
+            Card(
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 6.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+//                    .fillMaxWidth(.5f)
+//                        .size(width = 240.dp, height = 100.dp)
+            ) {
+                // Content of the System Data
+                Text(
+                    text = "Metadata",
+                    modifier = Modifier
+                        .padding(4.dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+//                        .fillMaxWidth(.3f),
+                ) {
+                    var observers by remember { mutableStateOf("") }
+                    ObservationCardOutlinedTextField(
+                        placeholderText = "observers",
+                        labelText = "Observers",
+                        sealField = observers,
+                        onValueChange = {
+                            observers = it
+                        }
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth()
+                ) {
+                    var site by remember { mutableStateOf("") }
+                    val censusOptions = listOf("0", "1", "2", "3", "4")
+                    Column(modifier = Modifier.padding(4.dp)) {
+                        Text(text = "Site")
+                    }
+                    Column(modifier = Modifier.padding(4.dp)) {
+                        DropdownField(censusOptions) { newText ->
+                            site = newText
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth()
+//                    modifier = Modifier.fillMaxWidth(.3f)
+                ) {
+                    //TODO, pull a system field and use it in place of This
+                    var compId by remember { mutableStateOf("This") }
+                    Column(modifier = Modifier.padding(4.dp)) {
+                        Text(text = "Computer Id")
+                    }
+                    Column(modifier = Modifier.padding(4.dp)) {
+                        Text(text = compId)
                     }
                 }
             }
         }
     }
 }
+//
+//@Composable
+//fun CardWithClickableImages() {
+//    var clickedImage by remember { mutableStateOf(0) }
+//
+//    Card(
+//        modifier = Modifier
+//            .padding(16.dp)
+//    ) {
+//        Column(
+//            modifier = Modifier.fillMaxSize(),
+//            verticalArrangement = Arrangement.Center
+//        ) {
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+//                ClickableImage(imageResId = R.drawable.pup1_2, onClick = { clickedImage = 1 })
+//                ClickableImage(imageResId = R.drawable.pup1_2, onClick = { clickedImage = 2 })
+//                ClickableImage(imageResId = R.drawable.pup1_2, onClick = { clickedImage = 3 })
+//            }
+//
+//            // Optionally, display some content based on the clickedImage value
+//            when (clickedImage) {
+//                1 -> Text("You clicked Image 1")
+//                2 -> Text("You clicked Image 2")
+//                3 -> Text("You clicked Image 3")
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//fun ClickableImage(imageResId: Int, onClick: () -> Unit) {
+//    Image(
+//        painter = painterResource(id = imageResId),
+//        contentDescription = null, // Provide a proper content description
+//        modifier = Modifier
+//            .clickable { onClick() }
+//            .padding(8.dp)
+//    )
+//}
 
-
-
-
-
-//PhotoGrid(Modifier.padding(16.dp), photos = observationLog.photos)
-@Composable
-fun EmptyLogMessage(modifier: Modifier) {
-    Column(
-        modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            "Hi there \uD83D\uDC4B",
-            style = MaterialTheme.typography.headlineMedium,
-            fontFamily = FontFamily.Serif
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "Create a seal observation log by clicking the ✚ icon below \uD83D\uDC47",
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
-}
-
-@Composable
-fun CreateDocumentScreen() {
-    val createDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
-        // Handle the created document URI
-        if (uri != null) {
-            // Do something with the created document URI
-        }
-    }
-
-    fun saveFile(suggestedFileName: String) {
-        createDocument.launch(suggestedFileName)
-    }
-
-
-    Column {
-        Button(
-            onClick = {
-                createDocument.launch("observations.csv")
-            }
-        ) {
-            Text("Create Document")
-        }
-    }
-}
-
-@Composable
-fun FilePickerScreen(viewModel: HomeViewModel) {
-    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        // Handle the selected file URI
-        if (uri != null) {
-            // Do something with the selected file URI
-            viewModel.updateURI(uri)
-        }
-    }
-
-    Column {
-        Button(
-            onClick = {
-                openFilePicker.launch("file/*")
-            }
-        ) {
-            Text("Open File Picker")
-        }
-    }
-}
-
-fun populateObsView (viewModel: HomeViewModel) {
-    viewModel.viewModelScope.launch {
-        // Fetch observations only if it's not already available
-        if (viewModel.observationSaver._observations.isEmpty()) {
-            val observations = viewModel.observationSaver.getObservations()
-            viewModel.uiState.observations = observations
-        }
-    }
-}
 
 @Preview
 @Composable
 fun HomeScreen() {
     WeddellSealMarkRecapTheme {
         val navController = rememberNavController()
-        val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
-        val lifecycleOwner = LocalLifecycleOwner.current
-        mainScaffold(navController, viewModel, lifecycleOwner)
+        homeScaffold(navController)
     }
 }
 
-@Preview
-@Composable
-fun FilePicker() {
-    WeddellSealMarkRecapTheme {
-        val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
-        FilePickerScreen(viewModel)
-    }
-}
+//@Preview
+//@Composable
+//fun ImageCard() {
+//    WeddellSealMarkRecapTheme {
+//    }
+//}

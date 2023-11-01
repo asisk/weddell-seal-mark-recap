@@ -296,7 +296,7 @@ fun AddObservationLogScreen(
                             Text(text = "Age")
                         }
                         Column (modifier = Modifier.padding(16.dp).wrapContentWidth()){
-                            DropdownField(viewModel.uiState.age){ newText ->
+                            DropdownField(){ newText ->
                                 viewModel.updateAge(newText)
                             }
                         }
@@ -444,7 +444,7 @@ fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String,
 }
 
 @Composable
-fun DropdownField(sealField: String, onValueChange: (String) -> Unit) {
+fun DropdownField(onValueChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Select an option") }
     val options = listOf("Adult", "Pup", "Unknown")

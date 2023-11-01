@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = startNavigation) {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController)}
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController) }
+                        composable(Screens.RecentObservations.route) { HomeScreen(navController)}
                         //composable(Screens.Camera.route) { CameraScreen(navController) }
                     }
                 }
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
 sealed class Screens(val route: String) {
     object HomeScreen : Screens("home")
     object AddObservationLog : Screens("add_log")
+    object RecentObservations : Screens ("view_db")
     //object Camera : Screens("camera")
 }
 /*
