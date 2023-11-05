@@ -1,5 +1,6 @@
 package weddellseal.markrecap
 
+import android.os.Build.getSerial
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,14 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Dataset
+import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,11 +25,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -71,14 +71,18 @@ fun homeScaffold(navController: NavHostController) {
         bottomBar = {
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.primary
             ) {
+                Button(
+                    onClick = { /* TODO: Add click action */ },
+                    Modifier.padding(4.dp)
+                ) {
+                    Icon(Icons.Filled.Dataset, contentDescription = "View Recent Observations")
+                }
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    text = "Bottom app bar",
-                )
+                    modifier = Modifier.fillMaxWidth(.4f),
+                    text = "View Recent Observations",
+                    softWrap = true)
             }
         }
     ) { innerPadding ->
@@ -88,98 +92,9 @@ fun homeScaffold(navController: NavHostController) {
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-//            Row {
-//                ExtendedFloatingActionButton(
-//                    modifier = Modifier.padding(16.dp),
-//                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
-//                    icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
-//                    text = { Text(text = "Start Observation") })
-//            }
             Row {
                 val image = painterResource(R.drawable.pup1_2)
                 Image(painter = image, contentDescription = null)
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Card(
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 6.dp
-                    ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
-                    modifier = Modifier
-                        .padding(8.dp)
-//                        .fillMaxWidth(.5f)
-//                        .size(width = 240.dp, height = 100.dp)
-                ) {
-                    // Content of the Census Carde
-                    Text(
-                        text = "Census",
-                        modifier = Modifier
-                            .padding(4.dp),
-                    )
-
-                    val censusOptions = listOf("0", "1", "2", "3", "4")
-                    var selection = "0"
-                    Row() {
-                        Column(modifier = Modifier.padding(4.dp)) {
-                            Text(text = "Census #")
-                        }
-                        Column(modifier = Modifier.padding(4.dp)) {
-                            DropdownField(censusOptions) { newText ->
-                                selection = newText
-                            }
-                        }
-                    }
-                    FloatingActionButton(
-                        onClick = { /*TODO*/ },
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .align(CenterHorizontally),
-                    contentColor = LocalContentColor.current
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Start",
-                            tint = MaterialTheme.colorScheme.surfaceTint
-                        )
-                    }
-                }
-                Card(
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 6.dp
-                    ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
-                    modifier = Modifier
-                        .padding(8.dp)
-//                        .size(width = 240.dp, height = 100.dp)
-                ) {
-                    // Content of the Observation Card
-                    Text(
-                        text = "Observation",
-                        modifier = Modifier
-                            .padding(4.dp)
-//                            .fillMaxWidth()
-                    )
-                    FloatingActionButton(
-                        onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .align(CenterHorizontally),
-                        contentColor = LocalContentColor.current
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Start",
-                            tint = MaterialTheme.colorScheme.surfaceTint
-                        )
-                    }
-                }
             }
             Card(
                 elevation = CardDefaults.cardElevation(
@@ -194,16 +109,11 @@ fun homeScaffold(navController: NavHostController) {
 //                    .fillMaxWidth(.5f)
 //                        .size(width = 240.dp, height = 100.dp)
             ) {
-                // Content of the System Data
-                Text(
-                    text = "Metadata",
-                    modifier = Modifier
-                        .padding(4.dp)
-                )
+                // Metadata
                 Row(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-//                        .fillMaxWidth(.3f),
+//                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth(.3f)
                 ) {
                     var observers by remember { mutableStateOf("") }
                     ObservationCardOutlinedTextField(
@@ -217,13 +127,12 @@ fun homeScaffold(navController: NavHostController) {
                 }
                 Row(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
                         .fillMaxWidth()
                 ) {
                     var site by remember { mutableStateOf("") }
-                    val censusOptions = listOf("0", "1", "2", "3", "4")
+                    val censusOptions = listOf("Location A", "Location B")
                     Column(modifier = Modifier.padding(4.dp)) {
-                        Text(text = "Site")
+                        Text(text = "Location")
                     }
                     Column(modifier = Modifier.padding(4.dp)) {
                         DropdownField(censusOptions) { newText ->
@@ -231,23 +140,62 @@ fun homeScaffold(navController: NavHostController) {
                         }
                     }
                 }
+                val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
+                var selection = "0"
+                Row() {
+                    Column(modifier = Modifier.padding(4.dp)) {
+                        Text(text = "Census #")
+                    }
+                    Column(modifier = Modifier.padding(4.dp)) {
+                        DropdownField(censusOptions) { newText ->
+                            selection = newText
+                        }
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .fillMaxWidth()
-//                    modifier = Modifier.fillMaxWidth(.3f)
                 ) {
                     //TODO, pull a system field and use it in place of This
                     var compId by remember { mutableStateOf("This") }
                     Column(modifier = Modifier.padding(4.dp)) {
-                        Text(text = "Computer Id")
+                        Text(text = "Tablet Id: TBD")
                     }
-                    Column(modifier = Modifier.padding(4.dp)) {
-                        Text(text = compId)
-                    }
+//                    val serialNumber = getSerial()
+//
+//                    Column {
+//                        // Display the serial number in your Composable
+//                        Text(text = "Serial Number: $serialNumber")
+//                    }
                 }
             }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ){
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
+                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
+                        text = { Text(text = "Start Census") })
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
+                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
+                        text = { Text(text = "Start Observation") })
+            }
         }
+    }
+}
+
+@Composable
+fun SerialNumberDisplay() {
+    val serialNumber = getSerial()
+
+    Column {
+        // Display the serial number in your Composable
+        Text(text = "Serial Number: $serialNumber")
     }
 }
 //
