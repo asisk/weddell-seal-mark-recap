@@ -49,15 +49,12 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 
 class AddObservationLogViewModel(
     application: Application,
     private val observationSaver: ObservationSaverRepository
 ) : AndroidViewModel(application) {
-
-    // region ViewModel setup
     private val context: Context
         get() = getApplication()
 //    val observationDao = AppDatabase.getDatabase(application).observationDao()
@@ -71,27 +68,31 @@ class AddObservationLogViewModel(
         //val hasCameraAccess: Boolean,
         val isSaving: Boolean = false,
         val isSaved: Boolean = false,
-        val date: Long,
+        val date: String,
         val hasGPS: Boolean = false,
         var hasGooglePlay: Int,
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
         val latLong: String = "gps data empty",
-        val speno: String = "",
         val tagId: String = "",
-        val age : String = ""
-
+        val age : String = "",
+        val sex : String = ""
         //val savedPhotos: List<File> = emptyList(),
         //val localPickerPhotos: List<Uri> = emptyList()
     )
-    fun updateSpeno (input : String) {
-        uiState = uiState.copy(speno = input)
+    fun updateTagId (input : String) {
+        uiState = uiState.copy(tagId = input)
     }
     fun updateAge (input : String) {
         uiState = uiState.copy(age = input)
     }
-    fun updateTagId (input : String) {
-        uiState = uiState.copy(tagId = input)
+    fun updateSex (input : String) {
+        uiState = uiState.copy(sex = input)
+    }
+
+    fun appendToTagID(input: String) {
+        val newTagId = uiState.tagId + input
+        uiState = uiState.copy(tagId = newTagId)
     }
 
     var uiState by mutableStateOf(
@@ -99,8 +100,7 @@ class AddObservationLogViewModel(
             hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
             hasGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER),
             hasGooglePlay = 999,
-            date = getTodayDateInMillis(),
-            //savedPhotos = photoSaver.getPhotos()
+            date = SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US).format(System.currentTimeMillis()),
         )
     )
         private set
@@ -112,14 +112,6 @@ class AddObservationLogViewModel(
         }
         return false
 //        return !observationSaver.isEmpty() && !uiState.isSaving
-    }
-
-    private fun getTodayDateInMillis(): Long {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        return calendar.timeInMillis
     }
 
     private fun getIsoDate(timeInMillis: Long): String {
@@ -149,11 +141,6 @@ class AddObservationLogViewModel(
             }
         }
     }
-
-    fun onDateChange(dateInMillis: Long) {
-        uiState = uiState.copy(date = dateInMillis)
-    }
-
     fun createSettingsIntent(): Intent {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -220,12 +207,15 @@ class AddObservationLogViewModel(
                 } else {
                     val lat = currentLocation.latitude
                     val lon = currentLocation.longitude
+                    val date = SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US).format(
+                        System.currentTimeMillis()
+                    )
                     uiState = uiState.copy(
                         currentLocation =
                         "Current location is \n" +
                                 "lat : ${lat}\n" +
                                 "long : ${lon}\n" +
-                                "fetched at ${System.currentTimeMillis()}"
+                                "updated: $date"
                     )
                 }
             }
@@ -276,16 +266,10 @@ class AddObservationLogViewModel(
         uiState = uiState.copy(isSaving = true)
 
         viewModelScope.launch {
-            //val photos = photoSaver.savePhotos()
-
-            val calendar = Calendar.getInstance()
-            calendar.timeInMillis = uiState.date
-           // ObservationLog.e("date is ", uiState.date.toString())
-
             val log = ObservationLogEntry(
                 // passing zero, but Room entity will autopopulate the id
                 id = 0,
-                date = getIsoDate(uiState.date),
+                date = uiState.date,
                 currentLocation = uiState.currentLocation,
                 lastKnownLocation = uiState.lastKnownLocation
             )

@@ -20,15 +20,9 @@ package weddellseal.markrecap
 //import android.Manifest.permission.ACCESS_COARSE_LOCATION
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.app.DatePickerDialog
-import android.text.format.DateUtils
-import android.text.format.DateUtils.FORMAT_ABBREV_ALL
-import android.widget.DatePicker
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,8 +30,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
@@ -45,8 +37,6 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.rememberModalBottomSheetState
@@ -56,11 +46,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -84,15 +71,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
+import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -144,28 +135,22 @@ fun AddObservationLogScreen(
     if (showExplanationDialogForLocationPermission) {
         LocationExplanationDialog(
             onConfirm = {
-                // TODO: Step 10. Change location request to only request COARSE location.
                 requestLocationPermissions.launch(ACCESS_FINE_LOCATION)
-//
-//                        requestLocationPermissions.launch(
-//                    arrayOf(
-//                        ACCESS_FINE_LOCATION
-//                    ).toString()
-//                )
                 showExplanationDialogForLocationPermission = false
                 viewModel.fetchCurrentLocation()
-                viewModel.fetchGeoCoderLocation()
+//                viewModel.fetchGeoCoderLocation()
             },
             onDismiss = { showExplanationDialogForLocationPermission = false },
         )
     }
+
     // method called on the initial load of the ObservationLog Screen
     // if permissions are in place it gathers information about the
     // current and last known locations to populate location fields
     fun canAddLocation() {
         if (viewModel.hasPermission(ACCESS_FINE_LOCATION)) {
             viewModel.fetchCurrentLocation()
-            viewModel.fetchGeoCoderLocation()
+//            viewModel.fetchGeoCoderLocation()
         } else {
             //requestLocationPermissions.launch(ACCESS_FINE_LOCATION)
             showExplanationDialogForLocationPermission = true
@@ -193,11 +178,6 @@ fun AddObservationLogScreen(
             }
         }
     }
-
-    /*    val pickImage = rememberLauncherForActivityResult(
-        PickMultipleVisualMedia(MAX_LOG_PHOTOS_LIMIT),
-        viewModel::onPhotoPickerSelect
-    )*/
 
     fun canSaveLog(callback: () -> Unit) {
         if (viewModel.isValid()) {
@@ -272,149 +252,139 @@ fun AddObservationLogScreen(
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Card(
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 6.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
                 ) {
-                       ObservationCardOutlinedTextField(
-                           "Enter SpeNo",
-                           "SpeNo",
-                           viewModel.uiState.speno
-                       ) { newText ->
-                           viewModel.updateSpeno(newText)
-                       }
-                       ObservationCardOutlinedTextField(
-                           "Enter TagId",
-                           "TagId",
-                           viewModel.uiState.tagId
-                       ) { newText ->
-                           viewModel.updateTagId(newText)
-                       }
-                   }
-
-                    Row {
-                        Column(modifier = Modifier.padding(16.dp).wrapContentWidth() ){
-                            Text(text = "Age")
+                   //TAG ID
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ObservationCardOutlinedTextField(
+                            "Enter TagId",
+                            "TagId",
+                            viewModel.uiState.tagId
+                        ) { newText ->
+                            viewModel.updateTagId(newText)
                         }
-                        Column (modifier = Modifier.padding(16.dp).wrapContentWidth()){
-                            DropdownField(){ newText ->
-                                viewModel.updateAge(newText)
-                            }
-                        }
+                        Button(
+                            onClick = { viewModel.appendToTagID("A") },
+                            colors = ButtonDefaults.buttonColors( containerColor = Color.Blue), // Change the background color
+                        ) { Text("A") }
+                        Button( onClick = { viewModel.appendToTagID("C") },
+                            colors = ButtonDefaults.buttonColors( containerColor = Color.Green) ) { Text("C") }
+                        Button( onClick = { viewModel.appendToTagID("D") },
+                            colors = ButtonDefaults.buttonColors( containerColor = Color.Red) ) { Text("D") }
                     }
-                ListItem(
-                    headlineContent = { Text("Date") },
-                    trailingContent = {
-                        var dateTime =
-                            SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US).format(
-                                viewModel.uiState.date
-                            )
-                        Text(text = dateTime.toString())
-                        //DatePicker(state.date, onChange = viewModel::onDateChange)
+                    //AGE
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                            Text(text = "Age:")
+                            Text(text = viewModel.uiState.age)
+//                        Column (modifier = Modifier.padding(16.dp).wrapContentWidth()){
+//                            DropdownField(){ newText ->
+//                                viewModel.updateAge(newText)
+//                            }
+                        Button( onClick = { viewModel.updateAge("Adult") } ) { Text("Adult") }
+                        Button( onClick = { viewModel.updateAge("Pup") } ) { Text("Pup") }
+                        Button( onClick = { viewModel.updateAge("Yearling") } ) { Text("Yearling") }
+//                        }
                     }
-                )
-                HorizontalDivider()
-                ListItem(
-                    headlineContent = { Text("SpeNo") },
-                    trailingContent = { Text(text = viewModel.uiState.speno)}
-                )
-                HorizontalDivider()
-                ListItem(
-                    headlineContent = { Text("TagId") },
-                    trailingContent = { Text(text = viewModel.uiState.tagId)}
-                )
-                HorizontalDivider()
-                ListItem(
-                    headlineContent = { Text("Age") },
-                    trailingContent = { Text(text = viewModel.uiState.age)}
-                )
-                HorizontalDivider()
-                ListItem(
-                    headlineContent = { Text("GPS Locator Available") },
-                    trailingContent = {
-                        Text(text = viewModel.uiState.hasGPS.toString())
+                    // SEX
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Sex:")
+                        Text(text = viewModel.uiState.sex)
+                        Button( onClick = { viewModel.updateSex("Female") } ) { Text("Female") }
+                        Button( onClick = { viewModel.updateSex("Male") } ) { Text("Male") }
+                        Button( onClick = { viewModel.updateSex("Unknown") } ) { Text("Unknown") }
                     }
-                )
-                HorizontalDivider()
-                ListItem(
-                    headlineContent = { Text("Google Play Services Available") },
-                    trailingContent = {
-                        if (viewModel.uiState.hasGooglePlay != null) {
-                            Text(text = viewModel.uiState.hasGooglePlay.toString())
-                        } else {
-                            Text(text = "Google Play is not currently enabled")
-                        }
-                    }
-                )
-                // region Location
-                HorizontalDivider()
-                // endregion
-                ListItem(
-                    headlineContent = { Text("Last Known Location") },
-                    trailingContent = {
-                        Text(text = viewModel.uiState.lastKnownLocation)
-                    }
-                )
+//                ListItem(
+//                    headlineContent = { Text("Date") },
+//                    trailingContent = {
+//                        Text(text = viewModel.uiState.date)
+//                    }
+//                )
+//                HorizontalDivider()
+//                ListItem(
+//                    headlineContent = { Text("SpeNo") },
+//                    trailingContent = { Text(text = viewModel.uiState.speno)}
+//                )
+//                HorizontalDivider()
+//                ListItem(
+//                    headlineContent = { Text("TagId") },
+//                    trailingContent = { Text(text = viewModel.uiState.tagId)}
+//                )
+//                HorizontalDivider()
+//                ListItem(
+//                    headlineContent = { Text("Age") },
+//                    trailingContent = { Text(text = viewModel.uiState.age)}
+//                )
+                }
+//                HorizontalDivider()
+//                ListItem(
+//                    headlineContent = { Text("GPS Locator Available") },
+//                    trailingContent = {
+//                        Text(text = viewModel.uiState.hasGPS.toString())
+//                    }
+//                )
+//                HorizontalDivider()
+//                ListItem(
+//                    headlineContent = { Text("Google Play Services Available") },
+//                    trailingContent = {
+//                        if (viewModel.uiState.hasGooglePlay != null) {
+//                            Text(text = viewModel.uiState.hasGooglePlay.toString())
+//                        } else {
+//                            Text(text = "Google Play is not currently enabled")
+//                        }
+//                    }
+//                )
+//                // region Location
+//                HorizontalDivider()
+//                // endregion
+//                ListItem(
+//                    headlineContent = { Text("Last Known Location") },
+//                    trailingContent = {
+//                        Text(text = viewModel.uiState.lastKnownLocation)
+//                    }
+//                )
 
                 ListItem(
-                    headlineContent = { Text("Current Location") },
-                    trailingContent = {
-                        // Step 7. Check, request, and explain Location permissions
-
-                        Text(text = viewModel.uiState.currentLocation)
-
-                        // TODO: Step 9. Change location request to only request COARSE location.
-                    }
+                    headlineContent = { Text("Device GPS") },
+                    trailingContent = { Text(text = viewModel.uiState.currentLocation) }
                 )
-
-//
-                // region Photos
-                /*ListItem(
-                    headlineContent = { Text("Photos") },
-                    trailingContent = {
-                        Row {
-                            // region Photo Picker
-                            TextButton(onClick = {
-                                canAddPhoto {
-                                    viewModel.loadLocalPickerPictures()
-                                    coroutineScope.launch {
-                                        // TODO: Step 12. Replace the line below showing our internal
-                                        //  photo picking UI and launch the Android Photo Picker instead
-                                        internalPhotoPickerState.show()
-                                    }
-                                }
-                            }) {
-                                Icon(Icons.Filled.PhotoLibrary, null)
-                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                Text("Add photo")
-                            }
-                            // endregion
-
-                            // region Camera
-                            IconButton(onClick = {
-                                // TODO: Step 2. Check & request for Camera permission before navigating to the camera screen.
-                                canAddPhoto {
-                                    //navController.navigate(Screens.Camera.route)
-                                }
-                            })
-                            {
-                                Icon(Icons.Filled.AddAPhoto, null)
-                            }
-                            // endregion
-                        }
-                    }
-                )*/
-                // endregion
-
-                /*                PhotoGrid(
-                    modifier = Modifier.padding(16.dp),
-                    photos = state.savedPhotos,
-                    onRemove = { photo -> viewModel.onPhotoRemoved(photo) }
-                )*/
             }
         }
     }
 }
 
+fun createAnnotatedStringWithClickAction(text: String): AnnotatedString {
+    return buildAnnotatedString {
+        withStyle(style = SpanStyle(color = Color.Blue)) {
+            append(text)
+        }
+        val clickableString = "Click here"
+        val clickableOffset = text.indexOf(clickableString)
+        addStringAnnotation(
+            tag = "clickable",
+            annotation = clickableString,
+            start = clickableOffset,
+            end = clickableOffset + clickableString.length
+        )
+    }
+}
 @Composable
 fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String, sealField: String, onValueChange: (String) -> Unit) {
     val paddingModifier  = Modifier.padding(10.dp)
@@ -426,7 +396,7 @@ fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String,
         onValueChange = { onValueChange(it)
                 isFocused  = it.isNotBlank()
                         },
-        label = { Text(labelText) },
+        label = { Text(text = labelText) },
         modifier = Modifier
             .background(
                 color = if (isFocused) Color.LightGray else Color.Transparent, // Change border color when focused
@@ -442,94 +412,87 @@ fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String,
         )
     )
 }
+//
+//@Composable
+//fun DropdownField(onValueChange: (String) -> Unit) {
+//    var expanded by remember { mutableStateOf(false) }
+//    var selectedOption by remember { mutableStateOf("Select an option") }
+//    val options = listOf("Adult", "Pup", "Unknown")
+//
+//    Column {
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .clickable { expanded = true },
+//            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+//            border = BorderStroke(1.dp, Color.Gray), // Border appearance
+////            contentColor = Color.Black // Text color
+//        ) {
+//            Row (
+//                modifier = Modifier.padding(8.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ){
+//                BasicTextField(
+//                    value = selectedOption,
+//                    onValueChange = { onValueChange(selectedOption) },
+//                    enabled = false,
+//                    keyboardOptions = KeyboardOptions.Default.copy(
+//                        imeAction = ImeAction.Done
+//                    ),
+//                    keyboardActions = KeyboardActions(
+//                        onDone = {
+//                            expanded = !expanded
+//                        }
+//                    )
+//                )
+//                Icon(
+//                    imageVector = Icons.Default.ArrowDropDown,
+//                    contentDescription = "Dropdown Icon",
+//                    tint = Color.Black
+//                )
+//            }
+//        }
+//        if (expanded) {
+//            Card(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable { expanded = true },
+//                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+//                border = BorderStroke(1.dp, Color.Gray), // Border appearance
+//            ) {
+//                DropdownMenu(
+//                    expanded = expanded,
+//                    onDismissRequest = { expanded = false }
+//                ) {
+//                    options.forEach { option ->
+//                        DropdownMenuItem(text = { Text(text = option) },
+//                            onClick = {
+//                                selectedOption = option
+//                                onValueChange(selectedOption)
+//                                expanded = false
+//                            }
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Composable
-fun DropdownField(onValueChange: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf("Select an option") }
-    val options = listOf("Adult", "Pup", "Unknown")
+fun sealCard() {
+    Card(
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+    ) {
 
-    Column {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-            border = BorderStroke(1.dp, Color.Gray), // Border appearance
-//            contentColor = Color.Black // Text color
-        ) {
-            Row (
-                modifier = Modifier.padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                BasicTextField(
-                    value = selectedOption,
-                    onValueChange = { onValueChange(selectedOption) },
-                    enabled = false,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            expanded = !expanded
-                        }
-                    )
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Dropdown Icon",
-                    tint = Color.Black
-                )
-            }
-        }
-        if (expanded) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = true },
-                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-                border = BorderStroke(1.dp, Color.Gray), // Border appearance
-            ) {
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    options.forEach { option ->
-                        DropdownMenuItem(text = { Text(text = option) },
-                            onClick = {
-                                selectedOption = option
-                                onValueChange(selectedOption)
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DatePicker(timeInMillis: Long, onChange: (time: Long) -> Unit) {
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    calendar.timeInMillis = timeInMillis
-
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            calendar.set(year, month, dayOfMonth)
-            onChange(calendar.timeInMillis)
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
-    )
-
-    TextButton(onClick = { datePickerDialog.show() }) {
-        Icon(Icons.Filled.CalendarToday, null)
-        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-        Text(DateUtils.formatDateTime(context, timeInMillis, FORMAT_ABBREV_ALL))
     }
 }
 
@@ -541,48 +504,6 @@ fun LocationPicker(address: String?, fetchLocation: () -> Unit) {
         Text(address ?: "Get location")
     }
 }
-
-/*@Composable
-fun PhotoPicker(modifier: Modifier = Modifier, entries: List<Uri>, onSelect: (uri: Uri) -> Unit) {
-    LazyVerticalGrid(modifier = modifier, columns = GridCells.Fixed(3)) {
-        items(entries) { uri ->
-            AsyncImage(
-                model = uri,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .clickable { onSelect(uri) }
-            )
-        }
-    }
-}*/
-
-/*@Composable
-fun CameraExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Camera access") },
-        text = { Text("PhotoLog would like access to the camera to be able take picture when creating a log") },
-        icon = {
-            Icon(
-                Icons.Filled.Camera,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.surfaceTint
-            )
-        },
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Continue")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Dismiss")
-            }
-        }
-    )
-}*/
 
 @Composable
 fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
@@ -609,3 +530,15 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
         }
     )
 }
+
+@Preview
+@Composable
+fun ObservationScreen() {
+    WeddellSealMarkRecapTheme {
+        val navController = rememberNavController()
+        val viewModel: AddObservationLogViewModel = viewModel(factory = AddLogViewModelFactory())
+//        observationScaffold(navController, viewModel.uiState)
+    }
+}
+
+
