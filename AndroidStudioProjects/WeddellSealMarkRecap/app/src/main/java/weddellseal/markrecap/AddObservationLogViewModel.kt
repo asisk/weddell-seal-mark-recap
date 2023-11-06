@@ -74,14 +74,18 @@ class AddObservationLogViewModel(
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
         val latLong: String = "gps data empty",
-        val tagId: String = "",
+        val tagNumber: Number = 0,
+        val tagAlpha : String = "",
+        val tagId: String = tagNumber.toString() + tagAlpha,
         val age : String = "",
-        val sex : String = ""
+        val sex : String = "",
+        val numTags : Number = 0
         //val savedPhotos: List<File> = emptyList(),
         //val localPickerPhotos: List<Uri> = emptyList()
     )
-    fun updateTagId (input : String) {
-        uiState = uiState.copy(tagId = input)
+    fun updateTagIdNum (input : String) {
+        val alpha = uiState.tagAlpha
+        uiState = uiState.copy(tagNumber = input.toInt(), tagId = input.toString() + alpha)
     }
     fun updateAge (input : String) {
         uiState = uiState.copy(age = input)
@@ -90,9 +94,13 @@ class AddObservationLogViewModel(
         uiState = uiState.copy(sex = input)
     }
 
-    fun appendToTagID(input: String) {
-        val newTagId = uiState.tagId + input
-        uiState = uiState.copy(tagId = newTagId)
+    fun appendAlphaToTagID(input: String) {
+        val num = uiState.tagNumber
+        uiState = uiState.copy(tagAlpha = input, tagId = num.toString() + input)
+    }
+
+    fun updateNumTags(input : Number) {
+        uiState = uiState.copy(numTags = input)
     }
 
     var uiState by mutableStateOf(

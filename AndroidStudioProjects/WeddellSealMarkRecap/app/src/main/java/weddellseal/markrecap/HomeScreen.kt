@@ -119,7 +119,7 @@ fun homeScaffold(navController: NavHostController) {
                     ObservationCardOutlinedTextField(
                         placeholderText = "observers",
                         labelText = "Observers",
-                        sealField = observers,
+                        fieldVal = observers,
                         onValueChange = {
                             observers = it
                         }

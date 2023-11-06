@@ -71,12 +71,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -264,28 +261,43 @@ fun AddObservationLogScreen(
                         .fillMaxWidth()
                 ) {
                    //TAG ID
-                    Row(modifier = Modifier.fillMaxWidth(),
+                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        ObservationCardOutlinedTextField(
+                        NumberInputField(
                             "Enter TagId",
                             "TagId",
                             viewModel.uiState.tagId
                         ) { newText ->
-                            viewModel.updateTagId(newText)
+                            viewModel.updateTagIdNum(newText)
                         }
                         Button(
-                            onClick = { viewModel.appendToTagID("A") },
-                            colors = ButtonDefaults.buttonColors( containerColor = Color.Blue), // Change the background color
-                        ) { Text("A") }
-                        Button( onClick = { viewModel.appendToTagID("C") },
-                            colors = ButtonDefaults.buttonColors( containerColor = Color.Green) ) { Text("C") }
-                        Button( onClick = { viewModel.appendToTagID("D") },
-                            colors = ButtonDefaults.buttonColors( containerColor = Color.Red) ) { Text("D") }
+                            onClick = { viewModel.appendAlphaToTagID("A") },
+                            colors = ButtonDefaults.buttonColors( containerColor = Color.Yellow), // Change the background color
+                        ) { Text("A", color = Color.Black) }
+                        Button( onClick = { viewModel.appendAlphaToTagID("C") },
+                            colors = ButtonDefaults.buttonColors( containerColor = Color.Green)
+                        ) { Text("C", color = Color.Black) }
+                        Button( onClick = { viewModel.appendAlphaToTagID("D") },
+                            colors = ButtonDefaults.buttonColors( containerColor = Color.Blue)
+                        ) { Text("D", color = Color.White) }
+                    }
+                    //NUMBER TAGS
+                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        NumberInputField(
+                            "Number of Tags",
+                            "Number of Tags",
+                            viewModel.uiState.numTags.toString()
+                        ) { newText ->
+                            viewModel.updateNumTags(newText.toInt())
+                        }
                     }
                     //AGE
-                    Row(modifier = Modifier.fillMaxWidth(),
+                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -301,7 +313,7 @@ fun AddObservationLogScreen(
 //                        }
                     }
                     // SEX
-                    Row(modifier = Modifier.fillMaxWidth(),
+                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -369,29 +381,30 @@ fun AddObservationLogScreen(
         }
     }
 }
-
-fun createAnnotatedStringWithClickAction(text: String): AnnotatedString {
-    return buildAnnotatedString {
-        withStyle(style = SpanStyle(color = Color.Blue)) {
-            append(text)
-        }
-        val clickableString = "Click here"
-        val clickableOffset = text.indexOf(clickableString)
-        addStringAnnotation(
-            tag = "clickable",
-            annotation = clickableString,
-            start = clickableOffset,
-            end = clickableOffset + clickableString.length
+@ExperimentalMaterial3Api
+@Composable
+fun NumberInputField(placeholderText: String, labelText: String, fieldVal: String, onValChangeDo: (String) -> Unit) {
+    OutlinedTextField(
+        value = fieldVal,
+        placeholder = { "" },
+        onValueChange = { onValChangeDo (it) },
+        label = { Text(text = labelText) },
+        modifier = Modifier
+            .background(
+                color = Color.Transparent, // Change border color when focused
+            ),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            keyboardType = KeyboardType.Number
         )
-    }
+    )
 }
 @Composable
-fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String, sealField: String, onValueChange: (String) -> Unit) {
+fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String, fieldVal: String, onValueChange: (String) -> Unit) {
     val paddingModifier  = Modifier.padding(10.dp)
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
     OutlinedTextField(
-        value = sealField,
+        value = fieldVal,
         placeholder = { Text(placeholderText) },
         onValueChange = { onValueChange(it)
                 isFocused  = it.isNotBlank()
@@ -406,7 +419,7 @@ fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String,
         ),
         keyboardActions = KeyboardActions(
              onDone = {
-                 isFocused = sealField.isNotBlank()
+                 isFocused = fieldVal.isNotBlank()
                 defaultKeyboardAction((ImeAction.Done))
             }
         )
