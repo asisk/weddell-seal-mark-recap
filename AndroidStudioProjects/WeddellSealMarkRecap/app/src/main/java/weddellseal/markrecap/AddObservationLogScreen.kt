@@ -44,6 +44,7 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Explore
@@ -261,49 +262,85 @@ fun AddObservationLogScreen(
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.Center
             ) {
-                SealCard(viewModel, viewModel.adultSeal)
-
+                var viewAdult by remember { mutableStateOf(true) }
                 var addPup by remember { mutableStateOf(false) }
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    onClick = { addPup = true },
-                    icon = { Icon(Icons.Filled.Add, "Add Pup") },
-                    text = { Text(text = "Add Pup") }
-                )
+                var addSecondPup by remember { mutableStateOf(false) }
+
+                if (viewAdult) {
+                    SealCard(viewModel, viewModel.adultSeal)
+
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = { addPup = true
+                                  viewAdult = false},
+                        icon = { Icon(Icons.Filled.Add, "Add Pup") },
+                        text = { Text(text = "Add Pup") }
+                    )
+                }
+
                 if (addPup) {
                     // show new card and show summary fields from parent
+                    SealCard(viewModel, viewModel.pupOne)
 
-                    val stringBuilder = StringBuilder()
-                    var age = viewModel.adultSeal.age[0]
-                    var sex = viewModel.adultSeal.sex[0]
-                    var numRels = viewModel.adultSeal.numRelatives
-                    var tag = viewModel.adultSeal.tagId
-                    var event = viewModel.adultSeal.tagEventType[0]
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = { addPup = false
+                                  viewAdult = true },
+                        icon = { Icon(Icons.Filled.ArrowUpward, "View Adult") },
+                        text = { Text(text = "View Adult") }
+                    )
+                }
 
-                    // Append strings to the StringBuilder
-                    stringBuilder.append(age)
-                    stringBuilder.append(sex)
-                    stringBuilder.append(numRels)
-                    stringBuilder.append("  ")
-                    stringBuilder.append(tag)
-                    stringBuilder.append("  ")
-                    stringBuilder.append(event)
+                val stringBuilder = StringBuilder()
+                var age = if (viewModel.adultSeal.tagEventType.isNotEmpty()) {
+                    viewModel.adultSeal.age[0].toString()
+                } else {
+                    ""
+                }
 
-                    // Get the final string
-                    val resultString = stringBuilder.toString()
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(.7f)
-                            .padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ListItem(
-                            headlineContent = { Text("Adult Seal Details: ", style = MaterialTheme.typography.titleLarge) },
-                            trailingContent = {
-                                Text(text = resultString, style = MaterialTheme.typography.titleLarge)
-                            }
-                        )
-                    }
+                var sex = if (viewModel.adultSeal.sex.isNotEmpty()) {
+                    viewModel.adultSeal.sex[0].toString()
+                } else {
+                    ""
+                }
+
+                val numRels = if (viewModel.adultSeal.numRelatives > 0) {
+                    viewModel.adultSeal.numRelatives.toString()
+                } else {
+                    ""
+                }
+
+                var tag = viewModel.adultSeal.tagId
+
+                var event = if (viewModel.adultSeal.tagEventType.isNotEmpty()) {
+                    viewModel.adultSeal.tagEventType[0]
+                } else {
+                    ""
+                }
+
+                // Append strings to the StringBuilder
+                stringBuilder.append(age)
+                stringBuilder.append(sex)
+                stringBuilder.append(numRels)
+                stringBuilder.append("  ")
+                stringBuilder.append(tag)
+                stringBuilder.append("  ")
+                stringBuilder.append(event)
+
+                // Get the final string
+                val resultString = stringBuilder.toString()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(.7f)
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ListItem(
+                        headlineContent = { Text("Adult Seal Details: ", style = MaterialTheme.typography.titleLarge) },
+                        trailingContent = {
+                            Text(text = resultString, style = MaterialTheme.typography.titleLarge)
+                        }
+                    )
                 }
             }
         }
