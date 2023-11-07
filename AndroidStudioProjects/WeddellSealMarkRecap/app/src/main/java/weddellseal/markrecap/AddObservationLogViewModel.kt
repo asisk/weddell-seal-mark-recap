@@ -22,14 +22,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,10 +71,13 @@ class AddObservationLogViewModel(
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
         val latLong: String = "gps data empty",
+    )
+    data class Seal(
+        val name : String = "",
         val tagNumber: Int = 0,
         val tagAlpha : String = "",
+        val tagId: String ="",
         val condition : String = "",
-        val tagId: String = tagNumber.toString() + tagAlpha,
         val age : String = "",
         val sex : String = "",
         val numTags : Int = 0,
@@ -85,37 +85,101 @@ class AddObservationLogViewModel(
         val tagEventType: String = "",
         val comment: String = ""
     )
+    var adultSeal by mutableStateOf(Seal(name = "adult"))
+        private set
+    var pupOne by mutableStateOf(Seal(name = "pupOne"))
+        private set
+    var pupTwo by mutableStateOf(Seal(name = "pupTwo"))
+        private set
 
-    fun updateCondition(input: String) {
-        uiState = uiState.copy(condition = input)
+    fun updateCondition(seal: Seal, input: String) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(condition = input) }
+            "pupOne" -> { pupOne = pupOne.copy(condition = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(condition = input) }
+        }
     }
-    fun updateTagIdNum (input : String) {
-        val alpha = uiState.tagAlpha
-        uiState = uiState.copy(tagNumber = input.toInt(), tagId = input.toString() + alpha)
+    private fun updateTagId (seal: Seal) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(tagId = adultSeal.tagNumber.toString() + adultSeal.tagAlpha) }
+            "pupOne" -> { pupOne = pupOne.copy(tagId = pupOne.tagNumber.toString() + pupOne.tagAlpha) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(tagId = pupTwo.tagNumber.toString() + pupTwo.tagAlpha) }
+        }
     }
-    fun updateAge (input : String) {
-        uiState = uiState.copy(age = input)
-    }
-    fun updateSex (input : String) {
-        uiState = uiState.copy(sex = input)
-    }
-    fun updateTagEventType (input : String) {
-        uiState = uiState.copy(tagEventType = input)
+    fun clearTag (seal:Seal) {
+        // set tag back to original values
+//        val tagNumber: Int = 0,
+//        val tagAlpha : String = "",
+//        val tagId: String ="",
+        updateTagNumber(seal, 0)
+        updateTagAlpha(seal,"")
+        updateTagId(seal)
     }
 
-    fun updateNumRelatives (input : Int) {
-        uiState = uiState.copy(numRelatives = input)
-    }
-    fun appendAlphaToTagID(input: String) {
-        val num = uiState.tagNumber
-        uiState = uiState.copy(tagAlpha = input, tagId = num.toString() + input)
+    fun updateTagAlpha (seal: Seal, input: String) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(tagAlpha = input) }
+            "pupOne" -> { pupOne = pupOne.copy(tagAlpha = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(tagAlpha = input) }
+        }
     }
 
-    fun updateComment(input: String) {
-        uiState = uiState.copy(comment = input)
+    fun updateTagNumber (seal: Seal, input: Int) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(tagNumber = input) }
+            "pupOne" -> { pupOne = pupOne.copy(tagNumber = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(tagNumber = input) }
+        }
+        updateTagId(seal)
     }
-    fun updateNumTags(input: Int) {
-        uiState = uiState.copy(numTags = input)
+    fun appendAlphaToTagID(seal: Seal, input: String) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(tagAlpha = input, tagId = adultSeal.tagNumber.toString() + input) }
+            "pupOne" -> { pupOne = pupOne.copy(tagAlpha = input, tagId = pupOne.tagNumber.toString() + input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(tagAlpha = input, tagId = pupTwo.tagNumber.toString() + input) }
+        }
+    }
+    fun updateAge (seal: Seal, input : String) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(age = input) }
+            "pupOne" -> { pupOne = pupOne.copy(age = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(age = input) }
+        }
+    }
+    fun updateSex (seal: Seal, input : String) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(sex = input) }
+            "pupOne" -> { pupOne = pupOne.copy(sex = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(sex = input) }
+        }
+    }
+    fun updateTagEventType (seal: Seal, input : String) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(tagEventType = input) }
+            "pupOne" -> { pupOne = pupOne.copy(tagEventType = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(tagEventType = input) }
+        }
+    }
+    fun updateNumRelatives (seal: Seal, input : Int) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(numRelatives = input) }
+            "pupOne" -> { pupOne = pupOne.copy(numRelatives = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(numRelatives = input) }
+        }
+    }
+    fun updateComment(seal: Seal, input: String) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(comment = input) }
+            "pupOne" -> { pupOne = pupOne.copy(comment = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(comment = input) }
+        }
+    }
+    fun updateNumTags(seal: Seal, input: Int) {
+        when (seal.name) {
+            "adult" -> { adultSeal = adultSeal.copy(numTags = input) }
+            "pupOne" -> { pupOne = pupOne.copy(numTags = input) }
+            "pupTwo" -> { pupTwo = pupTwo.copy(numTags = input) }
+        }
     }
 
     var uiState by mutableStateOf(
@@ -137,9 +201,9 @@ class AddObservationLogViewModel(
 //        return !observationSaver.isEmpty() && !uiState.isSaving
     }
 
-    private fun getIsoDate(timeInMillis: Long): String {
-        return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(timeInMillis)
-    }
+//    private fun getIsoDate(timeInMillis: Long): String {
+//        return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(timeInMillis)
+//    }
 
     fun hasPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -164,14 +228,14 @@ class AddObservationLogViewModel(
             }
         }
     }
-    fun createSettingsIntent(): Intent {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            data = Uri.fromParts("package", context.packageName, null)
-        }
-
-        return intent
-    }
+//    fun createSettingsIntent(): Intent {
+//        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+//            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//            data = Uri.fromParts("package", context.packageName, null)
+//        }
+//
+//        return intent
+//    }
     // endregion
 
     // region Location management

@@ -24,8 +24,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +45,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
@@ -56,6 +59,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -63,6 +67,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,10 +76,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -254,7 +261,7 @@ fun AddObservationLogScreen(
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.Center
             ) {
-                SealCard(viewModel)
+                SealCard(viewModel, viewModel.adultSeal)
 
                 var addPup by remember { mutableStateOf(false) }
                 ExtendedFloatingActionButton(
@@ -265,22 +272,43 @@ fun AddObservationLogScreen(
                 )
                 if (addPup) {
                     // show new card and show summary fields from parent
+
+                    val stringBuilder = StringBuilder()
+                    var age = viewModel.adultSeal.age[0]
+                    var sex = viewModel.adultSeal.sex[0]
+                    var numRels = viewModel.adultSeal.numRelatives
+                    var tag = viewModel.adultSeal.tagId
+                    var event = viewModel.adultSeal.tagEventType[0]
+
+                    // Append strings to the StringBuilder
+                    stringBuilder.append(age)
+                    stringBuilder.append(sex)
+                    stringBuilder.append(numRels)
+                    stringBuilder.append("  ")
+                    stringBuilder.append(tag)
+                    stringBuilder.append("  ")
+                    stringBuilder.append(event)
+
+                    // Get the final string
+                    val resultString = stringBuilder.toString()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(.7f)
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ListItem(
+                            headlineContent = { Text("Adult Seal Details: ", style = MaterialTheme.typography.titleLarge) },
+                            trailingContent = {
+                                Text(text = resultString, style = MaterialTheme.typography.titleLarge)
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
-//                ListItem(
-//                    headlineContent = { Text("Date") },
-//                    trailingContent = {
-//                        Text(text = viewModel.uiState.date)
-//                    }
-//                )
-//                HorizontalDivider()
-//                ListItem(
-//                    headlineContent = { Text("SpeNo") },
-//                    trailingContent = { Text(text = viewModel.uiState.speno)}
-//                )
 //                HorizontalDivider()
 //                ListItem(
 //                    headlineContent = { Text("TagId") },
@@ -351,7 +379,6 @@ fun SingleSelectButtonGroup(
 }
 
 
-
 @Composable
 fun CommentField(
     value: String,
@@ -359,6 +386,7 @@ fun CommentField(
 ) {
     val scrollState = rememberScrollState()
     var textEntered by remember { mutableStateOf(value) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     BasicTextField(
         value = textEntered,
@@ -379,6 +407,7 @@ fun CommentField(
             onDone = {
                 // Handle "Done" button action
                 onValueChange(textEntered)
+                keyboardController?.hide()
             }
         ),
         textStyle = TextStyle(fontSize = 16.sp),
@@ -391,23 +420,24 @@ fun CommentField(
 @ExperimentalMaterial3Api
 @Composable
 fun NumberInputField(
+    fieldVal: String,
     placeholderText: String,
     labelText: String,
-    fieldVal: String,
     onValChangeDo: (String) -> Unit
 ) {
-    OutlinedTextField(
+    TextField(
         value = fieldVal,
-        placeholder = { "" },
-        onValueChange = { onValChangeDo(it) },
-        label = { Text(text = labelText) },
-        modifier = Modifier
-            .background(
-                color = Color.Transparent, // Change border color when focused
-            ),
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Number
-        )
+        onValueChange = {
+            onValChangeDo(it)
+        },
+        label = { Text(labelText) },
+        placeholder = { Text(placeholderText) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+        trailingIcon = {
+            Icon(Icons.Filled.Clear, contentDescription = "Clear text",
+                Modifier.clickable { onValChangeDo("") })
+        }
     )
 }
 
