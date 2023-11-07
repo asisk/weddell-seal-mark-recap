@@ -74,15 +74,21 @@ class AddObservationLogViewModel(
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
         val latLong: String = "gps data empty",
-        val tagNumber: Number = 0,
+        val tagNumber: Int = 0,
         val tagAlpha : String = "",
+        val condition : String = "",
         val tagId: String = tagNumber.toString() + tagAlpha,
         val age : String = "",
         val sex : String = "",
-        val numTags : Number = 0
-        //val savedPhotos: List<File> = emptyList(),
-        //val localPickerPhotos: List<Uri> = emptyList()
+        val numTags : Int = 0,
+        val numRelatives : Int = 0,
+        val tagEventType: String = "",
+        val comment: String = ""
     )
+
+    fun updateCondition(input: String) {
+        uiState = uiState.copy(condition = input)
+    }
     fun updateTagIdNum (input : String) {
         val alpha = uiState.tagAlpha
         uiState = uiState.copy(tagNumber = input.toInt(), tagId = input.toString() + alpha)
@@ -93,13 +99,22 @@ class AddObservationLogViewModel(
     fun updateSex (input : String) {
         uiState = uiState.copy(sex = input)
     }
+    fun updateTagEventType (input : String) {
+        uiState = uiState.copy(tagEventType = input)
+    }
 
+    fun updateNumRelatives (input : Int) {
+        uiState = uiState.copy(numRelatives = input)
+    }
     fun appendAlphaToTagID(input: String) {
         val num = uiState.tagNumber
         uiState = uiState.copy(tagAlpha = input, tagId = num.toString() + input)
     }
 
-    fun updateNumTags(input : Number) {
+    fun updateComment(input: String) {
+        uiState = uiState.copy(comment = input)
+    }
+    fun updateNumTags(input: Int) {
         uiState = uiState.copy(numTags = input)
     }
 
@@ -287,6 +302,7 @@ class AddObservationLogViewModel(
             uiState = uiState.copy(isSaved = true)
         }
     }
+
     // endregion
 }
 

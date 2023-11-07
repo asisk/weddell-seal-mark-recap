@@ -23,20 +23,25 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.rememberModalBottomSheetState
@@ -46,11 +51,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -66,19 +71,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
@@ -225,7 +230,7 @@ fun AddObservationLogScreen(
                     }
                 )
             },
-                        floatingActionButton = {
+            floatingActionButton = {
                 ExtendedFloatingActionButton(
                     text = { Text("Save log") },
                     icon = {
@@ -249,80 +254,22 @@ fun AddObservationLogScreen(
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.Center
             ) {
-                Card(
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 6.dp
-                    ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
-                ) {
-                   //TAG ID
-                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        NumberInputField(
-                            "Enter TagId",
-                            "TagId",
-                            viewModel.uiState.tagId
-                        ) { newText ->
-                            viewModel.updateTagIdNum(newText)
-                        }
-                        Button(
-                            onClick = { viewModel.appendAlphaToTagID("A") },
-                            colors = ButtonDefaults.buttonColors( containerColor = Color.Yellow), // Change the background color
-                        ) { Text("A", color = Color.Black) }
-                        Button( onClick = { viewModel.appendAlphaToTagID("C") },
-                            colors = ButtonDefaults.buttonColors( containerColor = Color.Green)
-                        ) { Text("C", color = Color.Black) }
-                        Button( onClick = { viewModel.appendAlphaToTagID("D") },
-                            colors = ButtonDefaults.buttonColors( containerColor = Color.Blue)
-                        ) { Text("D", color = Color.White) }
-                    }
-                    //NUMBER TAGS
-                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        NumberInputField(
-                            "Number of Tags",
-                            "Number of Tags",
-                            viewModel.uiState.numTags.toString()
-                        ) { newText ->
-                            viewModel.updateNumTags(newText.toInt())
-                        }
-                    }
-                    //AGE
-                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                            Text(text = "Age:")
-                            Text(text = viewModel.uiState.age)
-//                        Column (modifier = Modifier.padding(16.dp).wrapContentWidth()){
-//                            DropdownField(){ newText ->
-//                                viewModel.updateAge(newText)
-//                            }
-                        Button( onClick = { viewModel.updateAge("Adult") } ) { Text("Adult") }
-                        Button( onClick = { viewModel.updateAge("Pup") } ) { Text("Pup") }
-                        Button( onClick = { viewModel.updateAge("Yearling") } ) { Text("Yearling") }
-//                        }
-                    }
-                    // SEX
-                    Row(modifier = Modifier.fillMaxWidth().padding(4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "Sex:")
-                        Text(text = viewModel.uiState.sex)
-                        Button( onClick = { viewModel.updateSex("Female") } ) { Text("Female") }
-                        Button( onClick = { viewModel.updateSex("Male") } ) { Text("Male") }
-                        Button( onClick = { viewModel.updateSex("Unknown") } ) { Text("Unknown") }
-                    }
+                SealCard(viewModel)
+
+                var addPup by remember { mutableStateOf(false) }
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    onClick = { addPup = true },
+                    icon = { Icon(Icons.Filled.Add, "Add Pup") },
+                    text = { Text(text = "Add Pup") }
+                )
+                if (addPup) {
+                    // show new card and show summary fields from parent
+                }
+            }
+        }
+    }
+}
 //                ListItem(
 //                    headlineContent = { Text("Date") },
 //                    trailingContent = {
@@ -344,7 +291,7 @@ fun AddObservationLogScreen(
 //                    headlineContent = { Text("Age") },
 //                    trailingContent = { Text(text = viewModel.uiState.age)}
 //                )
-                }
+//                }
 //                HorizontalDivider()
 //                ListItem(
 //                    headlineContent = { Text("GPS Locator Available") },
@@ -372,22 +319,87 @@ fun AddObservationLogScreen(
 //                        Text(text = viewModel.uiState.lastKnownLocation)
 //                    }
 //                )
+//
+//                ListItem(
+//                    headlineContent = { Text("Device GPS") },
+//                    trailingContent = { Text(text = viewModel.uiState.currentLocation) }
+//                )
+//        }
+//    }
 
-                ListItem(
-                    headlineContent = { Text("Device GPS") },
-                    trailingContent = { Text(text = viewModel.uiState.currentLocation) }
-                )
-            }
+@Composable
+fun SingleSelectButtonGroup(
+    txtOptions: List<String>,
+    onValChangeDo: (String) -> Unit
+) {
+    var selectedButton by remember { mutableStateOf("") }
+    txtOptions.forEach { option ->
+        ElevatedButton(
+            onClick = {
+                selectedButton = option
+                onValChangeDo(option) // Call the callback when the button is clicked
+            },
+            colors = ButtonDefaults.elevatedButtonColors(MaterialTheme.colorScheme.tertiary),
+            enabled = selectedButton != option
+        ) {
+            Text(
+                color = Color.White,
+                text = option
+            )
         }
     }
 }
+
+
+
+@Composable
+fun CommentField(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    val scrollState = rememberScrollState()
+    var textEntered by remember { mutableStateOf(value) }
+
+    BasicTextField(
+        value = textEntered,
+        onValueChange = {
+            textEntered = it
+        },
+        modifier = Modifier
+            .background(color = Color.White)
+            .border(1.dp, color = Color.LightGray)
+            .padding(16.dp)
+            .height(40.dp)
+            .fillMaxWidth()
+            .verticalScroll(state = scrollState, enabled = true),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                // Handle "Done" button action
+                onValueChange(textEntered)
+            }
+        ),
+        textStyle = TextStyle(fontSize = 16.sp),
+        singleLine = false,
+        maxLines = 5
+    )
+}
+
+
 @ExperimentalMaterial3Api
 @Composable
-fun NumberInputField(placeholderText: String, labelText: String, fieldVal: String, onValChangeDo: (String) -> Unit) {
+fun NumberInputField(
+    placeholderText: String,
+    labelText: String,
+    fieldVal: String,
+    onValChangeDo: (String) -> Unit
+) {
     OutlinedTextField(
         value = fieldVal,
         placeholder = { "" },
-        onValueChange = { onValChangeDo (it) },
+        onValueChange = { onValChangeDo(it) },
         label = { Text(text = labelText) },
         modifier = Modifier
             .background(
@@ -398,28 +410,35 @@ fun NumberInputField(placeholderText: String, labelText: String, fieldVal: Strin
         )
     )
 }
+
 @Composable
-fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String, fieldVal: String, onValueChange: (String) -> Unit) {
-    val paddingModifier  = Modifier.padding(10.dp)
+fun ObservationCardOutlinedTextField(
+    placeholderText: String,
+    labelText: String,
+    fieldVal: String,
+    onValueChange: (String) -> Unit
+) {
+    val paddingModifier = Modifier.padding(10.dp)
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
     OutlinedTextField(
         value = fieldVal,
         placeholder = { Text(placeholderText) },
-        onValueChange = { onValueChange(it)
-                isFocused  = it.isNotBlank()
-                        },
+        onValueChange = {
+            onValueChange(it)
+            isFocused = it.isNotBlank()
+        },
         label = { Text(text = labelText) },
         modifier = Modifier
             .background(
                 color = if (isFocused) Color.LightGray else Color.Transparent, // Change border color when focused
             ),
         keyboardOptions = KeyboardOptions.Default.copy(
-             imeAction = ImeAction.Done
+            imeAction = ImeAction.Done
         ),
         keyboardActions = KeyboardActions(
-             onDone = {
-                 isFocused = fieldVal.isNotBlank()
+            onDone = {
+                isFocused = fieldVal.isNotBlank()
                 defaultKeyboardAction((ImeAction.Done))
             }
         )
@@ -548,10 +567,94 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 @Composable
 fun ObservationScreen() {
     WeddellSealMarkRecapTheme {
-        val navController = rememberNavController()
-        val viewModel: AddObservationLogViewModel = viewModel(factory = AddLogViewModelFactory())
-//        observationScaffold(navController, viewModel.uiState)
+//        ChipInputForm(chips)
     }
 }
+
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun TextFieldWithLengthValidation() {
+////   Row {
+//       var text by rememberSaveable { mutableStateOf("") }
+//       val errorMessage = "Text input too long"
+//       var isError by rememberSaveable { mutableStateOf(false) }
+//       val charLimit = 1
+//
+//       fun validate(text: String) {
+//           isError = text.length > charLimit
+//       }
+//       TextField(
+//           value = text,
+//           onValueChange = {
+//               text = it
+//               validate(text)
+//           },
+//           label = { Text("Label") },
+//           placeholder = { Text("example@gmail.com") },
+//           singleLine = true,
+//           supportingText = {
+//               Text(
+//                   modifier = Modifier.fillMaxWidth(),
+//                   text = "Limit: ${text.length}/$charLimit",
+//                   textAlign = TextAlign.End,
+//               )
+//           },
+//           isError = isError,
+//           keyboardActions = KeyboardActions { validate(text) },
+//           modifier = Modifier.semantics {
+//               // Provide localized description of the error
+//               if (isError) error(errorMessage)
+//           },
+//           leadingIcon = {
+//               Icon(
+//                   Icons.Filled.Favorite,
+//                   contentDescription = "Localized description"
+//               )
+//           },
+//           trailingIcon = { Icon(Icons.Filled.Info, contentDescription = "Localized description") }
+//       )
+//    }
+//    Row {
+//        ElevatedButton(onClick = { /* Do something! */ }) { Text("Elevated Button") }
+//    }
+//    Row {
+//        FilledTonalButton(onClick = { /* Do something! */ }) { Text("Filled Tonal Button") }
+//    }
+//    Row {
+//        var checked by remember { mutableStateOf(false) }
+//        FilledIconToggleButton(checked = checked, onCheckedChange = { checked = it }) {
+//            if (checked) {
+//                Icon(Icons.Filled.Lock, contentDescription = "Localized description")
+//            } else {
+//                Icon(Icons.Outlined.Lock, contentDescription = "Localized description")
+//            }
+//        }
+//    }
+
+//    val (checkedState, onStateChange) = remember { mutableStateOf(true) }
+//    Row(
+//        Modifier
+//            .fillMaxWidth()
+//            .height(56.dp)
+//            .toggleable(
+//                value = checkedState,
+//                onValueChange = { onStateChange(!checkedState) },
+//                role = Role.Checkbox
+//            )
+//            .padding(horizontal = 16.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Checkbox(
+//            checked = checkedState,
+//            onCheckedChange = null // null recommended for accessibility with screenreaders
+//        )
+//        Text(
+//            text = "Option selection",
+//            style = MaterialTheme.typography.bodyLarge,
+//            modifier = Modifier.padding(start = 16.dp)
+//        )
+//    }
+
+
 
 
