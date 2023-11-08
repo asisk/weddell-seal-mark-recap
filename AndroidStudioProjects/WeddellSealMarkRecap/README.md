@@ -1,6 +1,13 @@
 # weddell-seal-mark-recap-app
 Next generation Android app to support data capture in the field
 
+November 8, 2023
+Test Version: app-debug-sealCard
+Added fields to Observation Screen, add pup button (currently not active)
+Looking for feedback on layout, colors, and general field usability
+Added new screen to view recent observations
+Updates to home screen to add high level metadata for each observation, add cute seal photo
+
 October 27, 2023
 Test Version: app-debug-db-view
 Addition of scrollable database view to the home page that will populate after observations are saved
