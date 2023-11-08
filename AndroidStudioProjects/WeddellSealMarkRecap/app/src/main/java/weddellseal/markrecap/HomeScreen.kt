@@ -26,6 +26,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,10 +37,11 @@ import weddellseal.markrecap.entryfields.DropdownField
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 @Composable
-fun HomeScreen (navController: NavHostController){
+fun HomeScreen(navController: NavHostController) {
     val lifecycleOwner = LocalLifecycleOwner.current
     homeScaffold(navController)
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun homeScaffold(navController: NavHostController) {
@@ -82,7 +84,8 @@ fun homeScaffold(navController: NavHostController) {
                 Text(
                     modifier = Modifier.fillMaxWidth(.4f),
                     text = "View Recent Observations",
-                    softWrap = true)
+                    softWrap = true
+                )
             }
         }
     ) { innerPadding ->
@@ -105,15 +108,15 @@ fun homeScaffold(navController: NavHostController) {
                 ),
                 modifier = Modifier
                     .padding(8.dp)
-                    .fillMaxWidth()
-//                    .fillMaxWidth(.5f)
-//                        .size(width = 240.dp, height = 100.dp)
+                    .fillMaxWidth(.5f)
+                    .align(Alignment.CenterHorizontally)
             ) {
                 // Metadata
-                Row(
-                    modifier = Modifier
-//                        .align(Alignment.CenterHorizontally)
-                        .fillMaxWidth(.3f)
+                Row(                        modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     var observers by remember { mutableStateOf("") }
                     ObservationCardOutlinedTextField(
@@ -125,9 +128,11 @@ fun homeScaffold(navController: NavHostController) {
                         }
                     )
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                Row(                        modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     var site by remember { mutableStateOf("") }
                     val censusOptions = listOf("Location A", "Location B")
@@ -142,7 +147,12 @@ fun homeScaffold(navController: NavHostController) {
                 }
                 val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
                 var selection = "0"
-                Row() {
+                Row(                        modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Column(modifier = Modifier.padding(4.dp)) {
                         Text(text = "Census #")
                     }
@@ -153,12 +163,14 @@ fun homeScaffold(navController: NavHostController) {
                     }
                 }
                 Row(
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                 ) {
                     //TODO, pull a system field and use it in place of This
-                    var compId by remember { mutableStateOf("This") }
+//                    var compId by remember { mutableStateOf("This") }
                     Column(modifier = Modifier.padding(4.dp)) {
                         Text(text = "Tablet Id: TBD")
                     }
@@ -172,18 +184,27 @@ fun homeScaffold(navController: NavHostController) {
             }
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-            ){
-                    ExtendedFloatingActionButton(
-                        modifier = Modifier.padding(16.dp),
-                        onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
-                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
-                        text = { Text(text = "Start Census") })
-                    ExtendedFloatingActionButton(
-                        modifier = Modifier.padding(16.dp),
-                        onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
-                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
-                        text = { Text(text = "Start Observation") })
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                ) {
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    containerColor = Color.LightGray,
+                    onClick = { },
+                    icon = { Icon(Icons.Filled.PostAdd, "Start Census") },
+                    text = { Text(text = "Start Census") }
+                )
+                // TODO Live version of the start census button
+//                ExtendedFloatingActionButton(
+//                    modifier = Modifier.padding(16.dp),
+//                    onClick = { },
+//                    icon = { Icon(Icons.Filled.PostAdd, "Start Census") },
+//                    text = { Text(text = "Start Census") })
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
+                    icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
+                    text = { Text(text = "Start Observation") })
             }
         }
     }

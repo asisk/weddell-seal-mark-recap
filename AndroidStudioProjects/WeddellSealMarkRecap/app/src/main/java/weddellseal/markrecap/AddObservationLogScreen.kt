@@ -1,23 +1,8 @@
 package weddellseal.markrecap
 
 /*
- * Copyright (C) 2022 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Main screen for entering seal data
  */
-
-//import coil.compose.AsyncImage
-//import android.Manifest.permission.ACCESS_COARSE_LOCATION
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -44,7 +29,6 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Explore
@@ -108,23 +92,10 @@ fun AddObservationLogScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val internalPhotoPickerState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
-    //    fun canAddPhoto(callback: () -> Unit) {
-//        if (viewModel.canAddPhoto()) {
-//            callback()
-//        } else {
-//            coroutineScope.launch {
-//                snackbarHostState.showSnackbar("You can't add more than $MAX_LOG_PHOTOS_LIMIT photos")
-//            }
-//        }
-//    }
+//    var gpsData by remember { mutableStateOf("No data") }
     // endregion
 
-    // TODO: Step 1. Register ActivityResult to request Camera permission
-
-    // TODO: Step 3. Add explanation dialog for Camera permission
-
-    // TODO: Step 5. Register ActivityResult to request Location permissions
-
+    // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
@@ -138,9 +109,7 @@ fun AddObservationLogScreen(
             }
         }
 
-    // TODO: Step 8. Change activity result to only request Coarse Location
-
-    // TODO: Step 6. Add explanation dialog for Location permissions
+    // Add explanation dialog for Location permissions
     var showExplanationDialogForLocationPermission by remember { mutableStateOf(false) }
     if (showExplanationDialogForLocationPermission) {
         LocationExplanationDialog(
@@ -167,15 +136,12 @@ fun AddObservationLogScreen(
         }
     }
 
-    // TODO: Step 11. Register ActivityResult to launch the Photo Picker
     // region helper functions
 
     LaunchedEffect(Unit) {
-        //viewModel.refreshSavedPhotos()
         // preload the model with location data
-
-        //trigger location data population
         canAddLocation()
+//        gpsData = viewModel.uiState.currentLocation
     }
 
     //send the user back to the home screen when a log is saved
@@ -207,16 +173,6 @@ fun AddObservationLogScreen(
     ModalBottomSheetLayout(
         sheetState = internalPhotoPickerState,
         sheetContent = {
-            /* PhotoPicker(
-                modifier = Modifier.fillMaxSize(),
-                entries = state.localPickerPhotos,
-                onSelect = { uri ->
-                    coroutineScope.launch {
-                        internalPhotoPickerState.hide()
-                        viewModel.onLocalPhotoPickerSelect(uri)
-                    }
-                }
-            )*/
         }
     )
     // endregion
@@ -266,30 +222,41 @@ fun AddObservationLogScreen(
                 var addPup by remember { mutableStateOf(false) }
                 var addSecondPup by remember { mutableStateOf(false) }
 
-                if (viewAdult) {
-                    SealCard(viewModel, viewModel.adultSeal)
-
-                    ExtendedFloatingActionButton(
-                        modifier = Modifier.padding(16.dp),
-                        onClick = { addPup = true
-                                  viewAdult = false},
-                        icon = { Icon(Icons.Filled.Add, "Add Pup") },
-                        text = { Text(text = "Add Pup") }
-                    )
-                }
-
-                if (addPup) {
-                    // show new card and show summary fields from parent
-                    SealCard(viewModel, viewModel.pupOne)
-
-                    ExtendedFloatingActionButton(
-                        modifier = Modifier.padding(16.dp),
-                        onClick = { addPup = false
-                                  viewAdult = true },
-                        icon = { Icon(Icons.Filled.ArrowUpward, "View Adult") },
-                        text = { Text(text = "View Adult") }
-                    )
-                }
+//                if (viewAdult) {
+                SealCard(viewModel, viewModel.adultSeal)
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    containerColor = Color.LightGray,
+                    onClick = { },
+                    icon = { Icon(Icons.Filled.Add, "Add Pup") },
+                    text = { Text(text = "Add Pup") }
+                )
+                // Button when live
+//                    ExtendedFloatingActionButton(
+//                        modifier = Modifier.padding(16.dp),
+//                        onClick = {
+//                            addPup = true
+//                            viewAdult = false
+//                        },
+//                        icon = { Icon(Icons.Filled.Add, "Add Pup") },
+//                        text = { Text(text = "Add Pup") }
+//                    )
+//                }
+//
+//                if (addPup) {
+//                    // show new card and show summary fields from parent
+//                    SealCard(viewModel, viewModel.pupOne)
+//
+//                    ExtendedFloatingActionButton(
+//                        modifier = Modifier.padding(16.dp),
+//                        onClick = {
+//                            addPup = false
+//                            viewAdult = true
+//                        },
+//                        icon = { Icon(Icons.Filled.ArrowUpward, "View Adult") },
+//                        text = { Text(text = "View Adult") }
+//                    )
+//                }
 
                 val stringBuilder = StringBuilder()
                 var age = if (viewModel.adultSeal.tagEventType.isNotEmpty()) {
@@ -336,61 +303,38 @@ fun AddObservationLogScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ListItem(
-                        headlineContent = { Text("Adult Seal Details: ", style = MaterialTheme.typography.titleLarge) },
+                        headlineContent = {
+                            Text(
+                                "Adult Seal Details: ",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
                         trailingContent = {
                             Text(text = resultString, style = MaterialTheme.typography.titleLarge)
                         }
+                    )
+                }
+                // GPS LOCATION - SYSTEM
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(.7f)
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                "Device GPS: ",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
+                        trailingContent = { Text(text = viewModel.uiState.currentLocation) }
                     )
                 }
             }
         }
     }
 }
-//                HorizontalDivider()
-//                ListItem(
-//                    headlineContent = { Text("TagId") },
-//                    trailingContent = { Text(text = viewModel.uiState.tagId)}
-//                )
-//                HorizontalDivider()
-//                ListItem(
-//                    headlineContent = { Text("Age") },
-//                    trailingContent = { Text(text = viewModel.uiState.age)}
-//                )
-//                }
-//                HorizontalDivider()
-//                ListItem(
-//                    headlineContent = { Text("GPS Locator Available") },
-//                    trailingContent = {
-//                        Text(text = viewModel.uiState.hasGPS.toString())
-//                    }
-//                )
-//                HorizontalDivider()
-//                ListItem(
-//                    headlineContent = { Text("Google Play Services Available") },
-//                    trailingContent = {
-//                        if (viewModel.uiState.hasGooglePlay != null) {
-//                            Text(text = viewModel.uiState.hasGooglePlay.toString())
-//                        } else {
-//                            Text(text = "Google Play is not currently enabled")
-//                        }
-//                    }
-//                )
-//                // region Location
-//                HorizontalDivider()
-//                // endregion
-//                ListItem(
-//                    headlineContent = { Text("Last Known Location") },
-//                    trailingContent = {
-//                        Text(text = viewModel.uiState.lastKnownLocation)
-//                    }
-//                )
-//
-//                ListItem(
-//                    headlineContent = { Text("Device GPS") },
-//                    trailingContent = { Text(text = viewModel.uiState.currentLocation) }
-//                )
-//        }
-//    }
 
 @Composable
 fun SingleSelectButtonGroup(

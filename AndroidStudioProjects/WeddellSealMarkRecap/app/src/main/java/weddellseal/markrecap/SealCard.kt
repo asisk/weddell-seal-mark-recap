@@ -93,7 +93,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
                 "# of Relatives",
                 "Enter # of relatives present",
                 null
-            ) { newVal -> viewModel.updateNumRelatives(seal, newVal.toInt()) }
+            ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
 
             // CONDITION
             Text(text = "Condition")
@@ -108,12 +108,12 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             // NUMBER OF TAGS
-            TextFieldValidateOnCharCount(
+                TextFieldValidateOnCharCount(
                 1,
                 "# of Tags",
                 "Enter # of tags present",
                 null
-            ) { newVal -> viewModel.updateNumTags(seal, newVal.toInt()) }
+            ) { newVal -> viewModel.updateNumTags(seal, newVal) }
             // TISSUE SAMPLED
             val (checkedState, onStateChange) = remember { mutableStateOf(false) }
             Row(
