@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(
+fun RecentObservationsScreen(
     navController: NavHostController,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
 ) {
@@ -98,7 +98,7 @@ fun mainScaffold(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("View Recent Observations", fontFamily = FontFamily.Serif) },
+                title = { Text("Home", fontFamily = FontFamily.Serif) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary

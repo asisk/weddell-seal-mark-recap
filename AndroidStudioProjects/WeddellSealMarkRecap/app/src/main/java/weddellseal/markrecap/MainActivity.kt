@@ -37,8 +37,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = startNavigation) {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController)}
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController) }
-                        composable(Screens.RecentObservations.route) { HomeScreen(navController)}
-                        //composable(Screens.Camera.route) { CameraScreen(navController) }
+                        composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController)}
                     }
                 }
             }

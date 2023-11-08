@@ -76,7 +76,7 @@ fun homeScaffold(navController: NavHostController) {
                 contentColor = MaterialTheme.colorScheme.primary
             ) {
                 Button(
-                    onClick = { /* TODO: Add click action */ },
+                    onClick = { (navController.navigate(Screens.RecentObservations.route)) },
                     Modifier.padding(4.dp)
                 ) {
                     Icon(Icons.Filled.Dataset, contentDescription = "View Recent Observations")
