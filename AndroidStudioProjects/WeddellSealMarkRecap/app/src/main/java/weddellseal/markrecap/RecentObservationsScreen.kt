@@ -1,13 +1,13 @@
 package weddellseal.markrecap
 
 /*
- *
- */
+ * Provides a view of the database records and an option to export to CSV
+ * Updated when a new observation is saved
+*/
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,33 +35,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecentObservationsScreen(
     navController: NavHostController,
-    viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
+    viewModel: RecentObservationsViewModel = viewModel(factory = HomeViewModelFactory())
 ) {
-
-    //LaunchedEffect(Unit) { viewModel.loadLogs() }
     val state = viewModel.uiState
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
         viewModel.observationsFlow.collect {
@@ -69,24 +62,15 @@ fun RecentObservationsScreen(
         }
     }
 
-    mainScaffold(navController, viewModel, lifecycleOwner)
+    mainScaffold(navController, viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun mainScaffold(
     navController: NavHostController,
-    viewModel: HomeViewModel,
-    lifecycleOwner: LifecycleOwner
+    viewModel: RecentObservationsViewModel
 ) {
-    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        // Handle the selected file URI
-        if (uri != null) {
-            // Do something with the selected file URI
-            viewModel.updateURI(uri)
-        }
-    }
-
     val createDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
         // Handle the created document URI
         if (uri != null) {
@@ -214,7 +198,7 @@ fun CreateDocumentScreen() {
 }
 
 @Composable
-fun FilePickerScreen(viewModel: HomeViewModel) {
+fun FilePickerScreen(viewModel: RecentObservationsViewModel) {
     val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         // Handle the selected file URI
         if (uri != null) {
@@ -234,7 +218,7 @@ fun FilePickerScreen(viewModel: HomeViewModel) {
     }
 }
 
-fun populateObsView (viewModel: HomeViewModel) {
+fun populateObsView (viewModel: RecentObservationsViewModel) {
     viewModel.viewModelScope.launch {
         // Fetch observations only if it's not already available
         if (viewModel.observationSaver._observations.isEmpty()) {

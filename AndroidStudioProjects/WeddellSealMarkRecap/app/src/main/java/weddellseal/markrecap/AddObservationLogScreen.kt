@@ -13,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,8 +35,6 @@ import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -181,7 +178,7 @@ fun AddObservationLogScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             // region UI - Top Bar & Action Button
             topBar = {
-                TopAppBar(title = { Text("Add ObservationLog", fontFamily = FontFamily.Serif) },
+                TopAppBar(title = { Text("Home", fontFamily = FontFamily.Serif) },
                     navigationIcon = {
                         if (navController.previousBackStackEntry != null) {
                             IconButton(onClick = { navController.navigateUp() }) {
@@ -455,98 +452,6 @@ fun ObservationCardOutlinedTextField(
         )
     )
 }
-//
-//@Composable
-//fun DropdownField(onValueChange: (String) -> Unit) {
-//    var expanded by remember { mutableStateOf(false) }
-//    var selectedOption by remember { mutableStateOf("Select an option") }
-//    val options = listOf("Adult", "Pup", "Unknown")
-//
-//    Column {
-//        Card(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .clickable { expanded = true },
-//            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-//            border = BorderStroke(1.dp, Color.Gray), // Border appearance
-////            contentColor = Color.Black // Text color
-//        ) {
-//            Row (
-//                modifier = Modifier.padding(8.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ){
-//                BasicTextField(
-//                    value = selectedOption,
-//                    onValueChange = { onValueChange(selectedOption) },
-//                    enabled = false,
-//                    keyboardOptions = KeyboardOptions.Default.copy(
-//                        imeAction = ImeAction.Done
-//                    ),
-//                    keyboardActions = KeyboardActions(
-//                        onDone = {
-//                            expanded = !expanded
-//                        }
-//                    )
-//                )
-//                Icon(
-//                    imageVector = Icons.Default.ArrowDropDown,
-//                    contentDescription = "Dropdown Icon",
-//                    tint = Color.Black
-//                )
-//            }
-//        }
-//        if (expanded) {
-//            Card(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .clickable { expanded = true },
-//                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-//                border = BorderStroke(1.dp, Color.Gray), // Border appearance
-//            ) {
-//                DropdownMenu(
-//                    expanded = expanded,
-//                    onDismissRequest = { expanded = false }
-//                ) {
-//                    options.forEach { option ->
-//                        DropdownMenuItem(text = { Text(text = option) },
-//                            onClick = {
-//                                selectedOption = option
-//                                onValueChange(selectedOption)
-//                                expanded = false
-//                            }
-//                        )
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
-@Composable
-fun sealCard() {
-    Card(
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-    ) {
-
-    }
-}
-
-@Composable
-fun LocationPicker(address: String?, fetchLocation: () -> Unit) {
-    TextButton(onClick = { fetchLocation() }) {
-        Icon(Icons.Filled.Explore, null)
-        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-        Text(address ?: "Get location")
-    }
-}
 
 @Composable
 fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
@@ -578,93 +483,9 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 @Composable
 fun ObservationScreen() {
     WeddellSealMarkRecapTheme {
-//        ChipInputForm(chips)
     }
 }
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun TextFieldWithLengthValidation() {
-////   Row {
-//       var text by rememberSaveable { mutableStateOf("") }
-//       val errorMessage = "Text input too long"
-//       var isError by rememberSaveable { mutableStateOf(false) }
-//       val charLimit = 1
-//
-//       fun validate(text: String) {
-//           isError = text.length > charLimit
-//       }
-//       TextField(
-//           value = text,
-//           onValueChange = {
-//               text = it
-//               validate(text)
-//           },
-//           label = { Text("Label") },
-//           placeholder = { Text("example@gmail.com") },
-//           singleLine = true,
-//           supportingText = {
-//               Text(
-//                   modifier = Modifier.fillMaxWidth(),
-//                   text = "Limit: ${text.length}/$charLimit",
-//                   textAlign = TextAlign.End,
-//               )
-//           },
-//           isError = isError,
-//           keyboardActions = KeyboardActions { validate(text) },
-//           modifier = Modifier.semantics {
-//               // Provide localized description of the error
-//               if (isError) error(errorMessage)
-//           },
-//           leadingIcon = {
-//               Icon(
-//                   Icons.Filled.Favorite,
-//                   contentDescription = "Localized description"
-//               )
-//           },
-//           trailingIcon = { Icon(Icons.Filled.Info, contentDescription = "Localized description") }
-//       )
-//    }
-//    Row {
-//        ElevatedButton(onClick = { /* Do something! */ }) { Text("Elevated Button") }
-//    }
-//    Row {
-//        FilledTonalButton(onClick = { /* Do something! */ }) { Text("Filled Tonal Button") }
-//    }
-//    Row {
-//        var checked by remember { mutableStateOf(false) }
-//        FilledIconToggleButton(checked = checked, onCheckedChange = { checked = it }) {
-//            if (checked) {
-//                Icon(Icons.Filled.Lock, contentDescription = "Localized description")
-//            } else {
-//                Icon(Icons.Outlined.Lock, contentDescription = "Localized description")
-//            }
-//        }
-//    }
-
-//    val (checkedState, onStateChange) = remember { mutableStateOf(true) }
-//    Row(
-//        Modifier
-//            .fillMaxWidth()
-//            .height(56.dp)
-//            .toggleable(
-//                value = checkedState,
-//                onValueChange = { onStateChange(!checkedState) },
-//                role = Role.Checkbox
-//            )
-//            .padding(horizontal = 16.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Checkbox(
-//            checked = checkedState,
-//            onCheckedChange = null // null recommended for accessibility with screenreaders
-//        )
-//        Text(
-//            text = "Option selection",
-//            style = MaterialTheme.typography.bodyLarge,
-//            modifier = Modifier.padding(start = 16.dp)
-//        )
-//    }
 
 
 

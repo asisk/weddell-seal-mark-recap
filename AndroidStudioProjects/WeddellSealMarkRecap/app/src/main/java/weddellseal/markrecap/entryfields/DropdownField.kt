@@ -37,9 +37,10 @@ fun DropdownField(options : List<String>, onValueChange: (String) -> Unit) {
     Column {
         Card(
             modifier = Modifier
+                .fillMaxWidth()
                 .clickable { expanded = true },
             elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-            border = BorderStroke(1.dp, Color.Gray), // Border appearance
+            border = BorderStroke(1.dp, Color.LightGray), // Border appearance
         ) {
             Row (
                 modifier = Modifier.padding(8.dp),
@@ -71,7 +72,7 @@ fun DropdownField(options : List<String>, onValueChange: (String) -> Unit) {
                     .fillMaxWidth()
                     .clickable { expanded = true },
                 elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-                border = BorderStroke(1.dp, Color.Gray), // Border appearance
+                border = BorderStroke(1.dp, Color.LightGray), // Border appearance
             ) {
                 DropdownMenu(
                     expanded = expanded,

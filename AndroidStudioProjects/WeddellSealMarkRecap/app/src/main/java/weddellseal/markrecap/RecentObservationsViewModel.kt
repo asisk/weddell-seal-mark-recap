@@ -11,7 +11,6 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
-import android.text.format.DateUtils
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,13 +26,13 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 
-class HomeViewModel(
+class RecentObservationsViewModel(
     application: Application,
     val observationSaver: ObservationSaverRepository,
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
-    // allows the home screen to observe LiveData as observations are saved
+    // allows for the screen to observe LiveData as observations are saved
     val observationsFlow: Flow<List<ObservationLogEntry>> = observationSaver.observations.asFlow()
 
     data class UiState(
@@ -48,32 +47,12 @@ class HomeViewModel(
     )
         private set
 
-    fun formatDateTime(timeInMillis: Long): String {
-        return DateUtils.formatDateTime(context, timeInMillis, DateUtils.FORMAT_ABBREV_ALL)
-    }
     fun updateURI(uri: Uri) {
         uiState = uiState.copy(
             uriForCSVWrite = uri
         )
-        // may need to throw an error if no uri returned from file picker call on the home screen
+        // may need to throw an error if no uri returned from file picker call
     }
-
-//    fun exportLogs() {
-//        viewModelScope.launch {
-//            val file = uriToFile(context, uiState.uriForCSVWrite!!)
-//
-//            if (file != null) {
-//                observationSaver.saveObservations(file)
-//            } else {
-//                throw NoUriSelectedException("No URI was selected")
-//            }
-//
-//            uiState = uiState.copy(
-//                loading = false,
-//            )
-//        }
-//
-//    }
 
     fun exportLogs() {
         viewModelScope.launch {
@@ -108,22 +87,14 @@ class HomeViewModel(
         }
     }
 
-
     fun uriToFile(context: Context, uri: Uri): File? {
         val documentFile = DocumentFile.fromSingleUri(context, uri)
         if (documentFile != null) {
             val displayName = documentFile.name
-            val externalDir = Environment.getExternalStorageDirectory() // or another appropriate directory
+            val externalDir = Environment.getExternalStorageDirectory()
             return File(externalDir, displayName)
         }
         return null
-    }
-
-    fun delete(observationLog: ObservationLog) {
-       // viewModelScope.launch {
-       //     db.logDao().delete(observationLog.toLogEntry())
-       //     loadLogs()
-       // }
     }
 }
 
@@ -134,6 +105,6 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val app =
             extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
-        return HomeViewModel(app, app.observationSaver) as T
+        return RecentObservationsViewModel(app, app.observationSaver) as T
     }
 }

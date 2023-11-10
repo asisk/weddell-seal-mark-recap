@@ -27,7 +27,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,13 +37,23 @@ import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     homeScaffold(navController)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun homeScaffold(navController: NavHostController) {
+
+// TODO, implement the file picker with the CSV import capability to update location data
+
+//    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+//        // Handle the selected file URI
+//        if (uri != null) {
+//            // Do something with the selected file URI
+//            viewModel.updateURI(uri)
+//        }
+//    }
+
     Scaffold(
         // region UI - Top Bar & Action Button
         topBar = {
@@ -131,28 +140,29 @@ fun homeScaffold(navController: NavHostController) {
                 Row(                        modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp),
-                    horizontalArrangement = Arrangement.Start,
+                    horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     var site by remember { mutableStateOf("") }
-                    val censusOptions = listOf("Location A", "Location B")
+                    //TODO, read the locations from a CSV
+                    val colonyLocations = listOf("Location A", "Location B")
                     Column(modifier = Modifier.padding(4.dp)) {
                         Text(text = "Location")
                     }
                     Column(modifier = Modifier.padding(4.dp)) {
-                        DropdownField(censusOptions) { newText ->
+                        DropdownField(colonyLocations) { newText ->
                             site = newText
                         }
                     }
                 }
-                val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
-                var selection = "0"
                 Row(                        modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp),
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
+                    var selection = "0"
                     Column(modifier = Modifier.padding(4.dp)) {
                         Text(text = "Census #")
                     }
