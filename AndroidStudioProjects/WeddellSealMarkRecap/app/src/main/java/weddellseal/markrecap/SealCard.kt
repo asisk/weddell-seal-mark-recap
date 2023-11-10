@@ -96,7 +96,9 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
 
             // CONDITION
+            Spacer(modifier = Modifier.width(30.dp))
             Text(text = "Condition")
+            Spacer(modifier = Modifier.width(10.dp))
             val conditions = listOf<String>("Dead", "Poor", "Fair", "Good", "Newborn")
             DropdownField(conditions) { newText -> viewModel.updateCondition(seal, newText) }
         }
@@ -114,8 +116,8 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
                 "Enter # of tags present",
                 null
             ) { newVal -> viewModel.updateNumTags(seal, newVal) }
-            // TISSUE SAMPLED
             val (checkedState, onStateChange) = remember { mutableStateOf(false) }
+            // TISSUE SAMPLED
             Row(
                 Modifier
                     .fillMaxWidth()
