@@ -56,7 +56,7 @@ fun TextFieldValidateOnCharCount(
             )
         },
         isError = isError,
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
         keyboardActions = KeyboardActions { validate(text)
             keyboardController?.hide()
         },

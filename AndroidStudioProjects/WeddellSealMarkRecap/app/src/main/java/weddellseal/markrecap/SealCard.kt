@@ -33,7 +33,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.entryfields.DropdownField
-import weddellseal.markrecap.entryfields.TextFieldValidateOnCharCount
+import weddellseal.markrecap.entryfields.NumberFieldValidateOnCharCount
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +88,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextFieldValidateOnCharCount(
+            NumberFieldValidateOnCharCount(
                 1,
                 "# of Relatives",
                 "Enter # of relatives present",
@@ -110,7 +110,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             // NUMBER OF TAGS
-                TextFieldValidateOnCharCount(
+                NumberFieldValidateOnCharCount(
                 1,
                 "# of Tags",
                 "Enter # of tags present",

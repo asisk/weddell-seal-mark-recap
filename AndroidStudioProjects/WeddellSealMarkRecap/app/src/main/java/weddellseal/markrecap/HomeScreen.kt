@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.entryfields.DropdownField
+import weddellseal.markrecap.entryfields.TextFieldValidateOnCharCount
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 @Composable
@@ -120,26 +121,29 @@ fun homeScaffold(navController: NavHostController) {
                     .fillMaxWidth(.5f)
                     .align(Alignment.CenterHorizontally)
             ) {
-                // Metadata
-                Row(                        modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
+                // OBSERVER
+                Row(
+                    modifier = Modifier
+//                        .fillMaxWidth()
+                        .padding(10.dp),
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    var observers by remember { mutableStateOf("") }
-                    ObservationCardOutlinedTextField(
-                        placeholderText = "observers",
-                        labelText = "Observers",
-                        fieldVal = observers,
-                        onValueChange = {
-                            observers = it
+                    var observerInitials by remember { mutableStateOf("") }
+                    TextFieldValidateOnCharCount(
+                        charNumber = 3,
+                        fieldLabel = "Observer Initials",
+                        placeHolderTxt = "",
+                        leadIcon = null,
+                        onChangeDo = { newText ->
+                            observerInitials = newText
                         }
                     )
                 }
-                Row(                        modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -219,6 +223,7 @@ fun homeScaffold(navController: NavHostController) {
         }
     }
 }
+
 
 @Composable
 fun SerialNumberDisplay() {

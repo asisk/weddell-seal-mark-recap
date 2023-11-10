@@ -9,7 +9,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +28,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
@@ -43,13 +41,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,12 +58,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -395,63 +389,61 @@ fun CommentField(
 }
 
 
-@ExperimentalMaterial3Api
-@Composable
-fun NumberInputField(
-    fieldVal: String,
-    placeholderText: String,
-    labelText: String,
-    onValChangeDo: (String) -> Unit
-) {
-    TextField(
-        value = fieldVal,
-        onValueChange = {
-            onValChangeDo(it)
-        },
-        label = { Text(labelText) },
-        placeholder = { Text(placeholderText) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-        trailingIcon = {
-            Icon(Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable { onValChangeDo("") })
-        }
-    )
-}
+//@ExperimentalMaterial3Api
+//@Composable
+//fun NumberInputField(
+//    fieldVal: String,
+//    placeholderText: String,
+//    labelText: String,
+//    onValChangeDo: (String) -> Unit
+//) {
+//    TextField(
+//        value = fieldVal,
+//        onValueChange = {
+//            onValChangeDo(it)
+//        },
+//        label = { Text(labelText) },
+//        placeholder = { Text(placeholderText) },
+//        singleLine = true,
+//        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+//        trailingIcon = {
+//            Icon(Icons.Filled.Clear, contentDescription = "Clear text",
+//                Modifier.clickable { onValChangeDo("") })
+//        }
+//    )
+//}
 
-@Composable
-fun ObservationCardOutlinedTextField(
-    placeholderText: String,
-    labelText: String,
-    fieldVal: String,
-    onValueChange: (String) -> Unit
-) {
-    val paddingModifier = Modifier.padding(10.dp)
-    val focusManager = LocalFocusManager.current
-    var isFocused by remember { mutableStateOf(false) }
-    OutlinedTextField(
-        value = fieldVal,
-        placeholder = { Text(placeholderText) },
-        onValueChange = {
-            onValueChange(it)
-            isFocused = it.isNotBlank()
-        },
-        label = { Text(text = labelText) },
-        modifier = Modifier
-            .background(
-                color = if (isFocused) Color.LightGray else Color.Transparent, // Change border color when focused
-            ),
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                isFocused = fieldVal.isNotBlank()
-                defaultKeyboardAction((ImeAction.Done))
-            }
-        )
-    )
-}
+//@Composable
+//fun ObservationCardOutlinedTextField(
+//    placeholderText: String,
+//    labelText: String,
+//    fieldVal: String,
+//    onValueChange: (String) -> Unit
+//) {
+//    var isFocused by remember { mutableStateOf(false) }
+//    OutlinedTextField(
+//        value = fieldVal,
+//        placeholder = { Text(placeholderText) },
+//        onValueChange = {
+//            onValueChange(it)
+////            isFocused = it.isNotBlank()
+//        },
+//        label = { Text(text = labelText) },
+////        modifier = Modifier
+////            .background(
+////                color = if (isFocused) Color.LightGray else Color.Transparent, // Change border color when focused
+////            ),
+//        keyboardOptions = KeyboardOptions.Default.copy(
+//            imeAction = ImeAction.Done
+//        ),
+//        keyboardActions = KeyboardActions(
+//            onDone = {
+////                isFocused = fieldVal.isNotBlank()
+//                defaultKeyboardAction((ImeAction.Done))
+//            }
+//        )
+//    )
+//}
 
 @Composable
 fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {

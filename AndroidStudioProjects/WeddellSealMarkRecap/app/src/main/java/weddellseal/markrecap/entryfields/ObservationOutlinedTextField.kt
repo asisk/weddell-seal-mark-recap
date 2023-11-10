@@ -1,46 +1,61 @@
 package weddellseal.markrecap.entryfields
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
-fun ObservationCardOutlinedTextField(placeholderText: String, labelText: String, fieldName: String, onValueChange: (String) -> Unit) {
-    val paddingModifier  = Modifier.padding(10.dp)
-    val focusManager = LocalFocusManager.current
-    var isFocused by remember { mutableStateOf(false) }
+fun ObservationCardOutlinedTextField(
+    labelText: String,
+    onValueChangeDo: (String) -> Unit,
+) {
+    var text by rememberSaveable { mutableStateOf("") }
+    // State to manage whether the text field should lose focus
+    val keyboardController = LocalSoftwareKeyboardController.current
+//    val errorMessage = "Text input too long"
+//    var isError by rememberSaveable { mutableStateOf(false) }
+    val charLimit = 3
+
     OutlinedTextField(
-        value = fieldName,
-        placeholder = { Text(placeholderText) },
-        onValueChange = { onValueChange(it)
-            isFocused  = it.isNotBlank()
+        value = text,
+        placeholder = { "Observer" },
+        onValueChange = {
+            text = it
+            onValueChangeDo(it)
         },
         label = { Text(labelText) },
+        singleLine = true,
         modifier = Modifier
-            .background(
-                color = if (isFocused) Color.LightGray else Color.Transparent, // Change border color when focused
-            ),
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                isFocused = fieldName.isNotBlank()
-                defaultKeyboardAction((ImeAction.Done))
-            }
-        )
+            .background(color = Color.Transparent),
+        keyboardActions = KeyboardActions {
+            keyboardController?.hide()
+        },
+        trailingIcon = {
+            Icon(
+                Icons.Filled.Clear, contentDescription = "Clear text",
+                Modifier.clickable { text = "" })
+        },
+        supportingText = {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Limit: ${text.length}/$charLimit",
+                textAlign = TextAlign.End,
+            )
+        }
     )
 }
