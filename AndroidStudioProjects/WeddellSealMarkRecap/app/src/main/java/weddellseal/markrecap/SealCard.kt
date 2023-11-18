@@ -12,8 +12,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -27,14 +25,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.entryfields.CommentField
 import weddellseal.markrecap.entryfields.DropdownField
 import weddellseal.markrecap.entryfields.NumberFieldValidateOnCharCount
 import weddellseal.markrecap.entryfields.SingleSelectButtonGroup
+import weddellseal.markrecap.entryfields.SingleSelectTagAlphaButtonGroup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +50,19 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             .fillMaxWidth()
     ) {
         val keyboardController = LocalSoftwareKeyboardController.current
+        // Title
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(.7f)
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+        Text(
+            text = seal.age,
+            style = MaterialTheme.typography.titleMedium
+        )
+        }
 
         //AGE
         Row(
@@ -62,8 +74,8 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
         ) {
             //AGE
             Text(text = "Age")
-            val buttonList = listOf<String>("Adult", "Pup", "Yearling")
-            SingleSelectButtonGroup(buttonList, seal.age) { newText -> viewModel.updateAge(seal, newText) }
+            val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
+            SingleSelectButtonGroup(buttonListAge, seal.age) { newText -> viewModel.updateAge(seal, newText) }
             Spacer(modifier = Modifier.width(16.dp))
         }
 
@@ -76,8 +88,8 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = "Sex")
-            val buttonList = listOf<String>("Female", "Male", "Unknown")
-            SingleSelectButtonGroup(buttonList, seal.sex) { newText ->
+            val buttonListSex = listOf<String>("Female", "Male", "Unknown")
+            SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
                 viewModel.updateSex(seal, newText)
             }
         }
@@ -90,10 +102,10 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             NumberFieldValidateOnCharCount(
+                seal.numRelatives.toString(),
                 1,
                 "# of Relatives",
-                "Enter # of relatives present",
-                null
+                "Enter # of relatives present"
             ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
 
             // CONDITION
@@ -111,20 +123,22 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             // NUMBER OF TAGS
-                NumberFieldValidateOnCharCount(
+            NumberFieldValidateOnCharCount(
+                seal.numTags.toString(),
                 1,
                 "# of Tags",
-                "Enter # of tags present",
-                null
+                "Enter # of tags present"
             ) { newVal -> viewModel.updateNumTags(seal, newVal) }
-            val (checkedState, onStateChange) = remember { mutableStateOf(false) }
+
             // TISSUE SAMPLED
+            val (checkedState, onStateChange) = remember { mutableStateOf(seal.tissueTaken) }
             Row(
                 Modifier
                     .fillMaxWidth()
                     .toggleable(
                         value = checkedState,
-                        onValueChange = { onStateChange(!checkedState) },
+                        onValueChange = { onStateChange(!checkedState)
+                            viewModel.updateTissueTaken(seal, checkedState)},
                         role = Role.Checkbox
                     )
                     .padding(horizontal = 16.dp),
@@ -180,19 +194,10 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
                         Modifier.clickable { viewModel.clearTag(seal) })
                 }
             )
-            // ALPHA VALUES
-            Button(
-                onClick = { viewModel.appendAlphaToTagID(seal, "A") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow), // Change the background color
-            ) { Text("A", color = Color.Black) }
-            Button(
-                onClick = { viewModel.appendAlphaToTagID(seal, "C") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
-            ) { Text("C", color = Color.Black) }
-            Button(
-                onClick = { viewModel.appendAlphaToTagID(seal, "D") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
-            ) { Text("D", color = Color.White) }
+
+            //TAG ALPHA BUTTONS
+            val buttonListAlpha = listOf<String>("A", "C", "D")
+            SingleSelectTagAlphaButtonGroup(buttonListAlpha, seal.tagAlpha) { newText -> viewModel.appendAlphaToTagID(seal, newText) }
         }
         // TAG EVENT TYPE
         val (checkedState, onStateChange) = remember { mutableStateOf(false) }
@@ -205,7 +210,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
         ) {
             Text(text = "Event Type")
             val tagEventList = listOf<String>("Marked", "New", "Retag")
-            SingleSelectButtonGroup(tagEventList, seal.age) { newText ->
+            SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
                 viewModel.updateTagEventType(seal, newText)
             }
         }
@@ -218,7 +223,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = "Comments")
-            CommentField("") { newText ->
+            CommentField(seal.comment) { newText ->
                 viewModel.updateComment(seal, newText)
             }
         }

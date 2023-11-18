@@ -7,20 +7,12 @@ package weddellseal.markrecap
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
@@ -56,15 +48,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
@@ -347,125 +334,6 @@ fun AddObservationLogScreen(
         }
     }
 }
-
-//@Composable
-//fun SingleSelectButtonGroup(
-//    txtOptions: List<String>,
-//    valueInModel: String,
-//    onValChangeDo: (String) -> Unit
-//) {
-//    var selectedButton by remember { mutableStateOf(valueInModel) }
-//    txtOptions.forEach { option ->
-//        ElevatedButton(
-//            onClick = {
-//                selectedButton = option
-//                onValChangeDo(option) // callback when the button is clicked
-//            },
-//            colors = ButtonDefaults.elevatedButtonColors(MaterialTheme.colorScheme.tertiary),
-//            enabled = selectedButton != option
-//        ) {
-//            Text(
-//                color = Color.White,
-//                text = option
-//            )
-//        }
-//    }
-//}
-
-
-@Composable
-fun CommentField(
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    val scrollState = rememberScrollState()
-    var textEntered by remember { mutableStateOf(value) }
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    BasicTextField(
-        value = textEntered,
-        onValueChange = {
-            textEntered = it
-        },
-        modifier = Modifier
-            .background(color = Color.White)
-            .border(1.dp, color = Color.LightGray)
-            .padding(16.dp)
-            .height(40.dp)
-            .fillMaxWidth()
-            .verticalScroll(state = scrollState, enabled = true),
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                // Handle "Done" button action
-                onValueChange(textEntered)
-                keyboardController?.hide()
-            }
-        ),
-        textStyle = TextStyle(fontSize = 16.sp),
-        singleLine = false,
-        maxLines = 5
-    )
-}
-
-
-//@ExperimentalMaterial3Api
-//@Composable
-//fun NumberInputField(
-//    fieldVal: String,
-//    placeholderText: String,
-//    labelText: String,
-//    onValChangeDo: (String) -> Unit
-//) {
-//    TextField(
-//        value = fieldVal,
-//        onValueChange = {
-//            onValChangeDo(it)
-//        },
-//        label = { Text(labelText) },
-//        placeholder = { Text(placeholderText) },
-//        singleLine = true,
-//        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-//        trailingIcon = {
-//            Icon(Icons.Filled.Clear, contentDescription = "Clear text",
-//                Modifier.clickable { onValChangeDo("") })
-//        }
-//    )
-//}
-
-//@Composable
-//fun ObservationCardOutlinedTextField(
-//    placeholderText: String,
-//    labelText: String,
-//    fieldVal: String,
-//    onValueChange: (String) -> Unit
-//) {
-//    var isFocused by remember { mutableStateOf(false) }
-//    OutlinedTextField(
-//        value = fieldVal,
-//        placeholder = { Text(placeholderText) },
-//        onValueChange = {
-//            onValueChange(it)
-////            isFocused = it.isNotBlank()
-//        },
-//        label = { Text(text = labelText) },
-////        modifier = Modifier
-////            .background(
-////                color = if (isFocused) Color.LightGray else Color.Transparent, // Change border color when focused
-////            ),
-//        keyboardOptions = KeyboardOptions.Default.copy(
-//            imeAction = ImeAction.Done
-//        ),
-//        keyboardActions = KeyboardActions(
-//            onDone = {
-////                isFocused = fieldVal.isNotBlank()
-//                defaultKeyboardAction((ImeAction.Done))
-//            }
-//        )
-//    )
-//}
 
 @Composable
 fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {

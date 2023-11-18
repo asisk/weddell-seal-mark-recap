@@ -61,18 +61,19 @@ class AddObservationLogViewModel(
     )
 
     data class Seal(
+        val age: String = "",
+        val comment: String = "",
+        val condition: String = "",
         val isStarted: Boolean = false,
         val name: String = "",
-        val tagNumber: Int = 0,
-        val tagAlpha: String = "",
-        val tagId: String = "",
-        val condition: String = "",
-        val age: String = "",
-        val sex: String = "",
-        val numTags: Int = 0,
         val numRelatives: Int = 0,
+        val numTags: Int = 0,
+        val sex: String = "",
+        val tagAlpha: String = "",
         val tagEventType: String = "",
-        val comment: String = ""
+        val tagId: String = "",
+        val tissueTaken: Boolean = false,
+        val tagNumber: Int = 0
     )
 
     var adultSeal by mutableStateOf(Seal(name = "adult"))
@@ -274,6 +275,22 @@ class AddObservationLogViewModel(
                 "pupTwo" -> {
                     pupTwo = pupTwo.copy(numTags = number, isStarted = true)
                 }
+            }
+        }
+    }
+
+    fun updateTissueTaken(seal: Seal, input: Boolean) {
+        when (seal.name) {
+            "adult" -> {
+                adultSeal = adultSeal.copy(tissueTaken = input, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tissueTaken = input, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tissueTaken = input, isStarted = true)
             }
         }
     }
