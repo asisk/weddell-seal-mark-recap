@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.entryfields.DropdownField
 import weddellseal.markrecap.entryfields.NumberFieldValidateOnCharCount
+import weddellseal.markrecap.entryfields.SingleSelectButtonGroup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +63,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             //AGE
             Text(text = "Age")
             val buttonList = listOf<String>("Adult", "Pup", "Yearling")
-            SingleSelectButtonGroup(buttonList) { newText -> viewModel.updateAge(seal, newText) }
+            SingleSelectButtonGroup(buttonList, seal.age) { newText -> viewModel.updateAge(seal, newText) }
             Spacer(modifier = Modifier.width(16.dp))
         }
 
@@ -76,7 +77,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
         ) {
             Text(text = "Sex")
             val buttonList = listOf<String>("Female", "Male", "Unknown")
-            SingleSelectButtonGroup(buttonList) { newText ->
+            SingleSelectButtonGroup(buttonList, seal.sex) { newText ->
                 viewModel.updateSex(seal, newText)
             }
         }
@@ -204,7 +205,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
         ) {
             Text(text = "Event Type")
             val tagEventList = listOf<String>("Marked", "New", "Retag")
-            SingleSelectButtonGroup(tagEventList) { newText ->
+            SingleSelectButtonGroup(tagEventList, seal.age) { newText ->
                 viewModel.updateTagEventType(seal, newText)
             }
         }

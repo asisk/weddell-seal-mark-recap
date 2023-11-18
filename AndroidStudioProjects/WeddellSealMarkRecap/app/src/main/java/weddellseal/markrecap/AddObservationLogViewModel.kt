@@ -61,6 +61,7 @@ class AddObservationLogViewModel(
     )
 
     data class Seal(
+        val isStarted: Boolean = false,
         val name: String = "",
         val tagNumber: Int = 0,
         val tagAlpha: String = "",
@@ -76,23 +77,23 @@ class AddObservationLogViewModel(
 
     var adultSeal by mutableStateOf(Seal(name = "adult"))
         private set
-    var pupOne by mutableStateOf(Seal(name = "pupOne"))
+    var pupOne by mutableStateOf(Seal(name = "pupOne", age = "Pup"))
         private set
-    var pupTwo by mutableStateOf(Seal(name = "pupTwo"))
+    var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup"))
         private set
 
     fun updateCondition(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(condition = input)
+                adultSeal = adultSeal.copy(condition = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(condition = input)
+                pupOne = pupOne.copy(condition = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(condition = input)
+                pupTwo = pupTwo.copy(condition = input, isStarted = true)
             }
         }
     }
@@ -101,15 +102,15 @@ class AddObservationLogViewModel(
         when (seal.name) {
             "adult" -> {
                 adultSeal =
-                    adultSeal.copy(tagId = adultSeal.tagNumber.toString() + adultSeal.tagAlpha)
+                    adultSeal.copy(tagId = adultSeal.tagNumber.toString() + adultSeal.tagAlpha, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagId = pupOne.tagNumber.toString() + pupOne.tagAlpha)
+                pupOne = pupOne.copy(tagId = pupOne.tagNumber.toString() + pupOne.tagAlpha, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagId = pupTwo.tagNumber.toString() + pupTwo.tagAlpha)
+                pupTwo = pupTwo.copy(tagId = pupTwo.tagNumber.toString() + pupTwo.tagAlpha, isStarted = true)
             }
         }
     }
@@ -127,15 +128,15 @@ class AddObservationLogViewModel(
     fun updateTagAlpha(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tagAlpha = input)
+                adultSeal = adultSeal.copy(tagAlpha = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagAlpha = input)
+                pupOne = pupOne.copy(tagAlpha = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagAlpha = input)
+                pupTwo = pupTwo.copy(tagAlpha = input, isStarted = true)
             }
         }
     }
@@ -143,15 +144,15 @@ class AddObservationLogViewModel(
     fun updateTagNumber(seal: Seal, input: Int) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tagNumber = input)
+                adultSeal = adultSeal.copy(tagNumber = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagNumber = input)
+                pupOne = pupOne.copy(tagNumber = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagNumber = input)
+                pupTwo = pupTwo.copy(tagNumber = input, isStarted = true)
             }
         }
         updateTagId(seal)
@@ -161,15 +162,15 @@ class AddObservationLogViewModel(
         when (seal.name) {
             "adult" -> {
                 adultSeal =
-                    adultSeal.copy(tagAlpha = input, tagId = adultSeal.tagNumber.toString() + input)
+                    adultSeal.copy(tagAlpha = input, tagId = adultSeal.tagNumber.toString() + input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagAlpha = input, tagId = pupOne.tagNumber.toString() + input)
+                pupOne = pupOne.copy(tagAlpha = input, tagId = pupOne.tagNumber.toString() + input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagAlpha = input, tagId = pupTwo.tagNumber.toString() + input)
+                pupTwo = pupTwo.copy(tagAlpha = input, tagId = pupTwo.tagNumber.toString() + input, isStarted = true)
             }
         }
     }
@@ -177,15 +178,15 @@ class AddObservationLogViewModel(
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(age = input)
+                adultSeal = adultSeal.copy(age = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(age = input)
+                pupOne = pupOne.copy(age = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(age = input)
+                pupTwo = pupTwo.copy(age = input, isStarted = true)
             }
         }
     }
@@ -193,15 +194,15 @@ class AddObservationLogViewModel(
     fun updateSex(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(sex = input)
+                adultSeal = adultSeal.copy(sex = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(sex = input)
+                pupOne = pupOne.copy(sex = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(sex = input)
+                pupTwo = pupTwo.copy(sex = input, isStarted = true)
             }
         }
     }
@@ -209,15 +210,15 @@ class AddObservationLogViewModel(
     fun updateTagEventType(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tagEventType = input)
+                adultSeal = adultSeal.copy(tagEventType = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagEventType = input)
+                pupOne = pupOne.copy(tagEventType = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagEventType = input)
+                pupTwo = pupTwo.copy(tagEventType = input, isStarted = true)
             }
         }
     }
@@ -227,15 +228,15 @@ class AddObservationLogViewModel(
         if (number != null) {
             when (seal.name) {
                 "adult" -> {
-                    adultSeal = adultSeal.copy(numRelatives = number)
+                    adultSeal = adultSeal.copy(numRelatives = number, isStarted = true)
                 }
 
                 "pupOne" -> {
-                    pupOne = pupOne.copy(numRelatives = number)
+                    pupOne = pupOne.copy(numRelatives = number, isStarted = true)
                 }
 
                 "pupTwo" -> {
-                    pupTwo = pupTwo.copy(numRelatives = number)
+                    pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
                 }
             }
         }
@@ -244,15 +245,15 @@ class AddObservationLogViewModel(
     fun updateComment(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(comment = input)
+                adultSeal = adultSeal.copy(comment = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(comment = input)
+                pupOne = pupOne.copy(comment = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(comment = input)
+                pupTwo = pupTwo.copy(comment = input, isStarted = true)
             }
         }
     }
@@ -263,15 +264,15 @@ class AddObservationLogViewModel(
 
             when (seal.name) {
                 "adult" -> {
-                    adultSeal = adultSeal.copy(numTags = number)
+                    adultSeal = adultSeal.copy(numTags = number, isStarted = true)
                 }
 
                 "pupOne" -> {
-                    pupOne = pupOne.copy(numTags = number)
+                    pupOne = pupOne.copy(numTags = number, isStarted = true)
                 }
 
                 "pupTwo" -> {
-                    pupTwo = pupTwo.copy(numTags = number)
+                    pupTwo = pupTwo.copy(numTags = number, isStarted = true)
                 }
             }
         }

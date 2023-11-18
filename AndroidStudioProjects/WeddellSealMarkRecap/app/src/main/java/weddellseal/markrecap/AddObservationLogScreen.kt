@@ -27,14 +27,14 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -82,6 +82,9 @@ fun AddObservationLogScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val adultSeal = viewModel.adultSeal
+    val pupOne = viewModel.pupOne
+    val pupTwo = viewModel.pupTwo
     val internalPhotoPickerState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 //    var gpsData by remember { mutableStateOf("No data") }
     // endregion
@@ -209,69 +212,87 @@ fun AddObservationLogScreen(
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.Center
             ) {
-                var viewAdult by remember { mutableStateOf(true) }
-                var addPup by remember { mutableStateOf(false) }
-                var addSecondPup by remember { mutableStateOf(false) }
+                // currently using short term variables to indicate which card to display
+                var showAdult by remember { mutableStateOf(true) }
+                var showPup by remember { mutableStateOf(false) }
+                var showPupTwo by remember { mutableStateOf(false) }
 
-//                if (viewAdult) {
-                SealCard(viewModel, viewModel.adultSeal)
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    containerColor = Color.LightGray,
-                    onClick = { },
-                    icon = { Icon(Icons.Filled.Add, "Add Pup") },
-                    text = { Text(text = "Add Pup") }
-                )
-                // Button when live
-//                    ExtendedFloatingActionButton(
-//                        modifier = Modifier.padding(16.dp),
-//                        onClick = {
-//                            addPup = true
-//                            viewAdult = false
-//                        },
-//                        icon = { Icon(Icons.Filled.Add, "Add Pup") },
-//                        text = { Text(text = "Add Pup") }
-//                    )
-//                }
-//
-//                if (addPup) {
-//                    // show new card and show summary fields from parent
-//                    SealCard(viewModel, viewModel.pupOne)
-//
-//                    ExtendedFloatingActionButton(
-//                        modifier = Modifier.padding(16.dp),
-//                        onClick = {
-//                            addPup = false
-//                            viewAdult = true
-//                        },
-//                        icon = { Icon(Icons.Filled.ArrowUpward, "View Adult") },
-//                        text = { Text(text = "View Adult") }
-//                    )
-//                }
+                if (showAdult) {
+                    SealCard(viewModel, adultSeal)
+                }
+                if (showPup) {
+                    // show new card and show summary fields from parent
+                    SealCard(viewModel, pupOne)
+                }
+                if (showPupTwo) {
+                    // show new card and show summary fields from parent
+                    SealCard(viewModel, pupTwo)
+                }
+
+                // STARTING/VIEWING THE ADULT ENTRY
+                if (showAdult) {
+                    // PUP BUTTON - LIVE
+                    if (adultSeal.numRelatives == 1 && !pupOne.isStarted) {
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            onClick = {
+                                showPup = true
+                                showAdult = false
+                            },
+                            icon = { Icon(Icons.Filled.Add, "Add Pup") },
+                            text = { Text(text = "Add Pup") }
+                        )
+                    }
+                    // VIEWING THE ADULT and PUP STARTED
+                    if (pupOne.isStarted) {
+                        // VIEW PUP BUTTON
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            onClick = {
+                                showAdult = false
+                                showPup = true
+                            },
+                            icon = { Icon(Icons.Filled.ArrowDownward, "View Pup") },
+                            text = { Text(text = "View Pup") }
+                        )
+                    }
+                // ENTERING THE PUP
+                } else {
+                    // VIEW ADULT BUTTON
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = {
+                            showAdult = true
+                            showPup = false
+                        },
+                        icon = { Icon(Icons.Filled.ArrowUpward, "View Adult") },
+                        text = { Text(text = "View Adult") }
+                    )
+                }
 
                 val stringBuilder = StringBuilder()
-                var age = if (viewModel.adultSeal.tagEventType.isNotEmpty()) {
-                    viewModel.adultSeal.age[0].toString()
+                var age = if (adultSeal.tagEventType.isNotEmpty()) {
+                    adultSeal.age[0].toString()
                 } else {
                     ""
                 }
 
-                var sex = if (viewModel.adultSeal.sex.isNotEmpty()) {
-                    viewModel.adultSeal.sex[0].toString()
+                var sex = if (adultSeal.sex.isNotEmpty()) {
+                    adultSeal.sex[0].toString()
                 } else {
                     ""
                 }
 
-                val numRels = if (viewModel.adultSeal.numRelatives > 0) {
-                    viewModel.adultSeal.numRelatives.toString()
+                val numRels = if (adultSeal.numRelatives > 0) {
+                    adultSeal.numRelatives.toString()
                 } else {
                     ""
                 }
 
-                var tag = viewModel.adultSeal.tagId
+                var tag = adultSeal.tagId
 
-                var event = if (viewModel.adultSeal.tagEventType.isNotEmpty()) {
-                    viewModel.adultSeal.tagEventType[0]
+                var event = if (adultSeal.tagEventType.isNotEmpty()) {
+                    adultSeal.tagEventType[0]
                 } else {
                     ""
                 }
@@ -327,28 +348,29 @@ fun AddObservationLogScreen(
     }
 }
 
-@Composable
-fun SingleSelectButtonGroup(
-    txtOptions: List<String>,
-    onValChangeDo: (String) -> Unit
-) {
-    var selectedButton by remember { mutableStateOf("") }
-    txtOptions.forEach { option ->
-        ElevatedButton(
-            onClick = {
-                selectedButton = option
-                onValChangeDo(option) // Call the callback when the button is clicked
-            },
-            colors = ButtonDefaults.elevatedButtonColors(MaterialTheme.colorScheme.tertiary),
-            enabled = selectedButton != option
-        ) {
-            Text(
-                color = Color.White,
-                text = option
-            )
-        }
-    }
-}
+//@Composable
+//fun SingleSelectButtonGroup(
+//    txtOptions: List<String>,
+//    valueInModel: String,
+//    onValChangeDo: (String) -> Unit
+//) {
+//    var selectedButton by remember { mutableStateOf(valueInModel) }
+//    txtOptions.forEach { option ->
+//        ElevatedButton(
+//            onClick = {
+//                selectedButton = option
+//                onValChangeDo(option) // callback when the button is clicked
+//            },
+//            colors = ButtonDefaults.elevatedButtonColors(MaterialTheme.colorScheme.tertiary),
+//            enabled = selectedButton != option
+//        ) {
+//            Text(
+//                color = Color.White,
+//                text = option
+//            )
+//        }
+//    }
+//}
 
 
 @Composable
