@@ -32,8 +32,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import weddellseal.markrecap.entryfields.DropdownField
-import weddellseal.markrecap.entryfields.TextFieldValidateOnCharCount
+import weddellseal.markrecap.ui.entryfields.DropdownField
+import weddellseal.markrecap.ui.entryfields.TextFieldValidateOnCharCount
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 @Composable

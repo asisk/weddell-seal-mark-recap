@@ -1,4 +1,4 @@
-package weddellseal.markrecap
+package weddellseal.markrecap.model
 
 /*
 * Main model that stores data entered from the observation page for up to three seals
@@ -31,6 +31,9 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
+import weddellseal.markrecap.ObservationLogApplication
+import weddellseal.markrecap.ObservationLogEntry
+import weddellseal.markrecap.ObservationSaverRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -44,7 +47,6 @@ class AddObservationLogViewModel(
 
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    // endregion
 
     // region UI state
     data class UiState(
@@ -57,15 +59,30 @@ class AddObservationLogViewModel(
         var hasGooglePlay: Int,
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
-        val latLong: String = "gps data empty",
+        val latLong: String = "",
     )
 
+    var uiState by mutableStateOf(
+        UiState(
+            hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
+            hasGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER),
+            hasGooglePlay = 999,
+            date = SimpleDateFormat(
+                "dd.MM.yyyy HH:mm:ss aaa z",
+                Locale.US
+            ).format(System.currentTimeMillis()),
+        )
+    )
+        private set
+
+    // region Seal state
     data class Seal(
         val age: String = "",
         val comment: String = "",
         val condition: String = "",
         val isStarted: Boolean = false,
         val name: String = "",
+        val notebookDataString: String = "",
         val numRelatives: Int = 0,
         val numTags: Int = 0,
         val sex: String = "",
@@ -83,8 +100,8 @@ class AddObservationLogViewModel(
     var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup"))
         private set
 
-    fun updateCondition(seal: Seal, input: String) {
-        when (seal.name) {
+    fun updateCondition(sealName: String, input: String) {
+        when (sealName) {
             "adult" -> {
                 adultSeal = adultSeal.copy(condition = input, isStarted = true)
             }
@@ -99,81 +116,10 @@ class AddObservationLogViewModel(
         }
     }
 
-    private fun updateTagId(seal: Seal) {
-        when (seal.name) {
-            "adult" -> {
-                adultSeal =
-                    adultSeal.copy(tagId = adultSeal.tagNumber.toString() + adultSeal.tagAlpha, isStarted = true)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagId = pupOne.tagNumber.toString() + pupOne.tagAlpha, isStarted = true)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagId = pupTwo.tagNumber.toString() + pupTwo.tagAlpha, isStarted = true)
-            }
-        }
-    }
-
     fun clearTag(seal: Seal) {
-        // set tag back to original values
-        // val tagNumber: Int = 0,
-        // val tagAlpha : String = "",
-        // val tagId: String ="",
         updateTagNumber(seal, 0)
         updateTagAlpha(seal, "")
         updateTagId(seal)
-    }
-
-    fun updateTagAlpha(seal: Seal, input: String) {
-        when (seal.name) {
-            "adult" -> {
-                adultSeal = adultSeal.copy(tagAlpha = input, isStarted = true)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagAlpha = input, isStarted = true)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagAlpha = input, isStarted = true)
-            }
-        }
-    }
-
-    fun updateTagNumber(seal: Seal, input: Int) {
-        when (seal.name) {
-            "adult" -> {
-                adultSeal = adultSeal.copy(tagNumber = input, isStarted = true)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagNumber = input, isStarted = true)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagNumber = input, isStarted = true)
-            }
-        }
-        updateTagId(seal)
-    }
-
-    fun appendAlphaToTagID(seal: Seal, input: String) {
-        when (seal.name) {
-            "adult" -> {
-                adultSeal =
-                    adultSeal.copy(tagAlpha = input, tagId = adultSeal.tagNumber.toString() + input, isStarted = true)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagAlpha = input, tagId = pupOne.tagNumber.toString() + input, isStarted = true)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagAlpha = input, tagId = pupTwo.tagNumber.toString() + input, isStarted = true)
-            }
-        }
     }
 
     fun updateAge(seal: Seal, input: String) {
@@ -188,38 +134,6 @@ class AddObservationLogViewModel(
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(age = input, isStarted = true)
-            }
-        }
-    }
-
-    fun updateSex(seal: Seal, input: String) {
-        when (seal.name) {
-            "adult" -> {
-                adultSeal = adultSeal.copy(sex = input, isStarted = true)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(sex = input, isStarted = true)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(sex = input, isStarted = true)
-            }
-        }
-    }
-
-    fun updateTagEventType(seal: Seal, input: String) {
-        when (seal.name) {
-            "adult" -> {
-                adultSeal = adultSeal.copy(tagEventType = input, isStarted = true)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagEventType = input, isStarted = true)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagEventType = input, isStarted = true)
             }
         }
     }
@@ -243,8 +157,91 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateComment(seal: Seal, input: String) {
+    fun updateSex(seal: Seal, input: String) {
         when (seal.name) {
+            "adult" -> {
+                adultSeal = adultSeal.copy(sex = input, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(sex = input, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(sex = input, isStarted = true)
+            }
+        }
+    }
+
+    fun updateTagAlpha(seal: Seal, input: String) {
+        when (seal.name) {
+            "adult" -> {
+                adultSeal = adultSeal.copy(tagAlpha = input, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagAlpha = input, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagAlpha = input, isStarted = true)
+            }
+        }
+        updateTagId(seal)
+    }
+
+    private fun updateTagId(seal: Seal) {
+        when (seal.name) {
+            "adult" -> {
+                adultSeal =
+                    adultSeal.copy(tagId = adultSeal.tagNumber.toString() + adultSeal.tagAlpha, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagId = pupOne.tagNumber.toString() + pupOne.tagAlpha, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagId = pupTwo.tagNumber.toString() + pupTwo.tagAlpha, isStarted = true)
+            }
+        }
+    }
+
+    fun updateTagNumber(seal: Seal, input: Int) {
+        when (seal.name) {
+            "adult" -> {
+                adultSeal = adultSeal.copy(tagNumber = input, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagNumber = input, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagNumber = input, isStarted = true)
+            }
+        }
+        updateTagId(seal)
+    }
+
+    fun updateTagEventType(seal: Seal, input: String) {
+        when (seal.name) {
+            "adult" -> {
+                adultSeal = adultSeal.copy(tagEventType = input, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagEventType = input, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagEventType = input, isStarted = true)
+            }
+        }
+    }
+
+    fun updateComment(sealName: String, input: String) {
+        when (sealName) {
             "adult" -> {
                 adultSeal = adultSeal.copy(comment = input, isStarted = true)
             }
@@ -259,11 +256,11 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateNumTags(seal: Seal, input: String) {
+    fun updateNumTags(sealName: String, input: String) {
         val number: Int? = input.toIntOrNull()
         if (number != null) {
 
-            when (seal.name) {
+            when (sealName) {
                 "adult" -> {
                     adultSeal = adultSeal.copy(numTags = number, isStarted = true)
                 }
@@ -279,8 +276,8 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateTissueTaken(seal: Seal, input: Boolean) {
-        when (seal.name) {
+    fun updateTissueTaken(sealName: String, input: Boolean) {
+        when (sealName) {
             "adult" -> {
                 adultSeal = adultSeal.copy(tissueTaken = input, isStarted = true)
             }
@@ -295,18 +292,43 @@ class AddObservationLogViewModel(
         }
     }
 
-    var uiState by mutableStateOf(
-        UiState(
-            hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
-            hasGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER),
-            hasGooglePlay = 999,
-            date = SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss aaa z",
-                Locale.US
-            ).format(System.currentTimeMillis()),
-        )
-    )
-        private set
+    fun updateNotebookEntry(seal: Seal): String {
+        val sb = StringBuilder()
+        var age = if (seal.age.isNotEmpty()) {
+            seal.age[0].toString()
+        } else {
+            ""
+        }
+
+        var sex = if (seal.sex.isNotEmpty()) {
+            seal.sex[0].toString()
+        } else {
+            ""
+        }
+
+        val numRels = if (seal.numRelatives > 0) {
+            seal.numRelatives.toString()
+        } else {
+            ""
+        }
+
+        var tag = seal.tagId
+
+        var event = if (seal.tagEventType.isNotEmpty()) {
+            seal.tagEventType[0]
+        } else {
+            ""
+        }
+        sb.append(age)
+        sb.append(sex)
+        sb.append(numRels)
+        sb.append("  ")
+        sb.append(tag)
+        sb.append("  ")
+        sb.append(event)
+
+        return sb.toString();
+    }
 
     fun isValid(): Boolean {
 //        if (!observationSaver.isEmpty() && !uiState.isSaving) {
@@ -316,10 +338,6 @@ class AddObservationLogViewModel(
         return false
 //        return !observationSaver.isEmpty() && !uiState.isSaving
     }
-
-//    private fun getIsoDate(timeInMillis: Long): String {
-//        return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(timeInMillis)
-//    }
 
     fun hasPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -403,9 +421,12 @@ class AddObservationLogViewModel(
                     )
                     uiState = uiState.copy(
                         currentLocation =
-                                "lat : ${lat}\n" +
-                                "long : ${lon}\n" +
+                                "Lat : ${lat}\n" +
+                                "Long : ${lon}\n" +
                                 "updated: $date"
+                    )
+                    uiState = uiState.copy(
+                        latLong = "Lat : $lat " + "Long : $lon"
                     )
                 }
             }

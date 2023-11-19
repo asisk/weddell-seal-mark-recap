@@ -1,4 +1,4 @@
-package weddellseal.markrecap.entryfields
+package weddellseal.markrecap.ui.entryfields
 
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton

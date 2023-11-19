@@ -1,4 +1,4 @@
-package weddellseal.markrecap
+package weddellseal.markrecap.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,13 +28,13 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.entryfields.CommentField
-import weddellseal.markrecap.entryfields.DropdownField
-import weddellseal.markrecap.entryfields.NumberFieldValidateOnCharCount
-import weddellseal.markrecap.entryfields.SingleSelectButtonGroup
-import weddellseal.markrecap.entryfields.SingleSelectTagAlphaButtonGroup
+import weddellseal.markrecap.model.AddObservationLogViewModel
+import weddellseal.markrecap.ui.entryfields.CommentField
+import weddellseal.markrecap.ui.entryfields.DropdownField
+import weddellseal.markrecap.ui.entryfields.NumberFieldValidateOnCharCount
+import weddellseal.markrecap.ui.entryfields.SingleSelectButtonGroup
+import weddellseal.markrecap.ui.entryfields.SingleSelectTagAlphaButtonGroup
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewModel.Seal) {
     Card(
@@ -50,20 +49,20 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             .fillMaxWidth()
     ) {
         val keyboardController = LocalSoftwareKeyboardController.current
-        // Title
+
+        // ADULT NOTEBOOK DISPLAY
         Row(
             modifier = Modifier
-                .fillMaxWidth(.7f)
+                .fillMaxWidth()
                 .padding(10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.Top
         ) {
-        Text(
-            text = seal.age,
-            style = MaterialTheme.typography.titleMedium
-        )
+            Text(
+                seal.age + " Seal Details",
+                style = MaterialTheme.typography.titleLarge
+            )
         }
-
         //AGE
         Row(
             modifier = Modifier
@@ -76,7 +75,6 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             Text(text = "Age")
             val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
             SingleSelectButtonGroup(buttonListAge, seal.age) { newText -> viewModel.updateAge(seal, newText) }
-            Spacer(modifier = Modifier.width(16.dp))
         }
 
         // SEX
@@ -101,8 +99,9 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val numRelsFieldVal = if (seal.numRelatives > 0) { seal.numRelatives } else { "" }
             NumberFieldValidateOnCharCount(
-                seal.numRelatives.toString(),
+                numRelsFieldVal.toString(),
                 1,
                 "# of Relatives",
                 "Enter # of relatives present"
@@ -113,7 +112,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             Text(text = "Condition")
             Spacer(modifier = Modifier.width(10.dp))
             val conditions = listOf<String>("Dead", "Poor", "Fair", "Good", "Newborn")
-            DropdownField(conditions) { newText -> viewModel.updateCondition(seal, newText) }
+            DropdownField(conditions) { newText -> viewModel.updateCondition(seal.name, newText) }
         }
         Row(
             modifier = Modifier
@@ -123,12 +122,13 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             // NUMBER OF TAGS
+            val numTagsFieldVal = if (seal.numTags > 0) { seal.numTags } else { "" }
             NumberFieldValidateOnCharCount(
-                seal.numTags.toString(),
+                numTagsFieldVal.toString(),
                 1,
                 "# of Tags",
                 "Enter # of tags present"
-            ) { newVal -> viewModel.updateNumTags(seal, newVal) }
+            ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
 
             // TISSUE SAMPLED
             val (checkedState, onStateChange) = remember { mutableStateOf(seal.tissueTaken) }
@@ -137,8 +137,10 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
                     .fillMaxWidth()
                     .toggleable(
                         value = checkedState,
-                        onValueChange = { onStateChange(!checkedState)
-                            viewModel.updateTissueTaken(seal, checkedState)},
+                        onValueChange = {
+                            onStateChange(!checkedState)
+                            viewModel.updateTissueTaken(seal.name, checkedState)
+                        },
                         role = Role.Checkbox
                     )
                     .padding(horizontal = 16.dp),
@@ -164,12 +166,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val tagIdFieldVal = if (seal.tagNumber > 0) {
-                seal.tagId
-            } else {
-                ""
-            }
-
+            val tagIdFieldVal = (if (seal.tagNumber > 0) { seal.tagNumber } else { "" }).toString()
             TextField(
                 value = tagIdFieldVal,
                 onValueChange = {
@@ -178,7 +175,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
                         viewModel.updateTagNumber(seal, number)
                     }
                 },
-                label = { Text("TagId") },
+                label = { Text("TagNumber") },
                 placeholder = { Text("Enter Tag Number") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -197,7 +194,7 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
 
             //TAG ALPHA BUTTONS
             val buttonListAlpha = listOf<String>("A", "C", "D")
-            SingleSelectTagAlphaButtonGroup(buttonListAlpha, seal.tagAlpha) { newText -> viewModel.appendAlphaToTagID(seal, newText) }
+            SingleSelectTagAlphaButtonGroup(buttonListAlpha, seal.tagAlpha) { newText -> viewModel.updateTagAlpha(seal, newText) }
         }
         // TAG EVENT TYPE
         val (checkedState, onStateChange) = remember { mutableStateOf(false) }
@@ -223,8 +220,9 @@ fun SealCard(viewModel: AddObservationLogViewModel, seal: AddObservationLogViewM
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = "Comments")
+            Spacer(modifier = Modifier.width(10.dp))
             CommentField(seal.comment) { newText ->
-                viewModel.updateComment(seal, newText)
+                viewModel.updateComment(seal.name, newText)
             }
         }
     }

@@ -1,4 +1,4 @@
-package weddellseal.markrecap.entryfields
+package weddellseal.markrecap.ui.entryfields
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-package weddellseal.markrecap.entryfields
+package weddellseal.markrecap.ui.entryfields
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,14 +21,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 
 @Composable
-fun TextFieldValidateOnCharCount(
+fun NumberFieldValidateOnCharCount(
+    valueInModel: String,
     charNumber: Int,
     fieldLabel: String,
     placeHolderTxt: String,
-    leadIcon: Icons?,
     onChangeDo: (String) -> Unit
 ) {
-    var text by rememberSaveable { mutableStateOf("") }
+    var text by rememberSaveable { mutableStateOf(valueInModel) }
     val errorMessage = "Text input too long"
     var isError by rememberSaveable { mutableStateOf(false) }
     val charLimit = charNumber
@@ -56,21 +56,13 @@ fun TextFieldValidateOnCharCount(
             )
         },
         isError = isError,
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         keyboardActions = KeyboardActions { validate(text)
             keyboardController?.hide()
         },
         modifier = Modifier.semantics {
             // Provide localized description of the error
             if (isError) error(errorMessage)
-        },
-        leadingIcon = {
-            if (leadIcon != null) {
-//               Icon(
-//                   Icons.Filled.Favorite,
-//                   contentDescription = "Localized description"
-//               )
-            }
         },
         trailingIcon = {
             Icon(Icons.Filled.Clear, contentDescription = "Clear text",
