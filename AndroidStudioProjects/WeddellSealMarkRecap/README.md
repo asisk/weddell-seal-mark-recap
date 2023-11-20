@@ -1,6 +1,15 @@
 # weddell-seal-mark-recap-app
 Next generation Android app to support data capture in the field
 
+November 19, 2023
+Test Version: app-pup-entry
+Home Screen
+-Bug fix: Replaced the OutlinedTextField to ensure that input field behavior is similar between the Home and Observation Entry Screens
+Observation Screen
+-Updated view for adding a pup to the observation and viewing summary data when the user saves an observation
+-Added bottom bar navigation to Home, View Pup, View Adult, Save
+-Bug fix: Condition field no longer shifts its position left when the dropdown is selected
+
 November 8, 2023
 Test Version: app-debug-sealCard
 Added fields to Observation Screen, add pup button (currently not active)
