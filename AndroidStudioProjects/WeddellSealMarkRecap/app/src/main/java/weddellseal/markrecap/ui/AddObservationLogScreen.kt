@@ -7,7 +7,6 @@ package weddellseal.markrecap.ui
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,15 +15,14 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -76,7 +74,6 @@ fun AddObservationLogScreen(
     val adultSeal = viewModel.adultSeal
     val pupOne = viewModel.pupOne
     val pupTwo = viewModel.pupTwo
-    val internalPhotoPickerState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 //    var gpsData by remember { mutableStateOf("No data") }
     // endregion
 
@@ -126,10 +123,10 @@ fun AddObservationLogScreen(
     LaunchedEffect(Unit) {
         // preload the model with location data
         canAddLocation()
-//        gpsData = viewModel.uiState.currentLocation
     }
 
     //send the user back to the home screen when a log is saved
+    //TODO, give the user the option to enter another seal without automatically routing to home
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
             navController.navigate(Screens.HomeScreen.route) {
@@ -195,44 +192,16 @@ fun AddObservationLogScreen(
                         modifier = Modifier.fillMaxSize(),
                         backgroundColor = MaterialTheme.colorScheme.primaryContainer
                     ) {
-                        val contentColor =
-                            if (adultSeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = ContentAlpha.disabled
-                            )
                         BottomNavigationItem(
-                            enabled = adultSeal.isStarted,
-                            modifier = Modifier.clickable {
-                                if (adultSeal.isStarted) {
-//                                canSaveLog {
-//                                    viewModel.createLog()
-//                                }
-                                }
-                            },
-                            label = { Text(text = "Save", color = contentColor) },
+                            label = { Text(text = "Home") },
                             selected = false,
-                            onClick = {
-                                if (adultSeal.isStarted) {
-                                    viewModel.updateNotebookEntry(adultSeal)
-                                    viewModel.updateNotebookEntry(pupOne)
-                                    showSummary = true
-                                }
-                            },
-                            icon = {
-                                if (state.isSaving) {
-                                    CircularProgressIndicator(Modifier.size(24.0.dp))
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Filled.Check,
-                                        contentDescription = null,
-                                        tint = contentColor
-                                    )
-                                }
-                            }
+                            onClick = { navController.navigate(Screens.HomeScreen.route) },
+                            icon = { Icon(Icons.Filled.Home, null) }
                         )
 
                         if (showAdult) {
                             // PUP BUTTON - LIVE
-                            if (adultSeal.numRelatives == 1 && !pupOne.isStarted) {
+                            if (adultSeal.numRelatives >= 1 && !pupOne.isStarted) {
                                 BottomNavigationItem(
                                     label = { Text(text = "Add Pup") },
                                     selected = false,
@@ -264,6 +233,41 @@ fun AddObservationLogScreen(
                                 },
                                 icon = { Icon(Icons.Filled.ArrowUpward, null) })
                         }
+
+                        val contentColor =
+                            if (adultSeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = ContentAlpha.disabled
+                            )
+                        BottomNavigationItem(
+                            enabled = adultSeal.isStarted,
+//                            modifier = Modifier.clickable {
+//                                if (adultSeal.isStarted) {
+//                                    canSaveLog {
+//                                        viewModel.createLog()
+//                                    }
+//                                }
+//                            },
+                            label = { Text(text = "Save", color = contentColor) },
+                            selected = false,
+                            onClick = {
+                                if (adultSeal.isStarted) {
+                                    viewModel.updateNotebookEntry(adultSeal)
+                                    viewModel.updateNotebookEntry(pupOne)
+                                    showSummary = true
+                                }
+                            },
+                            icon = {
+                                if (state.isSaving) {
+                                    CircularProgressIndicator(Modifier.size(24.0.dp))
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = null,
+                                        tint = contentColor
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -301,70 +305,6 @@ fun AddObservationLogScreen(
                     text = { Text(text = "Continue Saving") }
                 )
             }
-
-//                // NOTEBOOK DATA DISPLAY
-//                val adultNotebookDataString = getSealNotebookEntry(adultSeal)
-//                val pupNotebookDataString = getSealNotebookEntry(pupOne)
-
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth(.7f)
-//                        .padding(10.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    // ADULT NOTEBOOK DISPLAY
-//                    ListItem(
-//                        headlineContent = {
-//                            Text(
-//                                "Adult Seal Details: ",
-//                                style = MaterialTheme.typography.titleLarge
-//                            )
-//                        },
-//                        trailingContent = {
-//                            Text(text = adultNotebookDataString, style = MaterialTheme.typography.titleLarge)
-//                        }
-//                    )
-//                    // PUP NOTEBOOK DISPLAY
-//                    if (pupOne.isStarted) {
-//                        ListItem(
-//                            headlineContent = {
-//                                Text(
-//                                    "Pup One Details: ",
-//                                    style = MaterialTheme.typography.titleLarge
-//                                )
-//                            },
-//                            trailingContent = {
-//                                Text(text = pupNotebookDataString, style = MaterialTheme.typography.titleLarge)
-//                            }
-//                        )
-//                    }
-//                }
-            // GPS LOCATION - SYSTEM
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth(.7f)
-//                        .padding(10.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth(.8f)
-//                        .padding(15.dp),
-//                    horizontalArrangement = Arrangement.SpaceBetween,
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    if (viewModel.uiState.latLong.isNotEmpty()) {
-//                        ListItem(
-//                            headlineContent = {
-//                                Text(
-//                                    "Device GPS",
-//                                    style = MaterialTheme.typography.titleMedium
-//                                )
-//                            },
-//                            trailingContent = { Text(text = viewModel.uiState.latLong, style = MaterialTheme.typography.titleMedium) }
-//                        )
-//                    }
-//                }
         }
     }
 }

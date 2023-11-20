@@ -292,7 +292,7 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateNotebookEntry(seal: Seal): String {
+    fun updateNotebookEntry(seal: Seal) {
         val sb = StringBuilder()
         var age = if (seal.age.isNotEmpty()) {
             seal.age[0].toString()
@@ -327,7 +327,21 @@ class AddObservationLogViewModel(
         sb.append("  ")
         sb.append(event)
 
-        return sb.toString();
+        var notebookEntry = sb.toString();
+
+        when (seal.name) {
+            "adult" -> {
+                adultSeal = adultSeal.copy(notebookDataString = notebookEntry)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(notebookDataString = notebookEntry)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(notebookDataString = notebookEntry)
+            }
+        }
     }
 
     fun isValid(): Boolean {
