@@ -1,6 +1,11 @@
 # weddell-seal-mark-recap-app
 Next generation Android app to support data capture in the field
 
+November 26, 2023
+Test Version: app-pup-entry-patch
+Home Screen
+-Bug fix: moved start census and start observation to bottom navigation bar on home screen
+
 November 19, 2023
 Test Version: app-pup-entry
 Home Screen

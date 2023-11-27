@@ -5,18 +5,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dataset
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -26,7 +28,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -85,23 +86,48 @@ fun homeScaffold(navController: NavHostController) {
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary
             ) {
-                Button(
-                    onClick = { (navController.navigate(Screens.RecentObservations.route)) },
-                    Modifier.padding(4.dp)
+                BottomNavigation(
+                    modifier = Modifier.fillMaxSize(),
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    Icon(Icons.Filled.Dataset, contentDescription = "View Recent Observations")
+                    BottomNavigationItem(
+                        label = { Text(text = "Recent Observations") },
+                        selected = false,
+                        onClick = { navController.navigate(Screens.RecentObservations.route) },
+                        icon = { Icon(Icons.Filled.Dataset, null) }
+                    )
+                    val contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+                    BottomNavigationItem(
+                        label = { Text(text = "Start Census", color = contentColor) },
+                        selected = false,
+                        onClick = { /*TODO */ },
+                        icon = { Icon(Icons.Filled.PostAdd, "Start Census", tint = contentColor) }
+                    )
+                    BottomNavigationItem(
+                        label = { Text(text = "Start Observation") },
+                        selected = false,
+                        onClick = { navController.navigate(Screens.AddObservationLog.route) },
+                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") }
+                    )
                 }
-                Text(
-                    modifier = Modifier.fillMaxWidth(.4f),
-                    text = "View Recent Observations",
-                    softWrap = true
-                )
+//                Button(
+//                    onClick = { (navController.navigate(Screens.RecentObservations.route)) },
+//                    Modifier.padding(4.dp)
+//                ) {
+//                    Icon(Icons.Filled.Dataset, contentDescription = "View Recent Observations")
+//                }
+//                Text(
+//                    modifier = Modifier.fillMaxWidth(.4f),
+//                    text = "View Recent Observations",
+//                    softWrap = true
+//                )
             }
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+//                .scrollable(rememberScrollState(), Orientation.Vertical)
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -196,30 +222,30 @@ fun homeScaffold(navController: NavHostController) {
 //                    }
                 }
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                ) {
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    containerColor = Color.LightGray,
-                    onClick = { },
-                    icon = { Icon(Icons.Filled.PostAdd, "Start Census") },
-                    text = { Text(text = "Start Census") }
-                )
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth(),
+//                horizontalArrangement = Arrangement.Center,
+//                ) {
+//                ExtendedFloatingActionButton(
+//                    modifier = Modifier.padding(16.dp),
+//                    containerColor = Color.LightGray,
+//                    onClick = { },
+//                    icon = { Icon(Icons.Filled.PostAdd, "Start Census") },
+//                    text = { Text(text = "Start Census") }
+//                )
                 // TODO Live version of the start census button
 //                ExtendedFloatingActionButton(
 //                    modifier = Modifier.padding(16.dp),
 //                    onClick = { },
 //                    icon = { Icon(Icons.Filled.PostAdd, "Start Census") },
 //                    text = { Text(text = "Start Census") })
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
-                    icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
-                    text = { Text(text = "Start Observation") })
-            }
+//                ExtendedFloatingActionButton(
+//                    modifier = Modifier.padding(16.dp),
+//                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
+//                    icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
+//                    text = { Text(text = "Start Observation") })
+//            }
         }
     }
 }
