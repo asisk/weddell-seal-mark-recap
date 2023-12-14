@@ -15,6 +15,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Weddell Seal Mark Recap"
 include(":app")
-include(":core:model")
-include(":core:data")
-include(":core:datastore")

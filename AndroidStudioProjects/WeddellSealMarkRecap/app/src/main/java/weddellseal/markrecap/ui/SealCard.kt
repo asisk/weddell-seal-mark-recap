@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.model.AddObservationLogViewModel
+import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.ui.entryfields.CommentField
 import weddellseal.markrecap.ui.entryfields.DropdownField
 import weddellseal.markrecap.ui.entryfields.NumberFieldValidateOnCharCount

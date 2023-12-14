@@ -55,8 +55,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.model.AddLogViewModelFactory
-import weddellseal.markrecap.model.AddObservationLogViewModel
+import weddellseal.markrecap.models.AddLogViewModelFactory
+import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 

@@ -15,6 +15,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import weddellseal.markrecap.database.AppDatabase
+import weddellseal.markrecap.database.ObservationDao
+import weddellseal.markrecap.database.ObservationLogEntry
 import java.io.File
 import java.util.Date
 import java.util.concurrent.CountDownLatch

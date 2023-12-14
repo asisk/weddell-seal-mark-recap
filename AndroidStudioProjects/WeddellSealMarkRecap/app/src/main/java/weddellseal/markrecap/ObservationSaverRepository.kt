@@ -12,6 +12,8 @@ import androidx.lifecycle.liveData
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import weddellseal.markrecap.database.AppDatabase
+import weddellseal.markrecap.database.ObservationLogEntry
 import java.io.File
 import java.io.IOException
 import java.io.OutputStreamWriter

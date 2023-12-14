@@ -11,6 +11,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.ui.AddObservationLogScreen
+import weddellseal.markrecap.ui.HomeScreen
+import weddellseal.markrecap.ui.RecentObservationsScreen
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
@@ -30,9 +32,9 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val startNavigation = Screens.HomeScreen.route
                     NavHost(navController = navController, startDestination = startNavigation) {
-                        composable(Screens.HomeScreen.route) { HomeScreen(navController)}
+                        composable(Screens.HomeScreen.route) { HomeScreen(navController) }
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController) }
-                        composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController)}
+                        composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }
                     }
                 }
             }
