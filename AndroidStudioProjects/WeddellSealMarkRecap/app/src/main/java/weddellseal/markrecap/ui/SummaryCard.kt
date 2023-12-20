@@ -8,10 +8,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.ui.components.SummaryListItem
 
 @Composable
 fun SummaryCard(
@@ -38,17 +40,14 @@ fun SummaryCard(
                 .verticalScroll(rememberScrollState())
         ) {
             // NOTEBOOK DISPLAY
-            val headlineText = adult.age + " Seal Details: "
-            SummaryListItem(headlineText, adult.notebookDataString)
+            Text(text = adult.notebookDataString, style = MaterialTheme.typography.titleLarge)
 
             if (pupOne.isStarted) {
-                val pupHeadlineText = pupOne.age + " Seal Details: "
-                SummaryListItem(pupHeadlineText, pupOne.notebookDataString)
+                Text(text = pupOne.notebookDataString, style = MaterialTheme.typography.titleLarge)
             }
 
             if (pupTwo.isStarted) {
-                val pupTwoHeadlineText = pupTwo.age + " Seal Details: "
-                SummaryListItem(pupTwoHeadlineText, pupTwo.notebookDataString)
+                Text(text = pupTwo.notebookDataString, style = MaterialTheme.typography.titleLarge)
             }
 
             // GPS DISPLAY

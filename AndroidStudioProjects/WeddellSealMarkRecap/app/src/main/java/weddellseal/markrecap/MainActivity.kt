@@ -3,6 +3,7 @@ package weddellseal.markrecap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,12 +18,13 @@ import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
 class MainActivity : ComponentActivity() {
-    private lateinit var permissionManager: PermissionManager
+//    private lateinit var permissionManager: PermissionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        permissionManager = (application as ObservationLogApplication).permissions
+//        permissionManager = (application as ObservationLogApplication).permissions
 
+        enableEdgeToEdge()
         setContent {
             WeddellSealMarkRecapTheme {
                 Surface(
@@ -39,13 +41,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-/*        lifecycleScope.launch {
-            permissionManager.checkPermissions()
-        }*/
     }
 }
 

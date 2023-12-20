@@ -2,6 +2,8 @@ package weddellseal.markrecap.ui
 
 import android.os.Build.getSerial
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ContentAlpha
@@ -35,8 +38,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.ui.entryfields.DropdownField
-import weddellseal.markrecap.ui.entryfields.TextFieldValidateOnCharCount
+import weddellseal.markrecap.ui.components.DropdownField
+import weddellseal.markrecap.ui.components.TextFieldValidateOnCharCount
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 @Composable
@@ -99,12 +102,12 @@ fun homeScaffold(navController: NavHostController) {
                         icon = { Icon(Icons.Filled.Dataset, null) }
                     )
                     val contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-                    BottomNavigationItem(
-                        label = { Text(text = "Start Census", color = contentColor) },
-                        selected = false,
-                        onClick = { /*TODO */ },
-                        icon = { Icon(Icons.Filled.PostAdd, "Start Census", tint = contentColor) }
-                    )
+//                    BottomNavigationItem(
+//                        label = { Text(text = "Start Census", color = contentColor) },
+//                        selected = false,
+//                        onClick = { /*TODO */ },
+//                        icon = { Icon(Icons.Filled.PostAdd, "Start Census", tint = contentColor) }
+//                    )
                     BottomNavigationItem(
                         label = { Text(text = "Start Observation") },
                         selected = false,
@@ -112,24 +115,13 @@ fun homeScaffold(navController: NavHostController) {
                         icon = { Icon(Icons.Filled.PostAdd, "Start Observation") }
                     )
                 }
-//                Button(
-//                    onClick = { (navController.navigate(Screens.RecentObservations.route)) },
-//                    Modifier.padding(4.dp)
-//                ) {
-//                    Icon(Icons.Filled.Dataset, contentDescription = "View Recent Observations")
-//                }
-//                Text(
-//                    modifier = Modifier.fillMaxWidth(.4f),
-//                    text = "View Recent Observations",
-//                    softWrap = true
-//                )
             }
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-//                .scrollable(rememberScrollState(), Orientation.Vertical)
+                .scrollable(rememberScrollState(), Orientation.Vertical)
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -152,7 +144,6 @@ fun homeScaffold(navController: NavHostController) {
                 // OBSERVER
                 Row(
                     modifier = Modifier
-//                        .fillMaxWidth()
                         .padding(10.dp),
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
@@ -212,42 +203,9 @@ fun homeScaffold(navController: NavHostController) {
                         verticalAlignment = Alignment.CenterVertically
                 ) {
                     //TODO, pull a system field and use it in place of This
-//                    var compId by remember { mutableStateOf("This") }
-                    Column(modifier = Modifier.padding(4.dp)) {
-                        Text(text = "Tablet Id: TBD")
-                    }
-//                    val serialNumber = getSerial()
-//
-//                    Column {
-//                        // Display the serial number in your Composable
-//                        Text(text = "Serial Number: $serialNumber")
-//                    }
+//                    SerialNumberDisplay()
                 }
             }
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth(),
-//                horizontalArrangement = Arrangement.Center,
-//                ) {
-//                ExtendedFloatingActionButton(
-//                    modifier = Modifier.padding(16.dp),
-//                    containerColor = Color.LightGray,
-//                    onClick = { },
-//                    icon = { Icon(Icons.Filled.PostAdd, "Start Census") },
-//                    text = { Text(text = "Start Census") }
-//                )
-                // TODO Live version of the start census button
-//                ExtendedFloatingActionButton(
-//                    modifier = Modifier.padding(16.dp),
-//                    onClick = { },
-//                    icon = { Icon(Icons.Filled.PostAdd, "Start Census") },
-//                    text = { Text(text = "Start Census") })
-//                ExtendedFloatingActionButton(
-//                    modifier = Modifier.padding(16.dp),
-//                    onClick = { (navController.navigate(Screens.AddObservationLog.route)) },
-//                    icon = { Icon(Icons.Filled.PostAdd, "Start Observation") },
-//                    text = { Text(text = "Start Observation") })
-//            }
         }
     }
 }

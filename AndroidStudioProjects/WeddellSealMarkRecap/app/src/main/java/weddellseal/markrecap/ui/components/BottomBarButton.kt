@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui
+package weddellseal.markrecap.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

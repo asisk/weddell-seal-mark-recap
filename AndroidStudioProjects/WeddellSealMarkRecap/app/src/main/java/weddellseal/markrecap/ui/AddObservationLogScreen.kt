@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ContentAlpha
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -47,9 +46,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -57,31 +54,26 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddLogViewModelFactory
 import weddellseal.markrecap.models.AddObservationLogViewModel
-import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddObservationLogScreen(
     navController: NavHostController,
     viewModel: AddObservationLogViewModel = viewModel(factory = AddLogViewModelFactory())
 ) {
-    // region State initialization
     val state = viewModel.uiState
-    val context = LocalContext.current
+//    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
     val adultSeal = viewModel.adultSeal
     val pupOne = viewModel.pupOne
     val pupTwo = viewModel.pupTwo
-//    var gpsData by remember { mutableStateOf("No data") }
-    // endregion
 
     // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                //viewModel.onPermissionChange(ACCESS_COARSE_LOCATION, isGranted)
                 viewModel.onPermissionChange(ACCESS_FINE_LOCATION, isGranted)
                 viewModel.fetchCurrentLocation()
             } else {
@@ -99,7 +91,6 @@ fun AddObservationLogScreen(
                 requestLocationPermissions.launch(ACCESS_FINE_LOCATION)
                 showExplanationDialogForLocationPermission = false
                 viewModel.fetchCurrentLocation()
-//                viewModel.fetchGeoCoderLocation()
             },
             onDismiss = { showExplanationDialogForLocationPermission = false },
         )
@@ -111,29 +102,20 @@ fun AddObservationLogScreen(
     fun canAddLocation() {
         if (viewModel.hasPermission(ACCESS_FINE_LOCATION)) {
             viewModel.fetchCurrentLocation()
-//            viewModel.fetchGeoCoderLocation()
         } else {
-            //requestLocationPermissions.launch(ACCESS_FINE_LOCATION)
             showExplanationDialogForLocationPermission = true
         }
     }
-
-    // region helper functions
 
     LaunchedEffect(Unit) {
         // preload the model with location data
         canAddLocation()
     }
 
-    //send the user back to the home screen when a log is saved
-    //TODO, give the user the option to enter another seal without automatically routing to home
+    //send the user back to the observation screen when a log is saved
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
-            navController.navigate(Screens.HomeScreen.route) {
-                popUpTo(Screens.HomeScreen.route) {
-                    inclusive = false
-                }
-            }
+            navController.navigate(Screens.AddObservationLog.route) { }
         }
     }
 
@@ -158,47 +140,40 @@ fun AddObservationLogScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        // region UI - Top Bar & Action Button
-        topBar = {
-            TopAppBar(title = { Text("Back", fontFamily = FontFamily.Serif) },
-                navigationIcon = {
-                    if (navController.previousBackStackEntry != null) {
-                        if (showSummary) {
-                            IconButton(onClick = { showSummary = false }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
-                                )
-                            }
-                        } else {
-                            IconButton(onClick = { navController.navigateUp() }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
-                                )
+            topBar = {
+        if (showSummary) {
+                TopAppBar(title = { Text("Back", fontFamily = FontFamily.Serif) },
+                    navigationIcon = {
+                        if (navController.previousBackStackEntry != null) {
+                            if (showSummary) {
+                                IconButton(onClick = { showSummary = false }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back to Observation"
+                                    )
+                                }
                             }
                         }
                     }
-                }
-            )
+                )
+            }
         },
         bottomBar = {
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,
             ) {
-                if (!showSummary) {
-                    BottomNavigation(
-                        modifier = Modifier.fillMaxSize(),
-                        backgroundColor = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        BottomNavigationItem(
-                            label = { Text(text = "Home") },
-                            selected = false,
-                            onClick = { navController.navigate(Screens.HomeScreen.route) },
-                            icon = { Icon(Icons.Filled.Home, null) }
-                        )
-
+                BottomNavigation(
+                    modifier = Modifier.fillMaxSize(),
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    BottomNavigationItem(
+                        label = { Text(text = "Home") },
+                        selected = false,
+                        onClick = { navController.navigate(Screens.HomeScreen.route) },
+                        icon = { Icon(Icons.Filled.Home, null) }
+                    )
+                    if (!showSummary) {
                         if (showAdult) {
                             // PUP BUTTON - LIVE
                             if (adultSeal.numRelatives >= 1 && !pupOne.isStarted) {
@@ -206,8 +181,10 @@ fun AddObservationLogScreen(
                                     label = { Text(text = "Add Pup") },
                                     selected = false,
                                     onClick = {
+                                        viewModel.startPup(pupOne)
                                         showAdult = false
                                         showPup = true
+
                                     },
                                     icon = { Icon(Icons.Filled.Add, null) }
                                 )
@@ -240,13 +217,6 @@ fun AddObservationLogScreen(
                             )
                         BottomNavigationItem(
                             enabled = adultSeal.isStarted,
-//                            modifier = Modifier.clickable {
-//                                if (adultSeal.isStarted) {
-//                                    canSaveLog {
-//                                        viewModel.createLog()
-//                                    }
-//                                }
-//                            },
                             label = { Text(text = "Save", color = contentColor) },
                             selected = false,
                             onClick = {
@@ -272,7 +242,6 @@ fun AddObservationLogScreen(
                 }
             }
         }
-        // endregion
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -280,16 +249,12 @@ fun AddObservationLogScreen(
                 .fillMaxSize()
         ) {
             if (!showSummary) {
-                if (showAdult) {
-                    SealCard(viewModel, adultSeal)
+                SealCard(viewModel, adultSeal, showAdult)
+                if (pupOne.isStarted) {
+                    SealCard(viewModel, pupOne, showPup)
                 }
-                if (showPup) {
-                    // show new card and show summary fields from parent
-                    SealCard(viewModel, pupOne)
-                }
-                if (showPupTwo) {
-                    // show new card and show summary fields from parent
-                    SealCard(viewModel, pupTwo)
+                if (pupTwo.isStarted) {
+                    SealCard(viewModel, pupTwo, showPupTwo)
                 }
             } else {
                 SummaryCard(viewModel, adultSeal, pupOne, pupTwo)
@@ -301,8 +266,8 @@ fun AddObservationLogScreen(
                             viewModel.createLog()
                         }
                     },
-                    icon = { Icon(Icons.Filled.Save, "Continue Saving") },
-                    text = { Text(text = "Continue Saving") }
+                    icon = { Icon(Icons.Filled.Save, "Save and Start New Observation") },
+                    text = { Text(text = "Save and Start New Observation") }
                 )
             }
         }
@@ -333,13 +298,6 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             }
         }
     )
-}
-
-@Preview
-@Composable
-fun ObservationScreen() {
-    WeddellSealMarkRecapTheme {
-    }
 }
 
 

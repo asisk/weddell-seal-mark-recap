@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.entryfields
+package weddellseal.markrecap.ui.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer

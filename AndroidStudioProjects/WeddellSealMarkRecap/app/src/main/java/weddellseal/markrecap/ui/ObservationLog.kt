@@ -5,7 +5,7 @@ package weddellseal.markrecap.ui
  *
  */
 
-import weddellseal.markrecap.database.ObservationLogEntry
+import weddellseal.markrecap.data.ObservationLogEntry
 import java.text.SimpleDateFormat
 import java.util.Locale
 

@@ -1,4 +1,4 @@
-package weddellseal.markrecap.database
+package weddellseal.markrecap.data
 
 /*
  * Data access object. A mapping of SQL queries to functions.
@@ -14,11 +14,7 @@ import androidx.room.Query
 
 @Dao
 interface ObservationDao {
-    //selects all from the observationLogs table
-//    @Query("SELECT * FROM observationLogs ORDER BY date DESC")
-//    suspend fun getAll(): Any?
-
-    //this uses LiveData which is used by the Home Screen to display database entries for observations
+    //uses LiveData to display database entries in the UI
     @Query("SELECT * FROM observationLogs ORDER BY id DESC")
     fun loadAllObservations(): LiveData<List<ObservationLogEntry>>
     @Query("SELECT * FROM observationLogs")

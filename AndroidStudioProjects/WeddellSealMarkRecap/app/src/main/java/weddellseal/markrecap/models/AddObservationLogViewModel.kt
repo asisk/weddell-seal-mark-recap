@@ -32,14 +32,14 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.ObservationLogApplication
-import weddellseal.markrecap.database.ObservationLogEntry
-import weddellseal.markrecap.ObservationSaverRepository
+import weddellseal.markrecap.data.ObservationLogEntry
+import weddellseal.markrecap.data.ObservationRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class AddObservationLogViewModel(
     application: Application,
-    private val observationSaver: ObservationSaverRepository
+    private val observationRepo: ObservationRepository
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
@@ -100,18 +100,35 @@ class AddObservationLogViewModel(
     var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup"))
         private set
 
+    fun startPup(seal: Seal) {
+        when (seal.name) {
+            "pupOne" -> {
+                pupOne = pupOne.copy(numRelatives = adultSeal.numRelatives, isStarted = true)
+                updateNotebookEntry(pupOne)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(numRelatives = adultSeal.numRelatives, isStarted = true)
+                updateNotebookEntry(pupTwo)
+            }
+        }
+    }
+
     fun updateCondition(sealName: String, input: String) {
         when (sealName) {
             "adult" -> {
                 adultSeal = adultSeal.copy(condition = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(condition = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(condition = input, isStarted = true)
+                updateNotebookEntry(pupTwo)
             }
         }
     }
@@ -120,20 +137,24 @@ class AddObservationLogViewModel(
         updateTagNumber(seal, 0)
         updateTagAlpha(seal, "")
         updateTagId(seal)
+        updateNotebookEntry(seal)
     }
 
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
                 adultSeal = adultSeal.copy(age = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(age = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(age = input, isStarted = true)
+                updateNotebookEntry(pupTwo)
             }
         }
     }
@@ -144,14 +165,17 @@ class AddObservationLogViewModel(
             when (seal.name) {
                 "adult" -> {
                     adultSeal = adultSeal.copy(numRelatives = number, isStarted = true)
+                    updateNotebookEntry(adultSeal)
                 }
 
                 "pupOne" -> {
                     pupOne = pupOne.copy(numRelatives = number, isStarted = true)
+                    updateNotebookEntry(pupOne)
                 }
 
                 "pupTwo" -> {
                     pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
+                    updateNotebookEntry(pupTwo)
                 }
             }
         }
@@ -161,14 +185,17 @@ class AddObservationLogViewModel(
         when (seal.name) {
             "adult" -> {
                 adultSeal = adultSeal.copy(sex = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(sex = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(sex = input, isStarted = true)
+                updateNotebookEntry(pupTwo)
             }
         }
     }
@@ -177,32 +204,41 @@ class AddObservationLogViewModel(
         when (seal.name) {
             "adult" -> {
                 adultSeal = adultSeal.copy(tagAlpha = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(tagAlpha = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(tagAlpha = input, isStarted = true)
+                updateNotebookEntry(pupTwo)
             }
         }
         updateTagId(seal)
     }
 
     private fun updateTagId(seal: Seal) {
+        var tagIdStr = seal.tagNumber.toString() + seal.tagAlpha
+        if (seal.numTags == 2) {
+            tagIdStr = seal.tagNumber.toString() + seal.tagAlpha + seal.tagAlpha
+        }
         when (seal.name) {
             "adult" -> {
-                adultSeal =
-                    adultSeal.copy(tagId = adultSeal.tagNumber.toString() + adultSeal.tagAlpha, isStarted = true)
+                adultSeal = adultSeal.copy(tagId = tagIdStr, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagId = pupOne.tagNumber.toString() + pupOne.tagAlpha, isStarted = true)
+                pupOne = pupOne.copy(tagId = tagIdStr, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagId = pupTwo.tagNumber.toString() + pupTwo.tagAlpha, isStarted = true)
+                pupTwo = pupTwo.copy(tagId = tagIdStr, isStarted = true)
+                updateNotebookEntry(pupTwo)
             }
         }
     }
@@ -211,10 +247,12 @@ class AddObservationLogViewModel(
         when (seal.name) {
             "adult" -> {
                 adultSeal = adultSeal.copy(tagNumber = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(tagNumber = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
@@ -228,10 +266,12 @@ class AddObservationLogViewModel(
         when (seal.name) {
             "adult" -> {
                 adultSeal = adultSeal.copy(tagEventType = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(tagEventType = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
@@ -244,10 +284,12 @@ class AddObservationLogViewModel(
         when (sealName) {
             "adult" -> {
                 adultSeal = adultSeal.copy(comment = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(comment = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
@@ -263,10 +305,12 @@ class AddObservationLogViewModel(
             when (sealName) {
                 "adult" -> {
                     adultSeal = adultSeal.copy(numTags = number, isStarted = true)
+                    updateTagId(adultSeal)
                 }
 
                 "pupOne" -> {
                     pupOne = pupOne.copy(numTags = number, isStarted = true)
+                    updateTagId(pupOne)
                 }
 
                 "pupTwo" -> {
@@ -280,10 +324,12 @@ class AddObservationLogViewModel(
         when (sealName) {
             "adult" -> {
                 adultSeal = adultSeal.copy(tissueTaken = input, isStarted = true)
+                updateNotebookEntry(adultSeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(tissueTaken = input, isStarted = true)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
@@ -346,7 +392,7 @@ class AddObservationLogViewModel(
 
     fun isValid(): Boolean {
 //        if (!observationSaver.isEmpty() && !uiState.isSaving) {
-        if (observationSaver.canAddObservation() && !uiState.isSaving) {
+        if (observationRepo.canAddObservation() && !uiState.isSaving) {
             return true
         }
         return false
@@ -462,7 +508,7 @@ class AddObservationLogViewModel(
                 lastKnownLocation = uiState.lastKnownLocation
             )
             //TODO, consider a validation check to see if fields are populated before inserting to database
-            observationSaver.addObservation(log)
+            observationRepo.addObservation(log)
             //saving state triggers the navigation to route to home
             uiState = uiState.copy(isSaved = true)
         }
@@ -475,6 +521,6 @@ class AddLogViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val app = extras[APPLICATION_KEY] as ObservationLogApplication
-        return AddObservationLogViewModel(app, app.observationSaver) as T
+        return AddObservationLogViewModel(app, app.observationRepo) as T
     }
 }

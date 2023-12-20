@@ -1,4 +1,4 @@
-package weddellseal.markrecap.database
+package weddellseal.markrecap.data
 
 /*
  * Simplifies database work and serves as an access point to the

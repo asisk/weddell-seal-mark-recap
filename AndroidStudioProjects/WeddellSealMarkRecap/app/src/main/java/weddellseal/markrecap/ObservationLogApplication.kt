@@ -7,14 +7,18 @@ package weddellseal.markrecap
  */
 
 import android.app.Application
+import weddellseal.markrecap.data.AppDatabase
+import weddellseal.markrecap.data.ObservationRepository
 
 class ObservationLogApplication : Application() {
-    lateinit var observationSaver: ObservationSaverRepository
-    lateinit var permissions: PermissionManager
+    private lateinit var db : AppDatabase
+    lateinit var observationRepo: ObservationRepository
+//    lateinit var permissions: PermissionManager
+
     override fun onCreate() {
         super.onCreate()
-
-        observationSaver = ObservationSaverRepository(this, this.contentResolver)
-        permissions = PermissionManager(this)
+        db = AppDatabase.getDatabase(applicationContext)
+        observationRepo = ObservationRepository(db.observationDao())
+//        permissions = PermissionManager(this)
     }
 }

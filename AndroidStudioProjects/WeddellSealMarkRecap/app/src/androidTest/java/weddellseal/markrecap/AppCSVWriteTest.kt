@@ -15,9 +15,10 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import weddellseal.markrecap.database.AppDatabase
-import weddellseal.markrecap.database.ObservationDao
-import weddellseal.markrecap.database.ObservationLogEntry
+import weddellseal.markrecap.data.AppDatabase
+import weddellseal.markrecap.data.ObservationDao
+import weddellseal.markrecap.data.ObservationLogEntry
+import weddellseal.markrecap.data.ObservationRepository
 import java.io.File
 import java.util.Date
 import java.util.concurrent.CountDownLatch
@@ -28,20 +29,23 @@ class AppCSVWriteTest {
     lateinit var database: AppDatabase
     lateinit var observationDao: ObservationDao
     lateinit var appContext: Context
-    lateinit var observationSaver: ObservationSaverRepository
+    lateinit var observationSaver: ObservationRepository
+    lateinit var obsFolder: File
     lateinit var file: File
 
     @Before
     fun setUpDatabase(){
         appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        observationSaver = ObservationSaverRepository(appContext, appContext.contentResolver)
-        file = observationSaver.generateObservationLogFile()
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
         ).allowMainThreadQueries().build()
 
         observationDao = database.observationDao()
+        observationSaver = ObservationRepository(observationDao)
+        obsFolder = File(appContext.filesDir, "observations").also { it.mkdir() }
+        file = File(obsFolder, "${System.currentTimeMillis()}.csv")
+
     }
     @After
     fun tearDown(){

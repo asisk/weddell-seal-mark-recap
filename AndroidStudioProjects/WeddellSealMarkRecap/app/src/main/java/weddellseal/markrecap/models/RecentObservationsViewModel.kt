@@ -2,7 +2,7 @@ package weddellseal.markrecap.models
 
 /*
  * Primary model that acts as a communication center between the
- * ObservationSaverRepository (data) and the UI.
+ * ObservationRepository (data) and the UI.
  * The UI no longer needs to worry about the origin of the data.
  * ViewModel instances survive Activity/Fragment recreation.
  */
@@ -24,19 +24,19 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.ObservationLogApplication
-import weddellseal.markrecap.ObservationSaverRepository
-import weddellseal.markrecap.database.ObservationLogEntry
+import weddellseal.markrecap.data.ObservationLogEntry
+import weddellseal.markrecap.data.ObservationRepository
 import java.io.File
-
 
 class RecentObservationsViewModel(
     application: Application,
-    val observationSaver: ObservationSaverRepository,
+    private val observationRepo: ObservationRepository,
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
+
     // allows for the screen to observe LiveData as observations are saved
-    val observationsFlow: Flow<List<ObservationLogEntry>> = observationSaver.observations.asFlow()
+    val observationsFlow: Flow<List<ObservationLogEntry>> = observationRepo.observations.asFlow()
 
     data class UiState(
         val loading: Boolean = true,
@@ -45,9 +45,8 @@ class RecentObservationsViewModel(
     )
 
     var uiState by mutableStateOf(
-        UiState(
-        observations = observationSaver._observations
-        )
+        UiState()
+//        UiState(observations = observationRepo._observations)
     )
         private set
 
@@ -57,8 +56,18 @@ class RecentObservationsViewModel(
         )
         // may need to throw an error if no uri returned from file picker call
     }
+//    fun populateObsView () {
+//        viewModelScope.launch {
+//            // Fetch observations only if it's not already available
+//            if (uiState.observations.isEmpty()) {
+//                val observations = observationRepo.getObservations()
+//                uiState.observations = observations
+//                observations.isEmpty()
+//            }
+//        }
+//    }
 
-    fun exportLogs() {
+    fun exportLogs(context: Context) {
         viewModelScope.launch {
             try {
                 // Ensure there's a URI selected for writing the CSV file
@@ -74,7 +83,7 @@ class RecentObservationsViewModel(
                 if (file != null) {
                     // Create an Intent to share the file
                     // Save observations to the file
-                    observationSaver.writeDataToFile(uriForCSVWrite)
+                    observationRepo.writeDataToFile(uriForCSVWrite, context.contentResolver)
 
                 } else {
                     throw NoUriSelectedException("No file found for the selected URI")
@@ -102,6 +111,7 @@ class RecentObservationsViewModel(
     }
 }
 
+
 class NoUriSelectedException(message: String = "No URI was selected") : IllegalArgumentException(message)
 
 class HomeViewModelFactory : ViewModelProvider.Factory {
@@ -109,6 +119,6 @@ class HomeViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val app =
             extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
-        return RecentObservationsViewModel(app, app.observationSaver) as T
+        return RecentObservationsViewModel(app, app.observationRepo) as T
     }
 }

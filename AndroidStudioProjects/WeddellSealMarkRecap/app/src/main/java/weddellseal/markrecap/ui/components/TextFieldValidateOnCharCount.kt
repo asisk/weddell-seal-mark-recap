@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.entryfields
+package weddellseal.markrecap.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth

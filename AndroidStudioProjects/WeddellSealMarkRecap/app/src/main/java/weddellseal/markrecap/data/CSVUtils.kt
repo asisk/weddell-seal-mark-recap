@@ -1,4 +1,4 @@
-package weddellseal.markrecap
+package weddellseal.markrecap.data
 
 import com.opencsv.CSVWriter
 import java.io.File
