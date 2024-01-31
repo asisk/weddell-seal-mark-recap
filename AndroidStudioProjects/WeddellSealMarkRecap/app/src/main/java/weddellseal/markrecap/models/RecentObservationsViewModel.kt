@@ -46,7 +46,6 @@ class RecentObservationsViewModel(
 
     var uiState by mutableStateOf(
         UiState()
-//        UiState(observations = observationRepo._observations)
     )
         private set
 
@@ -56,16 +55,6 @@ class RecentObservationsViewModel(
         )
         // may need to throw an error if no uri returned from file picker call
     }
-//    fun populateObsView () {
-//        viewModelScope.launch {
-//            // Fetch observations only if it's not already available
-//            if (uiState.observations.isEmpty()) {
-//                val observations = observationRepo.getObservations()
-//                uiState.observations = observations
-//                observations.isEmpty()
-//            }
-//        }
-//    }
 
     fun exportLogs(context: Context) {
         viewModelScope.launch {

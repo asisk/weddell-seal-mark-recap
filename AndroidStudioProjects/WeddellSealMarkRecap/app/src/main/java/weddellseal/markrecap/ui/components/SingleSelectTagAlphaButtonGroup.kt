@@ -26,8 +26,8 @@ var selectedButton by remember { mutableStateOf(valueInModel) }
             colors = ButtonDefaults.buttonColors(
                 containerColor = when (option) {
                     "A" -> if (selectedButton == option) Color.Gray else Color.Yellow
-                    "C" -> if (selectedButton == option) Color.Gray else Color.Green
-                    "D" -> if (selectedButton == option) Color.Gray else Color.Blue
+                    "C" -> if (selectedButton == option) Color.Gray else Color.Blue
+                    "D" -> if (selectedButton == option) Color.Gray else Color.Green
                     else -> Color.Unspecified
                 }
             )
@@ -36,8 +36,8 @@ var selectedButton by remember { mutableStateOf(valueInModel) }
                 option,
                 color = when (option) {
                     "A" -> if (selectedButton == option) Color.White else Color.Black
-                    "C" -> if (selectedButton == option) Color.White else Color.Black
-                    "D" -> if (selectedButton == option) Color.White else Color.White
+                    "C" -> if (selectedButton == option) Color.White else Color.White
+                    "D" -> if (selectedButton == option) Color.White else Color.Black
                     else -> Color.Black
                 }
             )

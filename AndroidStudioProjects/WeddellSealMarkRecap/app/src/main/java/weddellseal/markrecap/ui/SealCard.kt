@@ -1,9 +1,13 @@
 package weddellseal.markrecap.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -11,29 +15,37 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.ui.components.CommentField
 import weddellseal.markrecap.ui.components.DropdownField
-import weddellseal.markrecap.ui.components.NumberFieldValidateOnCharCount
 import weddellseal.markrecap.ui.components.SingleSelectButtonGroup
 import weddellseal.markrecap.ui.components.SingleSelectTagAlphaButtonGroup
+import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 @Composable
 fun SealCard(
@@ -78,33 +90,85 @@ fun SealCard(
                 modifier = Modifier
                     .fillMaxWidth(.7f)
                     .padding(10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                //AGE
-                Text(text = "Age")
-                val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
-                SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
-                    viewModel.updateAge(
-                        seal,
-                        newText
-                    )
+                ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(2f)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    //AGE
+                    Text(text = "Age")
+                    val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
+                    SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
+                        viewModel.updateAge(
+                            seal,
+                            newText
+                        )
+                    }
                 }
             }
 
-            // SEX
+            // SEX & PUP PEED
+//            val (checkedStatePeed, onStateChangePeed) = remember { mutableStateOf(seal.tissueTaken) }
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(.7f)
+                    .fillMaxWidth()
+//                    .toggleable(
+//                        value = checkedStatePeed,
+//                        onValueChange = {
+//                            onStateChangePeed(!checkedStatePeed)
+//                            viewModel.updatePupPeed(seal.name, checkedStatePeed)
+//                        },
+//                        role = Role.Checkbox
+//                    )
                     .padding(10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Sex")
-                val buttonListSex = listOf<String>("Female", "Male", "Unknown")
-                SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
-                    viewModel.updateSex(seal, newText)
+                Row(
+                    modifier = Modifier
+                        .weight(2f)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Sex")
+                    val buttonListSex = listOf<String>("Female", "Male", "Unknown")
+                    SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
+                        viewModel.updateSex(seal, newText)
+                    }
                 }
+//                if (seal.age == "Pup") {
+                    Spacer(modifier = Modifier.width(10.dp))
+                var isChecked by remember {
+                    mutableStateOf(false)
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Pup Peed",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                    Checkbox(
+                        checked = isChecked,
+                        onCheckedChange = {
+                            isChecked = it
+                            viewModel.updatePupPeed(seal.name, it)
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                    )
+                }
+//            }
             }
             // NUMBER OF RELATIVES
             Row(
@@ -114,16 +178,24 @@ fun SealCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val numRelsFieldVal = if (seal.numRelatives > 0) {
-                    seal.numRelatives
-                } else {
-                    ""
-                }
-                NumberFieldValidateOnCharCount(
-                    numRelsFieldVal.toString(),
-                    1,
-                    "# of Relatives",
-                    "Enter # of relatives present"
+//                val numRelsFieldVal = if (seal.numRelatives > 0) {
+//                    seal.numRelatives
+//                } else {
+//                    ""
+//                }
+//                NumberFieldValidateOnCharCount(
+//                    numRelsFieldVal.toString(),
+//                    1,
+//                    "# of Relatives",
+//                    "Enter # of relatives present"
+//                ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
+
+                // NUMBER OF RELATIVES
+                Text(text = "# of Relatives")
+                val numTagsList = listOf<String>("0", "1", "2")
+                SingleSelectButtonGroup(
+                    numTagsList,
+                    seal.numRelatives.toString()
                 ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
 
                 // CONDITION
@@ -131,7 +203,7 @@ fun SealCard(
                 Text(text = "Condition")
                 Spacer(modifier = Modifier.width(10.dp))
                 // TODO, address the option to clear a condition for an adult
-                val conditions = listOf<String>("Dead", "Poor", "Fair", "Good", "Newborn")
+                val conditions = listOf<String>("0 - Dead", "1 - Poor", "2 - Fair", "3 - Good", "4 - Newborn")
                 DropdownField(conditions) { newText ->
                     viewModel.updateCondition(
                         seal.name,
@@ -147,28 +219,36 @@ fun SealCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // NUMBER OF TAGS
-                val numTagsFieldVal = if (seal.numTags > 0) {
-                    seal.numTags
-                } else {
-                    ""
-                }
-                NumberFieldValidateOnCharCount(
-                    numTagsFieldVal.toString(),
-                    1,
-                    "# of Tags",
-                    "Enter # of tags present"
+                Text(text = "# of Tags")
+                val numTagsList = listOf<String>("0", "1", "2", "3", "4")
+                SingleSelectButtonGroup(
+                    numTagsList,
+                    seal.numTags.toString()
                 ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
 
+
+//                val numTagsFieldVal = if (seal.numTags > 0) {
+//                    seal.numTags
+//                } else {
+//                    ""
+//                }
+//                NumberFieldValidateOnCharCount(
+//                    numTagsFieldVal.toString(),
+//                    1,
+//                    "# of Tags",
+//                    "Enter # of tags present"
+//                ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
+
                 // TISSUE SAMPLED
-                val (checkedState, onStateChange) = remember { mutableStateOf(seal.tissueTaken) }
+                val (checkedStateTissue, onStateChangeTissue) = remember { mutableStateOf(seal.tissueTaken) }
                 Row(
                     Modifier
                         .fillMaxWidth()
                         .toggleable(
-                            value = checkedState,
+                            value = checkedStateTissue,
                             onValueChange = {
-                                onStateChange(!checkedState)
-                                viewModel.updateTissueTaken(seal.name, checkedState)
+                                onStateChangeTissue(!checkedStateTissue)
+                                viewModel.updateTissueTaken(seal.name, checkedStateTissue)
                             },
                             role = Role.Checkbox
                         )
@@ -182,7 +262,7 @@ fun SealCard(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Checkbox(
-                        checked = checkedState,
+                        checked = checkedStateTissue,
                         onCheckedChange = null // null recommended for accessibility with screenreaders
                     )
                 }
@@ -195,18 +275,20 @@ fun SealCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                var tagidvaltest by rememberSaveable { mutableStateOf("") }
                 val tagIdFieldVal = (if (seal.tagNumber > 0) {
                     seal.tagNumber
                 } else {
                     ""
                 }).toString()
                 TextField(
-                    value = tagIdFieldVal,
+                    value = tagidvaltest,
                     onValueChange = {
                         val number: Int? = it.toIntOrNull()
-                        if (number != null) {
-                            viewModel.updateTagNumber(seal, number)
-                        }
+                        tagidvaltest = it
+//                        if (number != null) {
+//                            viewModel.updateTagNumber(seal, number)
+//                        }
                     },
                     label = { Text("TagNumber") },
                     placeholder = { Text("Enter Tag Number") },
@@ -216,6 +298,10 @@ fun SealCard(
                         onDone = {
                             // Handle "Done" button action
                             keyboardController?.hide()
+                            val number: Int? = tagidvaltest.toIntOrNull()
+                            if (number != null) {
+                                viewModel.updateTagNumber(seal, number)
+                            }
                         }
                     ),
                     trailingIcon = {
@@ -262,5 +348,59 @@ fun SealCard(
                 }
             }
         }
+    }
+}
+
+    @Composable
+    fun DropdownExample() {
+        val options = listOf<String>("A", "C", "D")
+
+        var selectedOption by remember { mutableStateOf("Option 1") }
+        var expanded by remember { mutableStateOf(false) }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Dropdown Field
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable { expanded = true }
+                    .padding(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = selectedOption, color = Color.White)
+                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                }
+            }
+
+            // Dropdown Menu
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(text = { Text(text = option) },
+                        onClick = {
+                            selectedOption = option
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+@Preview
+@Composable
+fun rowDualColumn() {
+    WeddellSealMarkRecapTheme {
+    DropdownExample()
     }
 }

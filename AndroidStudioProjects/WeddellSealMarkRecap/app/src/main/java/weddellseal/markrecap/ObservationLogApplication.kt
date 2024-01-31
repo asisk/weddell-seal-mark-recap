@@ -13,12 +13,12 @@ import weddellseal.markrecap.data.ObservationRepository
 class ObservationLogApplication : Application() {
     private lateinit var db : AppDatabase
     lateinit var observationRepo: ObservationRepository
-//    lateinit var permissions: PermissionManager
+    lateinit var permissions: PermissionManager
 
     override fun onCreate() {
         super.onCreate()
         db = AppDatabase.getDatabase(applicationContext)
         observationRepo = ObservationRepository(db.observationDao())
-//        permissions = PermissionManager(this)
+        permissions = PermissionManager(this)
     }
 }

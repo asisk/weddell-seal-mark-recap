@@ -66,6 +66,18 @@ fun DropdownField(options : List<String>, onValueChange: (String) -> Unit) {
                     contentDescription = "Dropdown Icon",
                     tint = Color.Black
                 )
+//                // Trailing Icon
+//                Icon(
+//                    imageVector = Icons.Default.Clear,
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .padding(8.dp)
+//                        .clickable {
+//                            // Handle the trailing icon click (clear action)
+//                            selectedOption = "Select an option"
+//                            onValueChange(selectedOption)
+//                        }
+//                )
             }
         }
         if (expanded) {
@@ -80,6 +92,13 @@ fun DropdownField(options : List<String>, onValueChange: (String) -> Unit) {
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
+                    DropdownMenuItem(text = { Text(text = "Select an option") },
+                        onClick = {
+                            selectedOption = "Select an option"
+                            onValueChange(selectedOption)
+                            expanded = false
+                        }
+                    )
                     options.forEach { option ->
                         DropdownMenuItem(text = { Text(text = option) },
                             onClick = {
