@@ -103,7 +103,7 @@ class RecentObservationsViewModel(
 
 class NoUriSelectedException(message: String = "No URI was selected") : IllegalArgumentException(message)
 
-class HomeViewModelFactory : ViewModelProvider.Factory {
+class RecentObservationsViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val app =

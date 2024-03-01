@@ -45,6 +45,7 @@ class AddObservationLogViewModel(
         get() = getApplication()
 //    val observationDao = AppDatabase.getDatabase(application).observationDao()
 
+    // for determining if GPS provider is active
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 

@@ -103,6 +103,11 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         return list
     }
 
+    fun canWriteStudyAreas(): Boolean {
+        //TODO, implement for the study area csv
+        return true
+    }
+
     companion object {
 
         // For Singleton instantiation

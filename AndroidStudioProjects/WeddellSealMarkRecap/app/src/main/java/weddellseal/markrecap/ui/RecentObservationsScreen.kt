@@ -44,13 +44,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.HomeViewModelFactory
 import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.models.RecentObservationsViewModelFactory
 
 @Composable
 fun RecentObservationsScreen(
     navController: NavHostController,
-    viewModel: RecentObservationsViewModel = viewModel(factory = HomeViewModelFactory())
+    viewModel: RecentObservationsViewModel = viewModel(factory = RecentObservationsViewModelFactory())
 ) {
     val state = viewModel.uiState
 

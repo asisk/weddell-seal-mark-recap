@@ -1,7 +1,6 @@
 package weddellseal.markrecap.ui
 
 import android.Manifest
-import android.content.ContentResolver
 import android.net.Uri
 import android.os.Build.getSerial
 import android.provider.OpenableColumns
@@ -51,43 +50,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.models.HomeViewModel
+import weddellseal.markrecap.models.HomeViewModelFactory
 import weddellseal.markrecap.ui.components.DropdownField
 import weddellseal.markrecap.ui.components.TextFieldValidateOnCharCount
-import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
-import java.io.InputStreamReader
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
-    HomeScaffold(navController)
+fun HomeScreen(
+    navController: NavHostController,
+    viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
+) {
+    HomeScaffold(navController, viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun HomeScaffold(navController: NavHostController) {
-
-// TODO, implement the file picker with the CSV import capability to update location data
-
-//    val openFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-//        // Handle the selected file URI
-//        if (uri != null) {
-//            // Do something with the selected file URI
-//            viewModel.updateURI(uri)
-//        }
-//    }
+fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
     val context = LocalContext.current
-
-    var isPermissionGranted by remember { mutableStateOf(false) }
+    val state = viewModel.uiState
+//    var isPermissionGranted by remember { mutableStateOf(false) }
 
     // Register ActivityResult to request Location permissions
     val requestFilePermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isPermissionGranted) {
+            if (isGranted) {
+                viewModel.onPermissionChange(Manifest.permission.READ_EXTERNAL_STORAGE, isGranted)
 //                viewModel.fetchCurrentLocation()
             } else {
                 //coroutineScope.launch {
@@ -103,18 +95,18 @@ fun HomeScaffold(navController: NavHostController) {
             onConfirm = {
                 requestFilePermissions.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                 showExplanationDialogForReadAccessPermission = false
-                isPermissionGranted = true
+//                isPermissionGranted = true
             },
             onDismiss = {
                 showExplanationDialogForReadAccessPermission = false
-                isPermissionGranted = true
+//                isPermissionGranted = true
             },
             title = "File access",
             text = "Weddell Seal Mark Recap app would like access to your stored files",
         )
     }
 
-    // Add explanation dialog for error permissions
+    // Add explanation dialog for file name validation error
     var showExplanationDialogForFileMatchError by remember { mutableStateOf(false) }
     if (showExplanationDialogForFileMatchError) {
         FileAccessExplanationDialog(
@@ -127,14 +119,14 @@ fun HomeScaffold(navController: NavHostController) {
         )
     }
 
-    var colonyLocations by remember {
-        mutableStateOf(
-            listOf(
-                "Default Location A",
-                "Default Location B"
-            )
-        )
-    }
+//    var colonyLocations by remember {
+//        mutableStateOf(
+//            listOf(
+//                "Default Location A",
+//                "Default Location B"
+//            )
+//        )
+//    }
 
     val pickCsvFile = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -160,9 +152,11 @@ fun HomeScaffold(navController: NavHostController) {
 //                    return fileSize <= MAX_FILE_SIZE_BYTES
 //                }
 
-                val csvData = readCsvData(context.contentResolver, uri)
-                // Update dropdown with dropdownValues
-                colonyLocations = extractDropdownValues(csvData)
+                viewModel.loadStudyAreaFile(uri)
+
+//                val csvData = readCsvData(context.contentResolver, uri)
+//                // Update dropdown with dropdownValues
+//                colonyLocations = extractDropdownValues(csvData)
             } else {
                 // Show an error message indicating that the selected file is not the expected file
                 showExplanationDialogForFileMatchError = true
@@ -290,7 +284,7 @@ fun HomeScaffold(navController: NavHostController) {
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    var observationSite by remember { mutableStateOf("") }
+                    var observationSiteSelected by remember { mutableStateOf("") }
                     //TODO, read the locations from a CSV
                     // Function to update dropdown values from CSV
                     Column(modifier = Modifier.padding(4.dp).fillMaxWidth(.3f)) {
@@ -298,8 +292,8 @@ fun HomeScaffold(navController: NavHostController) {
                     }
 
                     Column(modifier = Modifier.padding(4.dp).fillMaxWidth(.5f)) {
-                        DropdownField(colonyLocations) { newText ->
-                            observationSite = newText
+                        DropdownField(state.colonyLocations) { valueSelected ->
+                            observationSiteSelected = valueSelected
                         }
                     }
 
@@ -361,39 +355,39 @@ data class LocationInfo(
     val longitude: Double
 )
 
-private fun readCsvData(contentResolver: ContentResolver, uri: Uri): List<LocationInfo> {
-    val locationInfoList = mutableListOf<LocationInfo>()
-
-    contentResolver.openInputStream(uri)?.use { stream ->
-        InputStreamReader(stream).buffered().use { reader ->
-            val headerRow = reader.readLine()?.split(",") ?: emptyList()
-            val locationIndex = headerRow.indexOf("Location")
-            val latitudeIndex = headerRow.indexOf("Adj_Lat")
-            val longitudeIndex = headerRow.indexOf("Adj_Long")
-
-            reader.forEachLine { line ->
-                val row = line.split(",")
-                if (row.size >= 3 && locationIndex != -1 && latitudeIndex != -1 && longitudeIndex != -1) {
-                    val location = row.getOrNull(locationIndex)
-                    val latitude = row.getOrNull(latitudeIndex)?.toDoubleOrNull() ?: 0.0
-                    val longitude = row.getOrNull(longitudeIndex)?.toDoubleOrNull() ?: 0.0
-                    if (location != null) {
-                        val locationInfo = LocationInfo(location, latitude, longitude)
-                        locationInfoList.add(locationInfo)
-                    }
-                } else {
-                    // Handle invalid row or missing columns
-                }
-            }
-        }
-    }
-
-    return locationInfoList
-}
-
-private fun extractDropdownValues(locationInfoList: List<LocationInfo>): List<String> {
-    return locationInfoList.map { it.location }
-}
+//private fun readCsvData(contentResolver: ContentResolver, uri: Uri): List<LocationInfo> {
+//    val locationInfoList = mutableListOf<LocationInfo>()
+//
+//    contentResolver.openInputStream(uri)?.use { stream ->
+//        InputStreamReader(stream).buffered().use { reader ->
+//            val headerRow = reader.readLine()?.split(",") ?: emptyList()
+//            val locationIndex = headerRow.indexOf("Location")
+//            val latitudeIndex = headerRow.indexOf("Adj_Lat")
+//            val longitudeIndex = headerRow.indexOf("Adj_Long")
+//
+//            reader.forEachLine { line ->
+//                val row = line.split(",")
+//                if (row.size >= 3 && locationIndex != -1 && latitudeIndex != -1 && longitudeIndex != -1) {
+//                    val location = row.getOrNull(locationIndex)
+//                    val latitude = row.getOrNull(latitudeIndex)?.toDoubleOrNull() ?: 0.0
+//                    val longitude = row.getOrNull(longitudeIndex)?.toDoubleOrNull() ?: 0.0
+//                    if (location != null) {
+//                        val locationInfo = LocationInfo(location, latitude, longitude)
+//                        locationInfoList.add(locationInfo)
+//                    }
+//                } else {
+//                    // Handle invalid row or missing columns
+//                }
+//            }
+//        }
+//    }
+//
+//    return locationInfoList
+//}
+//
+//private fun extractDropdownValues(locationInfoList: List<LocationInfo>): List<String> {
+//    return locationInfoList.map { it.location }
+//}
 
 @Composable
 fun FileAccessExplanationDialog(
@@ -478,15 +472,21 @@ fun SerialNumberDisplay() {
 //    )
 //}
 
+//@PreviewParameter
+//@Composable
+//fun HomeModelProvider(): HomeModel {
+//    // Provide a default instance of HomeModel for preview
+//    val observationRepo: ObservationRepository
+//    return HomeModel(Application(), observationRepo)
+//}
+//@Preview
+//@Composable
+//fun HomeScreenPreview(@PreviewParameter(HomeModelProvider::class) viewModel: HomeModel) {
+//    val navController = rememberNavController()
+//    HomeScreen(viewModel, navController)
+//}
 
-@Preview
-@Composable
-fun HomeScreen() {
-    WeddellSealMarkRecapTheme {
-        val navController = rememberNavController()
-        HomeScaffold(navController)
-    }
-}
+
 
 //@Preview
 //@Composable
