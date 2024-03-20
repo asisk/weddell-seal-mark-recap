@@ -16,6 +16,7 @@ import androidx.room.RoomDatabase
 @Database(entities = [ObservationLogEntry::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao
+    abstract fun wedCheckDao(): WedCheckDao
 
     //companion is visible to other classes
     companion object {
