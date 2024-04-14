@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.ui.AddObservationLogScreen
 import weddellseal.markrecap.ui.HomeScreen
 import weddellseal.markrecap.ui.RecentObservationsScreen
+import weddellseal.markrecap.ui.SealLookupScreen
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController) }
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController) }
                         composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }
+                        composable(Screens.SealLookupScreen.route) {SealLookupScreen(navController)}
                     }
                 }
             }
@@ -48,5 +50,6 @@ sealed class Screens(val route: String) {
     object HomeScreen : Screens("home")
     object AddObservationLog : Screens("add_log")
     object RecentObservations : Screens ("view_db")
+    object SealLookupScreen : Screens("seal_lookup")
 }
 

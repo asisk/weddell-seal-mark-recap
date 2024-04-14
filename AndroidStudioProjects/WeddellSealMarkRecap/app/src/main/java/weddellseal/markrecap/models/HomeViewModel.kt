@@ -129,12 +129,11 @@ class HomeViewModel(
         val csvData = readCsvData(context.contentResolver, uri)
         // Update dropdown with dropdownValues
         val studyAreas = extractDropdownValues(csvData)
-        //TODO, write to database
+        //TODO, write to database???
     }
 
 
-    //TODO, does it make sense to save the rows of the csv to
-    //the database directly, or to the StudyArea data structs?
+    //TODO, does it make sense to save the rows of the csv to the database directly, or to the StudyArea data structs?
 
 }
 

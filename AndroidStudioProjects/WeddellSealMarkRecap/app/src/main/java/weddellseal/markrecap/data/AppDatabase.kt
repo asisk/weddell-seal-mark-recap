@@ -13,7 +13,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [ObservationLogEntry::class], version = 1)
+@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao
     abstract fun wedCheckDao(): WedCheckDao
@@ -34,7 +34,8 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "observations_database"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
+                //TODO remove the destructive mode once schema stable
                 INSTANCE = instance
                 // return instance
                 instance

@@ -19,10 +19,9 @@ data class WedCheckRecord(
     @ColumnInfo(name = "tagNumberTwo") val tagIdTwo: String,
     @ColumnInfo(name = "comments") val comments: String,
     @ColumnInfo(name = "ageYears") val ageYears: Int,
-    @ColumnInfo(name = "tissue") val tissueSampled: Boolean,
+    @ColumnInfo(name = "tissue") val tissueSampled: String,
     @ColumnInfo(name = "previousPups") val previousPups: String, // NA possible value, otherwise its a number
     @ColumnInfo(name = "massPups") val massPups: String, // NA possible value, otherwise its a number
     @ColumnInfo(name = "swimPups") val swimPups: String, // NA possible value, otherwise its a number
     @ColumnInfo(name = "photoYears") val photoYears: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "deviceId") val deviceId: String
 )

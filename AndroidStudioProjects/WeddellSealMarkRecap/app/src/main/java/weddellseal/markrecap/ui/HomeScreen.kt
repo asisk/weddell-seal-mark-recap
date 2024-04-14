@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dataset
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.PostAdd
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
@@ -202,6 +203,18 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     backgroundColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     BottomNavigationItem(
+                        label = { Text(text = "Seal Lookup") },
+                        selected = false,
+                        onClick = { navController.navigate(Screens.SealLookupScreen.route) },
+                        icon = { Icon(Icons.Filled.Search, null) }
+                    )
+                    BottomNavigationItem(
+                        label = { Text(text = "Start Observation") },
+                        selected = false,
+                        onClick = { navController.navigate(Screens.AddObservationLog.route) },
+                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") }
+                    )
+                    BottomNavigationItem(
                         label = { Text(text = "Recent Observations") },
                         selected = false,
                         onClick = { navController.navigate(Screens.RecentObservations.route) },
@@ -215,12 +228,6 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
 //                        onClick = { /*TODO */ },
 //                        icon = { Icon(Icons.Filled.PostAdd, "Start Census", tint = contentColor) }
 //                    )
-                    BottomNavigationItem(
-                        label = { Text(text = "Start Observation") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.AddObservationLog.route) },
-                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") }
-                    )
 //                    BottomNavigationItem(
 //                        label = { Text(text = "Upload Locations") },
 //                        selected = false,

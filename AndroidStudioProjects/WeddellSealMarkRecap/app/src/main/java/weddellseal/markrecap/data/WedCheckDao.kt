@@ -5,6 +5,8 @@ package weddellseal.markrecap.data
  */
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 
@@ -12,6 +14,10 @@ import androidx.room.Query
 interface WedCheckDao {
 
     @Query("SELECT * FROM wedCheck WHERE speno = :lookupSpeno")
+    // TODO rename to something that indicates it's coming from the SQlite database
     fun lookupSealBySpeno(lookupSpeno: Int): WedCheckRecord
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(data: List<WedCheckRecord>)
 
 }
