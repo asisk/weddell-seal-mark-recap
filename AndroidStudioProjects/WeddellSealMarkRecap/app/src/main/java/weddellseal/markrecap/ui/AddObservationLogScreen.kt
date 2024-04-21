@@ -7,7 +7,9 @@ package weddellseal.markrecap.ui
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -44,6 +47,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -54,11 +58,14 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddLogViewModelFactory
 import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.components.SealSearchField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddObservationLogScreen(
     navController: NavHostController,
+    wedCheckViewModel: WedCheckViewModel,
     viewModel: AddObservationLogViewModel = viewModel(factory = AddLogViewModelFactory())
 ) {
     val state = viewModel.uiState
@@ -133,6 +140,7 @@ fun AddObservationLogScreen(
     }
     // endregion
 
+    var showSealLookup by remember { mutableStateOf(true)}
     var showAdult by remember { mutableStateOf(true) }
     var showPup by remember { mutableStateOf(false) }
     var showPupTwo by remember { mutableStateOf(false) }
@@ -248,6 +256,9 @@ fun AddObservationLogScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            if (!adultSeal.isStarted) {
+                SealLookupRow(wedCheckViewModel = wedCheckViewModel)
+            }
             if (!showSummary) {
                 SealCard(viewModel, adultSeal, showAdult)
                 if (pupOne.isStarted) {
@@ -270,6 +281,44 @@ fun AddObservationLogScreen(
                     text = { Text(text = "Save and Start New Observation") }
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun SealLookupRow (wedCheckViewModel: WedCheckViewModel) {
+    // SEAL LOOKUP
+    Row(
+        modifier = Modifier
+            .padding(6.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        var sealSpeno by remember { mutableStateOf("") }
+        //TODO, add the ability to hide the field and display a spinner if searching
+        // Call SealSearchField and pass the lambda to update sealSpeno
+        SealSearchField { value ->
+            sealSpeno = value
+        }
+        IconButton(
+            onClick = {
+                // TODO, launch search
+                if (sealSpeno != null) {
+                    try {
+                        val spenoInt = sealSpeno.toInt()
+                        wedCheckViewModel.findSeal(spenoInt)
+                    } catch (e: NumberFormatException) {
+                        //TODO, throw up an error window if the speno is not an int?
+                        println("String cannot be parsed as an integer")
+                    }
+                }
+            },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search"
+            )
         }
     }
 }

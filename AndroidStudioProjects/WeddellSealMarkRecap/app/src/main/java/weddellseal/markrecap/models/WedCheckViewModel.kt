@@ -12,14 +12,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.ObservationLogApplication
 import weddellseal.markrecap.data.WedCheckRecord
 import weddellseal.markrecap.data.WedCheckRepository
 import java.io.IOException
@@ -86,11 +82,11 @@ class WedCheckViewModel(
                 wedCheckRepo.findSeal(speno)
             }
             if (seal != null) {
-
-                println("Seal found")
+                //TODO, show a populated Seal Card
+            } else {
+                // TODO, display a Seal Not Found message and
+                // offer to the user to enter a new Seal observation
             }
-
-            // TODO, throw up a seal not found dialog
 
             uiState = uiState.copy(
                 sealRecordDB = seal
@@ -184,12 +180,12 @@ class WedCheckViewModel(
         return csvData
     }
 }
-
-class WedCheckViewModelFactory : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        val app =
-            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
-        return WedCheckViewModel(app, app.wedCheckRepo) as T
-    }
-}
+//
+//class WedCheckViewModelFactory : ViewModelProvider.Factory {
+//    @Suppress("UNCHECKED_CAST")
+//    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+//        val app =
+//            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
+//        return WedCheckViewModel(app, app.wedCheckRepo) as T
+//    }
+//}

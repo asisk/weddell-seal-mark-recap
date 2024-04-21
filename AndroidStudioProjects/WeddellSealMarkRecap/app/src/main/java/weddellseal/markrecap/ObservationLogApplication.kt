@@ -9,6 +9,7 @@ package weddellseal.markrecap
 import android.app.Application
 import weddellseal.markrecap.data.AppDatabase
 import weddellseal.markrecap.data.ObservationRepository
+import weddellseal.markrecap.data.WedCheckDao
 import weddellseal.markrecap.data.WedCheckRepository
 
 class ObservationLogApplication : Application() {
@@ -23,5 +24,9 @@ class ObservationLogApplication : Application() {
         observationRepo = ObservationRepository(db.observationDao())
         wedCheckRepo = WedCheckRepository(db.wedCheckDao())
         permissions = PermissionManager(this)
+    }
+
+    fun getWedCheckDao(): WedCheckDao {
+        return db.wedCheckDao()
     }
 }

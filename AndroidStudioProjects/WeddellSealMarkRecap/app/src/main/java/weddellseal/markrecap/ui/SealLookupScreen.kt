@@ -5,8 +5,6 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,27 +13,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -44,25 +35,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.WedCheckViewModel
-import weddellseal.markrecap.models.WedCheckViewModelFactory
 
 @Composable
 fun SealLookupScreen(
     navController: NavHostController,
-    viewModel: WedCheckViewModel = viewModel(factory = WedCheckViewModelFactory())
+    viewModel: WedCheckViewModel,
 ) {
     SealLookupScaffold(navController, viewModel)
 }
@@ -143,6 +128,8 @@ fun SealLookupScaffold(navController: NavHostController, viewModel: WedCheckView
 //                }
 
                 viewModel.loadWedCheck(uri)
+                // Display a success message & navigate the user back to the Home Screen
+
             } else {
                 // Show an error message indicating that the selected file is not the expected file
                 showExplanationDialogForFileMatchError = true
@@ -155,7 +142,7 @@ fun SealLookupScaffold(navController: NavHostController, viewModel: WedCheckView
         // region UI - Top Bar
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(60.dp).fillMaxHeight(),
+                modifier = Modifier.fillMaxHeight(),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
@@ -224,76 +211,44 @@ fun SealLookupScaffold(navController: NavHostController, viewModel: WedCheckView
                     .fillMaxWidth(.7f)
                     .align(Alignment.CenterHorizontally)
             ) {
-                // SEAL LOOKUP
-                Row(
-                    modifier = Modifier
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    var sealSpeno by remember { mutableStateOf("") }
-                    //TODO, add the ability to hide the field and display a spinner if searching
-                    // Call SealSearchField and pass the lambda to update sealSpeno
-                    SealSearchField { value ->
-                        sealSpeno = value
-                    }
-                    IconButton(
-                        onClick = {
-                            // TODO, launch search
-                            if (sealSpeno != null) {
-                                try {
-                                    val spenoInt = sealSpeno.toInt()
-                                    viewModel.findSeal(spenoInt)
-                                } catch (e: NumberFormatException) {
-                                    //TODO, throw up an error window if the speno is not an int?
-                                    println("String cannot be parsed as an integer")
-                                }
-                            }
-                        },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
-                        )
-                    }
-                }
+                // LOAD WEDCHECK
+                // TODO, guide the user through uploading a wedcheck file
+
+//                // SEAL LOOKUP
+//                Row(
+//                    modifier = Modifier
+//                        .padding(6.dp),
+//                    horizontalArrangement = Arrangement.Start,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    var sealSpeno by remember { mutableStateOf("") }
+//                    //TODO, add the ability to hide the field and display a spinner if searching
+//                    // Call SealSearchField and pass the lambda to update sealSpeno
+//                    SealSearchField { value ->
+//                        sealSpeno = value
+//                    }
+//                    IconButton(
+//                        onClick = {
+//                            // TODO, launch search
+//                            if (sealSpeno != null) {
+//                                try {
+//                                    val spenoInt = sealSpeno.toInt()
+//                                    viewModel.findSeal(spenoInt)
+//                                } catch (e: NumberFormatException) {
+//                                    //TODO, throw up an error window if the speno is not an int?
+//                                    println("String cannot be parsed as an integer")
+//                                }
+//                            }
+//                        },
+//                        modifier = Modifier.size(48.dp)
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Search,
+//                            contentDescription = "Search"
+//                        )
+//                    }
+//                }
             }
         }
     }
 }
-
-@Composable
-fun SealSearchField(onValueChanged: (String) -> Unit) {
-    var text by rememberSaveable { mutableStateOf("") }
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    OutlinedTextField(
-        value = text,
-        placeholder = { "SpeNo" },
-        onValueChange = {
-            text = it
-            onValueChanged(text)
-        },
-        label = { Text("Seal SpeNo") },
-        singleLine = true,
-        modifier = Modifier
-            .background(color = Color.Transparent),
-        keyboardActions = KeyboardActions {
-            keyboardController?.hide()
-        },
-        trailingIcon = {
-            Icon(
-                Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable { text = "" })
-        },
-        supportingText = {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Numeric value",
-                textAlign = TextAlign.End,
-            )
-        }
-    )
-}
-

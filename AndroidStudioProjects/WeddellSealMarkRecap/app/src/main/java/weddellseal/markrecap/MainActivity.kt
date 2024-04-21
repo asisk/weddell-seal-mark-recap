@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -11,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import weddellseal.markrecap.data.WedCheckRepository
+import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.AddObservationLogScreen
 import weddellseal.markrecap.ui.HomeScreen
 import weddellseal.markrecap.ui.RecentObservationsScreen
@@ -20,10 +24,19 @@ import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 class MainActivity : ComponentActivity() {
 //    private lateinit var permissionManager: PermissionManager
+    private lateinit var wedCheckRepository: WedCheckRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        permissionManager = (application as ObservationLogApplication).permissions
+        // Access the ObservationLogApplication instance
+        val observationLogApplication = application as ObservationLogApplication
+        // Retrieve the WedCheckDao from ObservationLogApplication
+        val wedCheckDao = observationLogApplication.getWedCheckDao()
+        // Create the WedCheckRepository with the WedCheckDao
+        wedCheckRepository = WedCheckRepository(wedCheckDao)
+        val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository)
+        val wedCheckViewModel: WedCheckViewModel by viewModels { wedCheckViewModelFactory }
 
         enableEdgeToEdge()
         setContent {
@@ -36,9 +49,9 @@ class MainActivity : ComponentActivity() {
                     val startNavigation = Screens.HomeScreen.route
                     NavHost(navController = navController, startDestination = startNavigation) {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController) }
-                        composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController) }
+                        composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController, wedCheckViewModel) }
                         composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }
-                        composable(Screens.SealLookupScreen.route) {SealLookupScreen(navController)}
+                        composable(Screens.SealLookupScreen.route) {SealLookupScreen(navController, wedCheckViewModel)}
                     }
                 }
             }
