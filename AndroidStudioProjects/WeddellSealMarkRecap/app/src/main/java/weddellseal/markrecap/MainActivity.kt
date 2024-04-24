@@ -15,10 +15,10 @@ import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.data.WedCheckRepository
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
-import weddellseal.markrecap.ui.AddObservationLogScreen
-import weddellseal.markrecap.ui.HomeScreen
-import weddellseal.markrecap.ui.RecentObservationsScreen
-import weddellseal.markrecap.ui.SealLookupScreen
+import weddellseal.markrecap.ui.screens.AddObservationLogScreen
+import weddellseal.markrecap.ui.screens.HomeScreen
+import weddellseal.markrecap.ui.screens.RecentObservationsScreen
+import weddellseal.markrecap.ui.screens.AdminScreen
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController) }
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController, wedCheckViewModel) }
                         composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }
-                        composable(Screens.SealLookupScreen.route) {SealLookupScreen(navController, wedCheckViewModel)}
+                        composable(Screens.SealLookupScreen.route) { AdminScreen(navController, wedCheckViewModel) }
                     }
                 }
             }

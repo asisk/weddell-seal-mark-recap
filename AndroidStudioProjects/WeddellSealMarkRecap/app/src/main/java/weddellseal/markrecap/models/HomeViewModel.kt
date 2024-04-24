@@ -17,7 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import weddellseal.markrecap.ObservationLogApplication
 import weddellseal.markrecap.data.ObservationRepository
-import weddellseal.markrecap.ui.LocationInfo
+import weddellseal.markrecap.ui.screens.LocationInfo
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Locale
