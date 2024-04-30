@@ -8,6 +8,7 @@ package weddellseal.markrecap
 
 import android.app.Application
 import weddellseal.markrecap.data.AppDatabase
+import weddellseal.markrecap.data.ObservationDao
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.WedCheckDao
 import weddellseal.markrecap.data.WedCheckRepository
@@ -15,7 +16,7 @@ import weddellseal.markrecap.data.WedCheckRepository
 class ObservationLogApplication : Application() {
     private lateinit var db : AppDatabase
     lateinit var observationRepo: ObservationRepository
-    lateinit var wedCheckRepo: WedCheckRepository
+    private lateinit var wedCheckRepo: WedCheckRepository
     lateinit var permissions: PermissionManager
 
     override fun onCreate() {
@@ -28,5 +29,9 @@ class ObservationLogApplication : Application() {
 
     fun getWedCheckDao(): WedCheckDao {
         return db.wedCheckDao()
+    }
+
+    fun getObservationDao(): ObservationDao {
+        return db.observationDao()
     }
 }

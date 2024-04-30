@@ -19,11 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -31,9 +27,10 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
-import weddellseal.markrecap.ObservationLogApplication
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
+import weddellseal.markrecap.data.WedCheckRecord
+import weddellseal.markrecap.data.toSeal
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -523,13 +520,51 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun loadSealRecord(sealRecordDB: WedCheckRecord?) {
+        if (sealRecordDB != null) {
+            if (adultSeal.isStarted || pupOne.isStarted || pupTwo.isStarted) {
+                //TODO throw an error or ask if the user would like to overwrite the existing seal entry
+            } else {
+                sealRecordDB.toSeal()
+                // start the right seal based on the ageClass
+                if (sealRecordDB.ageClass == "A") {
+                    adultSeal = adultSeal.copy(name = "Adult", isStarted = true)
+                } else if (sealRecordDB.ageClass == "P") {
+                    pupOne = pupOne.copy(name = "PupOne", isStarted = true)
+                }
+            }
+        }
+    }
+
+//    fun findSeal(speno: Int) {
+//        uiState = uiState.copy(isSearching = true)
+//
+//        // lauch the search for a seal on a separate coroutine
+//        viewModelScope.launch {
+//            // Switch to the IO dispatcher for database operation
+//            val seal: WedCheckRecord = withContext(Dispatchers.IO) {
+//                wedCheckRepo.findSeal(speno)
+//            }
+//            if (seal != null) {
+//                //TODO, show a populated Seal Card
+//            } else {
+//                // TODO, display a Seal Not Found message and
+//                // offer to the user to enter a new Seal observation
+//            }
+//
+//            uiState = uiState.copy(
+//                sealRecordDB = seal
+//            )
+//        }
+//    }
+
     // endregion
 }
 
-class AddLogViewModelFactory : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        val app = extras[APPLICATION_KEY] as ObservationLogApplication
-        return AddObservationLogViewModel(app, app.observationRepo) as T
-    }
-}
+//class AddLogViewModelFactory : ViewModelProvider.Factory {
+//    @Suppress("UNCHECKED_CAST")
+//    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+//        val app = extras[APPLICATION_KEY] as ObservationLogApplication
+//        return AddObservationLogViewModel(app, app.observationRepo) as T
+//    }
+//}

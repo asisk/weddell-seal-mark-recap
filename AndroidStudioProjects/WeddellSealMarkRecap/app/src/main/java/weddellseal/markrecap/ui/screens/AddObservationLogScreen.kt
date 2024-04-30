@@ -56,11 +56,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.AddLogViewModelFactory
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.components.SealCard
@@ -72,7 +70,7 @@ import weddellseal.markrecap.ui.components.SummaryCard
 fun AddObservationLogScreen(
     navController: NavHostController,
     wedCheckViewModel: WedCheckViewModel,
-    viewModel: AddObservationLogViewModel = viewModel(factory = AddLogViewModelFactory())
+    viewModel: AddObservationLogViewModel,
 ) {
     val state = viewModel.uiState
 //    val context = LocalContext.current
@@ -286,7 +284,7 @@ fun AddObservationLogScreen(
                        )
                        {
                            Text(text = "Seal Lookup")
-                           SealLookupRow(wedCheckViewModel = wedCheckViewModel)
+                           SealLookupRow(viewModel, wedCheckViewModel = wedCheckViewModel)
                        }
                     }
                 }
@@ -318,7 +316,7 @@ fun AddObservationLogScreen(
 }
 
 @Composable
-fun SealLookupRow (wedCheckViewModel: WedCheckViewModel) {
+fun SealLookupRow (viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
     // SEAL LOOKUP
     Row(
         modifier = Modifier
@@ -339,6 +337,13 @@ fun SealLookupRow (wedCheckViewModel: WedCheckViewModel) {
                     try {
                         val spenoInt = sealSpeno.toInt()
                         wedCheckViewModel.findSeal(spenoInt)
+
+//                        while wedCheckViewModel.uiState.isSearching {
+//                            //wait for this to be complete...display wheel?
+//                        }
+
+                        viewModel.loadSealRecord(wedCheckViewModel.uiState.sealRecordDB)
+
                     } catch (e: NumberFormatException) {
                         //TODO, throw up an error window if the speno is not an int?
                         println("String cannot be parsed as an integer")

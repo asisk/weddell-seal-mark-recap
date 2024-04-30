@@ -12,31 +12,41 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.WedCheckRepository
+import weddellseal.markrecap.models.AddLogViewModelFactory
+import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.screens.AddObservationLogScreen
+import weddellseal.markrecap.ui.screens.AdminScreen
 import weddellseal.markrecap.ui.screens.HomeScreen
 import weddellseal.markrecap.ui.screens.RecentObservationsScreen
-import weddellseal.markrecap.ui.screens.AdminScreen
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
 class MainActivity : ComponentActivity() {
 //    private lateinit var permissionManager: PermissionManager
     private lateinit var wedCheckRepository: WedCheckRepository
+    private lateinit var observationRepository: ObservationRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        permissionManager = (application as ObservationLogApplication).permissions
         // Access the ObservationLogApplication instance
         val observationLogApplication = application as ObservationLogApplication
-        // Retrieve the WedCheckDao from ObservationLogApplication
+
+        // Set up the WedCheck model to be shared between views
         val wedCheckDao = observationLogApplication.getWedCheckDao()
-        // Create the WedCheckRepository with the WedCheckDao
         wedCheckRepository = WedCheckRepository(wedCheckDao)
         val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository)
         val wedCheckViewModel: WedCheckViewModel by viewModels { wedCheckViewModelFactory }
+
+        // Set up the LogView model to be shared between views
+        val observationDao = observationLogApplication.getObservationDao()
+        observationRepository = ObservationRepository(observationDao)
+        val addLogViewModelFactory = AddLogViewModelFactory(application, observationRepository)
+        val addObservationLogViewModel: AddObservationLogViewModel by viewModels { addLogViewModelFactory }
 
         enableEdgeToEdge()
         setContent {
@@ -49,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     val startNavigation = Screens.HomeScreen.route
                     NavHost(navController = navController, startDestination = startNavigation) {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController) }
-                        composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController, wedCheckViewModel) }
+                        composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController, wedCheckViewModel, addObservationLogViewModel) }
                         composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }
                         composable(Screens.SealLookupScreen.route) { AdminScreen(navController, wedCheckViewModel) }
                     }

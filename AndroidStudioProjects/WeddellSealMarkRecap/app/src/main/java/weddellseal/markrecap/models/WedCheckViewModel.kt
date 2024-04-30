@@ -82,15 +82,14 @@ class WedCheckViewModel(
                 wedCheckRepo.findSeal(speno)
             }
             if (seal != null) {
-                //TODO, show a populated Seal Card
+                //TODO, populate an object that can be used to display the seal information
+                uiState = uiState.copy(sealRecordDB = seal)
+                uiState = uiState.copy(isSearching = false)
             } else {
+                uiState = uiState.copy(isSearching = false)
                 // TODO, display a Seal Not Found message and
                 // offer to the user to enter a new Seal observation
             }
-
-            uiState = uiState.copy(
-                sealRecordDB = seal
-            )
         }
     }
 
