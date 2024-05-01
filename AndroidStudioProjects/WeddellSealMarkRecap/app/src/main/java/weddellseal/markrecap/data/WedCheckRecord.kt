@@ -27,41 +27,61 @@ data class WedCheckRecord(
     @ColumnInfo(name = "photoYears") val photoYears: String, // NA possible value, otherwise its a number
 )
 
+data class TagProcessingResult(
+    val numTags: Int,
+    val tagId: String,
+    val tagAlpha: String,
+    val tagNumber: Int
+)
+
 // Extension function to map WedCheckRecord to Seal
 fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
     var name =""
+    var ageString = ""
     if (ageClass == "A") {
-        name = "Adult"
+        name = "adult"
+        ageString = "Adult"
     } else if (ageClass == "P") {
-        name = "PupOne"
+        name = "pupOne"
+        ageString = "Pup"
     }
 
     var numTags = 0
     var tagId = ""
     var tagAlpha = ""
+    var tagNumber = 0
 
     // Process tags and update variables
     val processedTags = processTags(tagIdOne, tagIdTwo)
-    numTags = processedTags.first
-    tagId = processedTags.second
-    tagAlpha = processedTags.third
+    numTags = processedTags.numTags
+    tagId = processedTags.tagId
+    tagAlpha = processedTags.tagAlpha
+    tagNumber = processedTags.tagNumber
 
     return AddObservationLogViewModel.Seal(
-        age = ageYears.toString(),
+        age = ageString,
+        ageYears = ageYears,
         comment = comments,
         condition = "",
         isStarted = false,
+        isWedCheckRecord = true,
+        lastSeenSeason = season,
+        massPups = massPups,
         name = name,
         notebookDataString = "",
         numRelatives = previousPups.toIntOrNull() ?: 0,
         numTags = numTags,
+        photoYears = photoYears,
+        previousPups = previousPups,
         pupPeed = false, // this field won't exist on historic records before 2024
         sex = sex,
+        speNo = speno,
+        swimPups = swimPups,
         tagAlpha = tagAlpha,
-        tagEventType = "", // Fill this field with appropriate data
+        tagEventType = "",
         tagId = tagId,
+        tagNumber = tagNumber,
         tissueTaken = tissueSampled.toBoolean(),
-        tagNumber = 0 // Fill this field with appropriate data
     )
 
     fun String.toBoolean(): Boolean {
@@ -70,10 +90,11 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
 
 }
 
-fun processTags(tag1: String?, tag2: String?): Triple<Int, String, String> {
+fun processTags(tag1: String?, tag2: String?): TagProcessingResult {
     var numTags = 0
     var tagId = ""
     var tagAlpha = ""
+    var tagNumber = 0
 
     val validTag = when {
         !tag1.isNullOrBlank() && tag1 != "NA" -> tag1
@@ -85,7 +106,10 @@ fun processTags(tag1: String?, tag2: String?): Triple<Int, String, String> {
         numTags++
         tagId = it
         tagAlpha = it.last().toString()
+        // Extract everything except the last character
+        tagNumber = it.substring(0, it.length - 1).toIntOrNull() ?: 0
+
     }
 
-    return Triple(numTags, tagId, tagAlpha)
+    return TagProcessingResult(numTags, tagId, tagAlpha, tagNumber)
 }

@@ -58,6 +58,8 @@ class AddObservationLogViewModel(
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
         val latLong: String = "",
+        val isError: Boolean = false,
+        val errorMessage: String = ""
     )
 
     var uiState by mutableStateOf(
@@ -76,20 +78,28 @@ class AddObservationLogViewModel(
     // region Seal state
     data class Seal(
         val age: String = "",
+        val ageYears: Int = 0,
         val comment: String = "",
         val condition: String = "",
         val isStarted: Boolean = false,
+        val isWedCheckRecord: Boolean = false,
+        val lastSeenSeason: Int = 0,
+        val massPups: String ="",
         val name: String = "",
         val notebookDataString: String = "",
         val numRelatives: Int = 0,
         val numTags: Int = 0,
+        val photoYears: String = "",
+        val previousPups: String = "",
         val pupPeed: Boolean = false,
         val sex: String = "",
+        val speNo: Int = 0,
+        val swimPups: String = "",
         val tagAlpha: String = "",
         val tagEventType: String = "",
         val tagId: String = "",
+        val tagNumber: Int = 0,
         val tissueTaken: Boolean = false,
-        val tagNumber: Int = 0
     )
 
     var adultSeal by mutableStateOf(Seal(name = "adult", age = "Adult"))
@@ -520,45 +530,35 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun loadSealRecord(sealRecordDB: WedCheckRecord?) {
+    fun findSealRecord(sealRecordDB: WedCheckRecord?) {
         if (sealRecordDB != null) {
             if (adultSeal.isStarted || pupOne.isStarted || pupTwo.isStarted) {
-                //TODO throw an error or ask if the user would like to overwrite the existing seal entry
+                uiState = uiState.copy(
+                    isError = true,
+                    errorMessage = "observation already started"
+                )
             } else {
-                sealRecordDB.toSeal()
-                // start the right seal based on the ageClass
-                if (sealRecordDB.ageClass == "A") {
-                    adultSeal = adultSeal.copy(name = "Adult", isStarted = true)
-                } else if (sealRecordDB.ageClass == "P") {
-                    pupOne = pupOne.copy(name = "PupOne", isStarted = true)
+                var seal = sealRecordDB.toSeal()
+                if (seal.age == "Adult") {
+                    adultSeal = seal
+                    updateNotebookEntry(adultSeal)
+                    adultSeal = adultSeal.copy(isStarted = true)
+                } else {
+                    pupOne = seal
+                    updateNotebookEntry(pupOne)
+                    pupOne = pupOne.copy(isStarted = true)
                 }
             }
         }
+        uiState = uiState.copy(
+            isError = true,
+            errorMessage = "seal not found"
+        )
     }
 
-//    fun findSeal(speno: Int) {
-//        uiState = uiState.copy(isSearching = true)
-//
-//        // lauch the search for a seal on a separate coroutine
-//        viewModelScope.launch {
-//            // Switch to the IO dispatcher for database operation
-//            val seal: WedCheckRecord = withContext(Dispatchers.IO) {
-//                wedCheckRepo.findSeal(speno)
-//            }
-//            if (seal != null) {
-//                //TODO, show a populated Seal Card
-//            } else {
-//                // TODO, display a Seal Not Found message and
-//                // offer to the user to enter a new Seal observation
-//            }
-//
-//            uiState = uiState.copy(
-//                sealRecordDB = seal
-//            )
-//        }
-//    }
-
-    // endregion
+    fun dismissError() {
+        TODO("Not yet implemented")
+    }
 }
 
 //class AddLogViewModelFactory : ViewModelProvider.Factory {

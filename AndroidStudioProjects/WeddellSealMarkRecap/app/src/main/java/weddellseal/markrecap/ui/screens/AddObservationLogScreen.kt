@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.components.ErrorDialog
 import weddellseal.markrecap.ui.components.SealCard
 import weddellseal.markrecap.ui.components.SealSearchField
 import weddellseal.markrecap.ui.components.SummaryCard
@@ -285,6 +286,11 @@ fun AddObservationLogScreen(
                        {
                            Text(text = "Seal Lookup")
                            SealLookupRow(viewModel, wedCheckViewModel = wedCheckViewModel)
+                           if (viewModel.uiState.isError) {
+                               ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
+                                   viewModel.dismissError()
+                               }
+                           }
                        }
                     }
                 }
@@ -334,7 +340,6 @@ fun SealLookupRow (viewModel: AddObservationLogViewModel, wedCheckViewModel: Wed
             onClick = {
                 // TODO, launch search
                 if (sealSpeno != null) {
-                    try {
                         val spenoInt = sealSpeno.toInt()
                         wedCheckViewModel.findSeal(spenoInt)
 
@@ -342,12 +347,14 @@ fun SealLookupRow (viewModel: AddObservationLogViewModel, wedCheckViewModel: Wed
 //                            //wait for this to be complete...display wheel?
 //                        }
 
-                        viewModel.loadSealRecord(wedCheckViewModel.uiState.sealRecordDB)
+                        viewModel.findSealRecord(wedCheckViewModel.uiState.sealRecordDB)
 
-                    } catch (e: NumberFormatException) {
-                        //TODO, throw up an error window if the speno is not an int?
-                        println("String cannot be parsed as an integer")
-                    }
+
+//                    } catch (e: NumberFormatException) {
+//                        ErrorDialog(errorMessage = "speno entered is not an integer, please try again") {
+//                            viewModel.dismissError()
+//                        }
+//                    }
                 }
             },
             modifier = Modifier.size(48.dp)
