@@ -59,7 +59,8 @@ class AddObservationLogViewModel(
         val lastKnownLocation: String = "last known location empty",
         val latLong: String = "",
         val isError: Boolean = false,
-        val errorMessage: String = ""
+        val errorMessage: String = "",
+        var isLoading: Boolean = false
     )
 
     var uiState by mutableStateOf(
@@ -84,7 +85,7 @@ class AddObservationLogViewModel(
         val isStarted: Boolean = false,
         val isWedCheckRecord: Boolean = false,
         val lastSeenSeason: Int = 0,
-        val massPups: String ="",
+        val massPups: String = "",
         val name: String = "",
         val notebookDataString: String = "",
         val numRelatives: Int = 0,
@@ -497,7 +498,7 @@ class AddObservationLogViewModel(
                     )
                     uiState = uiState.copy(
                         currentLocation =
-                                "Lat : ${lat}\n" +
+                        "Lat : ${lat}\n" +
                                 "Long : ${lon}\n" +
                                 "updated: $date"
                     )
@@ -507,6 +508,7 @@ class AddObservationLogViewModel(
                 }
             }
     }
+
     // endregion
     fun createLog() {
         if (!isValid()) {
@@ -530,30 +532,35 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun findSealRecord(sealRecordDB: WedCheckRecord?) {
+    fun loadWedCheckRecordToSeal(sealRecordDB: WedCheckRecord?) {
         if (sealRecordDB != null) {
             if (adultSeal.isStarted || pupOne.isStarted || pupTwo.isStarted) {
                 uiState = uiState.copy(
                     isError = true,
                     errorMessage = "observation already started"
                 )
+                uiState = uiState.copy(isLoading = false)
             } else {
                 var seal = sealRecordDB.toSeal()
                 if (seal.age == "Adult") {
                     adultSeal = seal
                     updateNotebookEntry(adultSeal)
                     adultSeal = adultSeal.copy(isStarted = true)
+                    uiState = uiState.copy(isLoading = false)
                 } else {
                     pupOne = seal
                     updateNotebookEntry(pupOne)
                     pupOne = pupOne.copy(isStarted = true)
+                    uiState = uiState.copy(isLoading = false)
                 }
             }
+        } else {
+            uiState = uiState.copy(
+                isError = true,
+                errorMessage = "seal not found",
+                isLoading = false
+            )
         }
-        uiState = uiState.copy(
-            isError = true,
-            errorMessage = "seal not found"
-        )
     }
 
     fun dismissError() {

@@ -145,7 +145,7 @@ fun AddObservationLogScreen(
     }
     // endregion
 
-    var showSealLookup by remember { mutableStateOf(true)}
+    var showSealLookup by remember { mutableStateOf(true) }
     var showAdult by remember { mutableStateOf(true) }
     var showPup by remember { mutableStateOf(false) }
     var showPupTwo by remember { mutableStateOf(false) }
@@ -153,8 +153,8 @@ fun AddObservationLogScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-            topBar = {
-        if (showSummary) {
+        topBar = {
+            if (showSummary) {
                 TopAppBar(title = { Text("Back", fontFamily = FontFamily.Serif) },
                     navigationIcon = {
                         if (navController.previousBackStackEntry != null) {
@@ -279,19 +279,20 @@ fun AddObservationLogScreen(
                             .padding(8.dp)
                             .fillMaxWidth()
                     ) {
-                       Row (modifier = Modifier.fillMaxWidth(),
-                           verticalAlignment = Alignment.CenterVertically,
-                           horizontalArrangement = Arrangement.SpaceEvenly
-                       )
-                       {
-                           Text(text = "Seal Lookup")
-                           SealLookupRow(viewModel, wedCheckViewModel = wedCheckViewModel)
-                           if (viewModel.uiState.isError) {
-                               ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
-                                   viewModel.dismissError()
-                               }
-                           }
-                       }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        )
+                        {
+                            Text(text = "Seal Lookup")
+                            SealLookupRow(viewModel, wedCheckViewModel = wedCheckViewModel)
+                            if (viewModel.adultSeal.isStarted) {
+                                showAdult = true
+                            } else if (viewModel.pupOne.isStarted) {
+                                showPup = true
+                            }
+                        }
                     }
                 }
             }
@@ -322,7 +323,7 @@ fun AddObservationLogScreen(
 }
 
 @Composable
-fun SealLookupRow (viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
+fun SealLookupRow(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
     // SEAL LOOKUP
     Row(
         modifier = Modifier
@@ -333,36 +334,32 @@ fun SealLookupRow (viewModel: AddObservationLogViewModel, wedCheckViewModel: Wed
         var sealSpeno by remember { mutableStateOf("") }
         //TODO, add the ability to hide the field and display a spinner if searching
         // Call SealSearchField and pass the lambda to update sealSpeno
-        SealSearchField { value ->
+        SealSearchField (viewModel) { value ->
             sealSpeno = value
         }
-        IconButton(
-            onClick = {
-                // TODO, launch search
-                if (sealSpeno != null) {
+        if (viewModel.uiState.isLoading) {
+            CircularProgressIndicator() // Display a loading indicator while searching
+        } else {
+            IconButton(
+                onClick = {
+                    if (sealSpeno != null) {
                         val spenoInt = sealSpeno.toInt()
-                        wedCheckViewModel.findSeal(spenoInt)
-
-//                        while wedCheckViewModel.uiState.isSearching {
-//                            //wait for this to be complete...display wheel?
-//                        }
-
-                        viewModel.findSealRecord(wedCheckViewModel.uiState.sealRecordDB)
-
-
-//                    } catch (e: NumberFormatException) {
-//                        ErrorDialog(errorMessage = "speno entered is not an integer, please try again") {
-//                            viewModel.dismissError()
-//                        }
-//                    }
-                }
-            },
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search"
-            )
+                        wedCheckViewModel.findSeal(spenoInt, viewModel)
+                    }
+                },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search"
+                )
+            }
+        }
+        // Display error dialog if there's an error
+        if (viewModel.uiState.isError) {
+            ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
+                viewModel.dismissError()
+            }
         }
     }
 }

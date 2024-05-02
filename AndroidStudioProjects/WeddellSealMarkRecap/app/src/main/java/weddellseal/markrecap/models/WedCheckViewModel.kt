@@ -72,7 +72,7 @@ class WedCheckViewModel(
         }
     }
 
-    fun findSeal(speno: Int) {
+    fun findSeal(speno: Int, viewModel: AddObservationLogViewModel) {
         uiState = uiState.copy(isSearching = true)
 
         // lauch the search for a seal on a separate coroutine
@@ -85,10 +85,12 @@ class WedCheckViewModel(
                 //TODO, populate an object that can be used to display the seal information
                 uiState = uiState.copy(sealRecordDB = seal)
                 uiState = uiState.copy(isSearching = false)
+                viewModel.loadWedCheckRecordToSeal(seal)
             } else {
                 uiState = uiState.copy(isSearching = false)
                 // TODO, display a Seal Not Found message and
                 // offer to the user to enter a new Seal observation
+//                uiState = uiState.copy(sealFound = false)
             }
         }
     }
