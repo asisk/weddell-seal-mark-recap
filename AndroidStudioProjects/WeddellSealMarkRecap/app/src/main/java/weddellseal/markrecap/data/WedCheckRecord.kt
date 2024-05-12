@@ -36,7 +36,7 @@ data class TagProcessingResult(
 
 // Extension function to map WedCheckRecord to Seal
 fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
-    var name =""
+    var name = ""
     var ageString = ""
     if (ageClass == "A") {
         name = "adult"
@@ -44,6 +44,20 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
     } else if (ageClass == "P") {
         name = "pupOne"
         ageString = "Pup"
+    }
+
+    val sealSex = when (sex) {
+        "F" -> "Female"
+        "M" -> "Male"
+        "U" -> "Unknown"
+        else -> "Unknown"
+    }
+
+    val tissueTaken = when (tissueSampled) {
+        "Need" -> false
+        "Done" -> true
+        "NA" -> false
+        else -> false
     }
 
     var numTags = 0
@@ -66,22 +80,22 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
         isStarted = false,
         isWedCheckRecord = true,
         lastSeenSeason = season,
-        massPups = massPups,
+        massPups = massPups.toIntOrNull(),
         name = name,
         notebookDataString = "",
-        numRelatives = previousPups.toIntOrNull() ?: 0,
+//        numRelatives = null,
         numTags = numTags,
-        photoYears = photoYears,
-        previousPups = previousPups,
-        pupPeed = false, // this field won't exist on historic records before 2024
-        sex = sex,
+        photoYears = photoYears.toIntOrNull(),
+        previousPups = previousPups.toIntOrNull(),
+//        pupPeed = false, // this field won't exist on historic records before 2024
+        sex = sealSex,
         speNo = speno,
-        swimPups = swimPups,
+        swimPups = swimPups.toIntOrNull(),
         tagAlpha = tagAlpha,
         tagEventType = "",
         tagId = tagId,
         tagNumber = tagNumber,
-        tissueTaken = tissueSampled.toBoolean(),
+        tissueTaken = tissueTaken,
     )
 
     fun String.toBoolean(): Boolean {

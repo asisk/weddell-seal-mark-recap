@@ -65,6 +65,7 @@ import weddellseal.markrecap.ui.components.ErrorDialog
 import weddellseal.markrecap.ui.components.SealCard
 import weddellseal.markrecap.ui.components.SealSearchField
 import weddellseal.markrecap.ui.components.SummaryCard
+import weddellseal.markrecap.ui.components.WedCheckCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,10 +78,17 @@ fun AddObservationLogScreen(
 //    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-
-    val adultSeal = viewModel.adultSeal
-    val pupOne = viewModel.pupOne
+    var adultSeal = viewModel.adultSeal
+    var pupOne = viewModel.pupOne
     val pupTwo = viewModel.pupTwo
+    var showSealLookup by remember { mutableStateOf(true) }
+    var showAdult by remember { mutableStateOf(false) }
+    var showPup by remember { mutableStateOf(false) }
+    var showPupTwo by remember { mutableStateOf(false) }
+    var showSummary by remember { mutableStateOf(false) }
+    var showWedCheck by remember { mutableStateOf(false) }
+    lateinit var wedCheckSeal: AddObservationLogViewModel.Seal
+
 
     // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
@@ -131,6 +139,20 @@ fun AddObservationLogScreen(
         }
     }
 
+    LaunchedEffect(state.isLoaded) {
+        if (state.isLoaded) {
+            if (viewModel.uiState.isLoaded) {
+                if (viewModel.adultSeal.isStarted) {
+                    wedCheckSeal = adultSeal
+
+                } else if (viewModel.pupOne.isStarted) {
+                    wedCheckSeal = pupOne
+                }
+                showWedCheck = true
+            }
+        }
+    }
+
     fun canSaveLog(callback: () -> Unit) {
         if (viewModel.isValid()) {
             callback()
@@ -144,12 +166,6 @@ fun AddObservationLogScreen(
         }
     }
     // endregion
-
-    var showSealLookup by remember { mutableStateOf(true) }
-    var showAdult by remember { mutableStateOf(true) }
-    var showPup by remember { mutableStateOf(false) }
-    var showPupTwo by remember { mutableStateOf(false) }
-    var showSummary by remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -279,44 +295,75 @@ fun AddObservationLogScreen(
                             .padding(8.dp)
                             .fillMaxWidth()
                     ) {
+//                        SealLookupRow(viewModel, wedCheckViewModel = wedCheckViewModel)
+                        // SEAL LOOKUP
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        )
-                        {
+                            modifier = Modifier
+                                .padding(6.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(text = "Seal Lookup")
-                            SealLookupRow(viewModel, wedCheckViewModel = wedCheckViewModel)
-                            if (viewModel.adultSeal.isStarted) {
-                                showAdult = true
-                            } else if (viewModel.pupOne.isStarted) {
-                                showPup = true
+                            var sealSpeno by remember { mutableStateOf("") }
+                            //TODO, add the ability to hide the field and display a spinner if searching
+                            // Call SealSearchField and pass the lambda to update sealSpeno
+                            SealSearchField(viewModel) { value ->
+                                sealSpeno = value
+                            }
+                            if (viewModel.uiState.isLoading) {
+                                CircularProgressIndicator() // Display a loading indicator while searching
+                            } else {
+                                IconButton(
+                                    onClick = {
+                                        val spenoInt = sealSpeno.toInt()
+                                        wedCheckViewModel.findSeal(spenoInt, viewModel)
+                                    },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search"
+                                    )
+                                }
+                            }
+                            // Display error dialog if there's an error
+                            if (viewModel.uiState.isError) {
+                                ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
+                                    viewModel.dismissError()
+                                }
                             }
                         }
                     }
                 }
             }
-            if (!showSummary) {
-                SealCard(viewModel, adultSeal, showAdult)
-                if (pupOne.isStarted) {
-                    SealCard(viewModel, pupOne, showPup)
-                }
-                if (pupTwo.isStarted) {
-                    SealCard(viewModel, pupTwo, showPupTwo)
-                }
+            if (showWedCheck) {
+                WedCheckCard(viewModel, wedCheckSeal)
             } else {
-                SummaryCard(viewModel, adultSeal, pupOne, pupTwo)
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    containerColor = Color.LightGray,
-                    onClick = {
-                        canSaveLog {
-                            viewModel.createLog()
-                        }
-                    },
-                    icon = { Icon(Icons.Filled.Save, "Save and Start New Observation") },
-                    text = { Text(text = "Save and Start New Observation") }
-                )
+                if (!showSummary) {
+                    if (!showSealLookup) {
+                        SealCard(viewModel, adultSeal, showAdult)
+                    }
+                    if (viewModel.pupOne.isStarted) {
+                        SealCard(viewModel, pupOne, showPup)
+                    }
+                    if (viewModel.pupTwo.isStarted) {
+                        SealCard(viewModel, pupTwo, showPupTwo)
+                    }
+                } else {
+                    SummaryCard(viewModel, adultSeal, pupOne, pupTwo)
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        containerColor = Color.LightGray,
+                        onClick = {
+                            canSaveLog {
+                                viewModel.createLog()
+                            }
+                        },
+                        icon = { Icon(Icons.Filled.Save, "Save and Start New Observation") },
+                        text = { Text(text = "Save and Start New Observation") }
+                    )
+                }
             }
         }
     }
@@ -327,14 +374,16 @@ fun SealLookupRow(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedC
     // SEAL LOOKUP
     Row(
         modifier = Modifier
-            .padding(6.dp),
-        horizontalArrangement = Arrangement.Start,
+            .padding(6.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Text(text = "Seal Lookup")
         var sealSpeno by remember { mutableStateOf("") }
         //TODO, add the ability to hide the field and display a spinner if searching
         // Call SealSearchField and pass the lambda to update sealSpeno
-        SealSearchField (viewModel) { value ->
+        SealSearchField(viewModel) { value ->
             sealSpeno = value
         }
         if (viewModel.uiState.isLoading) {
@@ -342,10 +391,8 @@ fun SealLookupRow(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedC
         } else {
             IconButton(
                 onClick = {
-                    if (sealSpeno != null) {
-                        val spenoInt = sealSpeno.toInt()
-                        wedCheckViewModel.findSeal(spenoInt, viewModel)
-                    }
+                    val spenoInt = sealSpeno.toInt()
+                    wedCheckViewModel.findSeal(spenoInt, viewModel)
                 },
                 modifier = Modifier.size(48.dp)
             ) {

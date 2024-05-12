@@ -60,7 +60,8 @@ class AddObservationLogViewModel(
         val latLong: String = "",
         val isError: Boolean = false,
         val errorMessage: String = "",
-        var isLoading: Boolean = false
+        var isLoading: Boolean = false,
+        var isLoaded: Boolean = false
     )
 
     var uiState by mutableStateOf(
@@ -85,17 +86,17 @@ class AddObservationLogViewModel(
         val isStarted: Boolean = false,
         val isWedCheckRecord: Boolean = false,
         val lastSeenSeason: Int = 0,
-        val massPups: String = "",
+        val massPups: Int? = null,
         val name: String = "",
         val notebookDataString: String = "",
         val numRelatives: Int = 0,
         val numTags: Int = 0,
-        val photoYears: String = "",
-        val previousPups: String = "",
+        val photoYears: Int? = null,
+        val previousPups: Int? = null,
         val pupPeed: Boolean = false,
         val sex: String = "",
         val speNo: Int = 0,
-        val swimPups: String = "",
+        val swimPups: Int? = null,
         val tagAlpha: String = "",
         val tagEventType: String = "",
         val tagId: String = "",
@@ -539,21 +540,21 @@ class AddObservationLogViewModel(
                     isError = true,
                     errorMessage = "observation already started"
                 )
-                uiState = uiState.copy(isLoading = false)
             } else {
+                uiState = uiState.copy (isLoading = true)
                 var seal = sealRecordDB.toSeal()
                 if (seal.age == "Adult") {
                     adultSeal = seal
                     updateNotebookEntry(adultSeal)
                     adultSeal = adultSeal.copy(isStarted = true)
-                    uiState = uiState.copy(isLoading = false)
                 } else {
                     pupOne = seal
                     updateNotebookEntry(pupOne)
                     pupOne = pupOne.copy(isStarted = true)
-                    uiState = uiState.copy(isLoading = false)
                 }
             }
+            uiState = uiState.copy(isLoading = false)
+            uiState = uiState.copy(isLoaded = true)
         } else {
             uiState = uiState.copy(
                 isError = true,
@@ -567,11 +568,3 @@ class AddObservationLogViewModel(
         TODO("Not yet implemented")
     }
 }
-
-//class AddLogViewModelFactory : ViewModelProvider.Factory {
-//    @Suppress("UNCHECKED_CAST")
-//    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-//        val app = extras[APPLICATION_KEY] as ObservationLogApplication
-//        return AddObservationLogViewModel(app, app.observationRepo) as T
-//    }
-//}
