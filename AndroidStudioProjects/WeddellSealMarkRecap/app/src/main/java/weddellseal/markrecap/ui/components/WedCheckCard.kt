@@ -51,8 +51,17 @@ fun WedCheckCard(
                 style = MaterialTheme.typography.titleLarge
             )
         }
-        //AGE
-        WedCheckDataDisplayRow("Age", seal.age)
+        // SPENO
+        WedCheckDataDisplayRow("SPENO", seal.speNo.toString())
+
+        // TAG ID
+        WedCheckDataDisplayRow( "Tag", seal.tagId)
+
+        // AGE
+        WedCheckDataDisplayRow("Age Class", seal.age)
+
+        // AGE YEARS
+        WedCheckDataDisplayRow("Age Years", seal.ageYears.toString())
 
         // SEX
         WedCheckDataDisplayRow("Sex", seal.sex)
@@ -60,8 +69,20 @@ fun WedCheckCard(
         // TISSUE SAMPLED
         WedCheckDataDisplayRow("Tissue Taken", seal.tissueTaken.toString())
 
-        //TAG ID
-        WedCheckDataDisplayRow( "Tag", seal.tagId)
+        // LAST SEEN
+        WedCheckDataDisplayRow("Last Seen", seal.lastSeenSeason.toString())
+
+        // PREVIOUS PUPS
+        WedCheckDataDisplayRow("Previous Pups", seal.previousPups.toString())
+
+        // MASS PUPS
+        WedCheckDataDisplayRow("Mass Pups", seal.massPups.toString())
+
+        // SWIM PUPS
+        WedCheckDataDisplayRow("Swim Pups", seal.swimPups.toString())
+
+        // PHOTO YEARS
+        WedCheckDataDisplayRow("Photo Years", seal.photoYears.toString())
 
         // COMMENTS
         WedCheckDataDisplayRow("Comments",seal.comment)

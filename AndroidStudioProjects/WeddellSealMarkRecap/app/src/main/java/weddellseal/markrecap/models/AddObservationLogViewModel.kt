@@ -86,22 +86,23 @@ class AddObservationLogViewModel(
         val isStarted: Boolean = false,
         val isWedCheckRecord: Boolean = false,
         val lastSeenSeason: Int = 0,
-        val massPups: Int? = null,
+        val massPups: String = "",
         val name: String = "",
         val notebookDataString: String = "",
         val numRelatives: Int = 0,
         val numTags: Int = 0,
-        val photoYears: Int? = null,
-        val previousPups: Int? = null,
+        val photoYears: String = "",
+        val previousPups: String = "",
         val pupPeed: Boolean = false,
         val sex: String = "",
         val speNo: Int = 0,
-        val swimPups: Int? = null,
+        val swimPups: String = "",
         val tagAlpha: String = "",
         val tagEventType: String = "",
         val tagId: String = "",
         val tagNumber: Int = 0,
         val tissueTaken: Boolean = false,
+        val tissueSampled: String = ""
     )
 
     var adultSeal by mutableStateOf(Seal(name = "adult", age = "Adult"))

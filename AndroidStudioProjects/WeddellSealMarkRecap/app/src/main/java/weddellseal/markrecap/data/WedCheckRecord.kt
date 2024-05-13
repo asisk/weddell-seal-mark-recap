@@ -52,13 +52,13 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
         "U" -> "Unknown"
         else -> "Unknown"
     }
-
-    val tissueTaken = when (tissueSampled) {
-        "Need" -> false
-        "Done" -> true
-        "NA" -> false
-        else -> false
-    }
+//
+//    val tissueTaken = when (tissueSampled) {
+//        "Need" -> false
+//        "Done" -> true
+//        "NA" -> false
+//        else -> false
+//    }
 
     var numTags = 0
     var tagId = ""
@@ -80,22 +80,22 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
         isStarted = false,
         isWedCheckRecord = true,
         lastSeenSeason = season,
-        massPups = massPups.toIntOrNull(),
+        massPups = massPups,
         name = name,
         notebookDataString = "",
-//        numRelatives = null,
+//        numRelatives = null, // this field won't exist on historic records before 2024
         numTags = numTags,
-        photoYears = photoYears.toIntOrNull(),
-        previousPups = previousPups.toIntOrNull(),
+        photoYears = photoYears,
+        previousPups = previousPups,
 //        pupPeed = false, // this field won't exist on historic records before 2024
         sex = sealSex,
         speNo = speno,
-        swimPups = swimPups.toIntOrNull(),
+        swimPups = swimPups,
         tagAlpha = tagAlpha,
         tagEventType = "",
         tagId = tagId,
         tagNumber = tagNumber,
-        tissueTaken = tissueTaken,
+        tissueSampled = tissueSampled,
     )
 
     fun String.toBoolean(): Boolean {

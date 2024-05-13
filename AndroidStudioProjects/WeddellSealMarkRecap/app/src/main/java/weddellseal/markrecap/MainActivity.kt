@@ -22,6 +22,7 @@ import weddellseal.markrecap.ui.screens.AddObservationLogScreen
 import weddellseal.markrecap.ui.screens.AdminScreen
 import weddellseal.markrecap.ui.screens.HomeScreen
 import weddellseal.markrecap.ui.screens.RecentObservationsScreen
+import weddellseal.markrecap.ui.screens.SealLookupScreen
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
@@ -61,7 +62,8 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.HomeScreen.route) { HomeScreen(navController) }
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController, wedCheckViewModel, addObservationLogViewModel) }
                         composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }
-                        composable(Screens.SealLookupScreen.route) { AdminScreen(navController, wedCheckViewModel) }
+                        composable(Screens.SealLookupScreen.route) { SealLookupScreen(navController, wedCheckViewModel, addObservationLogViewModel) }
+                        composable(Screens.AdminScreen.route) { AdminScreen(navController, wedCheckViewModel) }
                     }
                 }
             }
@@ -71,6 +73,7 @@ class MainActivity : ComponentActivity() {
 
 sealed class Screens(val route: String) {
     object HomeScreen : Screens("home")
+    object AdminScreen : Screens("admin")
     object AddObservationLog : Screens("add_log")
     object RecentObservations : Screens ("view_db")
     object SealLookupScreen : Screens("seal_lookup")

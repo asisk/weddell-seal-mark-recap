@@ -8,7 +8,6 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,8 +29,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -65,7 +62,6 @@ import weddellseal.markrecap.ui.components.ErrorDialog
 import weddellseal.markrecap.ui.components.SealCard
 import weddellseal.markrecap.ui.components.SealSearchField
 import weddellseal.markrecap.ui.components.SummaryCard
-import weddellseal.markrecap.ui.components.WedCheckCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,13 +77,12 @@ fun AddObservationLogScreen(
     var adultSeal = viewModel.adultSeal
     var pupOne = viewModel.pupOne
     val pupTwo = viewModel.pupTwo
-    var showSealLookup by remember { mutableStateOf(true) }
-    var showAdult by remember { mutableStateOf(false) }
+//    var showSealLookup by remember { mutableStateOf(true) }
+    var showAdult by remember { mutableStateOf(true) }
     var showPup by remember { mutableStateOf(false) }
     var showPupTwo by remember { mutableStateOf(false) }
     var showSummary by remember { mutableStateOf(false) }
-    var showWedCheck by remember { mutableStateOf(false) }
-    lateinit var wedCheckSeal: AddObservationLogViewModel.Seal
+//    var showWedCheck by remember { mutableStateOf(false) }
 
 
     // Register ActivityResult to request Location permissions
@@ -139,19 +134,17 @@ fun AddObservationLogScreen(
         }
     }
 
-    LaunchedEffect(state.isLoaded) {
-        if (state.isLoaded) {
-            if (viewModel.uiState.isLoaded) {
-                if (viewModel.adultSeal.isStarted) {
-                    wedCheckSeal = adultSeal
-
-                } else if (viewModel.pupOne.isStarted) {
-                    wedCheckSeal = pupOne
-                }
-                showWedCheck = true
-            }
-        }
-    }
+//    LaunchedEffect(viewModel.uiState.isLoaded) {
+//        if (state.isLoaded) {
+//            if (viewModel.uiState.isLoaded) {
+//                if (viewModel.adultSeal.isStarted) {
+//                    showWedCheck = true
+//                } else if (viewModel.pupOne.isStarted) {
+//                    showWedCheck = true
+//                }
+//            }
+//        }
+//    }
 
     fun canSaveLog(callback: () -> Unit) {
         if (viewModel.isValid()) {
@@ -278,72 +271,75 @@ fun AddObservationLogScreen(
                 .fillMaxSize()
         ) {
             // SEAL LOOKUP - show if observation has not been started
-            if (!adultSeal.isStarted && !pupOne.isStarted && !pupTwo.isStarted) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                ) {
-                    Card(
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 6.dp
-                        ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        ),
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth()
-                    ) {
-//                        SealLookupRow(viewModel, wedCheckViewModel = wedCheckViewModel)
+//            if (!adultSeal.isStarted && !pupOne.isStarted && !pupTwo.isStarted) {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .align(Alignment.CenterHorizontally)
+//                ) {
+//                    Card(
+//                        elevation = CardDefaults.cardElevation(
+//                            defaultElevation = 6.dp
+//                        ),
+//                        colors = CardDefaults.cardColors(
+//                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+//                        ),
+//                        modifier = Modifier
+//                            .padding(8.dp)
+//                            .fillMaxWidth()
+//                    ) {
                         // SEAL LOOKUP
-                        Row(
-                            modifier = Modifier
-                                .padding(6.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "Seal Lookup")
-                            var sealSpeno by remember { mutableStateOf("") }
-                            //TODO, add the ability to hide the field and display a spinner if searching
-                            // Call SealSearchField and pass the lambda to update sealSpeno
-                            SealSearchField(viewModel) { value ->
-                                sealSpeno = value
-                            }
-                            if (viewModel.uiState.isLoading) {
-                                CircularProgressIndicator() // Display a loading indicator while searching
-                            } else {
-                                IconButton(
-                                    onClick = {
-                                        val spenoInt = sealSpeno.toInt()
-                                        wedCheckViewModel.findSeal(spenoInt, viewModel)
-                                    },
-                                    modifier = Modifier.size(48.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = "Search"
-                                    )
-                                }
-                            }
-                            // Display error dialog if there's an error
-                            if (viewModel.uiState.isError) {
-                                ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
-                                    viewModel.dismissError()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (showWedCheck) {
-                WedCheckCard(viewModel, wedCheckSeal)
-            } else {
+//                        Row(
+//                            modifier = Modifier
+//                                .padding(6.dp)
+//                                .fillMaxWidth(),
+//                            horizontalArrangement = Arrangement.SpaceEvenly,
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            Text(text = "Seal Lookup")
+//                            var sealSpeno by remember { mutableStateOf("") }
+//                            //TODO, add the ability to hide the field and display a spinner if searching
+//                            // Call SealSearchField and pass the lambda to update sealSpeno
+//                            SealSearchField(viewModel) { value ->
+//                                sealSpeno = value
+//                            }
+//                            if (viewModel.uiState.isLoading) {
+//                                CircularProgressIndicator() // Display a loading indicator while searching
+//                            } else {
+//                                IconButton(
+//                                    onClick = {
+//                                        val spenoInt = sealSpeno.toInt()
+//                                        wedCheckViewModel.findSeal(spenoInt, viewModel)
+//                                    },
+//                                    modifier = Modifier.size(48.dp)
+//                                ) {
+//                                    Icon(
+//                                        imageVector = Icons.Default.Search,
+//                                        contentDescription = "Search"
+//                                    )
+//                                }
+//                            }
+//                            // Display error dialog if there's an error
+//                            if (viewModel.uiState.isError) {
+//                                ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
+//                                    viewModel.dismissError()
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            if (showWedCheck) {
+//                if (viewModel.adultSeal.isStarted) {
+//                    WedCheckCard(viewModel, adultSeal)
+//                } else if (viewModel.pupOne.isStarted) {
+//                    WedCheckCard(viewModel, pupOne)
+//                }
+//            } else {
                 if (!showSummary) {
-                    if (!showSealLookup) {
+//                    if (!showSealLookup) {
                         SealCard(viewModel, adultSeal, showAdult)
-                    }
+//                    }
                     if (viewModel.pupOne.isStarted) {
                         SealCard(viewModel, pupOne, showPup)
                     }
@@ -364,7 +360,7 @@ fun AddObservationLogScreen(
                         text = { Text(text = "Save and Start New Observation") }
                     )
                 }
-            }
+//            }
         }
     }
 }
