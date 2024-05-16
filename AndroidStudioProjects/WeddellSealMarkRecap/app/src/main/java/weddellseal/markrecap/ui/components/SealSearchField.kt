@@ -21,13 +21,13 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.WedCheckViewModel
 
 class SealSearchField {
 
 }
 @Composable
-fun SealSearchField(viewModel: AddObservationLogViewModel, onValueChanged: (String) -> Unit) {
+fun SealSearchField(viewModel: WedCheckViewModel, onValueChanged: (String) -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -62,6 +62,6 @@ fun SealSearchField(viewModel: AddObservationLogViewModel, onValueChanged: (Stri
     )
 }
 
-fun onSearchClicked(viewModel: AddObservationLogViewModel) {
-    viewModel.uiState.isLoading = true
+fun onSearchClicked(viewModel: WedCheckViewModel) {
+    viewModel.uiState.isSearching = true
 }

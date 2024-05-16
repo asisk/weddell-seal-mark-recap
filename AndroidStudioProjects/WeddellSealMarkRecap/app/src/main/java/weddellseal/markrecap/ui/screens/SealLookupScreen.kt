@@ -1,5 +1,6 @@
 package weddellseal.markrecap.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
@@ -94,15 +96,20 @@ fun SealLookupScreen(
                     ) {
                         Text(text = "Seal Lookup")
                         var sealSpeno by remember { mutableStateOf("") }
-                        SealSearchField(viewModel) { value ->
+                        SealSearchField(wedCheckViewModel) { value ->
                             sealSpeno = value
                         }
-                        if (viewModel.uiState.isLoading) {
+                        if (wedCheckViewModel.uiState.isSearching) {
                             CircularProgressIndicator() // Display a loading indicator while searching
                         } else {
                             IconButton(
                                 onClick = {
                                     val spenoInt = sealSpeno.toInt()
+                                    // reset the current seal for new search
+                                    if (viewModel.wedCheckSeal.isStarted) {
+                                        viewModel.resetWedCheckSeal()
+                                        wedCheckViewModel.resetSearch()
+                                    }
                                     wedCheckViewModel.findSeal(spenoInt, viewModel)
                                 },
                                 modifier = Modifier.size(48.dp)
@@ -120,13 +127,23 @@ fun SealLookupScreen(
                             }
                         }
                     }
-                    if (viewModel.adultSeal.isStarted) {
-                        WedCheckCard(viewModel, viewModel.adultSeal)
-                    } else if (viewModel.pupOne.isStarted) {
-                        WedCheckCard(viewModel, viewModel.pupOne)
+                    if (!wedCheckViewModel.uiState.isSearching) {
+                        if (viewModel.wedCheckSeal.isStarted) {
+                            WedCheckCard(viewModel, viewModel.wedCheckSeal)
+                        }
+
+                        if (wedCheckViewModel.uiState.sealNotFound == true) {
+                            SealNotFoundToast()
+                        }
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun SealNotFoundToast() {
+    val context = LocalContext.current
+    Toast.makeText(context, "Seal not found", Toast.LENGTH_LONG).show()
 }

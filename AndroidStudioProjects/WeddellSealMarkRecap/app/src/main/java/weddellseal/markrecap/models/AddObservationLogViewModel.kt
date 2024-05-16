@@ -60,8 +60,6 @@ class AddObservationLogViewModel(
         val latLong: String = "",
         val isError: Boolean = false,
         val errorMessage: String = "",
-        var isLoading: Boolean = false,
-        var isLoaded: Boolean = false
     )
 
     var uiState by mutableStateOf(
@@ -83,7 +81,7 @@ class AddObservationLogViewModel(
         val ageYears: Int = 0,
         val comment: String = "",
         val condition: String = "",
-        val isStarted: Boolean = false,
+        var isStarted: Boolean = false,
         val isWedCheckRecord: Boolean = false,
         val lastSeenSeason: Int = 0,
         val massPups: String = "",
@@ -111,6 +109,12 @@ class AddObservationLogViewModel(
         private set
     var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup"))
         private set
+
+    var wedCheckSeal by mutableStateOf(Seal())
+
+    fun resetWedCheckSeal() {
+        wedCheckSeal = Seal()
+    }
 
     fun startPup(seal: Seal) {
         when (seal.name) {
@@ -542,7 +546,6 @@ class AddObservationLogViewModel(
                     errorMessage = "observation already started"
                 )
             } else {
-                uiState = uiState.copy (isLoading = true)
                 var seal = sealRecordDB.toSeal()
                 if (seal.age == "Adult") {
                     adultSeal = seal
@@ -554,14 +557,9 @@ class AddObservationLogViewModel(
                     pupOne = pupOne.copy(isStarted = true)
                 }
             }
-            uiState = uiState.copy(isLoading = false)
-            uiState = uiState.copy(isLoaded = true)
+
         } else {
-            uiState = uiState.copy(
-                isError = true,
-                errorMessage = "seal not found",
-                isLoading = false
-            )
+            uiState = uiState.copy(isError = true, errorMessage = "seal not found")
         }
     }
 

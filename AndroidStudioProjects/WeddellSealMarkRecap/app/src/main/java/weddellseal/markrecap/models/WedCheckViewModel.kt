@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.data.WedCheckRecord
 import weddellseal.markrecap.data.WedCheckRepository
+import weddellseal.markrecap.data.toSeal
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
@@ -36,7 +37,8 @@ class WedCheckViewModel(
     data class UiState(
         val hasFileAccess: Boolean,
         val loading: Boolean = true,
-        val isSearching: Boolean = false,
+        var isSearching: Boolean = false,
+        val sealNotFound: Boolean = false,
         val uriForCSVDataLoad: Uri? = null,
         val sealRecordDB: WedCheckRecord? = null,
         val date: String, //TODO, think about the proper date format, should it be UTC?
@@ -73,24 +75,21 @@ class WedCheckViewModel(
     }
 
     fun findSeal(speno: Int, viewModel: AddObservationLogViewModel) {
-        uiState = uiState.copy(isSearching = true)
-
-        // lauch the search for a seal on a separate coroutine
+        // launch the search for a seal on a separate coroutine
         viewModelScope.launch {
+            uiState = uiState.copy(isSearching = true)
+
             // Switch to the IO dispatcher for database operation
             val seal: WedCheckRecord = withContext(Dispatchers.IO) {
                 wedCheckRepo.findSeal(speno)
             }
             if (seal != null) {
-                //TODO, populate an object that can be used to display the seal information
-                uiState = uiState.copy(sealRecordDB = seal)
-                uiState = uiState.copy(isSearching = false)
-                viewModel.loadWedCheckRecordToSeal(seal)
+                viewModel.wedCheckSeal = seal.toSeal()
+                viewModel.wedCheckSeal.isStarted = true
+                uiState = uiState.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
+            //                viewModel.loadWedCheckRecordToSeal(seal)
             } else {
-                uiState = uiState.copy(isSearching = false)
-                // TODO, display a Seal Not Found message and
-                // offer to the user to enter a new Seal observation
-//                uiState = uiState.copy(sealFound = false)
+                uiState = uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true)
             }
         }
     }
@@ -179,6 +178,10 @@ class WedCheckViewModel(
             }
         }
         return csvData
+    }
+
+    fun resetSearch() {
+        uiState = uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true)
     }
 }
 //

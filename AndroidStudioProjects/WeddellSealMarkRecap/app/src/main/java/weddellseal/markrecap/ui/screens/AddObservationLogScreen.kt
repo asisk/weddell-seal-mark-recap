@@ -7,11 +7,8 @@ package weddellseal.markrecap.ui.screens
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
@@ -25,7 +22,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -48,7 +44,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -58,9 +53,7 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
-import weddellseal.markrecap.ui.components.ErrorDialog
 import weddellseal.markrecap.ui.components.SealCard
-import weddellseal.markrecap.ui.components.SealSearchField
 import weddellseal.markrecap.ui.components.SummaryCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -365,47 +358,47 @@ fun AddObservationLogScreen(
     }
 }
 
-@Composable
-fun SealLookupRow(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
-    // SEAL LOOKUP
-    Row(
-        modifier = Modifier
-            .padding(6.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = "Seal Lookup")
-        var sealSpeno by remember { mutableStateOf("") }
-        //TODO, add the ability to hide the field and display a spinner if searching
-        // Call SealSearchField and pass the lambda to update sealSpeno
-        SealSearchField(viewModel) { value ->
-            sealSpeno = value
-        }
-        if (viewModel.uiState.isLoading) {
-            CircularProgressIndicator() // Display a loading indicator while searching
-        } else {
-            IconButton(
-                onClick = {
-                    val spenoInt = sealSpeno.toInt()
-                    wedCheckViewModel.findSeal(spenoInt, viewModel)
-                },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
-                )
-            }
-        }
-        // Display error dialog if there's an error
-        if (viewModel.uiState.isError) {
-            ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
-                viewModel.dismissError()
-            }
-        }
-    }
-}
+//@Composable
+//fun SealLookupRow(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
+//    // SEAL LOOKUP
+//    Row(
+//        modifier = Modifier
+//            .padding(6.dp)
+//            .fillMaxWidth(),
+//        horizontalArrangement = Arrangement.SpaceEvenly,
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Text(text = "Seal Lookup")
+//        var sealSpeno by remember { mutableStateOf("") }
+//        //TODO, add the ability to hide the field and display a spinner if searching
+//        // Call SealSearchField and pass the lambda to update sealSpeno
+//        SealSearchField(wedCheckViewModel) { value ->
+//            sealSpeno = value
+//        }
+//        if (wedCheckViewModel.uiState.isSearching) {
+//            CircularProgressIndicator() // Display a loading indicator while searching
+//        } else {
+//            IconButton(
+//                onClick = {
+//                    val spenoInt = sealSpeno.toInt()
+//                    wedCheckViewModel.findSeal(spenoInt, viewModel)
+//                },
+//                modifier = Modifier.size(48.dp)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Search,
+//                    contentDescription = "Search"
+//                )
+//            }
+//        }
+//        // Display error dialog if there's an error
+//        if (viewModel.uiState.isError) {
+//            ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
+//                viewModel.dismissError()
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
