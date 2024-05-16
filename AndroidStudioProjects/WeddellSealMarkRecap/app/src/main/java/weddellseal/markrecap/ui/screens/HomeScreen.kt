@@ -22,6 +22,7 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Dataset
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Person
@@ -202,12 +203,12 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     modifier = Modifier.fillMaxSize(),
                     backgroundColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    BottomNavigationItem(
-                        label = { Text(text = "Start Observation") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.AddObservationLog.route) },
-                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") }
-                    )
+//                    BottomNavigationItem(
+//                        label = { Text(text = "Start Observation") },
+//                        selected = false,
+//                        onClick = { navController.navigate(Screens.AddObservationLog.route) },
+//                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") }
+//                    )
                     BottomNavigationItem(
                         label = { Text(text = "Recent Observations") },
                         selected = false,
@@ -353,13 +354,34 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
 //                    SerialNumberDisplay()
                 }
             }
-            ExtendedFloatingActionButton(
-                modifier = Modifier.padding(16.dp),
-                containerColor = Color.LightGray,
-                onClick = { navController.navigate(Screens.SealLookupScreen.route) },
-                icon = { Icon(Icons.Filled.Search, "Search for SpeNo") },
-                text = { Text(text = "Seal Lookup") }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    containerColor = Color.LightGray,
+                    onClick = { navController.navigate(Screens.SealLookupScreen.route) },
+                    icon = { Icon(Icons.Filled.Search, "Search for SpeNo") },
+                    text = { Text(text = "Seal Lookup") }
+                )
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    containerColor = Color.LightGray,
+                    onClick = { navController.navigate(Screens.AddObservationLog.route)},
+                    icon = { Icon(Icons.Filled.PostAdd, "Enter a new observation") },
+                    text = { Text(text = "Tag/Retag") }
+                )
+                ExtendedFloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
+                    containerColor = Color.LightGray,
+                    onClick = {},// navController.navigate(Screens.SealLookupScreen.route) },
+                    icon = { Icon(Icons.Filled.Checklist, "Enter a new observation") },
+                    text = { Text(text = "Census") }
+                )
+            }
         }
     }
 }
