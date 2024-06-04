@@ -95,22 +95,21 @@ fun SealLookupScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = "Seal Lookup")
-                        var sealSpeno by remember { mutableStateOf("") }
+                        var sealTagID by remember { mutableStateOf("") }
                         SealSearchField(wedCheckViewModel) { value ->
-                            sealSpeno = value
+                            sealTagID = value
                         }
                         if (wedCheckViewModel.uiState.isSearching) {
                             CircularProgressIndicator() // Display a loading indicator while searching
                         } else {
                             IconButton(
                                 onClick = {
-                                    val spenoInt = sealSpeno.toInt()
                                     // reset the current seal for new search
                                     if (viewModel.wedCheckSeal.isStarted) {
                                         viewModel.resetWedCheckSeal()
                                         wedCheckViewModel.resetSearch()
                                     }
-                                    wedCheckViewModel.findSeal(spenoInt, viewModel)
+                                    wedCheckViewModel.findSeal(sealTagID, viewModel)
                                 },
                                 modifier = Modifier.size(48.dp)
                             ) {

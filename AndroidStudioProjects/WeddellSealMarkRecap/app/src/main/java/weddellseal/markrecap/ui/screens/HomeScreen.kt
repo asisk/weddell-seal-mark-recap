@@ -218,7 +218,7 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     BottomNavigationItem(
                         label = { Text(text = "Admin") },
                         selected = false,
-                        onClick = { navController.navigate(Screens.SealLookupScreen.route) },
+                        onClick = { navController.navigate(Screens.AdminScreen.route) },
                         icon = { Icon(Icons.Filled.Person, null) }
                     )
 //                    val contentColor =

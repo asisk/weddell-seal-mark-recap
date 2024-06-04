@@ -74,14 +74,14 @@ class WedCheckViewModel(
         }
     }
 
-    fun findSeal(speno: Int, viewModel: AddObservationLogViewModel) {
+    fun findSeal(sealTagID: String, viewModel: AddObservationLogViewModel) {
         // launch the search for a seal on a separate coroutine
         viewModelScope.launch {
             uiState = uiState.copy(isSearching = true)
 
             // Switch to the IO dispatcher for database operation
             val seal: WedCheckRecord = withContext(Dispatchers.IO) {
-                wedCheckRepo.findSeal(speno)
+                wedCheckRepo.findSeal(sealTagID)
             }
             if (seal != null) {
                 viewModel.wedCheckSeal = seal.toSeal()

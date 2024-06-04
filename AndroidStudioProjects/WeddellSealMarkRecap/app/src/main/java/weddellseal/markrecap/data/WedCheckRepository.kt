@@ -4,8 +4,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class WedCheckRepository(private val wedCheckDao: WedCheckDao) {
-    fun findSeal(speno: Int): WedCheckRecord {
-        val sealRecord = wedCheckDao.lookupSealBySpeno(speno)
+    fun findSeal(sealTagID: String): WedCheckRecord {
+        val sealRecord = wedCheckDao.lookupSealByTagID(sealTagID)
         return sealRecord
     }
 

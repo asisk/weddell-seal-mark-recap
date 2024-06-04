@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
@@ -22,27 +23,31 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.models.AddObservationLogViewModel
-import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SealCard(
     viewModel: AddObservationLogViewModel,
@@ -86,7 +91,7 @@ fun SealCard(
                 modifier = Modifier
                     .fillMaxWidth(.7f)
                     .padding(10.dp),
-                ) {
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -138,7 +143,7 @@ fun SealCard(
                     }
                 }
 //                if (seal.age == "Pup") {
-                    Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 var isChecked by remember {
                     mutableStateOf(false)
                 }
@@ -199,7 +204,8 @@ fun SealCard(
                 Text(text = "Condition")
                 Spacer(modifier = Modifier.width(10.dp))
                 // TODO, address the option to clear a condition for an adult
-                val conditions = listOf<String>("0 - Dead", "1 - Poor", "2 - Fair", "3 - Good", "4 - Newborn")
+                val conditions =
+                    listOf<String>("0 - Dead", "1 - Poor", "2 - Fair", "3 - Good", "4 - Newborn")
                 DropdownField(conditions) { newText ->
                     viewModel.updateCondition(
                         seal.name,
@@ -271,41 +277,60 @@ fun SealCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                var tagidvaltest by rememberSaveable { mutableStateOf("") }
-                val tagIdFieldVal = (if (seal.tagNumber > 0) {
-                    seal.tagNumber
-                } else {
-                    ""
-                }).toString()
-                TextField(
-                    value = tagidvaltest,
+                val focusManager: FocusManager = LocalFocusManager.current
+                val keyboardController = LocalSoftwareKeyboardController.current
+                var isError by remember { mutableStateOf(false) }
+                var tagIDVal by remember {
+                    mutableStateOf("")
+                }
+                OutlinedTextField(
+                    value = tagIDVal,
                     onValueChange = {
                         val number: Int? = it.toIntOrNull()
-                        tagidvaltest = it
-//                        if (number != null) {
-//                            viewModel.updateTagNumber(seal, number)
-//                        }
+                        tagIDVal = it
+                        isError = it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
                     },
                     label = { Text("TagNumber") },
+                    isError = isError,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+                    ),
                     placeholder = { Text("Enter Tag Number") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
                     keyboardActions = KeyboardActions(
                         onDone = {
                             // Handle "Done" button action
+
+                            // change the focus
+                            focusManager.clearFocus()
+
+                            //hide the keyboard
                             keyboardController?.hide()
-                            val number: Int? = tagidvaltest.toIntOrNull()
-                            if (number != null) {
+
+                            // save the input to the model
+                            val number: Int? = tagIDVal.toIntOrNull()
+                            if (number != null && !isError) {
                                 viewModel.updateTagNumber(seal, number)
                             }
-                        }
+                        },
                     ),
                     trailingIcon = {
                         Icon(
                             Icons.Filled.Clear, contentDescription = "Clear text",
-                            Modifier.clickable { viewModel.clearTag(seal) })
+                            Modifier.clickable {
+                                tagIDVal = ""
+                                viewModel.clearTag(seal)
+                            })
                     }
                 )
+                if (isError) {
+                    // change the outlined text box red and add text below indicating the error
+                }
 
                 //TAG ALPHA BUTTONS
                 val buttonListAlpha = listOf<String>("A", "C", "D")
@@ -347,56 +372,48 @@ fun SealCard(
     }
 }
 
-    @Composable
-    fun DropdownExample() {
-        val options = listOf<String>("A", "C", "D")
+@Composable
+fun DropdownExample() {
+    val options = listOf<String>("A", "C", "D")
 
-        var selectedOption by remember { mutableStateOf("Option 1") }
-        var expanded by remember { mutableStateOf(false) }
+    var selectedOption by remember { mutableStateOf("Option 1") }
+    var expanded by remember { mutableStateOf(false) }
 
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Dropdown Field
+        Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary)
+                .clickable { expanded = true }
                 .padding(16.dp)
         ) {
-            // Dropdown Field
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-                    .clickable { expanded = true }
-                    .padding(16.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = selectedOption, color = Color.White)
-                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
-                }
-            }
-
-            // Dropdown Menu
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                options.forEach { option ->
-                    DropdownMenuItem(text = { Text(text = option) },
-                        onClick = {
-                            selectedOption = option
-                            expanded = false
-                        }
-                    )
-                }
+                Text(text = selectedOption, color = Color.White)
+                Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
             }
         }
-    }
 
-@Preview
-@Composable
-fun rowDualColumn() {
-    WeddellSealMarkRecapTheme {
-    DropdownExample()
+        // Dropdown Menu
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(text = { Text(text = option) },
+                    onClick = {
+                        selectedOption = option
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }

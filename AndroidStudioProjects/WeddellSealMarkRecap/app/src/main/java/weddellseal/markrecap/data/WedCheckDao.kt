@@ -13,9 +13,9 @@ import androidx.room.Query
 @Dao
 interface WedCheckDao {
 
-    @Query("SELECT * FROM wedCheck WHERE speno = :lookupSpeno")
+    @Query("SELECT * FROM wedCheck WHERE tagNumberOne OR tagNumberTwo = :lookupSealTagID")
     // TODO rename to something that indicates it's coming from the SQlite database
-    fun lookupSealBySpeno(lookupSpeno: Int): WedCheckRecord
+    fun lookupSealByTagID(lookupSealTagID: String): WedCheckRecord
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(data: List<WedCheckRecord>)

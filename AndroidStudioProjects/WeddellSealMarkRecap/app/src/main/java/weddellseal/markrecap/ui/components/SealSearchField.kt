@@ -33,12 +33,12 @@ fun SealSearchField(viewModel: WedCheckViewModel, onValueChanged: (String) -> Un
 
     OutlinedTextField(
         value = text,
-        placeholder = { "SpeNo" },
+        placeholder = { "Tag ID" },
         onValueChange = {
             text = it
             onValueChanged(text)
         },
-        label = { Text("Seal SpeNo") },
+        label = { Text("Seal Tag ID") },
         singleLine = true,
         modifier = Modifier
             .background(color = Color.Transparent),
