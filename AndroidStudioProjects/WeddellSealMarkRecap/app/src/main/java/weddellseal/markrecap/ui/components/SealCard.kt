@@ -309,8 +309,6 @@ fun SealCard(
                             // change the focus
                             focusManager.clearFocus()
 
-                            //hide the keyboard
-                            keyboardController?.hide()
 
                             // save the input to the model
                             val number: Int? = tagIDVal.toIntOrNull()
@@ -358,12 +356,13 @@ fun SealCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+//                    .fillMaxHeight()
                     .padding(15.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+//                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Comments")
-                Spacer(modifier = Modifier.width(10.dp))
+//                Text(text = "Comments")
+//                Spacer(modifier = Modifier.width(10.dp))
                 CommentField(seal.comment) { newText ->
                     viewModel.updateComment(seal.name, newText)
                 }
