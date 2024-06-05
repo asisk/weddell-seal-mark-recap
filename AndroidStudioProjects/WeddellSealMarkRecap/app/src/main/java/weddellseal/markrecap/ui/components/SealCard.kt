@@ -357,9 +357,9 @@ fun SealCard(
                 modifier = Modifier
                     .fillMaxWidth()
 //                    .fillMaxHeight()
-                    .padding(15.dp),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
 //                Text(text = "Comments")
 //                Spacer(modifier = Modifier.width(10.dp))
