@@ -73,11 +73,6 @@ fun AddObservationLogScreen(
     var adultSeal = viewModel.adultSeal
     var pupOne = viewModel.pupOne
     val pupTwo = viewModel.pupTwo
-    var showAdult by remember { mutableStateOf(true) }
-    var showPup by remember { mutableStateOf(false) }
-    var showPupTwo by remember { mutableStateOf(false) }
-    var showSummary by remember { mutableStateOf(false) }
-
 
     // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
@@ -141,7 +136,11 @@ fun AddObservationLogScreen(
         }
     }
     // endregion
-    var showSummaryState by remember { mutableStateOf(showSummary) }
+    var showAdultState by remember { mutableStateOf(true) }
+    var showPupState by remember { mutableStateOf(false) }
+    var showPupTwoState by remember { mutableStateOf(false) }
+    var showSummaryState by remember { mutableStateOf(false) }
+
     val saveAction = {
         if (adultSeal.isStarted) {
             viewModel.updateNotebookEntry(adultSeal)
@@ -200,15 +199,21 @@ fun AddObservationLogScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-                if (!showSummary) {
-                    val tabItems = listOf(
-                        TabItem("Adult Seal") { SealCard(viewModel, adultSeal, showAdult) },
-                        TabItem("Pup One") { SealCard(viewModel, pupOne, showPup) }
-                    ).let {
-                        if (viewModel.pupTwo.isStarted) it + TabItem("Pup Two") { SealCard(viewModel, pupTwo, showPupTwo) } else it
+                if (!showSummaryState) {
+                    val tabItems = mutableListOf<TabItem>().apply {
+                        add(TabItem("Adult Seal") { SealCard(viewModel, viewModel.adultSeal, showAdultState) })
+
+                        if (viewModel.adultSeal.numRelatives >= 1) {
+                            add(TabItem("Pup One") { SealCard(viewModel, viewModel.pupOne, showPupState) })
+                        }
+
+                        if (viewModel.adultSeal.numRelatives >= 2) {
+                            add(TabItem("Pup Two") { SealCard(viewModel, viewModel.pupTwo, showPupTwoState) })
+                        }
                     }
 
                     TabbedCards(tabItems = tabItems)
+
 //                    SealCard(viewModel, adultSeal, showAdult)
 //
 //                    if (viewModel.pupOne.isStarted) {

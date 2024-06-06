@@ -88,7 +88,7 @@ fun SealCard(
                 style = MaterialTheme.typography.titleLarge
             )
         }
-        if (showDetails) {
+//        if (showDetails) {
             //AGE
             Row(
                 modifier = Modifier
@@ -368,7 +368,7 @@ fun SealCard(
                 }
             }
         }
-    }
+//    }
 }
 
 @Composable
