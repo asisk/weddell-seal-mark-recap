@@ -49,8 +49,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
@@ -171,7 +173,10 @@ fun AddObservationLogScreen(
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
-                        Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
+                        Icon(imageVector = Icons.Filled.Home,
+                            contentDescription = "Home",
+                            modifier = Modifier.size(36.dp)
+                        )
                     }
                     if (!showSummaryState) {
                         val contentColor =
@@ -185,6 +190,7 @@ fun AddObservationLogScreen(
                                 Icon(
                                     imageVector = Icons.Filled.Check,
                                     contentDescription = "Save",
+                                    modifier = Modifier.size(36.dp), // Change the size here
                                     tint = contentColor
                                 )
                             }
@@ -276,7 +282,7 @@ fun TabbedCards(tabItems: List<TabItem>) {
         PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
             tabItems.forEachIndexed { index, tabItem ->
                 Tab(
-                    text = { Text(tabItem.title) },
+                    text = { Text(tabItem.title, style = TextStyle(fontSize = 24.sp)) },
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index }
                 )
