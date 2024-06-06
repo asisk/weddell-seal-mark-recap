@@ -16,19 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -146,110 +141,58 @@ fun AddObservationLogScreen(
         }
     }
     // endregion
+    var showSummaryState by remember { mutableStateOf(showSummary) }
+    val saveAction = {
+        if (adultSeal.isStarted) {
+            viewModel.updateNotebookEntry(adultSeal)
+            viewModel.updateNotebookEntry(pupOne)
+            showSummaryState = true
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            if (showSummary) {
-                TopAppBar(title = { Text("Back", fontFamily = FontFamily.Serif) },
-                    navigationIcon = {
-                        if (navController.previousBackStackEntry != null) {
-                            if (showSummary) {
-                                IconButton(onClick = { showSummary = false }) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back to Observation"
-                                    )
-                                }
-                            }
+            TopAppBar(
+                title = {
+                    Text(
+                        if (showSummaryState) "Summary" else "Observation",
+                        fontFamily = FontFamily.Serif
+                    )
+                },
+                navigationIcon = {
+                    if (navController.previousBackStackEntry != null && showSummaryState) {
+                        IconButton(onClick = { showSummaryState = false }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to Observation"
+                            )
                         }
                     }
-                )
-            }
-        },
-        bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-            ) {
-                BottomNavigation(
-                    modifier = Modifier.fillMaxSize(),
-                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    BottomNavigationItem(
-                        label = { Text(text = "Home") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.HomeScreen.route) },
-                        icon = { Icon(Icons.Filled.Home, null) }
-                    )
-                    if (!showSummary) {
-                        if (showAdult) {
-                            // PUP BUTTON - LIVE
-                            if (adultSeal.numRelatives >= 1 && !pupOne.isStarted) {
-                                BottomNavigationItem(
-                                    label = { Text(text = "Add Pup") },
-                                    selected = false,
-                                    onClick = {
-                                        viewModel.startPup(pupOne)
-                                        showAdult = false
-                                        showPup = true
-
-                                    },
-                                    icon = { Icon(Icons.Filled.Add, null) }
-                                )
-                            }
-                            if (pupOne.isStarted) {
-                                BottomNavigationItem(
-                                    label = { Text(text = "View Pup") },
-                                    selected = false,
-                                    onClick = {
-                                        showAdult = false
-                                        showPup = true
-                                    },
-                                    icon = { Icon(Icons.Filled.ArrowUpward, null) }
-                                )
-                            }
-                        } else {
-                            BottomNavigationItem(
-                                label = { Text(text = "View Adult") },
-                                selected = false,
-                                onClick = {
-                                    showAdult = true
-                                    showPup = false
-                                },
-                                icon = { Icon(Icons.Filled.ArrowUpward, null) })
-                        }
-
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
+                        Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
+                    }
+                    if (!showSummaryState) {
                         val contentColor =
                             if (adultSeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
                                 alpha = ContentAlpha.disabled
                             )
-                        BottomNavigationItem(
-                            enabled = adultSeal.isStarted,
-                            label = { Text(text = "Save", color = contentColor) },
-                            selected = false,
-                            onClick = {
-                                if (adultSeal.isStarted) {
-                                    viewModel.updateNotebookEntry(adultSeal)
-                                    viewModel.updateNotebookEntry(pupOne)
-                                    showSummary = true
-                                }
-                            },
-                            icon = {
-                                if (state.isSaving) {
-                                    CircularProgressIndicator(Modifier.size(24.0.dp))
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Filled.Check,
-                                        contentDescription = null,
-                                        tint = contentColor
-                                    )
-                                }
+                        IconButton(onClick = saveAction, enabled = adultSeal.isStarted) {
+                            if (state.isSaving) {
+                                CircularProgressIndicator(Modifier.size(24.dp))
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Save",
+                                    tint = contentColor
+                                )
                             }
-                        )
+                        }
                     }
-                }
-            }
+                },
+            )
         }
     ) { innerPadding ->
         Column(
@@ -339,7 +282,7 @@ fun TabbedCards(tabItems: List<TabItem>) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .verticalScroll(state=scrollState, enabled=true)
+                .verticalScroll(state = scrollState, enabled = true)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
