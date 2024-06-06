@@ -15,13 +15,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -58,18 +55,19 @@ fun SealCard(
 ) {
     val scrollState = rememberScrollState()
 
-    Card(
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .verticalScroll(state=scrollState, enabled=true)
-    ) {
+//    Card(
+//        elevation = CardDefaults.cardElevation(
+//            defaultElevation = 6.dp
+//        ),
+//        colors = CardDefaults.cardColors(
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+//        ),
+//        modifier = Modifier
+//            .padding(8.dp)
+//            .fillMaxWidth()
+//            .verticalScroll(state=scrollState, enabled=true)
+//    )
+    Column () {
         val keyboardController = LocalSoftwareKeyboardController.current
 
         // NOTEBOOK DISPLAY

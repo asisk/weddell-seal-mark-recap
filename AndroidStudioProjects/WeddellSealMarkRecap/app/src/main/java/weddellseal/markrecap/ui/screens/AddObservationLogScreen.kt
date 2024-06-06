@@ -8,9 +8,14 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ContentAlpha
@@ -25,15 +30,18 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -249,16 +257,23 @@ fun AddObservationLogScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-
                 if (!showSummary) {
-                    SealCard(viewModel, adultSeal, showAdult)
+                    val tabItems = listOf(
+                        TabItem("Adult Seal") { SealCard(viewModel, adultSeal, showAdult) },
+                        TabItem("Pup One") { SealCard(viewModel, pupOne, showPup) }
+                    ).let {
+                        if (viewModel.pupTwo.isStarted) it + TabItem("Pup Two") { SealCard(viewModel, pupTwo, showPupTwo) } else it
+                    }
 
-                    if (viewModel.pupOne.isStarted) {
-                        SealCard(viewModel, pupOne, showPup)
-                    }
-                    if (viewModel.pupTwo.isStarted) {
-                        SealCard(viewModel, pupTwo, showPupTwo)
-                    }
+                    TabbedCards(tabItems = tabItems)
+//                    SealCard(viewModel, adultSeal, showAdult)
+//
+//                    if (viewModel.pupOne.isStarted) {
+//                        SealCard(viewModel, pupOne, showPup)
+//                    }
+//                    if (viewModel.pupTwo.isStarted) {
+//                        SealCard(viewModel, pupTwo, showPupTwo)
+//                    }
                 } else {
                     SummaryCard(viewModel, adultSeal, pupOne, pupTwo)
                     ExtendedFloatingActionButton(
@@ -303,6 +318,37 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
+data class TabItem(val title: String, val content: @Composable () -> Unit)
+@Composable
+fun TabbedCards(tabItems: List<TabItem>) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val scrollState = rememberScrollState()
+
+    Column {
+        PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
+            tabItems.forEachIndexed { index, tabItem ->
+                Tab(
+                    text = { Text(tabItem.title) },
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index }
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .verticalScroll(state=scrollState, enabled=true)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                tabItems[selectedTabIndex].content()
+            }
+        }
+    }
+}
 
 
 
