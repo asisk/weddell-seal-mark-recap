@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -54,6 +56,8 @@ fun SealCard(
     seal: AddObservationLogViewModel.Seal,
     showDetails: Boolean
 ) {
+    val scrollState = rememberScrollState()
+
     Card(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
@@ -64,6 +68,7 @@ fun SealCard(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
+            .verticalScroll(state=scrollState, enabled=true)
     ) {
         val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -309,7 +314,6 @@ fun SealCard(
                             // change the focus
                             focusManager.clearFocus()
 
-
                             // save the input to the model
                             val number: Int? = tagIDVal.toIntOrNull()
                             if (number != null && !isError) {
@@ -326,9 +330,7 @@ fun SealCard(
                             })
                     }
                 )
-                if (isError) {
-                    // change the outlined text box red and add text below indicating the error
-                }
+
 
                 //TAG ALPHA BUTTONS
                 val buttonListAlpha = listOf<String>("A", "C", "D")
