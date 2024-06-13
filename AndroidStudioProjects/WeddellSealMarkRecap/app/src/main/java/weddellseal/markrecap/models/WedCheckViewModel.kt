@@ -29,20 +29,10 @@ class WedCheckViewModel(
     private val wedCheckRepo: WedCheckRepository
 ) : AndroidViewModel(application) {
 
-    //TODO, data load from csv to SQLite database
-
     private val context: Context
         get() = getApplication()
 
-    data class UiState(
-        val hasFileAccess: Boolean,
-        val loading: Boolean = true,
-        var isSearching: Boolean = false,
-        val sealNotFound: Boolean = false,
-        val uriForCSVDataLoad: Uri? = null,
-        val sealRecordDB: WedCheckRecord? = null,
-        val date: String, //TODO, think about the proper date format, should it be UTC?
-    )
+    var wedCheckSeal by mutableStateOf(WedCheckSeal())
 
     var uiState by mutableStateOf(
         UiState(
@@ -54,6 +44,42 @@ class WedCheckViewModel(
         )
     )
         private set
+
+    data class UiState(
+        val hasFileAccess: Boolean,
+        val loading: Boolean = true,
+        var isSearching: Boolean = false,
+        val sealNotFound: Boolean = false,
+        val uriForCSVDataLoad: Uri? = null,
+        val sealRecordDB: WedCheckRecord? = null,
+        val date: String, //TODO, think about the proper date format, should it be UTC?
+        val isError: Boolean = false,
+    )
+
+    data class WedCheckSeal(
+        val age: String = "",
+        val ageYears: String = "",
+        val comment: String = "",
+        val condition: String = "",
+        var found: Boolean = false,
+        val isWedCheckRecord: Boolean = false,
+        val lastSeenSeason: Int = 0,
+        val massPups: String = "",
+        val name: String = "",
+        val numRelatives: Int = 0,
+        val numTags: Int = 0,
+        val photoYears: String = "",
+        val previousPups: String = "",
+        val pupPeed: Boolean = false,
+        val sex: String = "",
+        val speNo: Int = 0,
+        val swimPups: String = "",
+        val tagAlpha: String = "",
+        val tagEventType: String = "",
+        val tagId: String = "",
+        val tagNumber: Int = 0,
+        val tissueSampled: String = ""
+    )
 
     fun hasPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -74,24 +100,30 @@ class WedCheckViewModel(
         }
     }
 
-    fun findSeal(sealTagID: String, viewModel: AddObservationLogViewModel) {
+    fun findSeal(sealTagID: String) {
+        uiState = uiState.copy(isSearching = true)
+
         // launch the search for a seal on a separate coroutine
         viewModelScope.launch {
-            uiState = uiState.copy(isSearching = true)
 
             // Switch to the IO dispatcher for database operation
             val seal: WedCheckRecord = withContext(Dispatchers.IO) {
                 wedCheckRepo.findSeal(sealTagID)
             }
             if (seal != null) {
-                viewModel.wedCheckSeal = seal.toSeal()
-                viewModel.wedCheckSeal.isStarted = true
-                uiState = uiState.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
-            //                viewModel.loadWedCheckRecordToSeal(seal)
+                uiState =
+                    uiState.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
+                wedCheckSeal = seal.toSeal()
             } else {
-                uiState = uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true)
+                uiState =
+                    uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true, isError = true)
             }
         }
+    }
+
+    fun resetState() {
+        uiState = uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true, isError = false)
+        wedCheckSeal = WedCheckSeal()
     }
 
     fun loadWedCheck(uri: Uri) {
@@ -106,23 +138,6 @@ class WedCheckViewModel(
             wedCheckRepo.insertCsvData(csvData)
         }
     }
-
-//    data class WedCheckCSVRecord(
-//        val speno: Int,
-//        val lastSeenSeason: Int,
-//        val ageClassLastObserved: String,
-//        val sex: String,
-//        val tagNumberOne: String,
-//        val tagNumberTwo: String,
-//        val comments: String,
-//        val age: Int,
-//        val tissue: String,
-//        val previousPups: String,
-//        val massPups: String,
-//        val swimPups: String,
-//        val photoYears: String,
-//        val deviceId: String,
-//        )
 
     private fun readCsvData(contentResolver: ContentResolver, uri: Uri): List<WedCheckRecord> {
         val csvData: MutableList<WedCheckRecord> = mutableListOf()
@@ -179,17 +194,4 @@ class WedCheckViewModel(
         }
         return csvData
     }
-
-    fun resetSearch() {
-        uiState = uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true)
-    }
 }
-//
-//class WedCheckViewModelFactory : ViewModelProvider.Factory {
-//    @Suppress("UNCHECKED_CAST")
-//    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-//        val app =
-//            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
-//        return WedCheckViewModel(app, app.wedCheckRepo) as T
-//    }
-//}

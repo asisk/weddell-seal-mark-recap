@@ -3,6 +3,7 @@ package weddellseal.markrecap.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,52 +17,71 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import weddellseal.markrecap.models.WedCheckViewModel
 
-class SealSearchField {
-
-}
 @Composable
 fun SealSearchField(viewModel: WedCheckViewModel, onValueChanged: (String) -> Unit) {
-    var text by rememberSaveable { mutableStateOf("") }
+    var sealTagID by rememberSaveable { mutableStateOf("") }
+    val focusManager: FocusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     OutlinedTextField(
-        value = text,
-        placeholder = { "Tag ID" },
-        onValueChange = {
-            text = it
-            onValueChanged(text)
+        value = sealTagID,
+        placeholder = { Text("Tag ID", fontSize = 25.sp) },
+        onValueChange = { newText ->
+            onValueChanged(sealTagID)
+            sealTagID = newText.filter { it != ' ' }
         },
-        label = { Text("Seal Tag ID") },
+        label = { Text("Seal Tag ID", fontSize = 25.sp) },
         singleLine = true,
+        textStyle = TextStyle(fontSize = 25.sp),
         modifier = Modifier
             .background(color = Color.Transparent),
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number, imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions {
-            onSearchClicked(viewModel)
-            keyboardController?.hide()
-        },
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Search,
+            capitalization = KeyboardCapitalization.Characters,
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                // change the focus
+                focusManager.clearFocus()
+                keyboardController?.hide()
+
+                // reset the current seal for new search
+                viewModel.resetState()
+
+                // engage the search function
+                viewModel.findSeal(sealTagID)
+            }
+        ),
         trailingIcon = {
             Icon(
                 Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable { text = "" })
+                Modifier
+                    .clickable {
+                        sealTagID = ""
+                        viewModel.resetState()
+                    }
+                    .size(35.dp) // Adjust the size as needed
+            )
         },
         supportingText = {
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "Numeric value",
+                text = "ex. 4932A",
                 textAlign = TextAlign.End,
+                fontSize = 20.sp
             )
         }
     )
-}
-
-fun onSearchClicked(viewModel: WedCheckViewModel) {
-    viewModel.uiState.isSearching = true
 }

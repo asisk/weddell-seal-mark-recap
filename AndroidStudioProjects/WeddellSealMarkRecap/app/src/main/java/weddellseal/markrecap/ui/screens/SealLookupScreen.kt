@@ -9,20 +9,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,38 +33,54 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
-import weddellseal.markrecap.ui.components.ErrorDialog
 import weddellseal.markrecap.ui.components.SealSearchField
 import weddellseal.markrecap.ui.components.WedCheckCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SealLookupScreen(
     navController: NavHostController,
-    wedCheckViewModel: WedCheckViewModel,
-    viewModel: AddObservationLogViewModel
+    wedCheckViewModel: WedCheckViewModel
 ) {
     Scaffold(
-        bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-            ) {
-                BottomNavigation(
-                    modifier = Modifier.fillMaxSize(),
-                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    BottomNavigationItem(
-                        label = { Text(text = "Home") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.HomeScreen.route) },
-                        icon = { Icon(Icons.Filled.Home, null) }
-                    )
-                }
-            }
+        topBar = {
+            TopAppBar(
+                title = {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "Seal Lookup",
+                            fontSize = 36.sp // Adjust this value as needed
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.navigateUp()
+                        wedCheckViewModel.resetState()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        navController.navigate(Screens.HomeScreen.route)
+                        wedCheckViewModel.resetState()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Home,
+                            contentDescription = "Home",
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                },
+            )
         }
     ) { innerPadding ->
         Column(
@@ -71,70 +88,69 @@ fun SealLookupScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            Box(
+            Card(
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 6.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ),
                 modifier = Modifier
+                    .padding(20.dp)
                     .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                Card(
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 6.dp
-                    ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
+            ) { // SEAL LOOKUP
+                Row(
                     modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
-                ) { // SEAL LOOKUP
-                    Row(
-                        modifier = Modifier
-                            .padding(6.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "Seal Lookup")
-                        var sealTagID by remember { mutableStateOf("") }
-                        SealSearchField(wedCheckViewModel) { value ->
-                            sealTagID = value
-                        }
-                        if (wedCheckViewModel.uiState.isSearching) {
-                            CircularProgressIndicator() // Display a loading indicator while searching
-                        } else {
-                            IconButton(
-                                onClick = {
-                                    // reset the current seal for new search
-                                    if (viewModel.wedCheckSeal.isStarted) {
-                                        viewModel.resetWedCheckSeal()
-                                        wedCheckViewModel.resetSearch()
-                                    }
-                                    wedCheckViewModel.findSeal(sealTagID, viewModel)
-                                },
-                                modifier = Modifier.size(48.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search"
-                                )
-                            }
-                        }
-                        // Display error dialog if there's an error
-                        if (viewModel.uiState.isError) {
-                            ErrorDialog(errorMessage = viewModel.uiState.errorMessage) {
-                                viewModel.dismissError()
-                            }
-                        }
-                    }
-                    if (!wedCheckViewModel.uiState.isSearching) {
-                        if (viewModel.wedCheckSeal.isStarted) {
-                            WedCheckCard(viewModel, viewModel.wedCheckSeal)
-                        }
+                        .padding(6.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    var sealTagID by remember { mutableStateOf("") }
 
-                        if (wedCheckViewModel.uiState.sealNotFound == true) {
-                            SealNotFoundToast()
-                        }
+                    if (wedCheckViewModel.uiState.isError) {
+                        SealNotFoundToast()
                     }
+
+                    SealSearchField(wedCheckViewModel) { newText ->
+                        sealTagID = newText
+                    }
+
+                    IconButton(
+                        onClick = {
+                            // reset the current seal & start a new search
+                            wedCheckViewModel.resetState()
+                            wedCheckViewModel.findSeal(sealTagID)
+                        },
+                        modifier = Modifier.padding(bottom = 15.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            modifier = Modifier.size(45.dp)
+                        )
+                    }
+                }
+            }
+            val scrollState = rememberScrollState()
+            Card(
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 6.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ),
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(state = scrollState, enabled = true)
+            ) {
+                Column (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 90.dp, end = 90.dp, top = 10.dp, bottom = 10.dp) // Apply padding to left and right
+                ) {
+                    WedCheckCard(wedCheckViewModel.wedCheckSeal)
                 }
             }
         }

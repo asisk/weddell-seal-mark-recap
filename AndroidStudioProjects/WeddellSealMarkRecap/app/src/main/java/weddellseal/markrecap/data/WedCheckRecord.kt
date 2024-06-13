@@ -7,7 +7,7 @@ package weddellseal.markrecap.data
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.WedCheckViewModel
 
 @Entity(tableName = "wedCheck")
 data class WedCheckRecord(
@@ -20,7 +20,7 @@ data class WedCheckRecord(
     @ColumnInfo(name = "tagNumberTwo") val tagIdTwo: String,
     @ColumnInfo(name = "comments") val comments: String,
     @ColumnInfo(name = "ageYears") val ageYears: Int,
-    @ColumnInfo(name = "tissue") val tissueSampled: String,
+    @ColumnInfo(name = "tissue") val tissueSampled: String, // NA possible value
     @ColumnInfo(name = "previousPups") val previousPups: String, // NA possible value, otherwise its a number
     @ColumnInfo(name = "massPups") val massPups: String, // NA possible value, otherwise its a number
     @ColumnInfo(name = "swimPups") val swimPups: String, // NA possible value, otherwise its a number
@@ -35,7 +35,7 @@ data class TagProcessingResult(
 )
 
 // Extension function to map WedCheckRecord to Seal
-fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
+fun WedCheckRecord.toSeal(): WedCheckViewModel.WedCheckSeal {
     var name = ""
     var ageString = ""
     if (ageClass == "A") {
@@ -52,13 +52,17 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
         "U" -> "Unknown"
         else -> "Unknown"
     }
-//
-//    val tissueTaken = when (tissueSampled) {
-//        "Need" -> false
-//        "Done" -> true
-//        "NA" -> false
-//        else -> false
-//    }
+
+    val tissue = when (tissueSampled) {
+        "Need" -> "No"
+        "Done" -> "Yes"
+        else -> "NA"
+    }
+
+    var ageNumeric = "Unknown"
+    if (ageYears > 0) {
+        ageNumeric = ageYears.toString()
+    }
 
     var numTags = 0
     var tagId = ""
@@ -72,22 +76,18 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
     tagAlpha = processedTags.tagAlpha
     tagNumber = processedTags.tagNumber
 
-    return AddObservationLogViewModel.Seal(
+    return WedCheckViewModel.WedCheckSeal(
         age = ageString,
-        ageYears = ageYears,
+        ageYears = ageNumeric,
         comment = comments,
         condition = "",
-        isStarted = false,
-        isWedCheckRecord = true,
+        found = true,
         lastSeenSeason = season,
         massPups = massPups,
         name = name,
-        notebookDataString = "",
-//        numRelatives = null, // this field won't exist on historic records before 2024
         numTags = numTags,
         photoYears = photoYears,
         previousPups = previousPups,
-//        pupPeed = false, // this field won't exist on historic records before 2024
         sex = sealSex,
         speNo = speno,
         swimPups = swimPups,
@@ -95,7 +95,7 @@ fun WedCheckRecord.toSeal(): AddObservationLogViewModel.Seal {
         tagEventType = "",
         tagId = tagId,
         tagNumber = tagNumber,
-        tissueSampled = tissueSampled,
+        tissueSampled = tissue,
     )
 
     fun String.toBoolean(): Boolean {

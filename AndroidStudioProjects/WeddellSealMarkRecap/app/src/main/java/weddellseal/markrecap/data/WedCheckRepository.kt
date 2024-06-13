@@ -5,8 +5,7 @@ import kotlinx.coroutines.withContext
 
 class WedCheckRepository(private val wedCheckDao: WedCheckDao) {
     fun findSeal(sealTagID: String): WedCheckRecord {
-        val sealRecord = wedCheckDao.lookupSealByTagID(sealTagID)
-        return sealRecord
+        return wedCheckDao.lookupSealByTagID(sealTagID)
     }
 
     suspend fun insertCsvData(csvData: List<WedCheckRecord>) {
