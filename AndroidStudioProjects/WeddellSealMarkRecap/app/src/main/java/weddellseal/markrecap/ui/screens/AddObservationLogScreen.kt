@@ -65,7 +65,7 @@ fun AddObservationLogScreen(
 //    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    var adultSeal = viewModel.adultSeal
+    var adultSeal = viewModel.primarySeal
     var pupOne = viewModel.pupOne
     val pupTwo = viewModel.pupTwo
 
@@ -193,16 +193,16 @@ fun AddObservationLogScreen(
                 add(TabItem("Seal") {
                     SealCard(
                         viewModel,
-                        viewModel.adultSeal,
+                        viewModel.primarySeal,
                         showAdultState
                     )
                 })
 
-                if (viewModel.adultSeal.numRelatives >= 1) {
+                if (viewModel.primarySeal.numRelatives >= 1) {
                     add(TabItem("Pup One") { SealCard(viewModel, viewModel.pupOne, showPupState) })
                 }
 
-                if (viewModel.adultSeal.numRelatives >= 2) {
+                if (viewModel.primarySeal.numRelatives >= 2) {
                     add(TabItem("Pup Two") {
                         SealCard(
                             viewModel,

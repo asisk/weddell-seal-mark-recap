@@ -44,13 +44,14 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.models.AddObservationLogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SealCard(
     viewModel: AddObservationLogViewModel,
-    seal: AddObservationLogViewModel.Seal,
+    seal: Seal,
     showDetails: Boolean
 ) {
     val scrollState = rememberScrollState()

@@ -29,7 +29,11 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
+import weddellseal.markrecap.data.Seal
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class AddObservationLogViewModel(
@@ -56,8 +60,13 @@ class AddObservationLogViewModel(
         val currentLocation: String = "current location empty",
         val lastKnownLocation: String = "last known location empty",
         val latLong: String = "",
+        val latitude: String = "",
+        val longitude: String = "",
         val isError: Boolean = false,
         val errorMessage: String = "",
+        val season: String = "",
+        val yearMonthDay: String = "",
+        val time: String = "",
     )
 
     var uiState by mutableStateOf(
@@ -69,59 +78,34 @@ class AddObservationLogViewModel(
                 "dd.MM.yyyy HH:mm:ss aaa z",
                 Locale.US
             ).format(System.currentTimeMillis()),
+            season = getCurrentYear().toString(),
+            yearMonthDay = getCurrentDateFormatted(),
+            time = getCurrentTimeFormatted()
+
         )
     )
         private set
 
-    // region Seal state
-    data class Seal(
-        val age: String = "",
-        val ageYears: Int = 0,
-        val comment: String = "",
-        val condition: String = "",
-        var isStarted: Boolean = false,
-        val isWedCheckRecord: Boolean = false,
-        val lastSeenSeason: Int = 0,
-        val massPups: String = "",
-        val name: String = "",
-        val notebookDataString: String = "",
-        val numRelatives: Int = 0,
-        val numTags: Int = 0,
-        val photoYears: String = "",
-        val previousPups: String = "",
-        val pupPeed: Boolean = false,
-        val sex: String = "",
-        val speNo: Int = 0,
-        val swimPups: String = "",
-        val tagAlpha: String = "",
-        val tagEventType: String = "",
-        val tagId: String = "",
-        val tagNumber: Int = 0,
-        val tissueTaken: Boolean = false,
-        val tissueSampled: String = ""
-    )
-
-    var adultSeal by mutableStateOf(Seal(name = "adult", age = "Adult"))
+    var primarySeal by mutableStateOf(
+        Seal(
+            name = "adult",
+            age = "Adult"
+        )
+    ) // default this to an adult, but could be a lone pup or juvenile with no relatives
         private set
     var pupOne by mutableStateOf(Seal(name = "pupOne", age = "Pup"))
         private set
     var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup"))
         private set
 
-    var wedCheckSeal by mutableStateOf(Seal())
-
-    fun resetWedCheckSeal() {
-        wedCheckSeal = Seal()
-    }
-
     fun startPup(seal: Seal) {
         when (seal.name) {
             "pupOne" -> {
-                pupOne = pupOne.copy(numRelatives = adultSeal.numRelatives, isStarted = true)
+                pupOne = pupOne.copy(numRelatives = primarySeal.numRelatives, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(numRelatives = adultSeal.numRelatives, isStarted = true)
+                pupTwo = pupTwo.copy(numRelatives = primarySeal.numRelatives, isStarted = true)
             }
         }
     }
@@ -133,7 +117,7 @@ class AddObservationLogViewModel(
         }
         when (sealName) {
             "adult" -> {
-                adultSeal = adultSeal.copy(condition = condSelected, isStarted = true)
+                primarySeal = primarySeal.copy(condition = condSelected, isStarted = true)
             }
 
             "pupOne" -> {
@@ -156,8 +140,8 @@ class AddObservationLogViewModel(
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(age = input, isStarted = true)
-                updateNotebookEntry(adultSeal)
+                primarySeal = primarySeal.copy(age = input, isStarted = true)
+                updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
@@ -177,8 +161,8 @@ class AddObservationLogViewModel(
         if (number != null) {
             when (seal.name) {
                 "adult" -> {
-                    adultSeal = adultSeal.copy(numRelatives = number, isStarted = true)
-                    updateNotebookEntry(adultSeal)
+                    primarySeal = primarySeal.copy(numRelatives = number, isStarted = true)
+                    updateNotebookEntry(primarySeal)
                 }
 
                 "pupOne" -> {
@@ -197,8 +181,8 @@ class AddObservationLogViewModel(
     fun updateSex(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(sex = input, isStarted = true)
-                updateNotebookEntry(adultSeal)
+                primarySeal = primarySeal.copy(sex = input, isStarted = true)
+                updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
@@ -228,8 +212,8 @@ class AddObservationLogViewModel(
     fun updateTagAlpha(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tagAlpha = input, isStarted = true)
-                updateTagId(adultSeal)
+                primarySeal = primarySeal.copy(tagAlpha = input, isStarted = true)
+                updateTagId(primarySeal)
             }
 
             "pupOne" -> {
@@ -251,8 +235,8 @@ class AddObservationLogViewModel(
         }
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tagId = tagIdStr, isStarted = true)
-                updateNotebookEntry(adultSeal)
+                primarySeal = primarySeal.copy(tagId = tagIdStr, isStarted = true)
+                updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
@@ -270,8 +254,8 @@ class AddObservationLogViewModel(
     fun updateTagNumber(seal: Seal, input: Int) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tagNumber = input, isStarted = true)
-                updateTagId(adultSeal)
+                primarySeal = primarySeal.copy(tagNumber = input, isStarted = true)
+                updateTagId(primarySeal)
             }
 
             "pupOne" -> {
@@ -289,8 +273,8 @@ class AddObservationLogViewModel(
     fun updateTagEventType(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tagEventType = input, isStarted = true)
-                updateNotebookEntry(adultSeal)
+                primarySeal = primarySeal.copy(tagEventType = input, isStarted = true)
+                updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
@@ -307,7 +291,7 @@ class AddObservationLogViewModel(
     fun updateComment(sealName: String, input: String) {
         when (sealName) {
             "adult" -> {
-                adultSeal = adultSeal.copy(comment = input, isStarted = true)
+                primarySeal = primarySeal.copy(comment = input, isStarted = true)
             }
 
             "pupOne" -> {
@@ -326,8 +310,8 @@ class AddObservationLogViewModel(
 
             when (sealName) {
                 "adult" -> {
-                    adultSeal = adultSeal.copy(numTags = number, isStarted = true)
-                    updateTagId(adultSeal)
+                    primarySeal = primarySeal.copy(numTags = number, isStarted = true)
+                    updateTagId(primarySeal)
                 }
 
                 "pupOne" -> {
@@ -346,7 +330,7 @@ class AddObservationLogViewModel(
     fun updateTissueTaken(sealName: String, input: Boolean) {
         when (sealName) {
             "adult" -> {
-                adultSeal = adultSeal.copy(tissueTaken = input, isStarted = true)
+                primarySeal = primarySeal.copy(tissueTaken = input, isStarted = true)
             }
 
             "pupOne" -> {
@@ -398,7 +382,7 @@ class AddObservationLogViewModel(
 
         when (seal.name) {
             "adult" -> {
-                adultSeal = adultSeal.copy(notebookDataString = notebookEntry)
+                primarySeal = primarySeal.copy(notebookDataString = notebookEntry)
             }
 
             "pupOne" -> {
@@ -507,36 +491,111 @@ class AddObservationLogViewModel(
                                 "updated: $date"
                     )
                     uiState = uiState.copy(
-                        latLong = "Lat : $lat " + "Long : $lon"
+                        latLong = "Lat : $lat Long : $lon"
                     )
+                    uiState = uiState.copy(latitude = lat.toString(), longitude = lon.toString())
                 }
             }
     }
 
-    // endregion
-    fun createLog() {
-        if (!isValid()) {
-            return
-        }
-
-        uiState = uiState.copy(isSaving = true)
-
+    fun createLog(vararg seals: Seal) {
         viewModelScope.launch {
-            val log = ObservationLogEntry(
-                // passing zero, but Room entity will autopopulate the id
-                id = 0,
-                date = uiState.date,
-                currentLocation = uiState.currentLocation,
-                lastKnownLocation = uiState.lastKnownLocation
-            )
-            //TODO, consider a validation check to see if fields are populated before inserting to database
-            observationRepo.addObservation(log)
-            //saving state triggers the navigation to route to home
-            uiState = uiState.copy(isSaved = true)
+            uiState = uiState.copy(isSaving = true)
+
+            //write an entry to the database for each seal that has valid input
+            for (seal in seals) {
+
+                if (validateSeal(seal)) {
+                    var pupOneTagID = ""
+                    var pupTwoTagID = ""
+                    if (seal.numRelatives > 0) {
+                        pupOneTagID = getPupTagId(pupOne)
+                        pupTwoTagID = getPupTagId(pupTwo)
+                    }
+
+                    var tagOneCondition = ""
+                    var tagTwoCondition = ""
+                    if (seal.tagEventType != "" && seal.tagEventType[0] == 'N') {
+                        tagOneCondition = "+"
+
+                        if (seal.numTags > 3) { // this is the definition for two tags
+                            tagTwoCondition = "+"
+                        }
+                    }
+                    val log = ObservationLogEntry(
+                        // passing zero, but Room entity will autopopulate the id
+                        id = 0,
+                        deviceID = "TBD",
+                        season = uiState.season,
+                        speno = "", //TODO, where are we getting this???
+                        date = uiState.yearMonthDay, // date format: yyyy-MM-dd
+                        time = uiState.time, // time format: hh:mm:ss
+                        censusID = "TBD", //TODO need to figure out how this will be passed to the observations
+                        latitude = uiState.latitude,  // example -77.73004, could also be 4 decimal precision
+                        longitude = uiState.longitude, // example 166.7941, could also be 2 decimal precision
+                        ageClass = seal.age[0].toString(),
+                        sex = seal.sex,
+                        numRelatives = seal.numRelatives.toString(),
+                        oldTagIDOne = "TBD", //TODO, where are we getting this??
+                        oldTagOneCondition = "TBD", //TODO, where are we getting this??
+                        oldTagIDTwo = "TBD", //TODO, where are we getting this??
+                        oldTagTwoCondition = "TBD", //TODO, where are we getting this??
+                        tagIDOne = seal.tagId,
+                        tagOneIndicator = tagOneCondition,
+                        tagIDTwo = seal.tagId,
+                        tagTwoIndicator = tagTwoCondition,
+                        relativeTagIDOne = pupOneTagID,
+                        relativeTagIDTwo = pupTwoTagID,
+                        sealCondition = seal.condition,
+                        observerInitials = "TBD", //TODO, need to figure out how this gets to the observation
+                        tagEvent = seal.tagEventType,
+                        tissueSampled = seal.tissueSampled,
+                        flaggedEntry = "TBD", // TODO, need to figure out when this gets triggered
+                        comments = seal.comment,
+                    )
+                    //TODO, consider a validation check to see if fields are populated before inserting to database
+                    observationRepo.addObservation(log)
+                    //saving state triggers the navigation to route to home
+                    uiState = uiState.copy(isSaved = true)
+                }
+            }
+        }
+    }
+
+    private fun getCurrentYear(): Int {
+        return LocalDate.now().year
+    }
+
+    private fun getCurrentDateFormatted(): String {
+        val currentDate = LocalDate.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        return currentDate.format(formatter)
+    }
+
+    private fun getCurrentTimeFormatted(): String {
+        val currentTime = LocalTime.now()
+        val formatter = DateTimeFormatter.ofPattern("hh:mm:ss a")
+        return currentTime.format(formatter)
+    }
+
+    fun getPupTagId(pup: Seal): String {
+        return if (pup.isStarted && validateSeal(pup)) {
+            pup.tagId
+        } else {
+            ""
         }
     }
 
     fun dismissError() {
         TODO("Not yet implemented")
+    }
+
+    private fun validateSeal(seal: Seal): Boolean {
+        if (seal.isStarted) {
+            if (seal.age != "" && seal.sex != "" && seal.tagId != "" && seal.tagEventType != "" && seal.tagNumber > 0) {
+                return true
+            }
+        }
+        return false
     }
 }

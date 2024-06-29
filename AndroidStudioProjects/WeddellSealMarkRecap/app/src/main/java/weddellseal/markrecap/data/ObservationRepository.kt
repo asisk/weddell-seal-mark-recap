@@ -11,7 +11,6 @@ import androidx.lifecycle.liveData
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.io.IOException
 import java.io.OutputStreamWriter
 
@@ -55,9 +54,34 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                     // Create a String array for the data
                     val obsFields = arrayOf(
                         obs?.date ?: "",
-                        obs?.currentLocation ?: "",
-                        obs?.lastKnownLocation ?: ""
-                    )
+                        obs?.deviceID ?: "",
+                        obs?.season ?: "",
+                        obs?.speno ?: "",
+                        obs?.date ?: "",
+                        obs?.time ?: "",
+                        obs?.censusID ?: "",
+                        obs?.latitude  ?: "",
+                        obs?.longitude ?: "",
+                        obs?.ageClass ?: "",
+                        obs?.sex ?: "",
+                        obs?.numRelatives ?: "",
+                        obs?.oldTagIDOne ?: "",
+                        obs?.oldTagOneCondition ?: "",
+                        obs?.oldTagIDTwo ?: "",
+                        obs?.oldTagTwoCondition ?: "",
+                        obs?.tagIDOne ?: "",
+                        obs?.tagOneIndicator ?: "",
+                        obs?.tagIDTwo ?: "",
+                        obs?.tagTwoIndicator ?: "",
+                        obs?.relativeTagIDOne ?: "",
+                        obs?.relativeTagIDTwo ?: "",
+                        obs?.sealCondition ?: "",
+                        obs?.observerInitials ?: "",
+                        obs?.tagEvent ?: "",
+                        obs?.tissueSampled ?: "",
+                        obs?.flaggedEntry ?: "",
+                        obs?.comments ?: "",
+                        )
                     csvWriter.writeNext(obsFields)
                 }
 
@@ -68,21 +92,21 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         }
     }
 
-    fun writeObservationsToCSV(file: File, obsList: List<ObservationLogEntry>) : Boolean {
-        val data: MutableList<Array<String>> = ArrayList()
-
-        for (obs in obsList) {
-            val obsFields = "${obs?.date ?: ""},${obs?.currentLocation ?: ""},${obs?.lastKnownLocation ?: ""}"
-            data.add(arrayOf(obsFields))
-        }
-
-        return try {
-            CSVUtils().writeDataAtOnce(file, data)
-            true
-        } catch (e : Exception){
-            false
-        }
-    }
+//    fun writeObservationsToCSV(file: File, obsList: List<ObservationLogEntry>) : Boolean {
+//        val data: MutableList<Array<String>> = ArrayList()
+//
+//        for (obs in obsList) {
+//            val obsFields = "${obs?.date ?: ""},${obs?.currentLocation ?: ""},${obs?.lastKnownLocation ?: ""}"
+//            data.add(arrayOf(obsFields))
+//        }
+//
+//        return try {
+//            CSVUtils().writeDataAtOnce(file, data)
+//            true
+//        } catch (e : Exception){
+//            false
+//        }
+//    }
 
 //    fun isEmpty() = _observations.isEmpty()
 
@@ -111,7 +135,8 @@ class ObservationRepository(private val observationDao: ObservationDao) {
     companion object {
 
         // For Singleton instantiation
-        @Volatile private var INSTANCE: ObservationRepository? = null
+        @Volatile
+        private var INSTANCE: ObservationRepository? = null
 
         fun getInstance(observationDao: ObservationDao) =
             INSTANCE ?: synchronized(this) {
