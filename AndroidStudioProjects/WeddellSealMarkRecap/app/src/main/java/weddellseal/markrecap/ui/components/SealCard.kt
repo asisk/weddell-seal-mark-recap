@@ -54,19 +54,6 @@ fun SealCard(
     showDetails: Boolean
 ) {
     val scrollState = rememberScrollState()
-
-//    Card(
-//        elevation = CardDefaults.cardElevation(
-//            defaultElevation = 6.dp
-//        ),
-//        colors = CardDefaults.cardColors(
-//            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-//        ),
-//        modifier = Modifier
-//            .padding(8.dp)
-//            .fillMaxWidth()
-//            .verticalScroll(state=scrollState, enabled=true)
-//    )
     Column () {
         val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -116,21 +103,10 @@ fun SealCard(
             }
 
             // SEX & PUP PEED
-//            val (checkedStatePeed, onStateChangePeed) = remember { mutableStateOf(seal.tissueTaken) }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .toggleable(
-//                        value = checkedStatePeed,
-//                        onValueChange = {
-//                            onStateChangePeed(!checkedStatePeed)
-//                            viewModel.updatePupPeed(seal.name, checkedStatePeed)
-//                        },
-//                        role = Role.Checkbox
-//                    )
                     .padding(10.dp),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     modifier = Modifier
@@ -361,8 +337,6 @@ fun SealCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-//                Text(text = "Comments")
-//                Spacer(modifier = Modifier.width(10.dp))
                 CommentField(seal.comment) { newText ->
                     viewModel.updateComment(seal.name, newText)
                 }

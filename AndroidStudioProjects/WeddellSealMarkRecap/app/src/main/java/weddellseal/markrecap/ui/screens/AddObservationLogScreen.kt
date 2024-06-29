@@ -7,6 +7,7 @@ package weddellseal.markrecap.ui.screens
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,13 +23,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,25 +45,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
-import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.components.SealCard
-import weddellseal.markrecap.ui.components.SummaryCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddObservationLogScreen(
     navController: NavHostController,
-    wedCheckViewModel: WedCheckViewModel,
     viewModel: AddObservationLogViewModel,
 ) {
     val state = viewModel.uiState
@@ -118,36 +111,22 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
-    //send the user back to the observation screen when a log is saved
-    LaunchedEffect(state.isSaved) {
-        if (state.isSaved) {
-            navController.navigate(Screens.AddObservationLog.route) { }
-        }
-    }
+//    //send the user back to the observation screen when a log is saved
+//    LaunchedEffect(state.isSaved) {
+//        if (state.isSaved) {
+//            navController.navigate(Screens.AddObservationLog.route) { }
+//        }
+//    }
 
-    fun canSaveLog(callback: () -> Unit) {
-        if (viewModel.isValid()) {
-            callback()
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("Successfully saved!")
-            }
-        } else {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("You haven't completed all details")
-            }
-        }
-    }
     // endregion
     var showAdultState by remember { mutableStateOf(true) }
     var showPupState by remember { mutableStateOf(false) }
     var showPupTwoState by remember { mutableStateOf(false) }
-    var showSummaryState by remember { mutableStateOf(false) }
 
     val saveAction = {
         if (adultSeal.isStarted) {
             viewModel.updateNotebookEntry(adultSeal)
             viewModel.updateNotebookEntry(pupOne)
-            showSummaryState = true
         }
     }
 
@@ -156,45 +135,50 @@ fun AddObservationLogScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        if (showSummaryState) "Summary" else "Observation",
-                        fontFamily = FontFamily.Serif
-                    )
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "Observation",
+                            fontSize = 36.sp // Adjust this value as needed
+                        )
+                    }
                 },
                 navigationIcon = {
-                    if (navController.previousBackStackEntry != null && showSummaryState) {
-                        IconButton(onClick = { showSummaryState = false }) {
+                    if (navController.previousBackStackEntry != null) {
+                        IconButton(onClick = { navController.navigateUp() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back to Observation"
+                                contentDescription = "Home"
                             )
                         }
                     }
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
-                        Icon(imageVector = Icons.Filled.Home,
+                        Icon(
+                            imageVector = Icons.Filled.Home,
                             contentDescription = "Home",
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(48.dp)
                         )
                     }
-                    if (!showSummaryState) {
-                        val contentColor =
-                            if (adultSeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = ContentAlpha.disabled
-                            )
-                        IconButton(onClick = saveAction, enabled = adultSeal.isStarted) {
-                            if (state.isSaving) {
-                                CircularProgressIndicator(Modifier.size(24.dp))
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = "Save",
-                                    modifier = Modifier.size(36.dp), // Change the size here
-                                    tint = contentColor
-                                )
+                    val contentColor =
+                        if (adultSeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = ContentAlpha.disabled
+                        )
+                    IconButton(
+                        onClick = {
+                            if (adultSeal.isStarted) {
+                                saveAction
+                                navController.navigate(Screens.AddObservationSummary.route)
                             }
-                        }
+                        },
+                        enabled = adultSeal.isStarted
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Review",
+                            modifier = Modifier.size(48.dp), // Change the size here
+                            tint = contentColor
+                        )
                     }
                 },
             )
@@ -205,43 +189,30 @@ fun AddObservationLogScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-                if (!showSummaryState) {
-                    val tabItems = mutableListOf<TabItem>().apply {
-                        add(TabItem("Adult Seal") { SealCard(viewModel, viewModel.adultSeal, showAdultState) })
-
-                        if (viewModel.adultSeal.numRelatives >= 1) {
-                            add(TabItem("Pup One") { SealCard(viewModel, viewModel.pupOne, showPupState) })
-                        }
-
-                        if (viewModel.adultSeal.numRelatives >= 2) {
-                            add(TabItem("Pup Two") { SealCard(viewModel, viewModel.pupTwo, showPupTwoState) })
-                        }
-                    }
-
-                    TabbedCards(tabItems = tabItems)
-
-//                    SealCard(viewModel, adultSeal, showAdult)
-//
-//                    if (viewModel.pupOne.isStarted) {
-//                        SealCard(viewModel, pupOne, showPup)
-//                    }
-//                    if (viewModel.pupTwo.isStarted) {
-//                        SealCard(viewModel, pupTwo, showPupTwo)
-//                    }
-                } else {
-                    SummaryCard(viewModel, adultSeal, pupOne, pupTwo)
-                    ExtendedFloatingActionButton(
-                        modifier = Modifier.padding(16.dp),
-                        containerColor = Color.LightGray,
-                        onClick = {
-                            canSaveLog {
-                                viewModel.createLog()
-                            }
-                        },
-                        icon = { Icon(Icons.Filled.Save, "Save and Start New Observation") },
-                        text = { Text(text = "Save and Start New Observation") }
+            val tabItems = mutableListOf<TabItem>().apply {
+                add(TabItem("Seal") {
+                    SealCard(
+                        viewModel,
+                        viewModel.adultSeal,
+                        showAdultState
                     )
+                })
+
+                if (viewModel.adultSeal.numRelatives >= 1) {
+                    add(TabItem("Pup One") { SealCard(viewModel, viewModel.pupOne, showPupState) })
                 }
+
+                if (viewModel.adultSeal.numRelatives >= 2) {
+                    add(TabItem("Pup Two") {
+                        SealCard(
+                            viewModel,
+                            viewModel.pupTwo,
+                            showPupTwoState
+                        )
+                    })
+                }
+            }
+            TabbedCards(tabItems = tabItems)
         }
     }
 }
@@ -273,6 +244,7 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 }
 
 data class TabItem(val title: String, val content: @Composable () -> Unit)
+
 @Composable
 fun TabbedCards(tabItems: List<TabItem>) {
     var selectedTabIndex by remember { mutableStateOf(0) }

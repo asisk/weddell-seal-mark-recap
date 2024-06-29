@@ -1,48 +1,70 @@
 package weddellseal.markrecap.ui.components
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.models.WedCheckViewModel
 
 @Composable
 fun WedCheckCard(
     seal: WedCheckViewModel.WedCheckSeal
 ) {
-    // SPENO
-    WedCheckDataDisplayRow("SPENO", if (seal.speNo == 0) "" else seal.speNo.toString())
+    val scrollState = rememberScrollState()
 
-    // TAG ID
-    WedCheckDataDisplayRow("Tag", seal.tagId)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                start = 80.dp,
+                end = 90.dp,
+                top = 10.dp,
+                bottom = 40.dp
+            )
+            .verticalScroll(state = scrollState, enabled = true)
+    ) {// Apply padding to left and right
 
-    // AGE
-    WedCheckDataDisplayRow("Age Class", seal.age)
+        // SPENO
+        WedCheckDataDisplayRow("SPENO", if (seal.speNo == 0) "" else seal.speNo.toString())
 
-    // AGE YEARS
-    WedCheckDataDisplayRow("Age Years", seal.ageYears)
+        // TAG ID
+        WedCheckDataDisplayRow("Tag", seal.tagId)
 
-    // SEX
-    WedCheckDataDisplayRow("Sex", seal.sex)
+        // AGE
+        WedCheckDataDisplayRow("Age Class", seal.age)
 
-    // TISSUE SAMPLED
-    WedCheckDataDisplayRow("Tissue Taken", seal.tissueSampled)
+        // AGE YEARS
+        WedCheckDataDisplayRow("Age Years", seal.ageYears)
 
-    // LAST SEEN
-    WedCheckDataDisplayRow(
-        "Last Seen",
-        if (seal.lastSeenSeason == 0) "" else seal.lastSeenSeason.toString()
-    )
+        // SEX
+        WedCheckDataDisplayRow("Sex", seal.sex)
 
-    // PREVIOUS PUPS
-    WedCheckDataDisplayRow("Previous Pups", seal.previousPups)
+        // TISSUE SAMPLED
+        WedCheckDataDisplayRow("Tissue Taken", seal.tissueSampled)
 
-    // MASS PUPS
-    WedCheckDataDisplayRow("Mass Pups", seal.massPups)
+        // LAST SEEN
+        WedCheckDataDisplayRow(
+            "Last Seen",
+            if (seal.lastSeenSeason == 0) "" else seal.lastSeenSeason.toString()
+        )
 
-    // SWIM PUPS
-    WedCheckDataDisplayRow("Swim Pups", seal.swimPups)
+        // PREVIOUS PUPS
+        WedCheckDataDisplayRow("Previous Pups", seal.previousPups)
 
-    // PHOTO YEARS
-    WedCheckDataDisplayRow("Photo Years", seal.photoYears)
+        // MASS PUPS
+        WedCheckDataDisplayRow("Mass Pups", seal.massPups)
 
-    // COMMENTS
-    WedCheckDataDisplayRow("Comments", seal.comment)
+        // SWIM PUPS
+        WedCheckDataDisplayRow("Swim Pups", seal.swimPups)
+
+        // PHOTO YEARS
+        WedCheckDataDisplayRow("Photo Years", seal.photoYears)
+
+        // COMMENTS
+        WedCheckDataDisplayRow("Comments", seal.comment)
+    }
 }

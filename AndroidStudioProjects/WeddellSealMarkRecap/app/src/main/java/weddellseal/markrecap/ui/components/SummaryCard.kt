@@ -8,7 +8,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,8 +28,8 @@ fun SummaryCard(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
         modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth(.8f)
+            .padding(20.dp)
+            .fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -39,20 +38,28 @@ fun SummaryCard(
                 .verticalScroll(rememberScrollState())
         ) {
             // NOTEBOOK DISPLAY
-            Text(text = adult.notebookDataString, style = MaterialTheme.typography.titleLarge)
+            SummaryListItem("Seal", adult.notebookDataString)
+//            Text(text = adult.notebookDataString, style = MaterialTheme.typography.titleLarge)
 
             if (pupOne.isStarted) {
-                Text(text = pupOne.notebookDataString, style = MaterialTheme.typography.titleLarge)
+                SummaryListItem("Pup One", pupOne.notebookDataString)
+//                Text(text = pupOne.notebookDataString, style = MaterialTheme.typography.titleLarge)
             }
 
             if (pupTwo.isStarted) {
-                Text(text = pupTwo.notebookDataString, style = MaterialTheme.typography.titleLarge)
+                SummaryListItem("Pup Two", pupOne.notebookDataString)
+//                Text(text = pupTwo.notebookDataString, style = MaterialTheme.typography.titleLarge)
             }
+
+            SummaryListItem("Location", "TBD")
 
             // GPS DISPLAY
             if (viewModel.uiState.latLong.isNotEmpty()) {
                 SummaryListItem("Device GPS", viewModel.uiState.latLong)
             }
+
+            SummaryListItem("Observers", "TBD")
+
         }
     }
 }

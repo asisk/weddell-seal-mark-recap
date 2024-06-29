@@ -536,31 +536,6 @@ class AddObservationLogViewModel(
         }
     }
 
-//    fun loadWedCheckRecordToSeal(sealRecordDB: WedCheckRecord?) {
-//        if (sealRecordDB != null) {
-//            if (adultSeal.isStarted || pupOne.isStarted || pupTwo.isStarted) {
-//                uiState = uiState.copy(
-//                    isError = true,
-//                    errorMessage = "observation already started"
-//                )
-//            } else {
-//                var seal = sealRecordDB.toSeal()
-//                if (seal.age == "Adult") {
-//                    adultSeal = seal
-//                    updateNotebookEntry(adultSeal)
-//                    adultSeal = adultSeal.copy(isStarted = true)
-//                } else {
-//                    pupOne = seal
-//                    updateNotebookEntry(pupOne)
-//                    pupOne = pupOne.copy(isStarted = true)
-//                }
-//            }
-//
-//        } else {
-//            uiState = uiState.copy(isError = true, errorMessage = "seal not found")
-//        }
-//    }
-
     fun dismissError() {
         TODO("Not yet implemented")
     }

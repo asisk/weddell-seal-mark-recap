@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
@@ -99,59 +97,43 @@ fun SealLookupScreen(
                     .padding(20.dp)
                     .fillMaxWidth()
             ) { // SEAL LOOKUP
-                Row(
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.padding(30.dp)
                 ) {
-                    var sealTagID by remember { mutableStateOf("") }
-
-                    if (wedCheckViewModel.uiState.isError) {
-                        SealNotFoundToast()
-                    }
-
-                    SealSearchField(wedCheckViewModel) { newText ->
-                        sealTagID = newText
-                    }
-
-                    IconButton(
-                        onClick = {
-                            // reset the current seal & start a new search
-                            wedCheckViewModel.resetState()
-                            wedCheckViewModel.findSeal(sealTagID)
-                        },
-                        modifier = Modifier.padding(bottom = 15.dp)
+                    Row(
+                        modifier = Modifier
+                            .padding(6.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            modifier = Modifier.size(45.dp)
-                        )
+                        var sealTagID by remember { mutableStateOf("") }
+
+                        if (wedCheckViewModel.uiState.isError) {
+                            SealNotFoundToast()
+                        }
+
+                        SealSearchField(wedCheckViewModel) { newText ->
+                            sealTagID = newText
+                        }
+
+                        IconButton(
+                            onClick = {
+                                // reset the current seal & start a new search
+                                wedCheckViewModel.resetState()
+                                wedCheckViewModel.findSeal(sealTagID)
+                            },
+                            modifier = Modifier.padding(bottom = 15.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                modifier = Modifier.size(45.dp)
+                            )
+                        }
                     }
                 }
-            }
-            val scrollState = rememberScrollState()
-            Card(
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 6.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ),
-                modifier = Modifier
-                    .padding(20.dp)
-                    .fillMaxWidth()
-                    .verticalScroll(state = scrollState, enabled = true)
-            ) {
-                Column (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 90.dp, end = 90.dp, top = 10.dp, bottom = 10.dp) // Apply padding to left and right
-                ) {
-                    WedCheckCard(wedCheckViewModel.wedCheckSeal)
-                }
+                WedCheckCard(wedCheckViewModel.wedCheckSeal)
             }
         }
     }

@@ -11,13 +11,13 @@ fun SummaryListItem(headText: String, trailText: String) {
         headlineContent = {
             Text(
                 headText,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge
             )
         },
         trailingContent = {
             Text(
                 trailText,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge
             )
         }
     )
