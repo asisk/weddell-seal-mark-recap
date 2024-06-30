@@ -53,7 +53,6 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                 for (obs in data) {
                     // Create a String array for the data
                     val obsFields = arrayOf(
-                        obs?.date ?: "",
                         obs?.deviceID ?: "",
                         obs?.season ?: "",
                         obs?.speno ?: "",
@@ -77,9 +76,9 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                         obs?.relativeTagIDTwo ?: "",
                         obs?.sealCondition ?: "",
                         obs?.observerInitials ?: "",
+                        obs?.flaggedEntry ?: "",
                         obs?.tagEvent ?: "",
                         obs?.tissueSampled ?: "",
-                        obs?.flaggedEntry ?: "",
                         obs?.comments ?: "",
                         )
                     csvWriter.writeNext(obsFields)

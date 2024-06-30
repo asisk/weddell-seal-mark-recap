@@ -508,20 +508,38 @@ class AddObservationLogViewModel(
                 if (validateSeal(seal)) {
                     var pupOneTagID = ""
                     var pupTwoTagID = ""
-                    if (seal.numRelatives > 0) {
+                    if (seal.numRelatives == 1) {
+                        pupOneTagID = getPupTagId(pupOne)
+                    }
+                    if (seal.numRelatives == 2) {
                         pupOneTagID = getPupTagId(pupOne)
                         pupTwoTagID = getPupTagId(pupTwo)
                     }
 
-                    var tagOneCondition = ""
-                    var tagTwoCondition = ""
-                    if (seal.tagEventType != "" && seal.tagEventType[0] == 'N') {
-                        tagOneCondition = "+"
-
-                        if (seal.numTags > 3) { // this is the definition for two tags
-                            tagTwoCondition = "+"
+                    var eventType = ""
+                    var tagOneIndicator = ""
+                    var tagTwoIndicator = ""
+                    if (seal.tagEventType.isNotEmpty()) {
+                        eventType = when (seal.tagEventType) {
+                            "Marked" -> {
+                                "M"
+                            }
+                            "New" -> {
+                                tagOneIndicator = "+"
+                                if (seal.numTags > 3) { // this is the definition for two tags
+                                    tagTwoIndicator = "+"
+                                }
+                                "N"
+                            }
+                            "Retag" -> {
+                                "R2"
+                            }
+                            else -> {
+                                ""
+                            }
                         }
                     }
+
                     val log = ObservationLogEntry(
                         // passing zero, but Room entity will autopopulate the id
                         id = 0,
@@ -534,23 +552,23 @@ class AddObservationLogViewModel(
                         latitude = uiState.latitude,  // example -77.73004, could also be 4 decimal precision
                         longitude = uiState.longitude, // example 166.7941, could also be 2 decimal precision
                         ageClass = seal.age[0].toString(),
-                        sex = seal.sex,
+                        sex = seal.sex[0].toString(),
                         numRelatives = seal.numRelatives.toString(),
                         oldTagIDOne = "TBD", //TODO, where are we getting this??
                         oldTagOneCondition = "TBD", //TODO, where are we getting this??
                         oldTagIDTwo = "TBD", //TODO, where are we getting this??
                         oldTagTwoCondition = "TBD", //TODO, where are we getting this??
                         tagIDOne = seal.tagId,
-                        tagOneIndicator = tagOneCondition,
+                        tagOneIndicator = tagOneIndicator,
                         tagIDTwo = seal.tagId,
-                        tagTwoIndicator = tagTwoCondition,
+                        tagTwoIndicator = tagTwoIndicator,
                         relativeTagIDOne = pupOneTagID,
                         relativeTagIDTwo = pupTwoTagID,
-                        sealCondition = seal.condition,
+                        sealCondition = seal.condition[0].toString(),
                         observerInitials = "TBD", //TODO, need to figure out how this gets to the observation
-                        tagEvent = seal.tagEventType,
-                        tissueSampled = seal.tissueSampled,
                         flaggedEntry = "TBD", // TODO, need to figure out when this gets triggered
+                        tagEvent = eventType,
+                        tissueSampled = seal.tissueSampled,
                         comments = seal.comment,
                     )
                     //TODO, consider a validation check to see if fields are populated before inserting to database
@@ -574,7 +592,7 @@ class AddObservationLogViewModel(
 
     private fun getCurrentTimeFormatted(): String {
         val currentTime = LocalTime.now()
-        val formatter = DateTimeFormatter.ofPattern("hh:mm:ss a")
+        val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
         return currentTime.format(formatter)
     }
 

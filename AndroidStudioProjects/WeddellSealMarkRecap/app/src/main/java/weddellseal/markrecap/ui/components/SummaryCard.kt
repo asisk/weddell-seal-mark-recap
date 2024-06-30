@@ -11,14 +11,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.models.AddObservationLogViewModel
 
 @Composable
 fun SummaryCard(
     viewModel: AddObservationLogViewModel,
-    adult: AddObservationLogViewModel.Seal,
-    pupOne: AddObservationLogViewModel.Seal,
-    pupTwo: AddObservationLogViewModel.Seal
+    adult: Seal,
+    pupOne: Seal,
+    pupTwo: Seal
 ) {
     Card(
         elevation = CardDefaults.cardElevation(

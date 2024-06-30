@@ -324,6 +324,7 @@ fun SealCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "Event Type")
+                //TODO, consider an enum for this an other strings
                 val tagEventList = listOf<String>("Marked", "New", "Retag")
                 SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
                     viewModel.updateTagEventType(seal, newText)
