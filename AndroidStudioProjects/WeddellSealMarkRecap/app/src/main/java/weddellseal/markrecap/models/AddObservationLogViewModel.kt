@@ -506,12 +506,25 @@ class AddObservationLogViewModel(
             for (seal in seals) {
 
                 if (validateSeal(seal)) {
+                    var ageClass = ""
+                    if (seal.age != "") {
+                        ageClass = seal.age[0].toString()
+                    }
+
+                    var sex = ""
+                    if (seal.sex != "") {
+                        sex = seal.sex[0].toString()
+                    }
+
+                    var numRels = ""
                     var pupOneTagID = ""
                     var pupTwoTagID = ""
                     if (seal.numRelatives == 1) {
+                        numRels = seal.numRelatives.toString()
                         pupOneTagID = getPupTagId(pupOne)
                     }
                     if (seal.numRelatives == 2) {
+                        numRels = seal.numRelatives.toString()
                         pupOneTagID = getPupTagId(pupOne)
                         pupTwoTagID = getPupTagId(pupTwo)
                     }
@@ -540,6 +553,11 @@ class AddObservationLogViewModel(
                         }
                     }
 
+                    var condition = ""
+                    if (seal.condition != "") {
+                        condition = seal.condition[0].toString()
+                    }
+
                     val log = ObservationLogEntry(
                         // passing zero, but Room entity will autopopulate the id
                         id = 0,
@@ -551,9 +569,9 @@ class AddObservationLogViewModel(
                         censusID = "TBD", //TODO need to figure out how this will be passed to the observations
                         latitude = uiState.latitude,  // example -77.73004, could also be 4 decimal precision
                         longitude = uiState.longitude, // example 166.7941, could also be 2 decimal precision
-                        ageClass = seal.age[0].toString(),
-                        sex = seal.sex[0].toString(),
-                        numRelatives = seal.numRelatives.toString(),
+                        ageClass = ageClass,
+                        sex = sex,
+                        numRelatives = numRels,
                         oldTagIDOne = "TBD", //TODO, where are we getting this??
                         oldTagOneCondition = "TBD", //TODO, where are we getting this??
                         oldTagIDTwo = "TBD", //TODO, where are we getting this??
@@ -564,7 +582,7 @@ class AddObservationLogViewModel(
                         tagTwoIndicator = tagTwoIndicator,
                         relativeTagIDOne = pupOneTagID,
                         relativeTagIDTwo = pupTwoTagID,
-                        sealCondition = seal.condition[0].toString(),
+                        sealCondition = condition,
                         observerInitials = "TBD", //TODO, need to figure out how this gets to the observation
                         flaggedEntry = "TBD", // TODO, need to figure out when this gets triggered
                         tagEvent = eventType,
@@ -575,6 +593,7 @@ class AddObservationLogViewModel(
                     observationRepo.addObservation(log)
                     //saving state triggers the navigation to route to home
                     uiState = uiState.copy(isSaved = true)
+                    //TODO, reset the values in the model once the records are save successfully
                 }
             }
         }
