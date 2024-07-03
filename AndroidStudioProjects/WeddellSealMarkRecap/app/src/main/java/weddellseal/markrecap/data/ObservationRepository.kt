@@ -17,11 +17,9 @@ import java.io.OutputStreamWriter
 const val CSV_FILE_PATH = "./result.csv"
 
 class ObservationRepository(private val observationDao: ObservationDao) {
-//    var _observations = mutableListOf<ObservationLogEntry>()
-//    fun getObservations() = _observations.toList()
 
     /**
-     * Fetch a list of Observations from the database.
+     * Fetch a list of Observations from the database for the Recent Observations Screen.
      * Returns a LiveData-wrapped List of Observations.
      */
     val observations: LiveData<List<ObservationLogEntry>> = liveData<List<ObservationLogEntry>> {
@@ -32,9 +30,7 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         emitSource(observationsLiveData)
     }
 
-//    private val obsFolder = File(context.filesDir, "observations").also { it.mkdir() }
     private fun generateFileName() = "${System.currentTimeMillis()}.csv"
-//    fun generateObservationLogFile() = File(obsFolder, generateFileName())
 
     suspend fun writeDataToFile(uri: Uri, contentResolver: ContentResolver) {
         try {

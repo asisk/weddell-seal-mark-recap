@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Seal
+import weddellseal.markrecap.ui.utils.notebookEntryValueSeal
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalTime
@@ -344,41 +345,7 @@ class AddObservationLogViewModel(
     }
 
     fun updateNotebookEntry(seal: Seal) {
-        val sb = StringBuilder()
-        var age = if (seal.age.isNotEmpty()) {
-            seal.age[0].toString()
-        } else {
-            ""
-        }
-
-        var sex = if (seal.sex.isNotEmpty()) {
-            seal.sex[0].toString()
-        } else {
-            ""
-        }
-
-        val numRels = if (seal.numRelatives > 0) {
-            seal.numRelatives.toString()
-        } else {
-            ""
-        }
-
-        var tag = seal.tagId
-
-        var event = if (seal.tagEventType.isNotEmpty()) {
-            seal.tagEventType[0]
-        } else {
-            ""
-        }
-        sb.append(age)
-        sb.append(sex)
-        sb.append(numRels)
-        sb.append("  ")
-        sb.append(tag)
-        sb.append("  ")
-        sb.append(event)
-
-        var notebookEntry = sb.toString();
+        val notebookEntry = notebookEntryValueSeal(seal)
 
         when (seal.name) {
             "adult" -> {

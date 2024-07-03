@@ -46,6 +46,7 @@ import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModelFactory
+import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
 
 @Composable
 fun RecentObservationsScreen(
@@ -134,7 +135,11 @@ fun recentObsScaffold(
 //                        viewModel.populateObsView()
 //                    }
                     items(state.observations) { observation ->
-                        Text(text = "ID:  " + observation.id.toString() + "    " + "Entered:  " + observation.date.toString(), modifier = Modifier.padding(8.dp))
+                        Text(text =
+                                "ID:  " + observation.id.toString() + "    " +
+                                "Entered:  " + observation.date + "    " +
+                                "Notebook Entry:  " + notebookEntryValueObservation(observation),
+                            modifier = Modifier.padding(8.dp))
                         HorizontalDivider()
                     }
                 }
@@ -209,14 +214,3 @@ fun FilePickerScreen(viewModel: RecentObservationsViewModel) {
         }
     }
 }
-
-//fun populateObsView (viewModel: RecentObservationsViewModel) {
-//    viewModel.viewModelScope.launch {
-//        // Fetch observations only if it's not already available
-//        if (viewModel.observationRepository._observations.isEmpty()) {
-//            val observations = viewModel.observationRepository.getObservations()
-//            viewModel.uiState.observations = observations
-//            observations.isEmpty()
-//        }
-//    }
-//}
