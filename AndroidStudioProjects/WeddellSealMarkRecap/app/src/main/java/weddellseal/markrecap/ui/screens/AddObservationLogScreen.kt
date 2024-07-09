@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.ui.components.PupCard
 import weddellseal.markrecap.ui.components.SealCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -199,12 +200,12 @@ fun AddObservationLogScreen(
                 })
 
                 if (viewModel.primarySeal.numRelatives >= 1) {
-                    add(TabItem("Pup One") { SealCard(viewModel, viewModel.pupOne, showPupState) })
+                    add(TabItem("Pup One") { PupCard(viewModel, viewModel.pupOne, showPupState) })
                 }
 
                 if (viewModel.primarySeal.numRelatives >= 2) {
                     add(TabItem("Pup Two") {
-                        SealCard(
+                        PupCard(
                             viewModel,
                             viewModel.pupTwo,
                             showPupTwoState

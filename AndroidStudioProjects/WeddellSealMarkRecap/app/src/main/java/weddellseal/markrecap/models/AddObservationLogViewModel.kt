@@ -111,6 +111,18 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun resetPup(seal: Seal) {
+        when (seal.name) {
+            "pupOne" -> {
+                pupOne = pupOne.copy(name = "pupOne", age = "Pup", isStarted = false)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(name = "pupTwo", age = "Pup", isStarted = false)
+            }
+        }
+    }
+
     fun updateCondition(sealName: String, input: String) {
         var condSelected = input
         if (input == "Select an option") {
@@ -160,21 +172,24 @@ class AddObservationLogViewModel(
     fun updateNumRelatives(seal: Seal, input: String) {
         val number: Int? = input.toIntOrNull()
         if (number != null) {
-            when (seal.name) {
-                "adult" -> {
-                    primarySeal = primarySeal.copy(numRelatives = number, isStarted = true)
-                    updateNotebookEntry(primarySeal)
-                }
+            primarySeal = primarySeal.copy(numRelatives = number, isStarted = true)
+            updateNotebookEntry(primarySeal)
 
-                "pupOne" -> {
-                    pupOne = pupOne.copy(numRelatives = number, isStarted = true)
-                    updateNotebookEntry(pupOne)
-                }
+            if (number == 1) {
+                pupOne = pupOne.copy(numRelatives = number, isStarted = true)
+                updateNotebookEntry(pupOne)
+            }
 
-                "pupTwo" -> {
-                    pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
-                    updateNotebookEntry(pupTwo)
-                }
+            if (number == 2) {
+                pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
+                updateNotebookEntry(pupTwo)
+            }
+
+            // case where the number of relatives is being reset
+            if (number == 0 && primarySeal.numRelatives > 0) {
+                // reset the pups
+                resetPup(pupOne)
+                resetPup(pupTwo)
             }
         }
     }
