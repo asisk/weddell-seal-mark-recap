@@ -68,7 +68,7 @@ fun AddObservationLogScreen(
     val coroutineScope = rememberCoroutineScope()
     var adultSeal = viewModel.primarySeal
     var pupOne = viewModel.pupOne
-    val pupTwo = viewModel.pupTwo
+    var pupTwo = viewModel.pupTwo
 
     // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
@@ -112,22 +112,11 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
-//    //send the user back to the observation screen when a log is saved
-//    LaunchedEffect(state.isSaved) {
-//        if (state.isSaved) {
-//            navController.navigate(Screens.AddObservationLog.route) { }
-//        }
-//    }
-
-    // endregion
-    var showAdultState by remember { mutableStateOf(true) }
-    var showPupState by remember { mutableStateOf(false) }
-    var showPupTwoState by remember { mutableStateOf(false) }
-
     val saveAction = {
         if (adultSeal.isStarted) {
             viewModel.updateNotebookEntry(adultSeal)
             viewModel.updateNotebookEntry(pupOne)
+            viewModel.updateNotebookEntry(pupTwo)
         }
     }
 
@@ -191,26 +180,14 @@ fun AddObservationLogScreen(
                 .fillMaxSize()
         ) {
             val tabItems = mutableListOf<TabItem>().apply {
-                add(TabItem("Seal") {
-                    SealCard(
-                        viewModel,
-                        viewModel.primarySeal,
-                        showAdultState
-                    )
-                })
+                add(TabItem("Seal") { SealCard(viewModel, viewModel.primarySeal) })
 
                 if (viewModel.primarySeal.numRelatives >= 1) {
-                    add(TabItem("Pup One") { PupCard(viewModel, viewModel.pupOne, showPupState) })
+                    add(TabItem("Pup One") { PupCard(viewModel, viewModel.pupOne) })
                 }
 
                 if (viewModel.primarySeal.numRelatives >= 2) {
-                    add(TabItem("Pup Two") {
-                        PupCard(
-                            viewModel,
-                            viewModel.pupTwo,
-                            showPupTwoState
-                        )
-                    })
+                    add(TabItem("Pup Two") { PupCard(viewModel, viewModel.pupTwo) })
                 }
             }
             TabbedCards(tabItems = tabItems)

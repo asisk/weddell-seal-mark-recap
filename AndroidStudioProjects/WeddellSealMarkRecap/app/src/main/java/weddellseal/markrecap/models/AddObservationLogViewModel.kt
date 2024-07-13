@@ -43,7 +43,6 @@ class AddObservationLogViewModel(
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
-//    val observationDao = AppDatabase.getDatabase(application).observationDao()
 
     // for determining if GPS provider is active
     private val locationManager =
@@ -87,16 +86,13 @@ class AddObservationLogViewModel(
     )
         private set
 
-    var primarySeal by mutableStateOf(
-        Seal(
-            name = "adult",
-            age = "Adult"
-        )
-    ) // default this to an adult, but could be a lone pup or juvenile with no relatives
+    var primarySeal by mutableStateOf(Seal(name = "adult", age = "Adult", numRelatives = 0, isStarted = false))
         private set
-    var pupOne by mutableStateOf(Seal(name = "pupOne", age = "Pup"))
+
+    var pupOne by mutableStateOf(Seal(name = "pupOne", age = "Pup", numRelatives = 1, isStarted = false))
         private set
-    var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup"))
+
+    var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup", numRelatives = 2, isStarted = false))
         private set
 
     fun startPup(seal: Seal) {
@@ -111,14 +107,16 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun resetPup(seal: Seal) {
+    private fun resetPup(seal: Seal) {
         when (seal.name) {
             "pupOne" -> {
                 pupOne = pupOne.copy(name = "pupOne", age = "Pup", isStarted = false)
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(name = "pupTwo", age = "Pup", isStarted = false)
+                updateNotebookEntry(pupTwo)
             }
         }
     }
@@ -190,6 +188,7 @@ class AddObservationLogViewModel(
                 // reset the pups
                 resetPup(pupOne)
                 resetPup(pupTwo)
+
             }
         }
     }
@@ -197,7 +196,12 @@ class AddObservationLogViewModel(
     fun updateSex(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                primarySeal = primarySeal.copy(sex = input, isStarted = true)
+                if (input == "Male"){
+                    primarySeal = primarySeal.copy(sex = input, numRelatives = 0, isStarted = true)
+                    updateNumRelatives(seal, "0")
+                } else {
+                    primarySeal = primarySeal.copy(sex = input, isStarted = true)
+                }
                 updateNotebookEntry(primarySeal)
             }
 

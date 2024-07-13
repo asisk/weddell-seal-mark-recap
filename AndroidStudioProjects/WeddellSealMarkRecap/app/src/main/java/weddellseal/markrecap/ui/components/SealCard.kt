@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,9 +46,15 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 fun SealCard(
     viewModel: AddObservationLogViewModel,
     seal: Seal,
-    showDetails: Boolean
 ) {
     val scrollState = rememberScrollState()
+    var newNumRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
+
+    // Synchronize newNumRelatives with the ViewModel whenever it changes
+    LaunchedEffect(seal.numRelatives) {
+        newNumRelatives = seal.numRelatives.toString()
+    }
+
     Column() {
         val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -109,7 +116,7 @@ fun SealCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "Sex")
-                val buttonListSex = listOf<String>("Female", "Male", "Unknown")
+                val buttonListSex = listOf("Female", "Male", "Unknown")
                 SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
                     viewModel.updateSex(seal, newText)
                 }
@@ -123,32 +130,22 @@ fun SealCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-//                val numRelsFieldVal = if (seal.numRelatives > 0) {
-//                    seal.numRelatives
-//                } else {
-//                    ""
-//                }
-//                NumberFieldValidateOnCharCount(
-//                    numRelsFieldVal.toString(),
-//                    1,
-//                    "# of Relatives",
-//                    "Enter # of relatives present"
-//                ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
-
             // NUMBER OF RELATIVES
             Text(text = "# of Relatives")
-            val numTagsList = listOf<String>("0", "1", "2")
+            val numRelsList = listOf("0", "1", "2")
             SingleSelectButtonGroup(
-                numTagsList,
-                seal.numRelatives.toString()
+                txtOptions = numRelsList,
+                valueInModel = newNumRelatives
             ) { newVal ->
+                newNumRelatives = newVal
                 // case where the number of relatives is being reset
                 if (newVal.toInt() == 0 && seal.numRelatives > 0) {
                     // TODO, pop a warning and ask for confirmation before moving forward
                     // because this action results in removing any entered data for pups
+                } else {
+                    // TODO, consider firing this if the user confirms the action
+                    viewModel.updateNumRelatives(seal, newVal)
                 }
-                // TODO, consider firing this if the user confirms the action
-                viewModel.updateNumRelatives(seal, newVal)
             }
 
             // CONDITION

@@ -5,6 +5,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,13 +19,21 @@ fun SingleSelectButtonGroup(
     onValChangeDo: (String) -> Unit
 ) {
     var selectedButton by remember { mutableStateOf(valueInModel) }
+
+    // Synchronize selectedButton with valueInModel whenever it changes
+    LaunchedEffect(valueInModel) {
+        selectedButton = valueInModel
+    }
+
     txtOptions.forEach { option ->
         ElevatedButton(
             onClick = {
                 selectedButton = option
                 onValChangeDo(option) // callback when the button is clicked
             },
-            colors = ButtonDefaults.elevatedButtonColors(MaterialTheme.colorScheme.tertiary),
+            colors = ButtonDefaults.elevatedButtonColors(
+                if (selectedButton == option) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+            ),
             enabled = selectedButton != option
         ) {
             Text(

@@ -44,8 +44,7 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 @Composable
 fun PupCard(
     viewModel: AddObservationLogViewModel,
-    seal: Seal,
-    showDetails: Boolean
+    seal: Seal
 ) {
     val scrollState = rememberScrollState()
     Column () {
@@ -69,7 +68,6 @@ fun PupCard(
                 style = MaterialTheme.typography.titleLarge
             )
         }
-//        if (showDetails) {
             //AGE
             Row(
                 modifier = Modifier
@@ -85,14 +83,14 @@ fun PupCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     //AGE
-                    Text(text = "Age")
-                    val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
-                    SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
-                        viewModel.updateAge(
-                            seal,
-                            newText
-                        )
-                    }
+//                    Text(text = "Age")
+//                    val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
+//                    SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
+//                        viewModel.updateAge(
+//                            seal,
+//                            newText
+//                        )
+//                    }
                 }
             }
 
@@ -115,7 +113,6 @@ fun PupCard(
                         viewModel.updateSex(seal, newText)
                     }
                 }
-//                if (seal.age == "Pup") {
                 Spacer(modifier = Modifier.width(10.dp))
                 var isChecked by remember {
                     mutableStateOf(false)
@@ -142,9 +139,8 @@ fun PupCard(
                             .padding(8.dp)
                     )
                 }
-//            }
             }
-            // NUMBER OF RELATIVES
+            // CONDITION & WEIGHT
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -153,28 +149,9 @@ fun PupCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val pupNumRels = viewModel.primarySeal.numRelatives
-
-//                val numRelsFieldVal = if (seal.numRelatives > 0) {
-//                    seal.numRelatives
-//                } else {
-//                    ""
-//                }
-//                NumberFieldValidateOnCharCount(
-//                    numRelsFieldVal.toString(),
-//                    1,
-//                    "# of Relatives",
-//                    "Enter # of relatives present"
-//                ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
-
                 // NUMBER OF RELATIVES
-                Text(text = "# of Relatives")
-                Text(text = pupNumRels.toString())
-
-//                val numTagsList = listOf<String>("0", "1", "2")
-//                SingleSelectButtonGroup(
-//                    numTagsList,
-//                    seal.numRelatives.toString()
-//                ) { newVal -> viewModel.updateNumRelatives(seal, newVal) }
+//                Text(text = "# of Relatives")
+//                Text(text = pupNumRels.toString())
 
                 // CONDITION
                 Spacer(modifier = Modifier.width(30.dp))

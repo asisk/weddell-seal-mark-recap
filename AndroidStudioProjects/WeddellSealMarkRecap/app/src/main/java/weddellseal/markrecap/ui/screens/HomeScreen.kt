@@ -1,9 +1,10 @@
 package weddellseal.markrecap.ui.screens
 
 import android.Manifest
+import android.content.Context
 import android.net.Uri
-import android.os.Build.getSerial
 import android.provider.OpenableColumns
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -123,15 +124,6 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
         )
     }
 
-//    var colonyLocations by remember {
-//        mutableStateOf(
-//            listOf(
-//                "Default Location A",
-//                "Default Location B"
-//            )
-//        )
-//    }
-
     val pickCsvFile = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -203,12 +195,6 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     modifier = Modifier.fillMaxSize(),
                     backgroundColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
-//                    BottomNavigationItem(
-//                        label = { Text(text = "Start Observation") },
-//                        selected = false,
-//                        onClick = { navController.navigate(Screens.AddObservationLog.route) },
-//                        icon = { Icon(Icons.Filled.PostAdd, "Start Observation") }
-//                    )
                     BottomNavigationItem(
                         label = { Text(text = "Recent Observations") },
                         selected = false,
@@ -221,25 +207,6 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                         onClick = { navController.navigate(Screens.AdminScreen.route) },
                         icon = { Icon(Icons.Filled.Person, null) }
                     )
-//                    val contentColor =
-//                        MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-//                    BottomNavigationItem(
-//                        label = { Text(text = "Start Census", color = contentColor) },
-//                        selected = false,
-//                        onClick = { /*TODO */ },
-//                        icon = { Icon(Icons.Filled.PostAdd, "Start Census", tint = contentColor) }
-//                    )
-//                    BottomNavigationItem(
-//                        label = { Text(text = "Upload Locations") },
-//                        selected = false,
-//                        onClick = { if (!isPermissionGranted) {
-//                            showExplanationDialogForReadAccessPermission = true
-//                        } else {
-//                            // Launch file picker
-//                            launcher.launch("text/csv") // Mime type for plain text files, change as per requirement
-//                        } },
-//                        icon = { Icon(Icons.Filled.UploadFile, "Upload Locations") }
-//                    )
                 }
             }
         }
@@ -249,7 +216,6 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                 .padding(innerPadding)
                 .scrollable(rememberScrollState(), Orientation.Vertical)
                 .fillMaxWidth(),
-//            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Seal Pup Image
             Row {
@@ -296,11 +262,15 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     var observationSiteSelected by remember { mutableStateOf("") }
                     //TODO, read the locations from a CSV
                     // Function to update dropdown values from CSV
-                    Column(modifier = Modifier.padding(4.dp).fillMaxWidth(.3f)) {
+                    Column(modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth(.3f)) {
                         Text(text = "Location")
                     }
 
-                    Column(modifier = Modifier.padding(4.dp).fillMaxWidth(.5f)) {
+                    Column(modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth(.5f)) {
                         DropdownField(state.colonyLocations) { valueSelected ->
                             observationSiteSelected = valueSelected
                         }
@@ -334,10 +304,14 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                 ) {
                     val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
                     var selection = "0"
-                    Column(modifier = Modifier.padding(4.dp).fillMaxWidth(.3f)) {
+                    Column(modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth(.3f)) {
                         Text(text = "Census #")
                     }
-                    Column(modifier = Modifier.padding(4.dp).fillMaxWidth(.5f)) {
+                    Column(modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth(.5f)) {
                         DropdownField(censusOptions) { newText ->
                             selection = newText
                         }
@@ -350,8 +324,10 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    //TODO, pull a system field and use it in place of This
-//                    SerialNumberDisplay()
+                    var deviceName by remember { mutableStateOf("") }
+                    deviceName = getDeviceName(context)
+                    Text(text = "Device Name")
+                    Text(text = deviceName)
                 }
             }
             Row(
@@ -457,15 +433,10 @@ fun FileAccessExplanationDialog(
     )
 }
 
-@Composable
-fun SerialNumberDisplay() {
-    val serialNumber = getSerial()
-
-    Column {
-        // Display the serial number in your Composable
-        Text(text = "Serial Number: $serialNumber")
-    }
+fun getDeviceName(context: Context): String {
+    return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: "Unknown Device"
 }
+
 //
 //@Composable
 //fun CardWithClickableImages() {
@@ -507,27 +478,4 @@ fun SerialNumberDisplay() {
 //            .clickable { onClick() }
 //            .padding(8.dp)
 //    )
-//}
-
-//@PreviewParameter
-//@Composable
-//fun HomeModelProvider(): HomeModel {
-//    // Provide a default instance of HomeModel for preview
-//    val observationRepo: ObservationRepository
-//    return HomeModel(Application(), observationRepo)
-//}
-//@Preview
-//@Composable
-//fun HomeScreenPreview(@PreviewParameter(HomeModelProvider::class) viewModel: HomeModel) {
-//    val navController = rememberNavController()
-//    HomeScreen(viewModel, navController)
-//}
-
-
-
-//@Preview
-//@Composable
-//fun ImageCard() {
-//    WeddellSealMarkRecapTheme {
-//    }
 //}
