@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,11 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.components.SealSearchField
 import weddellseal.markrecap.ui.components.WedCheckCard
@@ -42,7 +47,8 @@ import weddellseal.markrecap.ui.components.WedCheckCard
 @Composable
 fun SealLookupScreen(
     navController: NavHostController,
-    wedCheckViewModel: WedCheckViewModel
+    wedCheckViewModel: WedCheckViewModel,
+    obsViewModel: AddObservationLogViewModel
 ) {
     Scaffold(
         topBar = {
@@ -104,7 +110,7 @@ fun SealLookupScreen(
                         modifier = Modifier
                             .padding(6.dp)
                             .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         var sealTagID by remember { mutableStateOf("") }
@@ -117,18 +123,40 @@ fun SealLookupScreen(
                             sealTagID = newText
                         }
 
-                        IconButton(
-                            onClick = {
-                                // reset the current seal & start a new search
-                                wedCheckViewModel.resetState()
-                                wedCheckViewModel.findSeal(sealTagID)
-                            },
-                            modifier = Modifier.padding(bottom = 15.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                modifier = Modifier.size(45.dp)
+                        if (!wedCheckViewModel.wedCheckSeal.found) {
+                            IconButton(
+                                onClick = {
+                                    // reset the current seal & start a new search
+                                    wedCheckViewModel.resetState()
+                                    wedCheckViewModel.findSeal(sealTagID)
+                                },
+                                modifier = Modifier.padding(bottom = 15.dp, end = 20.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.size(45.dp)
+                                )
+                            }
+                        } else {
+                            ExtendedFloatingActionButton(
+                                modifier = Modifier
+                                    .padding(bottom = 20.dp, start = 20.dp)
+                                    .fillMaxWidth(),
+                                containerColor = Color.LightGray,
+                                onClick = {
+                                    obsViewModel.populateSeal(wedCheckViewModel.wedCheckSeal)
+                                    navController.navigate(Screens.AddObservationLog.route)
+                                          },
+                                icon = { Icon(Icons.Filled.PostAdd, "Enter a new observation") },
+                                text = {
+                                    Text(
+                                        text = "Tag/Retag",
+                                        fontSize = 18.sp, // Set your desired text size here
+                                        fontWeight = FontWeight.Bold, // Optional: set the font weight
+                                        color = Color.Black // Optional: set the text color
+                                    )
+                                }
                             )
                         }
                     }

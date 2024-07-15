@@ -621,4 +621,16 @@ class AddObservationLogViewModel(
         }
         return false
     }
+
+    fun populateSeal(wedCheckSeal: WedCheckViewModel.WedCheckSeal) {
+        primarySeal = primarySeal.copy(
+            age = wedCheckSeal.age,
+            sex = wedCheckSeal.sex,
+            isStarted = true,
+
+        )
+        updateTagId(primarySeal)
+        updateNotebookEntry(primarySeal)
+
+    }
 }

@@ -2,7 +2,6 @@ package weddellseal.markrecap.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -77,9 +76,8 @@ fun SealSearchField(viewModel: WedCheckViewModel, onValueChanged: (String) -> Un
         },
         supportingText = {
             Text(
-                modifier = Modifier.fillMaxWidth(),
                 text = "ex. 4932A",
-                textAlign = TextAlign.End,
+                textAlign = TextAlign.Start,
                 fontSize = 20.sp
             )
         }

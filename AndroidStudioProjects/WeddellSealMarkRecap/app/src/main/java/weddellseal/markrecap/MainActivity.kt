@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController, addObservationLogViewModel) }
                         composable(Screens.AddObservationSummary.route) { AddObservationSummaryScreen(navController, addObservationLogViewModel) }
                         composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }
-                        composable(Screens.SealLookupScreen.route) { SealLookupScreen(navController, wedCheckViewModel) }
+                        composable(Screens.SealLookupScreen.route) { SealLookupScreen(navController, wedCheckViewModel, addObservationLogViewModel) }
                         composable(Screens.AdminScreen.route) { AdminScreen(navController, wedCheckViewModel) }
                     }
                 }
