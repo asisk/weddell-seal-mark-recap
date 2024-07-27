@@ -148,7 +148,7 @@ fun SealLookupScreen(
                                     obsViewModel.populateSeal(wedCheckViewModel.wedCheckSeal)
                                     navController.navigate(Screens.AddObservationLog.route)
                                           },
-                                icon = { Icon(Icons.Filled.PostAdd, "Enter a new observation") },
+                                icon = { Icon(Icons.Filled.PostAdd, "Edit seal") },
                                 text = {
                                     Text(
                                         text = "Tag/Retag",

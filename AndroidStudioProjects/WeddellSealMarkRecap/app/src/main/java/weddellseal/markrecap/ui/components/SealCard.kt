@@ -230,7 +230,7 @@ fun SealCard(
             val keyboardController = LocalSoftwareKeyboardController.current
             var isError by remember { mutableStateOf(false) }
             var tagIDVal by remember {
-                mutableStateOf("")
+                mutableStateOf(seal.tagId)
             }
             OutlinedTextField(
                 value = tagIDVal,

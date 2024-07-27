@@ -86,13 +86,34 @@ class AddObservationLogViewModel(
     )
         private set
 
-    var primarySeal by mutableStateOf(Seal(name = "adult", age = "Adult", numRelatives = 0, isStarted = false))
+    var primarySeal by mutableStateOf(
+        Seal(
+            name = "adult",
+            age = "Adult",
+            numRelatives = 0,
+            isStarted = false
+        )
+    )
         private set
 
-    var pupOne by mutableStateOf(Seal(name = "pupOne", age = "Pup", numRelatives = 1, isStarted = false))
+    var pupOne by mutableStateOf(
+        Seal(
+            name = "pupOne",
+            age = "Pup",
+            numRelatives = 1,
+            isStarted = false
+        )
+    )
         private set
 
-    var pupTwo by mutableStateOf(Seal(name = "pupTwo", age = "Pup", numRelatives = 2, isStarted = false))
+    var pupTwo by mutableStateOf(
+        Seal(
+            name = "pupTwo",
+            age = "Pup",
+            numRelatives = 2,
+            isStarted = false
+        )
+    )
         private set
 
     fun startPup(seal: Seal) {
@@ -196,7 +217,7 @@ class AddObservationLogViewModel(
     fun updateSex(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                if (input == "Male"){
+                if (input == "Male") {
                     primarySeal = primarySeal.copy(sex = input, numRelatives = 0, isStarted = true)
                     updateNumRelatives(seal, "0")
                 } else {
@@ -523,6 +544,7 @@ class AddObservationLogViewModel(
                             "Marked" -> {
                                 "M"
                             }
+
                             "New" -> {
                                 tagOneIndicator = "+"
                                 if (seal.numTags > 3) { // this is the definition for two tags
@@ -530,9 +552,11 @@ class AddObservationLogViewModel(
                                 }
                                 "N"
                             }
+
                             "Retag" -> {
                                 "R2"
                             }
+
                             else -> {
                                 ""
                             }
@@ -601,7 +625,7 @@ class AddObservationLogViewModel(
         return currentTime.format(formatter)
     }
 
-    fun getPupTagId(pup: Seal): String {
+    private fun getPupTagId(pup: Seal): String {
         return if (pup.isStarted && validateSeal(pup)) {
             pup.tagId
         } else {
@@ -624,13 +648,36 @@ class AddObservationLogViewModel(
 
     fun populateSeal(wedCheckSeal: WedCheckViewModel.WedCheckSeal) {
         primarySeal = primarySeal.copy(
+            isStarted = true,  // should this be true yet?
+
+            name = wedCheckSeal.name,
             age = wedCheckSeal.age,
             sex = wedCheckSeal.sex,
-            isStarted = true,
+            numRelatives = wedCheckSeal.numRelatives,
+            numTags = wedCheckSeal.numTags,
+            condition = wedCheckSeal.condition,
+            pupPeed = wedCheckSeal.pupPeed,
+            tagId = wedCheckSeal.tagId,
+            tagNumber = wedCheckSeal.tagNumber,
+            tagAlpha = wedCheckSeal.tagAlpha,
+            tagEventType = wedCheckSeal.tagEventType,
+            comment = wedCheckSeal.comment,
+            // tissueTaken left out intentionally
+            //TODO, update notebookDataString once the seal is populated,
+            // instead of mapping here
 
+
+            // historical fields
+            speNo = wedCheckSeal.speNo,
+            ageYears = wedCheckSeal.ageYears,
+            lastSeenSeason = wedCheckSeal.lastSeenSeason,
+            massPups = wedCheckSeal.massPups,
+            photoYears = wedCheckSeal.photoYears,
+            swimPups = wedCheckSeal.swimPups,
+            previousPups = wedCheckSeal.previousPups,
+            tissueSampled = wedCheckSeal.tissueSampled,
         )
-        updateTagId(primarySeal)
+//        updateTagId(primarySeal) -- don't think this is necessary
         updateNotebookEntry(primarySeal)
-
     }
 }

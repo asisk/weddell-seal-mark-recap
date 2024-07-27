@@ -106,24 +106,28 @@ fun WedCheckRecord.toSeal(): WedCheckViewModel.WedCheckSeal {
 
 fun processTags(tag1: String?, tag2: String?): TagProcessingResult {
     var numTags = 0
-    var tagId = ""
-    var tagAlpha = ""
-    var tagNumber = 0
+    var finalTagId = ""
+    var finalTagAlpha = ""
+    var finalTagNumber = 0
 
-    val validTag = when {
-        !tag1.isNullOrBlank() && tag1 != "NA" -> tag1
-        !tag2.isNullOrBlank() && tag2 != "NA" -> tag2
-        else -> null
-    }
+    fun validateTag(tag: String?) {
 
-    validTag?.let {
+        //verify that the tag is the valid format
+        if (tag.isNullOrBlank() || tag == "NA" || tag == "NoTag") return
+        if (tag.dropLast(1).toIntOrNull() == null) return
+        if (!tag.last().isLetter()) return
+
         numTags++
-        tagId = it
-        tagAlpha = it.last().toString()
-        // Extract everything except the last character
-        tagNumber = it.substring(0, it.length - 1).toIntOrNull() ?: 0
 
+        if (finalTagId == "") {
+            finalTagId = tag
+            finalTagAlpha = tag.last().toString()
+            finalTagNumber = tag.dropLast(1).toIntOrNull() ?: 0
+        }
     }
 
-    return TagProcessingResult(numTags, tagId, tagAlpha, tagNumber)
+    validateTag(tag1)
+    validateTag(tag2)
+
+    return TagProcessingResult(numTags, finalTagId, finalTagAlpha, finalTagNumber)
 }

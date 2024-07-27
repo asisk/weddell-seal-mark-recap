@@ -2,11 +2,10 @@ package weddellseal.markrecap.data
 
 data class Seal(
     val age: String = "",
-    val ageYears: Int = 0,
+    val ageYears: String = "",
     val comment: String = "",
     val condition: String = "",
     var isStarted: Boolean = false,
-    val isWedCheckRecord: Boolean = false,
     val lastSeenSeason: Int = 0,
     val massPups: String = "",
     val name: String = "",
