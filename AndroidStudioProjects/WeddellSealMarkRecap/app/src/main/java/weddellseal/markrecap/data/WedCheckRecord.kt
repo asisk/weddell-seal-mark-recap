@@ -28,7 +28,7 @@ data class WedCheckRecord(
 )
 
 data class TagProcessingResult(
-    val numTags: Int,
+    val numTags: String,
     val tagId: String,
     val tagAlpha: String,
     val tagNumber: Int
@@ -64,7 +64,7 @@ fun WedCheckRecord.toSeal(): WedCheckViewModel.WedCheckSeal {
         ageNumeric = ageYears.toString()
     }
 
-    var numTags = 0
+    var numTags = ""
     var tagId = ""
     var tagAlpha = ""
     var tagNumber = 0
@@ -129,5 +129,5 @@ fun processTags(tag1: String?, tag2: String?): TagProcessingResult {
     validateTag(tag1)
     validateTag(tag2)
 
-    return TagProcessingResult(numTags, finalTagId, finalTagAlpha, finalTagNumber)
+    return TagProcessingResult(numTags.toString(), finalTagId, finalTagAlpha, finalTagNumber)
 }

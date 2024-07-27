@@ -11,7 +11,7 @@ data class Seal(
     val name: String = "",
     val notebookDataString: String = "",
     val numRelatives: Int = 0,
-    val numTags: Int = 0,
+    val numTags: String = "",
     val photoYears: String = "",
     val previousPups: String = "",
     val pupPeed: Boolean = false,

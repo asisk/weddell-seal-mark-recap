@@ -2,6 +2,7 @@ package weddellseal.markrecap.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,9 +36,12 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.models.AddObservationLogViewModel
 
@@ -49,6 +53,7 @@ fun SealCard(
 ) {
     val scrollState = rememberScrollState()
     var newNumRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
+    var noTagSelected by remember { mutableStateOf(false) }
 
     // Synchronize newNumRelatives with the ViewModel whenever it changes
     LaunchedEffect(seal.numRelatives) {
@@ -61,8 +66,7 @@ fun SealCard(
         // NOTEBOOK DISPLAY
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Top
         ) {
@@ -73,25 +77,29 @@ fun SealCard(
             }
             Text(
                 headingStr + seal.notebookDataString,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold
             )
         }
         //AGE
         Row(
             modifier = Modifier
-                .fillMaxWidth(.7f)
-                .padding(10.dp),
+//                .fillMaxWidth(.7f)
+                .fillMaxWidth()
+                .padding(8.dp),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(2f)
+//                    .weight(2f)
                     .padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 //AGE
-                Text(text = "Age")
+                Text(
+                    "Age",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
                 SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
                     viewModel.updateAge(
@@ -115,7 +123,10 @@ fun SealCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Sex")
+                Text(
+                    "Sex",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 val buttonListSex = listOf("Female", "Male", "Unknown")
                 SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
                     viewModel.updateSex(seal, newText)
@@ -130,92 +141,141 @@ fun SealCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // NUMBER OF RELATIVES
-            Text(text = "# of Relatives")
-            val numRelsList = listOf("0", "1", "2")
-            SingleSelectButtonGroup(
-                txtOptions = numRelsList,
-                valueInModel = newNumRelatives
-            ) { newVal ->
-                newNumRelatives = newVal
-                // case where the number of relatives is being reset
-                if (newVal.toInt() == 0 && seal.numRelatives > 0) {
-                    // TODO, pop a warning and ask for confirmation before moving forward
-                    // because this action results in removing any entered data for pups
-                } else {
-                    // TODO, consider firing this if the user confirms the action
-                    viewModel.updateNumRelatives(seal, newVal)
+            Box(
+                modifier = Modifier
+                    .weight(.9f)
+//                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    // NUMBER OF RELATIVES
+                    Text(
+                        "# of Rels",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    val numRelsList = listOf("0", "1", "2")
+                    SingleSelectButtonGroupSquare(
+                        txtOptions = numRelsList,
+                        valueInModel = newNumRelatives
+                    ) { newVal ->
+                        newNumRelatives = newVal
+                        // case where the number of relatives is being reset
+                        if (newVal.toInt() == 0 && seal.numRelatives > 0) {
+                            // TODO, pop a warning and ask for confirmation before moving forward
+                            // because this action results in removing any entered data for pups
+                        } else {
+                            // TODO, consider firing this if the user confirms the action
+                            viewModel.updateNumRelatives(seal, newVal)
+                        }
+                    }
                 }
             }
 
-            // CONDITION
-            Spacer(modifier = Modifier.width(30.dp))
-            Text(text = "Condition")
-            Spacer(modifier = Modifier.width(10.dp))
-            // TODO, address the option to clear a condition for an adult
-            val conditions =
-                listOf<String>("0 - Dead", "1 - Poor", "2 - Fair", "3 - Good", "4 - Newborn")
-            DropdownField(conditions) { newText ->
-                viewModel.updateCondition(
-                    seal.name,
-                    newText
-                )
+            Box(
+                modifier = Modifier
+                    .weight(.6f)
+//                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    // CONDITION
+                    Text(
+                        "Condition",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    val conditions =
+                        listOf("Dead - 0", "Poor - 1", "Fair - 2", "Good - 3", "Newborn - 4")
+                    DropdownField(conditions) { newText ->
+                        viewModel.updateCondition(
+                            seal.name,
+                            newText
+                        )
+                    }
+                }
             }
         }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // NUMBER OF TAGS
-            Text(text = "# of Tags")
-            val numTagsList = listOf<String>("0", "1", "2", "3", "4")
-            SingleSelectButtonGroup(
-                numTagsList,
-                seal.numTags.toString()
-            ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
-
-
-//                val numTagsFieldVal = if (seal.numTags > 0) {
-//                    seal.numTags
-//                } else {
-//                    ""
-//                }
-//                NumberFieldValidateOnCharCount(
-//                    numTagsFieldVal.toString(),
-//                    1,
-//                    "# of Tags",
-//                    "Enter # of tags present"
-//                ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
-
-            // TISSUE SAMPLED
-            val (checkedStateTissue, onStateChangeTissue) = remember { mutableStateOf(seal.tissueTaken) }
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .toggleable(
-                        value = checkedStateTissue,
-                        onValueChange = {
-                            onStateChangeTissue(!checkedStateTissue)
-                            viewModel.updateTissueTaken(seal.name, checkedStateTissue)
-                        },
-                        role = Role.Checkbox
-                    )
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
             ) {
-                Text(
-                    text = "Tissue Sampled",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Checkbox(
-                    checked = checkedStateTissue,
-                    onCheckedChange = null // null recommended for accessibility with screenreaders
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // NUMBER OF TAGS
+                    Text(
+                        "# of Tags",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    val numTagsList = listOf("1", "2")
+                    SingleSelectButtonGroupSquare(
+                        numTagsList,
+                        seal.numTags
+                    ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    TagSwitch(seal.numTags) {
+                        viewModel.updateNumTags(seal.name, "NoTag")
+                    }
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(start = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    // TISSUE SAMPLED
+                    val (checkedStateTissue, onStateChangeTissue) = remember { mutableStateOf(seal.tissueTaken) }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = checkedStateTissue,
+                                onValueChange = {
+                                    onStateChangeTissue(!checkedStateTissue)
+                                    viewModel.updateTissueTaken(seal.name, checkedStateTissue)
+                                },
+                                role = Role.Checkbox
+                            )
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Tissue Sampled",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Checkbox(
+                            checked = checkedStateTissue,
+                            onCheckedChange = null // null recommended for accessibility with screenreaders
+                        )
+                    }
+                }
             }
         }
         //TAG ID
@@ -226,76 +286,118 @@ fun SealCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val focusManager: FocusManager = LocalFocusManager.current
-            val keyboardController = LocalSoftwareKeyboardController.current
-            var isError by remember { mutableStateOf(false) }
-            var tagIDVal by remember {
-                mutableStateOf(seal.tagId)
-            }
-            OutlinedTextField(
-                value = tagIDVal,
-                onValueChange = {
-                    val number: Int? = it.toIntOrNull()
-                    tagIDVal = it
-                    isError =
-                        it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
-                },
-                label = { Text("TagNumber") },
-                isError = isError,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = ContentAlpha.disabled
-                    ),
-                ),
-                placeholder = { Text("Enter Tag Number") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        // Handle "Done" button action
+            Box(
+                modifier = Modifier
+                    .weight(.3f)
+                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
 
-                        // change the focus
-                        focusManager.clearFocus()
+                    val focusManager: FocusManager = LocalFocusManager.current
+                    val keyboardController = LocalSoftwareKeyboardController.current
+                    var isError by remember { mutableStateOf(false) }
+                    var tagIDVal by remember {
+                        mutableStateOf(seal.tagId)
+                    }
+                    Text(
+                        "Tag ID",
+                        style = MaterialTheme.typography.titleLarge
+                    )
 
-                        // save the input to the model
-                        val number: Int? = tagIDVal.toIntOrNull()
-                        if (number != null && !isError) {
-                            viewModel.updateTagNumber(seal, number)
+                    OutlinedTextField(
+                        value = tagIDVal,
+                        onValueChange = {
+                            val number: Int? = it.toIntOrNull()
+                            tagIDVal = it
+                            isError =
+                                it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
+                        },
+                        label = {
+                            Text(
+                                "Number",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        },
+                        textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
+                        isError = isError,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = ContentAlpha.disabled
+                            ),
+                        ),
+                        placeholder = { Text("Enter Tag Number") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                // Handle "Done" button action
+
+                                // change the focus
+                                focusManager.clearFocus()
+
+                                // save the input to the model
+                                val number: Int? = tagIDVal.toIntOrNull()
+                                if (number != null && !isError) {
+                                    viewModel.updateTagNumber(seal, number)
+                                }
+                            },
+                        ),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Filled.Clear, contentDescription = "Clear text",
+                                Modifier.clickable {
+                                    tagIDVal = ""
+                                    viewModel.clearTag(seal)
+                                })
                         }
-                    },
-                ),
-                trailingIcon = {
-                    Icon(
-                        Icons.Filled.Clear, contentDescription = "Clear text",
-                        Modifier.clickable {
-                            tagIDVal = ""
-                            viewModel.clearTag(seal)
-                        })
+                    )
                 }
-            )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(start = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    //TAG ALPHA BUTTONS
+                    Text(
+                        "Tag Alpha",
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-
-            //TAG ALPHA BUTTONS
-            val buttonListAlpha = listOf<String>("A", "C", "D")
-            SingleSelectTagAlphaButtonGroup(
-                buttonListAlpha,
-                seal.tagAlpha
-            ) { newText -> viewModel.updateTagAlpha(seal, newText) }
+                    val buttonListAlpha = listOf<String>("A", "C", "D")
+                    SingleSelectTagAlphaButtonGroup(
+                        buttonListAlpha,
+                        seal.tagAlpha
+                    ) { newText -> viewModel.updateTagAlpha(seal, newText) }
+                }
+            }
         }
         // TAG EVENT TYPE
         val (checkedState, onStateChange) = remember { mutableStateOf(false) }
         Row(
             modifier = Modifier
-                .fillMaxWidth(.7f)
-                .padding(10.dp),
+                .fillMaxWidth()
+                .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Event Type")
+            Text(
+                "Tag Event",
+                style = MaterialTheme.typography.titleLarge
+            )
             //TODO, consider an enum for this an other strings
             val tagEventList = listOf<String>("Marked", "New", "Retag")
             SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
@@ -307,12 +409,24 @@ fun SealCard(
             modifier = Modifier
                 .fillMaxWidth()
 //                    .fillMaxHeight()
-                .padding(10.dp),
+                .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            CommentField(seal.comment) { newText ->
-                viewModel.updateComment(seal.name, newText)
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(start = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CommentField(seal.comment) { newText ->
+                        viewModel.updateComment(seal.name, newText)
+                    }
+                }
             }
         }
     }

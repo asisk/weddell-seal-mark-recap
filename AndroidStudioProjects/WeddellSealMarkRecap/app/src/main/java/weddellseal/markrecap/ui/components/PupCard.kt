@@ -98,7 +98,7 @@ fun PupCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
+                    .padding(8.dp),
             ) {
                 Row(
                     modifier = Modifier
@@ -159,7 +159,7 @@ fun PupCard(
                 Spacer(modifier = Modifier.width(10.dp))
                 // TODO, address the option to clear a condition for an adult
                 val conditions =
-                    listOf<String>("0 - Dead", "1 - Poor", "2 - Fair", "3 - Good", "4 - Newborn")
+                    listOf("Dead - 0", "Poor - 1", "Fair - 2", "Good - 3", "Newborn - 4")
                 DropdownField(conditions) { newText ->
                     viewModel.updateCondition(
                         seal.name,
@@ -176,7 +176,7 @@ fun PupCard(
             ) {
                 // NUMBER OF TAGS
                 Text(text = "# of Tags")
-                val numTagsList = listOf<String>("0", "1", "2", "3", "4")
+                val numTagsList = listOf("NoTag", "0", "1", "2", "3", "4")
                 SingleSelectButtonGroup(
                     numTagsList,
                     seal.numTags.toString()
@@ -235,7 +235,7 @@ fun PupCard(
                 val keyboardController = LocalSoftwareKeyboardController.current
                 var isError by remember { mutableStateOf(false) }
                 var tagIDVal by remember {
-                    mutableStateOf("")
+                    mutableStateOf(seal.tagId)
                 }
                 OutlinedTextField(
                     value = tagIDVal,

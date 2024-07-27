@@ -271,9 +271,12 @@ class AddObservationLogViewModel(
 
     private fun updateTagId(seal: Seal) {
         var tagIdStr = seal.tagNumber.toString() + seal.tagAlpha
-        if (seal.numTags > 3) {
+        val number: Int? = seal.numTags.toIntOrNull()
+
+        if (number != null && number > 1) {
             tagIdStr = seal.tagNumber.toString() + seal.tagAlpha + seal.tagAlpha
         }
+
         when (seal.name) {
             "adult" -> {
                 primarySeal = primarySeal.copy(tagId = tagIdStr, isStarted = true)
@@ -346,24 +349,20 @@ class AddObservationLogViewModel(
     }
 
     fun updateNumTags(sealName: String, input: String) {
-        val number: Int? = input.toIntOrNull()
-        if (number != null) {
+        when (sealName) {
+            "adult" -> {
+                primarySeal = primarySeal.copy(numTags = input, isStarted = true)
+                updateTagId(primarySeal)
+            }
 
-            when (sealName) {
-                "adult" -> {
-                    primarySeal = primarySeal.copy(numTags = number, isStarted = true)
-                    updateTagId(primarySeal)
-                }
+            "pupOne" -> {
+                pupOne = pupOne.copy(numTags = input, isStarted = true)
+                updateTagId(pupOne)
+            }
 
-                "pupOne" -> {
-                    pupOne = pupOne.copy(numTags = number, isStarted = true)
-                    updateTagId(pupOne)
-                }
-
-                "pupTwo" -> {
-                    pupTwo = pupTwo.copy(numTags = number, isStarted = true)
-                    updateTagId(pupTwo)
-                }
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(numTags = input, isStarted = true)
+                updateTagId(pupTwo)
             }
         }
     }
@@ -547,7 +546,8 @@ class AddObservationLogViewModel(
 
                             "New" -> {
                                 tagOneIndicator = "+"
-                                if (seal.numTags > 3) { // this is the definition for two tags
+                                val number: Int? = seal.numTags.toIntOrNull()
+                                if (number != null && number > 1) { // this is the definition for two tags
                                     tagTwoIndicator = "+"
                                 }
                                 "N"

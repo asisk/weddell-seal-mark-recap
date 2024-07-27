@@ -1,5 +1,6 @@
 package weddellseal.markrecap.ui.components
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -9,6 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
 @Composable
 fun SingleSelectTagAlphaButtonGroup(
     txtOptions: List<String>,
@@ -23,6 +26,7 @@ var selectedButton by remember { mutableStateOf(valueInModel) }
                 selectedButton = option
                 onValChangeDo(option)
             },
+            shape = RoundedCornerShape(8.dp), // Slightly rounded corners
             colors = ButtonDefaults.buttonColors(
                 containerColor = when (option) {
                     "A" -> if (selectedButton == option) Color.Gray else Color.Yellow
