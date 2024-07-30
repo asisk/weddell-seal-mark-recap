@@ -47,7 +47,7 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun SealCard(
+fun CensusCard(
     viewModel: AddObservationLogViewModel,
     seal: Seal,
 ) {

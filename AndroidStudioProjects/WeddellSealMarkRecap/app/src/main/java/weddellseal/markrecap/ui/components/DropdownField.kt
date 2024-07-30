@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun DropdownField(options : List<String>, onValueChange: (String) -> Unit) {
+fun DropdownField(options : List<String>, selectedOption : String, onValueChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf("Select an option") }
+    var selectedOption by remember { mutableStateOf(selectedOption) }
 
     Column {
         Card(

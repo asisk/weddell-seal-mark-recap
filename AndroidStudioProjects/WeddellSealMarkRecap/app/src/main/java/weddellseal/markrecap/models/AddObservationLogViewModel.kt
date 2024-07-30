@@ -13,6 +13,7 @@ import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,10 @@ class AddObservationLogViewModel(
         val season: String = "",
         val yearMonthDay: String = "",
         val time: String = "",
+        val deviceID : String,
+        val observerInitials : String = "Select an option",
+        val censusNumber : String = "Select an option",
+        val obsLocationSelected: String = "Select an option",
     )
 
     var uiState by mutableStateOf(
@@ -80,8 +85,8 @@ class AddObservationLogViewModel(
             ).format(System.currentTimeMillis()),
             season = getCurrentYear().toString(),
             yearMonthDay = getCurrentDateFormatted(),
-            time = getCurrentTimeFormatted()
-
+            time = getCurrentTimeFormatted(),
+            deviceID = getDeviceName(context),
         )
     )
         private set
@@ -141,6 +146,15 @@ class AddObservationLogViewModel(
             }
         }
     }
+
+    fun updateObserverInitials(initials : String) {
+        uiState = uiState.copy(observerInitials = initials)
+    }
+
+    fun updateCensusNumber(censusNumber : String) {
+        uiState = uiState.copy(censusNumber = censusNumber)
+    }
+
 
     fun updateCondition(sealName: String, input: String) {
         var condSelected = input
@@ -571,12 +585,12 @@ class AddObservationLogViewModel(
                     val log = ObservationLogEntry(
                         // passing zero, but Room entity will autopopulate the id
                         id = 0,
-                        deviceID = "TBD",
+                        deviceID = uiState.deviceID,
                         season = uiState.season,
-                        speno = "", //TODO, where are we getting this???
+                        speno = seal.speNo.toString(),
                         date = uiState.yearMonthDay, // date format: yyyy-MM-dd
                         time = uiState.time, // time format: hh:mm:ss
-                        censusID = "TBD", //TODO need to figure out how this will be passed to the observations
+                        censusID = uiState.censusNumber,
                         latitude = uiState.latitude,  // example -77.73004, could also be 4 decimal precision
                         longitude = uiState.longitude, // example 166.7941, could also be 2 decimal precision
                         ageClass = ageClass,
@@ -593,7 +607,7 @@ class AddObservationLogViewModel(
                         relativeTagIDOne = pupOneTagID,
                         relativeTagIDTwo = pupTwoTagID,
                         sealCondition = condition,
-                        observerInitials = "TBD", //TODO, need to figure out how this gets to the observation
+                        observerInitials = uiState.observerInitials,
                         flaggedEntry = "TBD", // TODO, need to figure out when this gets triggered
                         tagEvent = eventType,
                         tissueSampled = seal.tissueSampled,
@@ -679,5 +693,9 @@ class AddObservationLogViewModel(
         )
 //        updateTagId(primarySeal) -- don't think this is necessary
         updateNotebookEntry(primarySeal)
+    }
+
+    fun getDeviceName(context: Context): String {
+        return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: "Unknown Device"
     }
 }

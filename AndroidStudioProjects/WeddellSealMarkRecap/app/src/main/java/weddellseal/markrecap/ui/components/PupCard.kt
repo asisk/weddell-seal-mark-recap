@@ -160,7 +160,7 @@ fun PupCard(
                 // TODO, address the option to clear a condition for an adult
                 val conditions =
                     listOf("Dead - 0", "Poor - 1", "Fair - 2", "Good - 3", "Newborn - 4")
-                DropdownField(conditions) { newText ->
+                DropdownField(conditions, seal.condition) { newText ->
                     viewModel.updateCondition(
                         seal.name,
                         newText

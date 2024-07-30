@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val startNavigation = Screens.HomeScreen.route
                     NavHost(navController = navController, startDestination = startNavigation) {
-                        composable(Screens.HomeScreen.route) { HomeScreen(navController) }
+                        composable(Screens.HomeScreen.route) { HomeScreen(navController, addObservationLogViewModel) }
                         composable(Screens.AddObservationLog.route) { AddObservationLogScreen(navController, addObservationLogViewModel) }
                         composable(Screens.AddObservationSummary.route) { AddObservationSummaryScreen(navController, addObservationLogViewModel) }
                         composable(Screens.RecentObservations.route) { RecentObservationsScreen(navController) }

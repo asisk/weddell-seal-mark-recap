@@ -11,6 +11,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,8 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
@@ -31,7 +30,6 @@ import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -53,6 +51,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -60,24 +60,28 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.models.HomeViewModelFactory
+import weddellseal.markrecap.ui.components.CensusDialog
 import weddellseal.markrecap.ui.components.DropdownField
-import weddellseal.markrecap.ui.components.TextFieldValidateOnCharCount
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
+    obsViewModel: AddObservationLogViewModel,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
 ) {
-    HomeScaffold(navController, viewModel)
+    HomeScaffold(navController, obsViewModel, viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
+fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationLogViewModel, viewModel: HomeViewModel) {
     val context = LocalContext.current
     val state = viewModel.uiState
+    val showCensusDialog = remember { mutableStateOf(false) }
+
 //    var isPermissionGranted by remember { mutableStateOf(false) }
 
     // Register ActivityResult to request Location permissions
@@ -153,6 +157,8 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
 //                val csvData = readCsvData(context.contentResolver, uri)
 //                // Update dropdown with dropdownValues
 //                colonyLocations = extractDropdownValues(csvData)
+            } else if (fileName == "Observer_Initials.csv") {
+                viewModel.loadObserversFile(uri)
             } else {
                 // Show an error message indicating that the selected file is not the expected file
                 showExplanationDialogForFileMatchError = true
@@ -178,185 +184,286 @@ fun HomeScaffold(navController: NavHostController, viewModel: HomeViewModel) {
                     ) {
                         Text(
                             modifier = Modifier
-                                .padding(14.dp),
+                                .padding(20.dp),
                             text = "Weddell Seal Mark Recap",
                             style = MaterialTheme.typography.titleLarge
                         )
                     }
-                }
+                },
+        actions = {
+            IconButton(onClick = { navController.navigate(Screens.RecentObservations.route) }) {
+                Icon(
+                    imageVector = Icons.Filled.Dataset,
+                    contentDescription = "Recent Observations",
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+            val contentColor = MaterialTheme.colorScheme.primary
+            IconButton(
+                onClick = {
+                        navController.navigate(Screens.AdminScreen.route)
+                },
+                enabled = true
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = "Admin",
+                    modifier = Modifier.size(48.dp), // Change the size here
+                )
+            }
+        },
             )
         },
-        bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary
-            ) {
-                BottomNavigation(
-                    modifier = Modifier.fillMaxSize(),
-                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    BottomNavigationItem(
-                        label = { Text(text = "Recent Observations") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.RecentObservations.route) },
-                        icon = { Icon(Icons.Filled.Dataset, null) }
-                    )
-                    BottomNavigationItem(
-                        label = { Text(text = "Admin") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.AdminScreen.route) },
-                        icon = { Icon(Icons.Filled.Person, null) }
-                    )
-                }
-            }
-        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .scrollable(rememberScrollState(), Orientation.Vertical)
-                .fillMaxWidth(),
+                .fillMaxSize(),
         ) {
             // Seal Pup Image
-            Row {
-                val image = painterResource(R.drawable.pup1_2)
-                Image(painter = image, contentDescription = null)
-            }
-            Card(
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 6.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ),
+            Box(
                 modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(.7f)
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxSize()
             ) {
-                // OBSERVER
-                Row(
+                Image(
+                    painter = painterResource(R.drawable.pup1_2),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    var observerInitials by remember { mutableStateOf("") }
-                    TextFieldValidateOnCharCount(
-                        charNumber = 3,
-                        fieldLabel = "Observer Initials",
-                        placeHolderTxt = "",
-                        leadIcon = null,
-                        onChangeDo = { newText ->
-                            observerInitials = newText
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            alpha = 0.5f // Adjust this value for desired transparency
                         }
-                    )
-                }
-                Row(
+                )
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
                 ) {
-                    var observationSiteSelected by remember { mutableStateOf("") }
-                    //TODO, read the locations from a CSV
-                    // Function to update dropdown values from CSV
-                    Column(modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxWidth(.3f)) {
-                        Text(text = "Location")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(30.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            containerColor = Color.LightGray,
+                            onClick = { navController.navigate(Screens.SealLookupScreen.route) },
+                            icon = { Icon(Icons.Filled.Search, "Search for SpeNo", Modifier.size(36.dp)) },
+                            text = { Text("Seal Lookup", style = MaterialTheme.typography.titleLarge) }
+                        )
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            containerColor = Color.LightGray,
+                            onClick = { navController.navigate(Screens.AddObservationLog.route) },
+                            icon = { Icon(Icons.Filled.PostAdd, "Enter a new observation", Modifier.size(36.dp)) },
+                            text = { Text(text = "Tag/Retag", style = MaterialTheme.typography.titleLarge) }
+                        )
                     }
-
-                    Column(modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxWidth(.5f)) {
-                        DropdownField(state.colonyLocations) { valueSelected ->
-                            observationSiteSelected = valueSelected
-                        }
-                    }
-
-                    // Spacer to push the IconButton to the right
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Column(modifier = Modifier.padding(4.dp)) {
-                        IconButton(
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            containerColor = Color.LightGray,
                             onClick = {
-                            // Show file picker to select CSV file
-                            pickCsvFile.launch("text/csv") // Mime type for plain text files, change as per requirement
+                                showCensusDialog.value = true
                             },
-                            modifier = Modifier.size(48.dp) // Adjust size as needed
+                            icon = { Icon(Icons.Filled.Checklist, "Census", Modifier.size(36.dp)) },
+                            text = { Text(text = "Census", style = MaterialTheme.typography.titleLarge) }
+                        )
+                    }
+                    Card(
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 6.dp
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ),
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth(.8f)
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        // OBSERVER
+//                        Row(
+//                            modifier = Modifier
+//                                .padding(6.dp),
+//                            horizontalArrangement = Arrangement.Start,
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            var observerInitials by remember { mutableStateOf("") }
+//                            TextFieldValidateOnCharCount(
+//                                charNumber = 3,
+//                                fieldLabel = "Observer Initials",
+//                                placeHolderTxt = "",
+//                                leadIcon = null,
+//                                onChangeDo = { newText ->
+//                                    observerInitials = newText
+//                                    obsViewModel.updateObserverInitials(newText)
+//                                }
+//                            )
+//                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(6.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Upload,
-                                contentDescription = "Upload CSV"
-                            )
+                            var observerSelected by remember { mutableStateOf("") }
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.5f)
+                            ) {
+                                Text(text = "Observer Initials", style = MaterialTheme.typography.titleLarge)
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.8f)
+                            ) {
+
+                                DropdownField(state.observer, obsViewModel.uiState.observerInitials) { valueSelected ->
+                                    observerSelected = valueSelected
+                                    obsViewModel.updateObserverInitials(valueSelected)
+                                }
+                            }
+
+                            // Spacer to push the IconButton to the right
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            Column(modifier = Modifier.padding(4.dp)) {
+                                IconButton(
+                                    onClick = {
+                                        // Show file picker to select CSV file
+                                        pickCsvFile.launch("text/csv") // Mime type for plain text files, change as per requirement
+                                    },
+                                    modifier = Modifier.size(48.dp) // Adjust size as needed
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Upload,
+                                        contentDescription = "Upload CSV"
+                                    )
+                                }
+                            }
+
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(6.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            var observationSiteSelected by remember { mutableStateOf("") }
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.5f)
+                            ) {
+                                Text(text = "Location", style = MaterialTheme.typography.titleLarge)
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.8f)
+                            ) {
+                                DropdownField(state.colonyLocations, obsViewModel.uiState.obsLocationSelected) { valueSelected ->
+                                    observationSiteSelected = valueSelected
+                                }
+                            }
+
+                            // Spacer to push the IconButton to the right
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            Column(modifier = Modifier.padding(4.dp)) {
+                                IconButton(
+                                    onClick = {
+                                        // Show file picker to select CSV file
+                                        pickCsvFile.launch("text/csv") // Mime type for plain text files, change as per requirement
+                                    },
+                                    modifier = Modifier.size(48.dp) // Adjust size as needed
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Upload,
+                                        contentDescription = "Upload CSV"
+                                    )
+                                }
+                            }
+                        }
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(6.dp),
+//                            horizontalArrangement = Arrangement.Start,
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
+//                            var selection = "0"
+//                            Column(
+//                                modifier = Modifier
+//                                    .padding(4.dp)
+//                                    .fillMaxWidth(.3f)
+//                            ) {
+//                                Text(text = "Census #")
+//                            }
+//                            Column(
+//                                modifier = Modifier
+//                                    .padding(4.dp)
+//                                    .fillMaxWidth(.5f)
+//                            ) {
+//                                DropdownField(censusOptions) { newText ->
+//                                    selection = newText
+//                                    obsViewModel.updateCensusNumber(newText)
+//                                }
+//                            }
+//                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(6.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            var deviceName by remember { mutableStateOf("") }
+                            deviceName = getDeviceName(context)
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.5f)
+                            ) {
+                                Text(text = "Device Name", style = MaterialTheme.typography.titleLarge)
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.8f)
+                            ) {
+                                Text(text = deviceName, style = MaterialTheme.typography.bodyLarge)
+                            }
                         }
                     }
 
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
-                    var selection = "0"
-                    Column(modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxWidth(.3f)) {
-                        Text(text = "Census #")
-                    }
-                    Column(modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxWidth(.5f)) {
-                        DropdownField(censusOptions) { newText ->
-                            selection = newText
-                        }
+                    // Show the dialog if showDialog is true
+                    if (showCensusDialog.value) {
+                        CensusDialog(
+                            obsViewModel,
+                            onDismissRequest = { showCensusDialog.value = false },
+                            onConfirmation = { showCensusDialog.value = false },
+                        )
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    var deviceName by remember { mutableStateOf("") }
-                    deviceName = getDeviceName(context)
-                    Text(text = "Device Name")
-                    Text(text = deviceName)
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(6.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    containerColor = Color.LightGray,
-                    onClick = { navController.navigate(Screens.SealLookupScreen.route) },
-                    icon = { Icon(Icons.Filled.Search, "Search for SpeNo") },
-                    text = { Text(text = "Seal Lookup") }
-                )
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    containerColor = Color.LightGray,
-                    onClick = { navController.navigate(Screens.AddObservationLog.route)},
-                    icon = { Icon(Icons.Filled.PostAdd, "Enter a new observation") },
-                    text = { Text(text = "Tag/Retag") }
-                )
-                ExtendedFloatingActionButton(
-                    modifier = Modifier.padding(16.dp),
-                    containerColor = Color.LightGray,
-                    onClick = {},// navController.navigate(Screens.SealLookupScreen.route) },
-                    icon = { Icon(Icons.Filled.Checklist, "Enter a new observation") },
-                    text = { Text(text = "Census") }
-                )
             }
         }
     }
@@ -368,39 +475,9 @@ data class LocationInfo(
     val longitude: Double
 )
 
-//private fun readCsvData(contentResolver: ContentResolver, uri: Uri): List<LocationInfo> {
-//    val locationInfoList = mutableListOf<LocationInfo>()
-//
-//    contentResolver.openInputStream(uri)?.use { stream ->
-//        InputStreamReader(stream).buffered().use { reader ->
-//            val headerRow = reader.readLine()?.split(",") ?: emptyList()
-//            val locationIndex = headerRow.indexOf("Location")
-//            val latitudeIndex = headerRow.indexOf("Adj_Lat")
-//            val longitudeIndex = headerRow.indexOf("Adj_Long")
-//
-//            reader.forEachLine { line ->
-//                val row = line.split(",")
-//                if (row.size >= 3 && locationIndex != -1 && latitudeIndex != -1 && longitudeIndex != -1) {
-//                    val location = row.getOrNull(locationIndex)
-//                    val latitude = row.getOrNull(latitudeIndex)?.toDoubleOrNull() ?: 0.0
-//                    val longitude = row.getOrNull(longitudeIndex)?.toDoubleOrNull() ?: 0.0
-//                    if (location != null) {
-//                        val locationInfo = LocationInfo(location, latitude, longitude)
-//                        locationInfoList.add(locationInfo)
-//                    }
-//                } else {
-//                    // Handle invalid row or missing columns
-//                }
-//            }
-//        }
-//    }
-//
-//    return locationInfoList
-//}
-//
-//private fun extractDropdownValues(locationInfoList: List<LocationInfo>): List<String> {
-//    return locationInfoList.map { it.location }
-//}
+data class Observer(
+    val initials : String
+)
 
 @Composable
 fun FileAccessExplanationDialog(
@@ -434,7 +511,8 @@ fun FileAccessExplanationDialog(
 }
 
 fun getDeviceName(context: Context): String {
-    return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: "Unknown Device"
+    return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
+        ?: "Unknown Device"
 }
 
 //

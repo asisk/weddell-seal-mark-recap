@@ -18,6 +18,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import weddellseal.markrecap.ObservationLogApplication
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.ui.screens.LocationInfo
+import weddellseal.markrecap.ui.screens.Observer
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -39,6 +40,7 @@ class HomeViewModel(
         val isSaving: Boolean = false,
         var uriForCSVWrite: Uri? = null,
         var colonyLocations: List<String> = emptyList(),
+        var observer: List<String> = emptyList(),
         val date: String,
     )
 
@@ -89,7 +91,7 @@ class HomeViewModel(
         }
     }
 
-    private fun readCsvData(contentResolver: ContentResolver, uri: Uri): List<LocationInfo> {
+    private fun readLocationCsvData(contentResolver: ContentResolver, uri: Uri): List<LocationInfo> {
         val locationInfoList = mutableListOf<LocationInfo>()
         val dropdownList = mutableListOf<String>()
         contentResolver.openInputStream(uri)?.use { stream ->
@@ -121,15 +123,55 @@ class HomeViewModel(
         return locationInfoList
     }
 
-    private fun extractDropdownValues(locationInfoList: List<LocationInfo>): List<String> {
+    private fun extractLocationDropdownValues(locationInfoList: List<LocationInfo>): List<String> {
         return locationInfoList.map { it.location }
     }
 
+    private fun extractObserverDropdownValues(observerList: List<Observer>): List<String> {
+        return observerList.map { it.initials }
+    }
+
     fun loadStudyAreaFile(uri: Uri) {
-        val csvData = readCsvData(context.contentResolver, uri)
+        val csvData = readLocationCsvData(context.contentResolver, uri)
         // Update dropdown with dropdownValues
-        val studyAreas = extractDropdownValues(csvData)
+        val studyAreas = extractLocationDropdownValues(csvData)
         //TODO, write to database???
+    }
+
+    fun loadObserversFile(uri: Uri) {
+        val csvData = readObserverCsvData(context.contentResolver, uri)
+        // Update dropdown with dropdownValues
+        val observers = extractObserverDropdownValues(csvData)
+        //TODO, write to database???
+    }
+
+
+    private fun readObserverCsvData(contentResolver: ContentResolver, uri: Uri): List<Observer> {
+        val observerList = mutableListOf<Observer>()
+        val dropdownList = mutableListOf<String>()
+        contentResolver.openInputStream(uri)?.use { stream ->
+            InputStreamReader(stream).buffered().use { reader ->
+                val headerRow = reader.readLine()?.split(",") ?: emptyList()
+                val initialsIndex = headerRow.indexOf("Observer")
+
+                reader.forEachLine { line ->
+                    val row = line.split(",")
+                    if (row.isNotEmpty() && initialsIndex != -1) {
+                        val observer = row.getOrNull(initialsIndex)
+                        dropdownList.add(observer.toString())
+                        if (observer != null) {
+                            val observerInitials = Observer(observer)
+                            observerList.add(observerInitials)
+                        }
+                    } else {
+                        // Handle invalid row or missing columns
+                    }
+                }
+                uiState = uiState.copy(observer = dropdownList)
+            }
+        }
+
+        return observerList
     }
 
 
