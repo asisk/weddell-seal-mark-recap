@@ -31,6 +31,8 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Seal
+import weddellseal.markrecap.data.SupportingDataRepository
+import weddellseal.markrecap.data.WedCheckSeal
 import weddellseal.markrecap.ui.utils.notebookEntryValueSeal
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -40,7 +42,8 @@ import java.util.Locale
 
 class AddObservationLogViewModel(
     application: Application,
-    private val observationRepo: ObservationRepository
+    private val observationRepo: ObservationRepository,
+    private val supportingDataRepository: SupportingDataRepository
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
@@ -68,11 +71,23 @@ class AddObservationLogViewModel(
         val season: String = "",
         val yearMonthDay: String = "",
         val time: String = "",
-        val deviceID : String,
-        val observerInitials : String = "Select an option",
-        val censusNumber : String = "Select an option",
-        val obsLocationSelected: String = "Select an option",
+        val deviceID: String,
+        val observerInitials: String = "Select an option",
+        val censusNumber: String = "Select an option",
+        val colonyLocation: String = "Select an option",
     )
+
+    fun updateColonySelection(observationSiteSelected: String) {
+        uiState = uiState.copy(colonyLocation = observationSiteSelected)
+    }
+
+    fun updateObserverInitials(initials: String) {
+        uiState = uiState.copy(observerInitials = initials)
+    }
+
+    fun updateCensusNumber(censusNumber: String) {
+        uiState = uiState.copy(censusNumber = censusNumber)
+    }
 
     var uiState by mutableStateOf(
         UiState(
@@ -146,15 +161,6 @@ class AddObservationLogViewModel(
             }
         }
     }
-
-    fun updateObserverInitials(initials : String) {
-        uiState = uiState.copy(observerInitials = initials)
-    }
-
-    fun updateCensusNumber(censusNumber : String) {
-        uiState = uiState.copy(censusNumber = censusNumber)
-    }
-
 
     fun updateCondition(sealName: String, input: String) {
         var condSelected = input
@@ -647,10 +653,6 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun dismissError() {
-        TODO("Not yet implemented")
-    }
-
     private fun validateSeal(seal: Seal): Boolean {
         if (seal.isStarted) {
             if (seal.age != "" && seal.sex != "" && seal.tagId != "" && seal.tagEventType != "" && seal.tagNumber > 0) {
@@ -660,7 +662,7 @@ class AddObservationLogViewModel(
         return false
     }
 
-    fun populateSeal(wedCheckSeal: WedCheckViewModel.WedCheckSeal) {
+    fun populateSeal(wedCheckSeal: WedCheckSeal) {
         primarySeal = primarySeal.copy(
             isStarted = true,  // should this be true yet?
 
@@ -695,7 +697,9 @@ class AddObservationLogViewModel(
         updateNotebookEntry(primarySeal)
     }
 
-    fun getDeviceName(context: Context): String {
-        return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: "Unknown Device"
+    private fun getDeviceName(context: Context): String {
+        return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
+            ?: "Unknown Device"
     }
+
 }

@@ -13,10 +13,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class], version = 5, exportSchema = false)
+@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class, SealColony::class, Observers::class], version = 6, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao
     abstract fun wedCheckDao(): WedCheckDao
+    abstract fun sealColoniesDao() : SealColoniesDao
+    abstract fun observersDao() : ObserversDao
 
     //companion is visible to other classes
     companion object {

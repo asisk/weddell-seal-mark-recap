@@ -3,29 +3,28 @@ package weddellseal.markrecap.ui.screens
 import android.Manifest
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,31 +37,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(
     navController: NavHostController,
-    viewModel: WedCheckViewModel,
+    wedCheckViewModel: WedCheckViewModel,
+    homeViewModel: HomeViewModel
 ) {
-    AdminScaffold(navController, viewModel)
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
-@Composable
-fun AdminScaffold(navController: NavHostController, viewModel: WedCheckViewModel) {
     val context = LocalContext.current
-    val state = viewModel.uiState
 
     // Register ActivityResult to request read file permissions
     val requestFilePermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                viewModel.onPermissionChange(Manifest.permission.READ_EXTERNAL_STORAGE, isGranted)
+                wedCheckViewModel.onPermissionChange(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    isGranted
+                )
 //                viewModel.fetchCurrentLocation()
             } else {
                 //coroutineScope.launch {
@@ -103,7 +106,7 @@ fun AdminScaffold(navController: NavHostController, viewModel: WedCheckViewModel
     }
 
     //TODO, how to handle partial versus whole update (WedCheck.csv versus WedCheckFull.csv)
-    val getWedCheckCSV = rememberLauncherForActivityResult(
+    val getCSV = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         // Handle the selected locations file here
@@ -127,8 +130,17 @@ fun AdminScaffold(navController: NavHostController, viewModel: WedCheckViewModel
 //                    return fileSize <= MAX_FILE_SIZE_BYTES
 //                }
 
-                viewModel.loadWedCheck(uri)
+                wedCheckViewModel.loadWedCheck(uri)
+                Toast.makeText(context, "WedCheck file loaded successfully!", Toast.LENGTH_SHORT).show()
                 // Display a success message & navigate the user back to the Home Screen
+
+            } else if (fileName == "Colony_Locations.csv") {
+                homeViewModel.loadSealColoniesFile(uri)
+                Toast.makeText(context, "Seal Colony Locations file loaded successfully!", Toast.LENGTH_SHORT).show()
+
+            } else if (fileName == "Observer_Initials.csv") {
+                homeViewModel.loadObserversFile(uri)
+                Toast.makeText(context, "Observer Initials file loaded successfully!", Toast.LENGTH_SHORT).show()
 
             } else {
                 // Show an error message indicating that the selected file is not the expected file
@@ -139,10 +151,10 @@ fun AdminScaffold(navController: NavHostController, viewModel: WedCheckViewModel
     }
 
     Scaffold(
-        // region UI - Top Bar
+        // region UI - Top Bar & Action Buttons
         topBar = {
             TopAppBar(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier.fillMaxWidth(),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
@@ -155,100 +167,137 @@ fun AdminScaffold(navController: NavHostController, viewModel: WedCheckViewModel
                     ) {
                         Text(
                             modifier = Modifier
-                                .padding(14.dp),
-                            text = "Weddell Seal Lookup",
+                                .padding(20.dp),
+                            text = "Administration",
                             style = MaterialTheme.typography.titleLarge
                         )
                     }
-                }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Home,
+                            contentDescription = "Home",
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                },
             )
         },
-        bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary
-            ) {
-                BottomNavigation(
-                    modifier = Modifier.fillMaxSize(),
-                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    BottomNavigationItem(
-                        label = { Text(text = "Home") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.HomeScreen.route) },
-                        icon = { Icon(Icons.Filled.Home, "Home") }
-                    )
-                    BottomNavigationItem(
-                        label = { Text(text = "Upload WedCheck") },
-                        selected = false,
-                        onClick = {
-                            // TODO, consider throwing up a dialog box asking for confirmation that the user is an admin
-                            // Show file picker to select CSV file
-                            getWedCheckCSV.launch("text/csv") // Mime type for plain text files, change as per requirement
-                        },
-                        icon = { Icon(Icons.Default.Upload, "Upload WedCheck" )}
-                    )
-                }
-            }
-        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(top = innerPadding.calculateTopPadding() + 60.dp) // Adjusted padding for top bar height
+                .padding(innerPadding)
                 .scrollable(rememberScrollState(), Orientation.Vertical)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize(),
         ) {
-            Card(
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 6.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ),
+            Box(
                 modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(.7f)
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxSize()
             ) {
-                // LOAD WEDCHECK
-                // TODO, guide the user through uploading a wedcheck file
-
-//                // SEAL LOOKUP
-//                Row(
-//                    modifier = Modifier
-//                        .padding(6.dp),
-//                    horizontalArrangement = Arrangement.Start,
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    var sealSpeno by remember { mutableStateOf("") }
-//                    //TODO, add the ability to hide the field and display a spinner if searching
-//                    // Call SealSearchField and pass the lambda to update sealSpeno
-//                    SealSearchField { value ->
-//                        sealSpeno = value
-//                    }
-//                    IconButton(
-//                        onClick = {
-//                            // TODO, launch search
-//                            if (sealSpeno != null) {
-//                                try {
-//                                    val spenoInt = sealSpeno.toInt()
-//                                    viewModel.findSeal(spenoInt)
-//                                } catch (e: NumberFormatException) {
-//                                    //TODO, throw up an error window if the speno is not an int?
-//                                    println("String cannot be parsed as an integer")
-//                                }
-//                            }
-//                        },
-//                        modifier = Modifier.size(48.dp)
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.Search,
-//                            contentDescription = "Search"
-//                        )
-//                    }
-//                }
+                // Seal Pup Image
+                Image(
+                    painter = painterResource(R.drawable.pup1_2),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            alpha = 0.5f // Adjust this value for desired transparency
+                        }
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            containerColor = Color.LightGray,
+                            onClick = {
+                                getCSV.launch("text/csv")
+                            },
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Upload,
+                                    "Upload WedCheck File",
+                                    Modifier.size(36.dp)
+                                )
+                            },
+                            text = {
+                                Text(
+                                    "Upload WedCheck File",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            containerColor = Color.LightGray,
+                            onClick = { getCSV.launch("text/csv") },
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Upload,
+                                    "Upload Observer Initials",
+                                    Modifier.size(36.dp)
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = "Upload Observer Initials",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier.padding(16.dp),
+                            containerColor = Color.LightGray,
+                            onClick = { getCSV.launch("text/csv") },
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Upload,
+                                    "Upload Seal Colony Locations",
+                                    Modifier.size(36.dp)
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = "Upload Seal Colony Locations",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+fun FileLoadedToast() {
+    val context = LocalContext.current
+    Toast.makeText(context, "File Loaded", Toast.LENGTH_LONG).show()
 }

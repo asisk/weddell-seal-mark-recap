@@ -2,8 +2,6 @@ package weddellseal.markrecap.ui.screens
 
 import android.Manifest
 import android.content.Context
-import android.net.Uri
-import android.provider.OpenableColumns
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,7 +25,6 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -56,13 +52,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.HomeViewModel
-import weddellseal.markrecap.models.HomeViewModelFactory
 import weddellseal.markrecap.ui.components.CensusDialog
 import weddellseal.markrecap.ui.components.DropdownField
 
@@ -70,19 +64,21 @@ import weddellseal.markrecap.ui.components.DropdownField
 fun HomeScreen(
     navController: NavHostController,
     obsViewModel: AddObservationLogViewModel,
-    viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
+    viewModel: HomeViewModel
 ) {
     HomeScaffold(navController, obsViewModel, viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationLogViewModel, viewModel: HomeViewModel) {
+fun HomeScaffold(
+    navController: NavHostController,
+    obsViewModel: AddObservationLogViewModel,
+    viewModel: HomeViewModel
+) {
     val context = LocalContext.current
     val state = viewModel.uiState
     val showCensusDialog = remember { mutableStateOf(false) }
-
-//    var isPermissionGranted by remember { mutableStateOf(false) }
 
     // Register ActivityResult to request Location permissions
     val requestFilePermissions =
@@ -128,45 +124,6 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
         )
     }
 
-    val pickCsvFile = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        // Handle the selected locations file here
-        if (uri != null) {
-            var fileName = ""
-
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (displayNameIndex != -1 && cursor.moveToFirst()) {
-                    fileName = cursor.getString(displayNameIndex)
-                }
-            }
-
-            if (fileName == "Colony_Locations.csv") {
-
-                //TODO, add validation to ensure that the file is right-sized
-//                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
-//
-//                private fun isFileSizeWithinLimit(file: File): Boolean {
-//                    val fileSize = file.length()
-//                    return fileSize <= MAX_FILE_SIZE_BYTES
-//                }
-
-                viewModel.loadStudyAreaFile(uri)
-
-//                val csvData = readCsvData(context.contentResolver, uri)
-//                // Update dropdown with dropdownValues
-//                colonyLocations = extractDropdownValues(csvData)
-            } else if (fileName == "Observer_Initials.csv") {
-                viewModel.loadObserversFile(uri)
-            } else {
-                // Show an error message indicating that the selected file is not the expected file
-                showExplanationDialogForFileMatchError = true
-            }
-
-        }
-    }
-
     Scaffold(
         // region UI - Top Bar & Action Button
         topBar = {
@@ -190,28 +147,28 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                         )
                     }
                 },
-        actions = {
-            IconButton(onClick = { navController.navigate(Screens.RecentObservations.route) }) {
-                Icon(
-                    imageVector = Icons.Filled.Dataset,
-                    contentDescription = "Recent Observations",
-                    modifier = Modifier.size(48.dp)
-                )
-            }
-            val contentColor = MaterialTheme.colorScheme.primary
-            IconButton(
-                onClick = {
-                        navController.navigate(Screens.AdminScreen.route)
+                actions = {
+                    IconButton(onClick = { navController.navigate(Screens.RecentObservations.route) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Dataset,
+                            contentDescription = "Recent Observations",
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                    val contentColor = MaterialTheme.colorScheme.primary
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screens.AdminScreen.route)
+                        },
+                        enabled = true
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Admin",
+                            modifier = Modifier.size(48.dp), // Change the size here
+                        )
+                    }
                 },
-                enabled = true
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = "Admin",
-                    modifier = Modifier.size(48.dp), // Change the size here
-                )
-            }
-        },
             )
         },
     ) { innerPadding ->
@@ -253,15 +210,37 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                             modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
                             onClick = { navController.navigate(Screens.SealLookupScreen.route) },
-                            icon = { Icon(Icons.Filled.Search, "Search for SpeNo", Modifier.size(36.dp)) },
-                            text = { Text("Seal Lookup", style = MaterialTheme.typography.titleLarge) }
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Search,
+                                    "Search for SpeNo",
+                                    Modifier.size(36.dp)
+                                )
+                            },
+                            text = {
+                                Text(
+                                    "Seal Lookup",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
                         )
                         ExtendedFloatingActionButton(
                             modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
                             onClick = { navController.navigate(Screens.AddObservationLog.route) },
-                            icon = { Icon(Icons.Filled.PostAdd, "Enter a new observation", Modifier.size(36.dp)) },
-                            text = { Text(text = "Tag/Retag", style = MaterialTheme.typography.titleLarge) }
+                            icon = {
+                                Icon(
+                                    Icons.Filled.PostAdd,
+                                    "Enter a new observation",
+                                    Modifier.size(36.dp)
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = "Tag/Retag",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
                         )
                     }
                     Row(
@@ -277,7 +256,12 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                                 showCensusDialog.value = true
                             },
                             icon = { Icon(Icons.Filled.Checklist, "Census", Modifier.size(36.dp)) },
-                            text = { Text(text = "Census", style = MaterialTheme.typography.titleLarge) }
+                            text = {
+                                Text(
+                                    text = "Census",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
                         )
                     }
                     Card(
@@ -292,25 +276,6 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                             .fillMaxWidth(.8f)
                             .align(Alignment.CenterHorizontally)
                     ) {
-                        // OBSERVER
-//                        Row(
-//                            modifier = Modifier
-//                                .padding(6.dp),
-//                            horizontalArrangement = Arrangement.Start,
-//                            verticalAlignment = Alignment.CenterVertically
-//                        ) {
-//                            var observerInitials by remember { mutableStateOf("") }
-//                            TextFieldValidateOnCharCount(
-//                                charNumber = 3,
-//                                fieldLabel = "Observer Initials",
-//                                placeHolderTxt = "",
-//                                leadIcon = null,
-//                                onChangeDo = { newText ->
-//                                    observerInitials = newText
-//                                    obsViewModel.updateObserverInitials(newText)
-//                                }
-//                            )
-//                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -324,7 +289,10 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                                     .padding(4.dp)
                                     .fillMaxWidth(.5f)
                             ) {
-                                Text(text = "Observer Initials", style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    text = "Observer Initials",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
                             }
 
                             Column(
@@ -333,30 +301,14 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                                     .fillMaxWidth(.8f)
                             ) {
 
-                                DropdownField(state.observer, obsViewModel.uiState.observerInitials) { valueSelected ->
+                                DropdownField(
+                                    state.observerInitials,
+                                    obsViewModel.uiState.observerInitials
+                                ) { valueSelected ->
                                     observerSelected = valueSelected
                                     obsViewModel.updateObserverInitials(valueSelected)
                                 }
                             }
-
-                            // Spacer to push the IconButton to the right
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            Column(modifier = Modifier.padding(4.dp)) {
-                                IconButton(
-                                    onClick = {
-                                        // Show file picker to select CSV file
-                                        pickCsvFile.launch("text/csv") // Mime type for plain text files, change as per requirement
-                                    },
-                                    modifier = Modifier.size(48.dp) // Adjust size as needed
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Upload,
-                                        contentDescription = "Upload CSV"
-                                    )
-                                }
-                            }
-
                         }
                         Row(
                             modifier = Modifier
@@ -379,28 +331,32 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-                                DropdownField(state.colonyLocations, obsViewModel.uiState.obsLocationSelected) { valueSelected ->
+                                DropdownField(
+                                    state.colonyLocations,
+                                    obsViewModel.uiState.colonyLocation
+                                ) { valueSelected ->
                                     observationSiteSelected = valueSelected
+                                    obsViewModel.updateColonySelection(observationSiteSelected)
                                 }
                             }
 
-                            // Spacer to push the IconButton to the right
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            Column(modifier = Modifier.padding(4.dp)) {
-                                IconButton(
-                                    onClick = {
-                                        // Show file picker to select CSV file
-                                        pickCsvFile.launch("text/csv") // Mime type for plain text files, change as per requirement
-                                    },
-                                    modifier = Modifier.size(48.dp) // Adjust size as needed
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Upload,
-                                        contentDescription = "Upload CSV"
-                                    )
-                                }
-                            }
+//                            // Spacer to push the IconButton to the right
+//                            Spacer(modifier = Modifier.weight(1f))
+//
+//                            Column(modifier = Modifier.padding(4.dp)) {
+//                                IconButton(
+//                                    onClick = {
+//                                        // Show file picker to select CSV file
+//                                        pickCsvFile.launch("text/csv") // Mime type for plain text files, change as per requirement
+//                                    },
+//                                    modifier = Modifier.size(48.dp) // Adjust size as needed
+//                                ) {
+//                                    Icon(
+//                                        imageVector = Icons.Default.Upload,
+//                                        contentDescription = "Upload CSV"
+//                                    )
+//                                }
+//                            }
                         }
 //                        Row(
 //                            modifier = Modifier
@@ -443,7 +399,10 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
                                     .padding(4.dp)
                                     .fillMaxWidth(.5f)
                             ) {
-                                Text(text = "Device Name", style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    text = "Device Name",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
                             }
                             Column(
                                 modifier = Modifier
@@ -468,16 +427,6 @@ fun HomeScaffold(navController: NavHostController, obsViewModel: AddObservationL
         }
     }
 }
-
-data class LocationInfo(
-    val location: String,
-    val latitude: Double,
-    val longitude: Double
-)
-
-data class Observer(
-    val initials : String
-)
 
 @Composable
 fun FileAccessExplanationDialog(

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.data.WedCheckRecord
 import weddellseal.markrecap.data.WedCheckRepository
+import weddellseal.markrecap.data.WedCheckSeal
 import weddellseal.markrecap.data.toSeal
 import java.io.IOException
 import java.io.InputStreamReader
@@ -54,31 +55,6 @@ class WedCheckViewModel(
         val sealRecordDB: WedCheckRecord? = null,
         val date: String, //TODO, think about the proper date format, should it be UTC?
         val isError: Boolean = false,
-    )
-
-    data class WedCheckSeal(
-        val age: String = "",
-        val ageYears: String = "",
-        val comment: String = "",
-        val condition: String = "",
-        var found: Boolean = false,
-        val isWedCheckRecord: Boolean = false,
-        val lastSeenSeason: Int = 0,
-        val massPups: String = "",
-        val name: String = "",
-        val numRelatives: Int = 0,
-        val numTags: String = "",
-        val photoYears: String = "",
-        val previousPups: String = "",
-        val pupPeed: Boolean = false,
-        val sex: String = "",
-        val speNo: Int = 0,
-        val swimPups: String = "",
-        val tagAlpha: String = "",
-        val tagEventType: String = "",
-        val tagId: String = "",
-        val tagNumber: Int = 0,
-        val tissueSampled: String = ""
     )
 
     fun hasPermission(permission: String): Boolean {
@@ -131,7 +107,7 @@ class WedCheckViewModel(
         viewModelScope.launch {
             // Read CSV data on IO dispatcher
             val csvData = withContext(Dispatchers.IO) {
-                readCsvData(context.contentResolver, uri)
+                readWedCheckData(context.contentResolver, uri)
             }
 
             // Insert CSV data into the database
@@ -139,7 +115,7 @@ class WedCheckViewModel(
         }
     }
 
-    private fun readCsvData(contentResolver: ContentResolver, uri: Uri): List<WedCheckRecord> {
+    private fun readWedCheckData(contentResolver: ContentResolver, uri: Uri): List<WedCheckRecord> {
         val csvData: MutableList<WedCheckRecord> = mutableListOf()
         contentResolver.openInputStream(uri)?.use { stream ->
             InputStreamReader(stream).buffered().use { reader ->

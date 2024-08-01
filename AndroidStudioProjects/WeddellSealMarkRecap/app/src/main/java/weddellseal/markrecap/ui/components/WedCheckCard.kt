@@ -8,11 +8,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.data.WedCheckSeal
 
 @Composable
 fun WedCheckCard(
-    seal: WedCheckViewModel.WedCheckSeal
+    seal: WedCheckSeal
 ) {
     val scrollState = rememberScrollState()
 

@@ -52,14 +52,14 @@ fun SummaryCard(
 //                Text(text = pupTwo.notebookDataString, style = MaterialTheme.typography.titleLarge)
             }
 
-            SummaryListItem("Location", "TBD")
+            SummaryListItem("Location", viewModel.uiState.colonyLocation)
 
             // GPS DISPLAY
             if (viewModel.uiState.latLong.isNotEmpty()) {
                 SummaryListItem("Device GPS", viewModel.uiState.latLong)
             }
 
-            SummaryListItem("Observers", "TBD")
+            SummaryListItem("Observers", viewModel.uiState.observerInitials)
 
         }
     }

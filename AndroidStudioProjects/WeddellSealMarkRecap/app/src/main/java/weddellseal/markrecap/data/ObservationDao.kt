@@ -20,7 +20,7 @@ interface ObservationDao {
     @Query("SELECT * FROM observationLogs")
     fun getObservationsForCSVWrite(): List<ObservationLogEntry?>
 
-    @Query("select * from observationLogs where id = :obsId")
+    @Query("SELECT * FROM observationLogs WHERE id = :obsId")
     fun loadObsById(obsId: Int): LiveData<ObservationLogEntry?>?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE) //the suspend keyword means that coroutines are supported

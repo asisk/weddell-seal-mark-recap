@@ -7,7 +7,6 @@ package weddellseal.markrecap.data
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import weddellseal.markrecap.models.WedCheckViewModel
 
 @Entity(tableName = "wedCheck")
 data class WedCheckRecord(
@@ -35,7 +34,7 @@ data class TagProcessingResult(
 )
 
 // Extension function to map WedCheckRecord to Seal
-fun WedCheckRecord.toSeal(): WedCheckViewModel.WedCheckSeal {
+fun WedCheckRecord.toSeal(): WedCheckSeal {
     var name = ""
     var ageString = ""
     if (ageClass == "A") {
@@ -76,7 +75,7 @@ fun WedCheckRecord.toSeal(): WedCheckViewModel.WedCheckSeal {
     tagAlpha = processedTags.tagAlpha
     tagNumber = processedTags.tagNumber
 
-    return WedCheckViewModel.WedCheckSeal(
+    return WedCheckSeal(
         age = ageString,
         ageYears = ageNumeric,
         comment = comments,
