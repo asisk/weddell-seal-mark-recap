@@ -82,7 +82,8 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.AddObservationLog.route) {
                             AddObservationLogScreen(
                                 navController,
-                                addObservationLogViewModel
+                                addObservationLogViewModel,
+                                wedCheckViewModel
                             )
                         }
                         composable(Screens.AddObservationSummary.route) {

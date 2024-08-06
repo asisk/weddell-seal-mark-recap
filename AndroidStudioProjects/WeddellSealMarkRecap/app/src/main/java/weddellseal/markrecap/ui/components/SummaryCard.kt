@@ -52,6 +52,8 @@ fun SummaryCard(
 //                Text(text = pupTwo.notebookDataString, style = MaterialTheme.typography.titleLarge)
             }
 
+            SummaryListItem("SpeNo", adult.speNo.toString())
+
             SummaryListItem("Location", viewModel.uiState.colonyLocation)
 
             // GPS DISPLAY

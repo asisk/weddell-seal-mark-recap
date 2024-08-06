@@ -16,6 +16,9 @@ interface WedCheckDao {
     @Query("SELECT * FROM wedCheck WHERE tagNumberOne = :lookupSealTagID OR tagNumberTwo = :lookupSealTagID")
     fun lookupSealByTagID(lookupSealTagID: String): WedCheckRecord
 
+    @Query("SELECT speno FROM wedCheck WHERE tagNumberOne = :lookupSealTagID OR tagNumberTwo = :lookupSealTagID")
+    fun lookupSpeNoByTagID(lookupSealTagID: String): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(data: List<WedCheckRecord>)
 

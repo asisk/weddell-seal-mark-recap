@@ -76,6 +76,25 @@ class WedCheckViewModel(
         }
     }
 
+    fun findSealSpeNo(sealTagID: String): Int {
+        uiState = uiState.copy(isSearching = true)
+        // launch the search for a seal on a separate coroutine
+        var speNo: Int = 0
+        viewModelScope.launch {
+            // Switch to the IO dispatcher for database operation
+            val returnVal = withContext(Dispatchers.IO) {
+                wedCheckRepo.findSealSpeNo(sealTagID)
+            }
+
+            if (returnVal != 0) {
+                speNo = returnVal
+            }
+        }
+        uiState = uiState.copy(isSearching = false)
+
+        return speNo
+    }
+
     fun findSeal(sealTagID: String) {
         uiState = uiState.copy(isSearching = true)
 
@@ -92,13 +111,23 @@ class WedCheckViewModel(
                 wedCheckSeal = seal.toSeal()
             } else {
                 uiState =
-                    uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true, isError = true)
+                    uiState.copy(
+                        sealRecordDB = null,
+                        isSearching = false,
+                        sealNotFound = true,
+                        isError = true
+                    )
             }
         }
     }
 
     fun resetState() {
-        uiState = uiState.copy(sealRecordDB = null, isSearching = false, sealNotFound = true, isError = false)
+        uiState = uiState.copy(
+            sealRecordDB = null,
+            isSearching = false,
+            sealNotFound = true,
+            isError = false
+        )
         wedCheckSeal = WedCheckSeal()
     }
 
@@ -115,7 +144,10 @@ class WedCheckViewModel(
         }
     }
 
-    private fun readWedCheckData(contentResolver: ContentResolver, uri: Uri): List<WedCheckRecord> {
+    private fun readWedCheckData(
+        contentResolver: ContentResolver,
+        uri: Uri
+    ): List<WedCheckRecord> {
         val csvData: MutableList<WedCheckRecord> = mutableListOf()
         contentResolver.openInputStream(uri)?.use { stream ->
             InputStreamReader(stream).buffered().use { reader ->

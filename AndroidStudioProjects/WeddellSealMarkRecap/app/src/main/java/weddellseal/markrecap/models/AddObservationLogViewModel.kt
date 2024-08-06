@@ -403,6 +403,24 @@ class AddObservationLogViewModel(
         }
     }
 
+
+    fun updateSpeNo(sealName: String, speNo: Int) {
+        when (sealName) {
+            "adult" -> {
+                primarySeal = primarySeal.copy(speNo = speNo, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(speNo = speNo, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(speNo = speNo, isStarted = true)
+            }
+        }
+    }
+
+
     fun updateNotebookEntry(seal: Seal) {
         val notebookEntry = notebookEntryValueSeal(seal)
 
@@ -701,5 +719,4 @@ class AddObservationLogViewModel(
         return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
             ?: "Unknown Device"
     }
-
 }

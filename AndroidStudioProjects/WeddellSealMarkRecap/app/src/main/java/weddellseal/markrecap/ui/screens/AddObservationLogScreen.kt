@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.components.PupCard
 import weddellseal.markrecap.ui.components.SealCard
 
@@ -61,6 +62,7 @@ import weddellseal.markrecap.ui.components.SealCard
 fun AddObservationLogScreen(
     navController: NavHostController,
     viewModel: AddObservationLogViewModel,
+    wedCheckViewModel: WedCheckViewModel
 ) {
     val state = viewModel.uiState
 //    val context = LocalContext.current
@@ -112,8 +114,13 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
-    val saveAction = {
+    fun saveAction() {
         if (adultSeal.isStarted) {
+            if (adultSeal.speNo == 0 ) {
+                val speNo = wedCheckViewModel.findSealSpeNo(adultSeal.tagId)
+                viewModel.updateSpeNo(adultSeal.name, speNo)
+            }
+
             viewModel.updateNotebookEntry(adultSeal)
             viewModel.updateNotebookEntry(pupOne)
             viewModel.updateNotebookEntry(pupTwo)
@@ -156,8 +163,8 @@ fun AddObservationLogScreen(
                         )
                     IconButton(
                         onClick = {
+                            saveAction()
                             if (adultSeal.isStarted) {
-                                saveAction
                                 navController.navigate(Screens.AddObservationSummary.route)
                             }
                         },

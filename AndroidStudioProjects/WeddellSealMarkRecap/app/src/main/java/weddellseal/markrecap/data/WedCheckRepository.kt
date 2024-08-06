@@ -8,6 +8,10 @@ class WedCheckRepository(private val wedCheckDao: WedCheckDao) {
         return wedCheckDao.lookupSealByTagID(sealTagID)
     }
 
+    fun findSealSpeNo(sealTagID: String): Int {
+        return wedCheckDao.lookupSpeNoByTagID(sealTagID) ?: 0
+    }
+
     suspend fun insertCsvData(csvData: List<WedCheckRecord>) {
         withContext(Dispatchers.IO) {
             wedCheckDao.insertAll(csvData)
