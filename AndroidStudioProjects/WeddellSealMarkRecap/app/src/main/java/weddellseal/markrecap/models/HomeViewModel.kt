@@ -20,6 +20,7 @@ import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Observers
 import weddellseal.markrecap.data.SealColony
 import weddellseal.markrecap.data.SupportingDataRepository
+import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -44,13 +45,15 @@ class HomeViewModel(
 
     private val context: Context
         get() = getApplication()
-    var uiState by mutableStateOf(UiState(
-        hasFileAccess = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE),
-        date = SimpleDateFormat(
-            "dd.MM.yyyy HH:mm:ss aaa z",
-            Locale.US
-        ).format(System.currentTimeMillis()),
-    ))
+    var uiState by mutableStateOf(
+        UiState(
+            hasFileAccess = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE),
+            date = SimpleDateFormat(
+                "dd.MM.yyyy HH:mm:ss aaa z",
+                Locale.US
+            ).format(System.currentTimeMillis()),
+        )
+    )
         private set
 
     init {
@@ -59,8 +62,10 @@ class HomeViewModel(
 
     private fun loadData() {
         viewModelScope.launch {
-            val colonyLocations = withContext(Dispatchers.IO) { supportingDataRepository.getLocations() }
-            val observerInitials = withContext(Dispatchers.IO) { supportingDataRepository.getObserverInitials() }
+            val colonyLocations =
+                withContext(Dispatchers.IO) { supportingDataRepository.getLocations() }
+            val observerInitials =
+                withContext(Dispatchers.IO) { supportingDataRepository.getObserverInitials() }
             uiState = uiState.copy(
                 colonyLocations = colonyLocations,
                 observerInitials = observerInitials
@@ -111,53 +116,80 @@ class HomeViewModel(
     ): List<SealColony> {
         val sealColonies: MutableList<SealColony> = mutableListOf()
         val dropdownList = mutableListOf<String>()
-        contentResolver.openInputStream(uri)?.use { stream ->
-            InputStreamReader(stream).buffered().use { reader ->
-                val headerRow = reader.readLine()?.split(",") ?: emptyList()
-                val inOut = headerRow.indexOf("InOut")
-                val locationIndex = headerRow.indexOf("Location")
-                val nLimit = headerRow.indexOf("nLimit")
-                val sLimit = headerRow.indexOf("sLimit")
-                val wLimit = headerRow.indexOf("wLimit")
-                val eLimit = headerRow.indexOf("eLimit")
-                val adjLat = headerRow.indexOf("Adj_Lat")
-                val adjLong = headerRow.indexOf("Adj_Long")
+        try {
+            contentResolver.openInputStream(uri)?.use { stream ->
+                InputStreamReader(stream).buffered().use { reader ->
+                    val headerRow = reader.readLine()?.split(",") ?: emptyList()
+                    val inOutIndex = headerRow.indexOf("InOut")
+                    val locationIndex = headerRow.indexOf("Location")
+                    val nLimitIndex = headerRow.indexOf("nLimit")
+                    val sLimitIndex = headerRow.indexOf("sLimit")
+                    val wLimitIndex = headerRow.indexOf("wLimit")
+                    val eLimitIndex = headerRow.indexOf("eLimit")
+                    val adjLatIndex = headerRow.indexOf("Adj_Lat")
+                    val adjLongIndex = headerRow.indexOf("Adj_Long")
 
-                reader.forEachLine { line ->
-                    val row = line.split(",")
-                    if (row.size >= 3 && locationIndex != -1 && adjLat != -1 && adjLong != -1) {
-                        val inOut = row.getOrNull(locationIndex) ?: ""
+                    if (listOf(
+                            inOutIndex,
+                            locationIndex,
+                            nLimitIndex,
+                            sLimitIndex,
+                            wLimitIndex,
+                            eLimitIndex,
+                            adjLatIndex,
+                            adjLongIndex
+                        ).all { it != -1 }
+                    ) {
+                        reader.forEachLine { line ->
+                            val row = line.split(",")
+                            val inOut = row.getOrNull(inOutIndex) ?: ""
 
-                        val location = row.getOrNull(locationIndex) ?: ""
-                        dropdownList.add(location)
+                            val location = row.getOrNull(locationIndex) ?: ""
+                            dropdownList.add(location)
 
-                        val nLimit = row.getOrNull(nLimit)?.toDoubleOrNull() ?: 0.0
-                        val sLimit = row.getOrNull(sLimit)?.toDoubleOrNull() ?: 0.0
-                        val wLimit = row.getOrNull(wLimit)?.toDoubleOrNull() ?: 0.0
-                        val eLimit = row.getOrNull(eLimit)?.toDoubleOrNull() ?: 0.0
-                        val latitude = row.getOrNull(adjLat)?.toDoubleOrNull() ?: 0.0
-                        val longitude = row.getOrNull(adjLong)?.toDoubleOrNull() ?: 0.0
+                            val nLimit = row.getOrNull(nLimitIndex)?.toDoubleOrNull() ?: 0.0
+                            val sLimit = row.getOrNull(sLimitIndex)?.toDoubleOrNull() ?: 0.0
+                            val wLimit = row.getOrNull(wLimitIndex)?.toDoubleOrNull() ?: 0.0
+                            val eLimit = row.getOrNull(eLimitIndex)?.toDoubleOrNull() ?: 0.0
+                            val adjLat = row.getOrNull(adjLatIndex)?.toDoubleOrNull() ?: 0.0
+                            val adjLong = row.getOrNull(adjLongIndex)?.toDoubleOrNull() ?: 0.0
 
-                        val record = SealColony(
-                            colonyId = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
-                            inOut = inOut,
-                            location = location,
-                            nLimit = nLimit,
-                            sLimit = sLimit,
-                            wLimit = wLimit,
-                            eLimit = eLimit,
-                            adjLat = latitude,
-                            adjLong = longitude
-                        )
+                            val record = SealColony(
+                                colonyId = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
+                                inOut = inOut,
+                                location = location,
+                                nLimit = nLimit,
+                                sLimit = sLimit,
+                                wLimit = wLimit,
+                                eLimit = eLimit,
+                                adjLat = adjLat,
+                                adjLong = adjLong
+                            )
 
-                        // Add the parsed entity to the list
-                        sealColonies.add(record)
+                            // Add the parsed entity to the list
+                            sealColonies.add(record)
+                        }
+                        uiState = uiState.copy(colonyLocations = dropdownList)
                     } else {
-                        // Handle invalid row or missing columns
+                        // Handle the case where one or more headers are missing
+                        // This could be logging an error, showing a message to the user, etc.
+                        throw IllegalArgumentException("CSV file missing required headers")
                     }
                 }
-                uiState = uiState.copy(colonyLocations = dropdownList)
-            }
+            } ?: throw IOException("Unable to open input stream")
+        } catch (e: IOException) {
+            e.printStackTrace()
+            //TODO,  Handle IO exception
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+            //TODO
+        } catch (e: NumberFormatException) {
+            e.printStackTrace()
+            //TODO, Handle number format exception (if field3 cannot be parsed as an Int)
+        } catch (e: Exception) {
+            // Handle any other exceptions
+            e.printStackTrace()
+            // TODO, Show an error message to the user, log the error, etc.
         }
 
         return sealColonies

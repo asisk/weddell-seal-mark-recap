@@ -20,14 +20,17 @@ data class WedCheckRecord(
     @ColumnInfo(name = "comments") val comments: String,
     @ColumnInfo(name = "ageYears") val ageYears: Int,
     @ColumnInfo(name = "tissue") val tissueSampled: String, // NA possible value
-    @ColumnInfo(name = "previousPups") val previousPups: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "massPups") val massPups: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "swimPups") val swimPups: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "photoYears") val photoYears: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "pupinMassStudy") val pupinMassStudy: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "numPreviousPups") val numPreviousPups: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "pupinTTStudy") val pupinTTStudy: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "momMassMeasurements") val momMassMeasurements: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "condition") val condition: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "lastPhysio") val lastPhysio: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "colony") val colony: String, // NA possible value, otherwise its a number
 )
 
 data class TagProcessingResult(
-    val numTags: String,
+    val tagValid: Boolean,
     val tagId: String,
     val tagAlpha: String,
     val tagNumber: Int
@@ -63,38 +66,57 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         ageNumeric = ageYears.toString()
     }
 
-    var numTags = ""
-    var tagId = ""
-    var tagAlpha = ""
-    var tagNumber = 0
+    var numTags = 0
+    var tagIdOne = ""
+    var tagOneAlpha = ""
+    var tagOneNumber = 0
+    var tagIdTwo = ""
+    var tagTwoAlpha = ""
+    var tagTwoNumber = 0
 
     // Process tags and update variables
-    val processedTags = processTags(tagIdOne, tagIdTwo)
-    numTags = processedTags.numTags
-    tagId = processedTags.tagId
-    tagAlpha = processedTags.tagAlpha
-    tagNumber = processedTags.tagNumber
+
+    val processedTagOne = processTags(tagIdOne)
+    tagIdOne = processedTagOne.tagId
+    tagOneAlpha = processedTagOne.tagAlpha
+    tagOneNumber = processedTagOne.tagNumber
+    if (processedTagOne.tagValid) {
+        numTags++
+    }
+
+    val processedTagTwo = processTags(tagIdOne)
+    tagIdTwo = processedTagTwo.tagId
+    tagOneAlpha = processedTagTwo.tagAlpha
+    tagOneNumber = processedTagTwo.tagNumber
+    if (processedTagTwo.tagValid) {
+        numTags++
+    }
 
     return WedCheckSeal(
         age = ageString,
         ageYears = ageNumeric,
         comment = comments,
-        condition = "",
+        condition = condition,
         found = true,
         lastSeenSeason = season,
-        massPups = massPups,
+        massPups = pupinMassStudy,
         name = name,
-        numTags = numTags,
-        photoYears = photoYears,
-        previousPups = previousPups,
+        numTags = numTags.toString(),
+        momMassMeasurements = momMassMeasurements,
+        numPreviousPups = numPreviousPups,
         sex = sealSex,
         speNo = speno,
-        swimPups = swimPups,
-        tagAlpha = tagAlpha,
+        pupinTTStudy = pupinTTStudy,
         tagEventType = "",
-        tagId = tagId,
-        tagNumber = tagNumber,
+        tagIdOne = tagIdOne,
+        tagOneAlpha = tagOneAlpha,
+        tagOneNumber = tagOneNumber,
+        tagIdTwo = tagIdTwo,
+        tagTwoAlpha = tagTwoAlpha,
+        tagTwoNumber = tagTwoNumber,
         tissueSampled = tissue,
+        lastPhysio = lastPhysio,
+        colony = colony
     )
 
     fun String.toBoolean(): Boolean {
@@ -103,8 +125,8 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
 
 }
 
-fun processTags(tag1: String?, tag2: String?): TagProcessingResult {
-    var numTags = 0
+fun processTags(tag: String?): TagProcessingResult {
+    var tagValid = false
     var finalTagId = ""
     var finalTagAlpha = ""
     var finalTagNumber = 0
@@ -116,7 +138,7 @@ fun processTags(tag1: String?, tag2: String?): TagProcessingResult {
         if (tag.dropLast(1).toIntOrNull() == null) return
         if (!tag.last().isLetter()) return
 
-        numTags++
+        tagValid = true
 
         if (finalTagId == "") {
             finalTagId = tag
@@ -125,8 +147,7 @@ fun processTags(tag1: String?, tag2: String?): TagProcessingResult {
         }
     }
 
-    validateTag(tag1)
-    validateTag(tag2)
+    validateTag(tag)
 
-    return TagProcessingResult(numTags.toString(), finalTagId, finalTagAlpha, finalTagNumber)
+    return TagProcessingResult(tagValid, finalTagId, finalTagAlpha, finalTagNumber)
 }

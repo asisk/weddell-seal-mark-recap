@@ -32,7 +32,7 @@ fun WedCheckCard(
         WedCheckDataDisplayRow("SPENO", if (seal.speNo == 0) "" else seal.speNo.toString())
 
         // TAG ID
-        WedCheckDataDisplayRow("Tag", seal.tagId)
+        WedCheckDataDisplayRow("Tag", seal.tagIdOne)
 
         // AGE
         WedCheckDataDisplayRow("Age Class", seal.age)
@@ -53,16 +53,16 @@ fun WedCheckCard(
         )
 
         // PREVIOUS PUPS
-        WedCheckDataDisplayRow("Previous Pups", seal.previousPups)
+        WedCheckDataDisplayRow("Previous Pups", seal.numPreviousPups)
 
         // MASS PUPS
         WedCheckDataDisplayRow("Mass Pups", seal.massPups)
 
         // SWIM PUPS
-        WedCheckDataDisplayRow("Swim Pups", seal.swimPups)
+        WedCheckDataDisplayRow("Swim Pups", seal.pupinTTStudy)
 
         // PHOTO YEARS
-        WedCheckDataDisplayRow("Photo Years", seal.photoYears)
+        WedCheckDataDisplayRow("Photo Years", seal.momMassMeasurements)
 
         // COMMENTS
         WedCheckDataDisplayRow("Comments", seal.comment)

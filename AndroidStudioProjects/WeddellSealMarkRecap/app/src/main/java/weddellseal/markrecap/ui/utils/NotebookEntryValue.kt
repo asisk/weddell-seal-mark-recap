@@ -23,7 +23,7 @@ fun notebookEntryValueSeal(seal : Seal): String {
         ""
     }
 
-    var tag = seal.tagId
+    var tag = seal.tagIdOne
 
     var event = if (seal.tagEventType.isNotEmpty()) {
         seal.tagEventType[0]

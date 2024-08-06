@@ -55,15 +55,13 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                         obs?.date ?: "",
                         obs?.time ?: "",
                         obs?.censusID ?: "",
-                        obs?.latitude  ?: "",
+                        obs?.latitude ?: "",
                         obs?.longitude ?: "",
                         obs?.ageClass ?: "",
                         obs?.sex ?: "",
                         obs?.numRelatives ?: "",
                         obs?.oldTagIDOne ?: "",
-                        obs?.oldTagOneCondition ?: "",
                         obs?.oldTagIDTwo ?: "",
-                        obs?.oldTagTwoCondition ?: "",
                         obs?.tagIDOne ?: "",
                         obs?.tagOneIndicator ?: "",
                         obs?.tagIDTwo ?: "",
@@ -74,9 +72,11 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                         obs?.observerInitials ?: "",
                         obs?.flaggedEntry ?: "",
                         obs?.tagEvent ?: "",
+                        obs?.weight ?: "",
                         obs?.tissueSampled ?: "",
                         obs?.comments ?: "",
-                        )
+                        obs?.colony ?: ""
+                    )
                     csvWriter.writeNext(obsFields)
                 }
 
@@ -111,8 +111,8 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         observationDao.insert(log)
     }
 
-    private fun selectAllObservationsfromDB() : MutableList<ObservationLogEntry> {
-        val logs : List<ObservationLogEntry?> = observationDao.getObservationsForCSVWrite()
+    private fun selectAllObservationsfromDB(): MutableList<ObservationLogEntry> {
+        val logs: List<ObservationLogEntry?> = observationDao.getObservationsForCSVWrite()
         var list = mutableListOf<ObservationLogEntry>()
         for (log in logs) {
             if (log != null) {

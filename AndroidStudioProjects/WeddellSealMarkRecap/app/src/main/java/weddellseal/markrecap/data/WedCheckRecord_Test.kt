@@ -7,73 +7,172 @@ class TagProcessorTest {
 
     @Test
     fun testProcessTags_withValidTags() {
-        val result = processTags("123A", "123A")
-        assertEquals(2, result.numTags)
+        var numTags = 0
+        val result = processTags("123A")
+        if (result.tagValid) {
+            numTags++
+        }
         assertEquals("123A", result.tagId)
         assertEquals("A", result.tagAlpha)
         assertEquals(123, result.tagNumber)
+
+        val resultTwo = processTags("123A")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("123A", resultTwo.tagId)
+        assertEquals("A", resultTwo.tagAlpha)
+        assertEquals(123, resultTwo.tagNumber)
+
+        assertEquals(2, numTags)
     }
 
     @Test
     fun testProcessTags_withInvalidTag1() {
-        val result = processTags("NA", "789C")
-        assertEquals(1, result.numTags)
-        assertEquals("789C", result.tagId)
-        assertEquals("C", result.tagAlpha)
-        assertEquals(789, result.tagNumber)
+        var numTags = 0
+        val result = processTags("NA")
+        if (result.tagValid) {
+            numTags++
+        }
+
+        assertEquals("", result.tagId)
+        assertEquals("", result.tagAlpha)
+        assertEquals(0, result.tagNumber)
+
+        val resultTwo = processTags("789C")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("789C", resultTwo.tagId)
+        assertEquals("C", resultTwo.tagAlpha)
+        assertEquals(789, resultTwo.tagNumber)
+
+        assertEquals(1, numTags)
     }
 
     @Test
     fun testProcessTags_withInvalidTag2() {
-        val result = processTags("101D", "NoTag")
-        assertEquals(1, result.numTags)
+        var numTags = 0
+        val result = processTags("101D")
+        if (result.tagValid) {
+            numTags++
+        }
         assertEquals("101D", result.tagId)
         assertEquals("D", result.tagAlpha)
         assertEquals(101, result.tagNumber)
+
+        val resultTwo = processTags( "NoTag")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("", resultTwo.tagId)
+        assertEquals("", resultTwo.tagAlpha)
+        assertEquals(0, resultTwo.tagNumber)
+
+        assertEquals(1, numTags)
     }
 
     @Test
     fun testProcessTags_withInvalidTag_badValue_alphas() {
-        val result = processTags("badValue", "101D")
-        assertEquals(1, result.numTags)
-        assertEquals("101D", result.tagId)
-        assertEquals("D", result.tagAlpha)
-        assertEquals(101, result.tagNumber)
+        var numTags = 0
+        val result = processTags("badValue")
+        if (result.tagValid) {
+            numTags++
+        }
+        assertEquals("", result.tagId)
+        assertEquals("", result.tagAlpha)
+        assertEquals(0, result.tagNumber)
+
+        val resultTwo = processTags("101D")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("101D", resultTwo.tagId)
+        assertEquals("D", resultTwo.tagAlpha)
+        assertEquals(101, resultTwo.tagNumber)
+
+        assertEquals(1, numTags)
     }
 
     @Test
     fun testProcessTags_withInvalidTag_badValue_numbers() {
-        val result = processTags("1234", "101D")
-        assertEquals(1, result.numTags)
-        assertEquals("101D", result.tagId)
-        assertEquals("D", result.tagAlpha)
-        assertEquals(101, result.tagNumber)
+        var numTags = 0
+        val result = processTags("1234")
+        assertEquals("", result.tagId)
+        assertEquals("", result.tagAlpha)
+        assertEquals(0, result.tagNumber)
+
+        val resultTwo = processTags("101D")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("101D", resultTwo.tagId)
+        assertEquals("D", resultTwo.tagAlpha)
+        assertEquals(101, resultTwo.tagNumber)
+
+        assertEquals(1, numTags)
     }
 
     @Test
     fun testProcessTags_withBothInvalidTags() {
-        val result = processTags("NoTag", "NA")
-        assertEquals(0, result.numTags)
+        var numTags = 0
+        val result = processTags("NoTag")
+        if (result.tagValid) {
+            numTags++
+        }
         assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
+
+        val resultTwo = processTags("NA")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("", resultTwo.tagId)
+        assertEquals("", resultTwo.tagAlpha)
+        assertEquals(0, resultTwo.tagNumber)
+
+        assertEquals(0, numTags)
     }
 
     @Test
     fun testProcessTags_withEmptyTags() {
-        val result = processTags("", "")
-        assertEquals(0, result.numTags)
+        var numTags = 0
+        val result = processTags("")
         assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
+        if (result.tagValid) {
+            numTags++
+        }
+        val resultTwo = processTags("")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("", resultTwo.tagId)
+        assertEquals("", resultTwo.tagAlpha)
+        assertEquals(0, resultTwo.tagNumber)
+
+        assertEquals(0, numTags)
     }
 
     @Test
     fun testProcessTags_withNullTags() {
-        val result = processTags(null, null)
-        assertEquals(0, result.numTags)
+        var numTags = 0
+        val result = processTags(null)
         assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
-    }
+        if (result.tagValid) {
+            numTags++
+        }
+        val resultTwo = processTags(null)
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("", resultTwo.tagId)
+        assertEquals("", resultTwo.tagAlpha)
+        assertEquals(0, resultTwo.tagNumber)
+
+        assertEquals(0, numTags)    }
 }

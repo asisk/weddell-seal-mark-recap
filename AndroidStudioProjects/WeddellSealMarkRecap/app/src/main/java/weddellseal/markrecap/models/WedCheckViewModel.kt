@@ -149,57 +149,101 @@ class WedCheckViewModel(
         uri: Uri
     ): List<WedCheckRecord> {
         val csvData: MutableList<WedCheckRecord> = mutableListOf()
-        contentResolver.openInputStream(uri)?.use { stream ->
-            InputStreamReader(stream).buffered().use { reader ->
-                var line: String?
-                try {
-                    // Read the CSV header (if needed)
+        try {
+            contentResolver.openInputStream(uri)?.use { stream ->
+                InputStreamReader(stream).buffered().use { reader ->
+                    // Read the CSV header
                     // Assuming the first line contains the column headers
-//                    reader.readLine()
+                    val headerRow = reader.readLine()?.split(",") ?: emptyList()
+                    val spenoIndex = headerRow.indexOf("speno")
+                    val lastSeenIndex = headerRow.indexOf("last_seen")
+                    val ageClassIndex = headerRow.indexOf("ac")
+                    val sexIndex = headerRow.indexOf("newsex")
+                    val tagOneIndex = headerRow.indexOf("tag1")
+                    val tagTwoIndex = headerRow.indexOf("tag2")
+                    val noteIndex = headerRow.indexOf("note")
+                    val ageIndex = headerRow.indexOf("age")
+                    val tissueIndex = headerRow.indexOf("tissue")
+                    val pupinMassStudyIndex = headerRow.indexOf("PupinMassStudy")
+                    val numPreviousPupsIndex = headerRow.indexOf("NbPreviousPups")
+                    val pupinTTStudyIndex = headerRow.indexOf("PupinTTStudy")
+                    val momMassMeasurementsIndex = headerRow.indexOf("MomMassMeasurements")
+                    val conditionIndex = headerRow.indexOf("cond")
+                    val lastPhysioIndex = headerRow.indexOf("last physio")
+                    val colonyIndex = headerRow.indexOf("colony")
 
-                    // Read each line of the CSV file
-                    while (reader.readLine().also { line = it } != null) {
-                        // Split the line into fields based on the CSV delimiter (e.g., ',')
-                        val fields = line!!.split(",")
 
-                        // Parse fields and create an instance of YourEntity
-                        val record = WedCheckRecord(
-                            id = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
-                            speno = fields[0].toInt(),
-                            season = fields[1].toInt(),
-                            ageClass = fields[2],
-                            sex = fields[3],
-                            tagIdOne = fields[4],
-                            tagIdTwo = fields[5],
-                            comments = fields[6],
-                            ageYears = fields[7].toInt(),
-                            tissueSampled = fields[8],
-                            previousPups = fields[9],
-                            massPups = fields[10],
-                            swimPups = fields[11],
-                            photoYears = fields[12],
-                        )
+                    if (listOf(
+                            spenoIndex,
+                            lastSeenIndex,
+                            ageClassIndex,
+                            sexIndex,
+                            tagOneIndex,
+                            tagTwoIndex,
+                            noteIndex,
+                            ageIndex,
+                            tissueIndex,
+                            pupinMassStudyIndex,
+                            numPreviousPupsIndex,
+                            pupinTTStudyIndex,
+                            momMassMeasurementsIndex,
+                            conditionIndex,
+                            lastPhysioIndex,
+                            colonyIndex
+                        ).all { it != -1 }
+                    ) {
+                        // Read each line of the CSV file
+                        reader.forEachLine { line ->
+                            // Split the line into fields based on the CSV delimiter (e.g., ',')
+                            val row = line.split(",")
 
-                        // Add the parsed entity to the list
-                        csvData.add(record)
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                    // Handle IO exception
-                } catch (e: NumberFormatException) {
-                    e.printStackTrace()
-                    // Handle number format exception (if field3 cannot be parsed as an Int)
-                } finally {
-                    // Close the reader
-                    try {
-                        reader.close()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        // Handle IO exception
+                            // Parse fields and create an instance of YourEntity
+                            val record = WedCheckRecord(
+                                id = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
+                                speno = row.getOrNull(spenoIndex)?.toIntOrNull() ?: 0,
+                                season = row.getOrNull(lastSeenIndex)?.toIntOrNull() ?: 0,
+                                ageClass = row.getOrNull(ageClassIndex) ?: "",
+                                sex = row.getOrNull(sexIndex) ?: "",
+                                tagIdOne = row.getOrNull(tagOneIndex) ?: "",
+                                tagIdTwo = row.getOrNull(tagTwoIndex) ?: "",
+                                comments = row.getOrNull(noteIndex) ?: "",
+                                ageYears = row.getOrNull(ageIndex)?.toIntOrNull() ?: 0,
+                                tissueSampled = row.getOrNull(tissueIndex) ?: "",
+                                pupinMassStudy = row.getOrNull(pupinMassStudyIndex) ?: "",
+                                numPreviousPups = row.getOrNull(numPreviousPupsIndex) ?: "",
+                                pupinTTStudy = row.getOrNull(pupinTTStudyIndex) ?: "",
+                                momMassMeasurements = row.getOrNull(momMassMeasurementsIndex) ?: "",
+                                condition = row.getOrNull(conditionIndex) ?: "",
+                                lastPhysio = row.getOrNull(lastPhysioIndex) ?: "",
+                                colony = row.getOrNull(colonyIndex) ?: ""
+                            )
+
+                            // Add the parsed entity to the list
+                            csvData.add(record)
+                        }
+                    } else {
+                        // Handle the case where one or more headers are missing
+                        // This could be logging an error, showing a message to the user, etc.
+                        throw IllegalArgumentException("CSV file missing required headers")
                     }
                 }
-            }
+            } ?: throw IOException("Unable to open input stream")
+        } catch (e: IOException) {
+            e.printStackTrace()
+            //TODO,  Handle IO exception
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+            //TODO
+        } catch (e: NumberFormatException) {
+            e.printStackTrace()
+            //TODO, Handle number format exception (if field3 cannot be parsed as an Int)
+        } catch (e: Exception) {
+            // Handle any other exceptions
+            e.printStackTrace()
+            // TODO, Show an error message to the user, log the error, etc.
         }
         return csvData
     }
+
+    // end of model
 }

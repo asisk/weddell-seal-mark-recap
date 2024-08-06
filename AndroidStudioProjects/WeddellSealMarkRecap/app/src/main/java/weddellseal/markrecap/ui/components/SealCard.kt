@@ -300,6 +300,8 @@ fun SealCard(
                             onCheckedChange = null // null recommended for accessibility with screenreaders
                         )
                     }
+
+                    //TODO, add option to collect weight
                 }
             }
         }
@@ -326,7 +328,7 @@ fun SealCard(
                     val keyboardController = LocalSoftwareKeyboardController.current
                     var isError by remember { mutableStateOf(false) }
                     var tagIDVal by remember {
-                        mutableStateOf(seal.tagId)
+                        mutableStateOf(seal.tagIdOne)
                     }
                     Text(
                         "Tag ID",
@@ -371,7 +373,7 @@ fun SealCard(
                                 // save the input to the model
                                 val number: Int? = tagIDVal.toIntOrNull()
                                 if (number != null && !isError) {
-                                    viewModel.updateTagNumber(seal, number)
+                                    viewModel.updateTagOneNumber(seal, number)
                                 }
                             },
                         ),
@@ -405,8 +407,8 @@ fun SealCard(
                     val buttonListAlpha = listOf<String>("A", "C", "D")
                     SingleSelectTagAlphaButtonGroup(
                         buttonListAlpha,
-                        seal.tagAlpha
-                    ) { newText -> viewModel.updateTagAlpha(seal, newText) }
+                        seal.tagOneAlpha
+                    ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
                 }
             }
         }

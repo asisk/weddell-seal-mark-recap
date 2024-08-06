@@ -117,7 +117,7 @@ fun AddObservationLogScreen(
     fun saveAction() {
         if (adultSeal.isStarted) {
             if (adultSeal.speNo == 0 ) {
-                val speNo = wedCheckViewModel.findSealSpeNo(adultSeal.tagId)
+                val speNo = wedCheckViewModel.findSealSpeNo(adultSeal.tagIdOne)
                 viewModel.updateSpeNo(adultSeal.name, speNo)
             }
 

@@ -235,7 +235,7 @@ fun PupCard(
                 val keyboardController = LocalSoftwareKeyboardController.current
                 var isError by remember { mutableStateOf(false) }
                 var tagIDVal by remember {
-                    mutableStateOf(seal.tagId)
+                    mutableStateOf(seal.tagIdOne)
                 }
                 OutlinedTextField(
                     value = tagIDVal,
@@ -266,7 +266,7 @@ fun PupCard(
                             // save the input to the model
                             val number: Int? = tagIDVal.toIntOrNull()
                             if (number != null && !isError) {
-                                viewModel.updateTagNumber(seal, number)
+                                viewModel.updateTagOneNumber(seal, number)
                             }
                         },
                     ),
@@ -285,8 +285,8 @@ fun PupCard(
                 val buttonListAlpha = listOf<String>("A", "C", "D")
                 SingleSelectTagAlphaButtonGroup(
                     buttonListAlpha,
-                    seal.tagAlpha
-                ) { newText -> viewModel.updateTagAlpha(seal, newText) }
+                    seal.tagOneAlpha
+                ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
             }
             // TAG EVENT TYPE
             val (checkedState, onStateChange) = remember { mutableStateOf(false) }

@@ -23,9 +23,7 @@ data class ObservationLogEntry(
     @ColumnInfo(name = "sex") val sex: String,
     @ColumnInfo(name = "num_relatives") val numRelatives: String,
     @ColumnInfo(name = "old_tag_id_one") val oldTagIDOne: String,
-    @ColumnInfo(name = "old_tag_one_condition") val oldTagOneCondition: String,
     @ColumnInfo(name = "old_tag_id_two") val oldTagIDTwo: String,
-    @ColumnInfo(name = "old_tag_two_condition") val oldTagTwoCondition: String,
     @ColumnInfo(name = "tag_id_one") val tagIDOne: String,
     @ColumnInfo(name = "tag_one_indicator") val tagOneIndicator: String,
     @ColumnInfo(name = "tag_id_two") val tagIDTwo: String,
@@ -36,6 +34,8 @@ data class ObservationLogEntry(
     @ColumnInfo(name = "observer_initials") val observerInitials: String,
     @ColumnInfo(name = "flagged_entry") val flaggedEntry: String,
     @ColumnInfo(name = "tag_event") val tagEvent: String,
+    @ColumnInfo(name = "weight") val weight: String,
     @ColumnInfo(name = "tissue_sampled") val tissueSampled: String,
     @ColumnInfo(name = "comments") val comments: String,
+    @ColumnInfo(name = "colony") val colony: String,
 )

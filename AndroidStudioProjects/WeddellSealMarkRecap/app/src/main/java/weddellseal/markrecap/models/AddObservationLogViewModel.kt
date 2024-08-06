@@ -183,9 +183,9 @@ class AddObservationLogViewModel(
     }
 
     fun clearTag(seal: Seal) {
-        updateTagNumber(seal, 0)
-        updateTagAlpha(seal, "")
-        updateTagId(seal)
+        updateTagOneNumber(seal, 0)
+        updateTagOneAlpha(seal, "")
+        updateTagIdOne(seal)
         updateNotebookEntry(seal)
     }
 
@@ -270,66 +270,66 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateTagAlpha(seal: Seal, input: String) {
+    fun updateTagOneAlpha(seal: Seal, input: String) {
         when (seal.name) {
             "adult" -> {
-                primarySeal = primarySeal.copy(tagAlpha = input, isStarted = true)
-                updateTagId(primarySeal)
+                primarySeal = primarySeal.copy(tagOneAlpha = input, isStarted = true)
+                updateTagIdOne(primarySeal)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagAlpha = input, isStarted = true)
-                updateTagId(pupOne)
+                pupOne = pupOne.copy(tagOneAlpha = input, isStarted = true)
+                updateTagIdOne(pupOne)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagAlpha = input, isStarted = true)
-                updateTagId(pupTwo)
+                pupTwo = pupTwo.copy(tagOneAlpha = input, isStarted = true)
+                updateTagIdOne(pupTwo)
             }
         }
     }
 
-    private fun updateTagId(seal: Seal) {
-        var tagIdStr = seal.tagNumber.toString() + seal.tagAlpha
+    private fun updateTagIdOne(seal: Seal) {
+        var tagIdStr = seal.tagOneNumber.toString() + seal.tagOneAlpha
         val number: Int? = seal.numTags.toIntOrNull()
 
         if (number != null && number > 1) {
-            tagIdStr = seal.tagNumber.toString() + seal.tagAlpha + seal.tagAlpha
+            tagIdStr = seal.tagOneNumber.toString() + seal.tagOneAlpha + seal.tagOneAlpha
         }
 
         when (seal.name) {
             "adult" -> {
-                primarySeal = primarySeal.copy(tagId = tagIdStr, isStarted = true)
+                primarySeal = primarySeal.copy(tagIdOne = tagIdStr, isStarted = true)
                 updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagId = tagIdStr, isStarted = true)
+                pupOne = pupOne.copy(tagIdOne = tagIdStr, isStarted = true)
                 updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagId = tagIdStr, isStarted = true)
+                pupTwo = pupTwo.copy(tagIdOne = tagIdStr, isStarted = true)
                 updateNotebookEntry(pupTwo)
             }
         }
     }
 
-    fun updateTagNumber(seal: Seal, input: Int) {
+    fun updateTagOneNumber(seal: Seal, input: Int) {
         when (seal.name) {
             "adult" -> {
-                primarySeal = primarySeal.copy(tagNumber = input, isStarted = true)
-                updateTagId(primarySeal)
+                primarySeal = primarySeal.copy(tagOneNumber = input, isStarted = true)
+                updateTagIdOne(primarySeal)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagNumber = input, isStarted = true)
-                updateTagId(pupOne)
+                pupOne = pupOne.copy(tagOneNumber = input, isStarted = true)
+                updateTagIdOne(pupOne)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagNumber = input, isStarted = true)
-                updateTagId(pupTwo)
+                pupTwo = pupTwo.copy(tagOneNumber = input, isStarted = true)
+                updateTagIdOne(pupTwo)
             }
         }
     }
@@ -372,17 +372,17 @@ class AddObservationLogViewModel(
         when (sealName) {
             "adult" -> {
                 primarySeal = primarySeal.copy(numTags = input, isStarted = true)
-                updateTagId(primarySeal)
+                updateTagIdOne(primarySeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(numTags = input, isStarted = true)
-                updateTagId(pupOne)
+                updateTagIdOne(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(numTags = input, isStarted = true)
-                updateTagId(pupTwo)
+                updateTagIdOne(pupTwo)
             }
         }
     }
@@ -561,16 +561,16 @@ class AddObservationLogViewModel(
                     }
 
                     var numRels = ""
-                    var pupOneTagID = ""
-                    var pupTwoTagID = ""
+                    var pupOneTagIdOne = ""
+                    var pupTwoTagIdOne = ""
                     if (seal.numRelatives == 1) {
                         numRels = seal.numRelatives.toString()
-                        pupOneTagID = getPupTagId(pupOne)
+                        pupOneTagIdOne = getPupTagIdOne(pupOne)
                     }
                     if (seal.numRelatives == 2) {
                         numRels = seal.numRelatives.toString()
-                        pupOneTagID = getPupTagId(pupOne)
-                        pupTwoTagID = getPupTagId(pupTwo)
+                        pupOneTagIdOne = getPupTagIdOne(pupOne)
+                        pupTwoTagIdOne = getPupTagIdOne(pupTwo)
                     }
 
                     var eventType = ""
@@ -620,22 +620,22 @@ class AddObservationLogViewModel(
                         ageClass = ageClass,
                         sex = sex,
                         numRelatives = numRels,
-                        oldTagIDOne = "TBD", //TODO, where are we getting this??
-                        oldTagOneCondition = "TBD", //TODO, where are we getting this??
-                        oldTagIDTwo = "TBD", //TODO, where are we getting this??
-                        oldTagTwoCondition = "TBD", //TODO, where are we getting this??
-                        tagIDOne = seal.tagId,
+                        oldTagIDOne = seal.tagIdOne,
+                        oldTagIDTwo = seal.tagIdTwo,
+                        tagIDOne = seal.tagIdOne,
                         tagOneIndicator = tagOneIndicator,
-                        tagIDTwo = seal.tagId,
+                        tagIDTwo = seal.tagIdOne,
                         tagTwoIndicator = tagTwoIndicator,
-                        relativeTagIDOne = pupOneTagID,
-                        relativeTagIDTwo = pupTwoTagID,
+                        relativeTagIDOne = pupOneTagIdOne,
+                        relativeTagIDTwo = pupTwoTagIdOne,
                         sealCondition = condition,
                         observerInitials = uiState.observerInitials,
                         flaggedEntry = "TBD", // TODO, need to figure out when this gets triggered
                         tagEvent = eventType,
                         tissueSampled = seal.tissueSampled,
                         comments = seal.comment,
+                        colony = uiState.colonyLocation,
+                        weight = seal.weight.toString()
                     )
                     //TODO, consider a validation check to see if fields are populated before inserting to database
                     observationRepo.addObservation(log)
@@ -663,9 +663,9 @@ class AddObservationLogViewModel(
         return currentTime.format(formatter)
     }
 
-    private fun getPupTagId(pup: Seal): String {
+    private fun getPupTagIdOne(pup: Seal): String {
         return if (pup.isStarted && validateSeal(pup)) {
-            pup.tagId
+            pup.tagIdOne
         } else {
             ""
         }
@@ -673,7 +673,7 @@ class AddObservationLogViewModel(
 
     private fun validateSeal(seal: Seal): Boolean {
         if (seal.isStarted) {
-            if (seal.age != "" && seal.sex != "" && seal.tagId != "" && seal.tagEventType != "" && seal.tagNumber > 0) {
+            if (seal.age != "" && seal.sex != "" && seal.tagIdOne != "" && seal.tagEventType != "" && seal.tagOneNumber > 0) {
                 return true
             }
         }
@@ -691,25 +691,28 @@ class AddObservationLogViewModel(
             numTags = wedCheckSeal.numTags,
             condition = wedCheckSeal.condition,
             pupPeed = wedCheckSeal.pupPeed,
-            tagId = wedCheckSeal.tagId,
-            tagNumber = wedCheckSeal.tagNumber,
-            tagAlpha = wedCheckSeal.tagAlpha,
+            tagIdOne = wedCheckSeal.tagIdOne,
+            tagOneNumber = wedCheckSeal.tagOneNumber,
+            tagOneAlpha = wedCheckSeal.tagOneAlpha,
+            tagIdTwo = wedCheckSeal.tagIdTwo,
+            tagTwoNumber = wedCheckSeal.tagTwoNumber,
+            tagTwoAlpha = wedCheckSeal.tagTwoAlpha,
             tagEventType = wedCheckSeal.tagEventType,
             comment = wedCheckSeal.comment,
-            // tissueTaken left out intentionally
             //TODO, update notebookDataString once the seal is populated,
             // instead of mapping here
-
 
             // historical fields
             speNo = wedCheckSeal.speNo,
             ageYears = wedCheckSeal.ageYears,
             lastSeenSeason = wedCheckSeal.lastSeenSeason,
             massPups = wedCheckSeal.massPups,
-            photoYears = wedCheckSeal.photoYears,
-            swimPups = wedCheckSeal.swimPups,
-            previousPups = wedCheckSeal.previousPups,
+            photoYears = wedCheckSeal.momMassMeasurements,
+            swimPups = wedCheckSeal.pupinTTStudy,
+            previousPups = wedCheckSeal.numPreviousPups,
             tissueSampled = wedCheckSeal.tissueSampled,
+            lastPhysio = wedCheckSeal.lastPhysio,
+            colony = wedCheckSeal.colony
         )
 //        updateTagId(primarySeal) -- don't think this is necessary
         updateNotebookEntry(primarySeal)

@@ -120,7 +120,7 @@ fun AdminScreen(
                 }
             }
 
-            if (fileName == "WedCheck.csv") {
+            if (fileName == "AugustWedCheckTest.csv") {
 
                 //TODO, add validation to ensure that the file is right-sized
 //                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)

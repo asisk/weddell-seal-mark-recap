@@ -3,9 +3,11 @@ package weddellseal.markrecap.data
 data class Seal(
     val age: String = "",
     val ageYears: String = "",
+    val colony: String = "",
     val comment: String = "",
     val condition: String = "",
     var isStarted: Boolean = false,
+    val lastPhysio: String = "",
     val lastSeenSeason: Int = 0,
     val massPups: String = "",
     val name: String = "",
@@ -18,10 +20,14 @@ data class Seal(
     val sex: String = "",
     val speNo: Int = 0,
     val swimPups: String = "",
-    val tagAlpha: String = "",
     val tagEventType: String = "",
-    val tagId: String = "",
-    val tagNumber: Int = 0,
+    val tagIdOne: String = "",
+    val tagOneAlpha: String = "",
+    val tagOneNumber: Int = 0,
+    val tagIdTwo: String = "",
+    val tagTwoAlpha: String = "",
+    val tagTwoNumber: Int = 0,
     val tissueTaken: Boolean = false,
-    val tissueSampled: String = ""
+    val tissueSampled: String = "",
+    val weight: Int = 0
 )
