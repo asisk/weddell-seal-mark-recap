@@ -602,7 +602,7 @@ class AddObservationLogViewModel(
                     }
 
                     var condition = ""
-                    if (seal.condition != "") {
+                    if (seal.condition != "" && seal.condition != "None") {
                         condition = seal.condition[0].toString()
                     }
 

@@ -214,7 +214,7 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                     val conditions =
-                        listOf("Dead - 0", "Poor - 1", "Fair - 2", "Good - 3", "Newborn - 4")
+                        listOf("None", "Dead - 0", "Poor - 1", "Fair - 2", "Good - 3", "Newborn - 4")
                     DropdownField(conditions, seal.condition) { newText ->
                         viewModel.updateCondition(
                             seal.name,
