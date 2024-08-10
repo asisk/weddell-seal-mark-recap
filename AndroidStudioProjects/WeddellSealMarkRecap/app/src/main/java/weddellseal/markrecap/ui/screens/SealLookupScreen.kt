@@ -128,7 +128,7 @@ fun SealLookupScreen(
                                 onClick = {
                                     // reset the current seal & start a new search
                                     wedCheckViewModel.resetState()
-                                    wedCheckViewModel.findSeal(sealTagID)
+                                    wedCheckViewModel.findSealbyTagID(sealTagID)
                                 },
                                 modifier = Modifier.padding(bottom = 15.dp, end = 20.dp),
                             ) {

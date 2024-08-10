@@ -31,8 +31,9 @@ fun WedCheckCard(
         // SPENO
         WedCheckDataDisplayRow("SPENO", if (seal.speNo == 0) "" else seal.speNo.toString())
 
-        // TAG ID
-        WedCheckDataDisplayRow("Tag", seal.tagIdOne)
+        // TAGS
+        WedCheckDataDisplayRow("Tag 1", seal.tagIdOne)
+        WedCheckDataDisplayRow("Tag 2", seal.tagIdTwo)
 
         // AGE
         WedCheckDataDisplayRow("Age Class", seal.age)
@@ -46,11 +47,20 @@ fun WedCheckCard(
         // TISSUE SAMPLED
         WedCheckDataDisplayRow("Tissue Taken", seal.tissueSampled)
 
+        // CONDITION
+        WedCheckDataDisplayRow("Condition", seal.condition)
+
+        // PREVIOUS PUPS
+        WedCheckDataDisplayRow("Last Physio", seal.lastPhysio)
+
         // LAST SEEN
         WedCheckDataDisplayRow(
             "Last Seen",
             if (seal.lastSeenSeason == 0) "" else seal.lastSeenSeason.toString()
         )
+
+        // PREVIOUS PUPS
+        WedCheckDataDisplayRow("Colony", seal.colony)
 
         // PREVIOUS PUPS
         WedCheckDataDisplayRow("Previous Pups", seal.numPreviousPups)

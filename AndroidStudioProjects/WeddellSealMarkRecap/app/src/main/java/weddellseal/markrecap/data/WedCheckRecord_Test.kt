@@ -12,7 +12,6 @@ class TagProcessorTest {
         if (result.tagValid) {
             numTags++
         }
-        assertEquals("123A", result.tagId)
         assertEquals("A", result.tagAlpha)
         assertEquals(123, result.tagNumber)
 
@@ -20,7 +19,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("123A", resultTwo.tagId)
         assertEquals("A", resultTwo.tagAlpha)
         assertEquals(123, resultTwo.tagNumber)
 
@@ -35,7 +33,6 @@ class TagProcessorTest {
             numTags++
         }
 
-        assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
 
@@ -43,7 +40,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("789C", resultTwo.tagId)
         assertEquals("C", resultTwo.tagAlpha)
         assertEquals(789, resultTwo.tagNumber)
 
@@ -57,7 +53,6 @@ class TagProcessorTest {
         if (result.tagValid) {
             numTags++
         }
-        assertEquals("101D", result.tagId)
         assertEquals("D", result.tagAlpha)
         assertEquals(101, result.tagNumber)
 
@@ -65,7 +60,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("", resultTwo.tagId)
         assertEquals("", resultTwo.tagAlpha)
         assertEquals(0, resultTwo.tagNumber)
 
@@ -79,7 +73,6 @@ class TagProcessorTest {
         if (result.tagValid) {
             numTags++
         }
-        assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
 
@@ -87,7 +80,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("101D", resultTwo.tagId)
         assertEquals("D", resultTwo.tagAlpha)
         assertEquals(101, resultTwo.tagNumber)
 
@@ -98,7 +90,6 @@ class TagProcessorTest {
     fun testProcessTags_withInvalidTag_badValue_numbers() {
         var numTags = 0
         val result = processTags("1234")
-        assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
 
@@ -106,7 +97,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("101D", resultTwo.tagId)
         assertEquals("D", resultTwo.tagAlpha)
         assertEquals(101, resultTwo.tagNumber)
 
@@ -120,7 +110,6 @@ class TagProcessorTest {
         if (result.tagValid) {
             numTags++
         }
-        assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
 
@@ -128,7 +117,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("", resultTwo.tagId)
         assertEquals("", resultTwo.tagAlpha)
         assertEquals(0, resultTwo.tagNumber)
 
@@ -139,7 +127,6 @@ class TagProcessorTest {
     fun testProcessTags_withEmptyTags() {
         var numTags = 0
         val result = processTags("")
-        assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
         if (result.tagValid) {
@@ -149,7 +136,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("", resultTwo.tagId)
         assertEquals("", resultTwo.tagAlpha)
         assertEquals(0, resultTwo.tagNumber)
 
@@ -160,7 +146,6 @@ class TagProcessorTest {
     fun testProcessTags_withNullTags() {
         var numTags = 0
         val result = processTags(null)
-        assertEquals("", result.tagId)
         assertEquals("", result.tagAlpha)
         assertEquals(0, result.tagNumber)
         if (result.tagValid) {
@@ -170,7 +155,6 @@ class TagProcessorTest {
         if (resultTwo.tagValid) {
             numTags++
         }
-        assertEquals("", resultTwo.tagId)
         assertEquals("", resultTwo.tagAlpha)
         assertEquals(0, resultTwo.tagNumber)
 

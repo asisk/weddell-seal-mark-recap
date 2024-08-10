@@ -16,6 +16,9 @@ interface WedCheckDao {
     @Query("SELECT * FROM wedCheck WHERE tagNumberOne = :lookupSealTagID OR tagNumberTwo = :lookupSealTagID")
     fun lookupSealByTagID(lookupSealTagID: String): WedCheckRecord
 
+    @Query("SELECT * FROM wedCheck WHERE speno = :speNo")
+    fun lookupSealBySpeNo(speNo: Int): WedCheckRecord
+
     @Query("SELECT speno FROM wedCheck WHERE tagNumberOne = :lookupSealTagID OR tagNumberTwo = :lookupSealTagID")
     fun lookupSpeNoByTagID(lookupSealTagID: String): Int
 

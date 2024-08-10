@@ -60,7 +60,7 @@ fun SealSearchField(viewModel: WedCheckViewModel, onValueChanged: (String) -> Un
                 viewModel.resetState()
 
                 // engage the search function
-                viewModel.findSeal(sealTagID)
+                viewModel.findSealbyTagID(sealTagID)
             }
         ),
         trailingIcon = {

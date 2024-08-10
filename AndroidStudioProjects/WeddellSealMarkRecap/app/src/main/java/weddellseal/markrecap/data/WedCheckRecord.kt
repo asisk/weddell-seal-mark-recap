@@ -1,7 +1,7 @@
 package weddellseal.markrecap.data
 
 /*
- * Used in to display the Recent Observations in list form
+ * Used in to display a database row of historic seal observation
  */
 
 import androidx.room.ColumnInfo
@@ -27,13 +27,6 @@ data class WedCheckRecord(
     @ColumnInfo(name = "condition") val condition: String, // NA possible value, otherwise its a number
     @ColumnInfo(name = "lastPhysio") val lastPhysio: String, // NA possible value, otherwise its a number
     @ColumnInfo(name = "colony") val colony: String, // NA possible value, otherwise its a number
-)
-
-data class TagProcessingResult(
-    val tagValid: Boolean,
-    val tagId: String,
-    val tagAlpha: String,
-    val tagNumber: Int
 )
 
 // Extension function to map WedCheckRecord to Seal
@@ -67,27 +60,23 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
     }
 
     var numTags = 0
-    var tagIdOne = ""
     var tagOneAlpha = ""
     var tagOneNumber = 0
-    var tagIdTwo = ""
     var tagTwoAlpha = ""
     var tagTwoNumber = 0
 
     // Process tags and update variables
 
     val processedTagOne = processTags(tagIdOne)
-    tagIdOne = processedTagOne.tagId
     tagOneAlpha = processedTagOne.tagAlpha
     tagOneNumber = processedTagOne.tagNumber
     if (processedTagOne.tagValid) {
         numTags++
     }
 
-    val processedTagTwo = processTags(tagIdOne)
-    tagIdTwo = processedTagTwo.tagId
-    tagOneAlpha = processedTagTwo.tagAlpha
-    tagOneNumber = processedTagTwo.tagNumber
+    val processedTagTwo = processTags(tagIdTwo)
+    tagTwoAlpha = processedTagTwo.tagAlpha
+    tagTwoNumber = processedTagTwo.tagNumber
     if (processedTagTwo.tagValid) {
         numTags++
     }
@@ -118,16 +107,16 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         lastPhysio = lastPhysio,
         colony = colony
     )
-
-    fun String.toBoolean(): Boolean {
-        return equals("true", ignoreCase = true)
-    }
-
 }
+
+data class TagProcessingResult(
+    val tagValid: Boolean,
+    val tagAlpha: String,
+    val tagNumber: Int
+)
 
 fun processTags(tag: String?): TagProcessingResult {
     var tagValid = false
-    var finalTagId = ""
     var finalTagAlpha = ""
     var finalTagNumber = 0
 
@@ -140,8 +129,7 @@ fun processTags(tag: String?): TagProcessingResult {
 
         tagValid = true
 
-        if (finalTagId == "") {
-            finalTagId = tag
+        if (tag == "") {
             finalTagAlpha = tag.last().toString()
             finalTagNumber = tag.dropLast(1).toIntOrNull() ?: 0
         }
@@ -149,5 +137,5 @@ fun processTags(tag: String?): TagProcessingResult {
 
     validateTag(tag)
 
-    return TagProcessingResult(tagValid, finalTagId, finalTagAlpha, finalTagNumber)
+    return TagProcessingResult(tagValid, finalTagAlpha, finalTagNumber)
 }

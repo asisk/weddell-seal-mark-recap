@@ -83,7 +83,7 @@ class WedCheckViewModel(
         viewModelScope.launch {
             // Switch to the IO dispatcher for database operation
             val returnVal = withContext(Dispatchers.IO) {
-                wedCheckRepo.findSealSpeNo(sealTagID)
+                wedCheckRepo.getSealSpeNo(sealTagID)
             }
 
             if (returnVal != 0) {
@@ -95,7 +95,7 @@ class WedCheckViewModel(
         return speNo
     }
 
-    fun findSeal(sealTagID: String) {
+    fun findSealbyTagID(sealTagID: String) {
         uiState = uiState.copy(isSearching = true)
 
         // launch the search for a seal on a separate coroutine
@@ -103,7 +103,33 @@ class WedCheckViewModel(
 
             // Switch to the IO dispatcher for database operation
             val seal: WedCheckRecord = withContext(Dispatchers.IO) {
-                wedCheckRepo.findSeal(sealTagID)
+                wedCheckRepo.findSealbyTagID(sealTagID)
+            }
+            if (seal != null) {
+                uiState =
+                    uiState.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
+                wedCheckSeal = seal.toSeal()
+            } else {
+                uiState =
+                    uiState.copy(
+                        sealRecordDB = null,
+                        isSearching = false,
+                        sealNotFound = true,
+                        isError = true
+                    )
+            }
+        }
+    }
+
+    fun findSealbySpeNo(speno: Int) {
+        uiState = uiState.copy(isSearching = true)
+
+        // launch the search for a seal on a separate coroutine
+        viewModelScope.launch {
+
+            // Switch to the IO dispatcher for database operation
+            val seal: WedCheckRecord = withContext(Dispatchers.IO) {
+                wedCheckRepo.findSealbySpeNo(speno)
             }
             if (seal != null) {
                 uiState =
@@ -172,7 +198,7 @@ class WedCheckViewModel(
                     val lastPhysioIndex = headerRow.indexOf("last physio")
                     val colonyIndex = headerRow.indexOf("colony")
 
-
+                    // verify that all columns were found
                     if (listOf(
                             spenoIndex,
                             lastSeenIndex,
@@ -197,7 +223,7 @@ class WedCheckViewModel(
                             // Split the line into fields based on the CSV delimiter (e.g., ',')
                             val row = line.split(",")
 
-                            // Parse fields and create an instance of YourEntity
+                            // Parse fields and create an instance of a WedCheckRecord
                             val record = WedCheckRecord(
                                 id = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
                                 speno = row.getOrNull(spenoIndex)?.toIntOrNull() ?: 0,
