@@ -30,6 +30,7 @@ fun notebookEntryValueSeal(seal : Seal): String {
     } else {
         ""
     }
+
     sb.append(age)
     sb.append(sex)
     sb.append(numRels)
@@ -37,6 +38,16 @@ fun notebookEntryValueSeal(seal : Seal): String {
     sb.append(tag)
     sb.append("  ")
     sb.append(event)
+
+    if (seal.numTags == "NoTag") {
+        sb.append("  ")
+        sb.append(seal.numTags)
+    }
+
+    if (seal.pupPeed) {
+        sb.append("  ")
+        sb.append("peed")
+    }
 
     return sb.toString();
 }

@@ -108,9 +108,7 @@ class AddObservationLogViewModel(
 
     var primarySeal by mutableStateOf(
         Seal(
-            name = "adult",
-            age = "Adult",
-            numRelatives = 0,
+            name = "primary",
             isStarted = false
         )
     )
@@ -168,7 +166,7 @@ class AddObservationLogViewModel(
             condSelected = ""
         }
         when (sealName) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(condition = condSelected, isStarted = true)
             }
 
@@ -182,16 +180,37 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun clearTag(seal: Seal) {
+    fun clearTagOne(seal: Seal) {
         updateTagOneNumber(seal, 0)
         updateTagOneAlpha(seal, "")
         updateTagIdOne(seal)
+
+        updateNotebookEntry(seal)
+    }
+
+    fun clearTagTwo(seal: Seal) {
+        updateTagTwoNumber(seal, 0)
+        updateTagTwoAlpha(seal, "")
+        updateTagIdTwo(seal)
+
+        updateNotebookEntry(seal)
+    }
+
+    fun resetTags(seal: Seal) {
+        updateTagOneNumber(seal, 0)
+        updateTagOneAlpha(seal, "")
+        updateTagIdOne(seal)
+
+        updateTagTwoNumber(seal, 0)
+        updateTagTwoAlpha(seal, "")
+        updateTagIdTwo(seal)
+
         updateNotebookEntry(seal)
     }
 
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(age = input, isStarted = true)
                 updateNotebookEntry(primarySeal)
             }
@@ -236,7 +255,7 @@ class AddObservationLogViewModel(
 
     fun updateSex(seal: Seal, input: String) {
         when (seal.name) {
-            "adult" -> {
+            "primary" -> {
                 if (input == "Male") {
                     primarySeal = primarySeal.copy(sex = input, numRelatives = 0, isStarted = true)
                     updateNumRelatives(seal, "0")
@@ -272,7 +291,7 @@ class AddObservationLogViewModel(
 
     fun updateTagOneAlpha(seal: Seal, input: String) {
         when (seal.name) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(tagOneAlpha = input, isStarted = true)
                 updateTagIdOne(primarySeal)
             }
@@ -289,16 +308,40 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun updateTagTwoAlpha(seal: Seal, input: String) {
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(tagTwoAlpha = input, isStarted = true)
+                updateTagIdTwo(primarySeal)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagTwoAlpha = input, isStarted = true)
+                updateTagIdTwo(pupOne)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagTwoAlpha = input, isStarted = true)
+                updateTagIdTwo(pupTwo)
+            }
+        }
+    }
+
     private fun updateTagIdOne(seal: Seal) {
-        var tagIdStr = seal.tagOneNumber.toString() + seal.tagOneAlpha
+        var tagOneNumStr = ""
+        if (seal.tagOneNumber > 0) {
+            tagOneNumStr = seal.tagOneNumber.toString()
+        }
+
+        var tagIdStr = tagOneNumStr + seal.tagOneAlpha
         val number: Int? = seal.numTags.toIntOrNull()
 
         if (number != null && number > 1) {
-            tagIdStr = seal.tagOneNumber.toString() + seal.tagOneAlpha + seal.tagOneAlpha
+            tagIdStr = tagOneNumStr + seal.tagOneAlpha + seal.tagOneAlpha
         }
 
         when (seal.name) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(tagIdOne = tagIdStr, isStarted = true)
                 updateNotebookEntry(primarySeal)
             }
@@ -315,9 +358,36 @@ class AddObservationLogViewModel(
         }
     }
 
+    private fun updateTagIdTwo(seal: Seal) {
+        var tagIdStr = seal.tagTwoNumber.toString() + seal.tagTwoAlpha
+        val number: Int? = seal.numTags.toIntOrNull()
+
+        if (number != null && number > 1) {
+            tagIdStr = seal.tagTwoNumber.toString() + seal.tagTwoAlpha + seal.tagTwoAlpha
+        }
+
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(tagIdTwo = tagIdStr, isStarted = true)
+                updateNotebookEntry(primarySeal)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagIdTwo = tagIdStr, isStarted = true)
+                updateNotebookEntry(pupOne)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagIdTwo = tagIdStr, isStarted = true)
+                updateNotebookEntry(pupTwo)
+            }
+        }
+    }
+
+
     fun updateTagOneNumber(seal: Seal, input: Int) {
         when (seal.name) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(tagOneNumber = input, isStarted = true)
                 updateTagIdOne(primarySeal)
             }
@@ -333,10 +403,28 @@ class AddObservationLogViewModel(
             }
         }
     }
+    fun updateTagTwoNumber(seal: Seal, input: Int) {
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(tagTwoNumber = input, isStarted = true)
+                updateTagIdTwo(primarySeal)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagTwoNumber = input, isStarted = true)
+                updateTagIdTwo(pupOne)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagTwoNumber = input, isStarted = true)
+                updateTagIdTwo(pupTwo)
+            }
+        }
+    }
 
     fun updateTagEventType(seal: Seal, input: String) {
         when (seal.name) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(tagEventType = input, isStarted = true)
                 updateNotebookEntry(primarySeal)
             }
@@ -354,7 +442,7 @@ class AddObservationLogViewModel(
 
     fun updateComment(sealName: String, input: String) {
         when (sealName) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(comment = input, isStarted = true)
             }
 
@@ -370,7 +458,7 @@ class AddObservationLogViewModel(
 
     fun updateNumTags(sealName: String, input: String) {
         when (sealName) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(numTags = input, isStarted = true)
                 updateTagIdOne(primarySeal)
             }
@@ -389,7 +477,7 @@ class AddObservationLogViewModel(
 
     fun updateTissueTaken(sealName: String, input: Boolean) {
         when (sealName) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(tissueTaken = input, isStarted = true)
             }
 
@@ -406,7 +494,7 @@ class AddObservationLogViewModel(
 
     fun updateSpeNo(sealName: String, speNo: Int) {
         when (sealName) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(speNo = speNo, isStarted = true)
             }
 
@@ -425,7 +513,7 @@ class AddObservationLogViewModel(
         val notebookEntry = notebookEntryValueSeal(seal)
 
         when (seal.name) {
-            "adult" -> {
+            "primary" -> {
                 primarySeal = primarySeal.copy(notebookDataString = notebookEntry)
             }
 
@@ -684,8 +772,6 @@ class AddObservationLogViewModel(
     // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
     fun populateSeal(wedCheckSeal: WedCheckSeal) {
         primarySeal = primarySeal.copy(
-            isStarted = true,  // should this be true yet?
-            name = wedCheckSeal.name,
             age = wedCheckSeal.age,
             sex = wedCheckSeal.sex,
             numRelatives = wedCheckSeal.numRelatives,
@@ -696,6 +782,7 @@ class AddObservationLogViewModel(
             lastPhysio = wedCheckSeal.lastPhysio,
             colony = wedCheckSeal.colony
         )
+        updateNotebookEntry(primarySeal)
     }
 
     private fun getDeviceName(context: Context): String {

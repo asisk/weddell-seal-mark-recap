@@ -34,7 +34,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -51,18 +50,29 @@ fun SealCard(
     viewModel: AddObservationLogViewModel,
     seal: Seal,
 ) {
+
+
     val scrollState = rememberScrollState()
     var newNumRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
     var noTagSelected by remember { mutableStateOf(false) }
-
+    var newTagIdOne by remember { mutableStateOf(seal.tagIdOne) }
+    var newTagIdTwo by remember { mutableStateOf(seal.tagIdTwo) }
+    var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
+    var notebookStr by remember { mutableStateOf(seal.notebookDataString)}
     // Synchronize newNumRelatives with the ViewModel whenever it changes
     LaunchedEffect(seal.numRelatives) {
         newNumRelatives = seal.numRelatives.toString()
     }
 
-    Column() {
-        val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(seal.tagIdOne) {
+        tagIDVal = seal.tagIdOne
+    }
 
+    LaunchedEffect(seal.notebookDataString) {
+        notebookStr = seal.notebookDataString
+    }
+
+    Column() {
         // NOTEBOOK DISPLAY
         Row(
             modifier = Modifier
@@ -76,7 +86,7 @@ fun SealCard(
                 headingStr = seal.age + " :  "
             }
             Text(
-                headingStr + seal.notebookDataString,
+                headingStr + notebookStr,
                 style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold
             )
         }
@@ -87,7 +97,6 @@ fun SealCard(
                 .fillMaxWidth()
                 .padding(8.dp),
         ) {
-
             Box(
                 modifier = Modifier
                     .weight(.9f)
@@ -183,7 +192,10 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                     val numRelsList = listOf("0", "1", "2")
-                    SingleSelectButtonGroupSquare(numRelsList, seal.numRelatives.toString()) { newVal ->
+                    SingleSelectButtonGroupSquare(
+                        numRelsList,
+                        seal.numRelatives.toString()
+                    ) { newVal ->
                         newNumRelatives = newVal
                         // case where the number of relatives is being reset
                         if (newVal.toInt() == 0 && seal.numRelatives > 0) {
@@ -214,7 +226,14 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                     val conditions =
-                        listOf("None", "Dead - 0", "Poor - 1", "Fair - 2", "Good - 3", "Newborn - 4")
+                        listOf(
+                            "None",
+                            "Dead - 0",
+                            "Poor - 1",
+                            "Fair - 2",
+                            "Good - 3",
+                            "Newborn - 4"
+                        )
                     DropdownField(conditions, seal.condition) { newText ->
                         viewModel.updateCondition(
                             seal.name,
@@ -253,8 +272,9 @@ fun SealCard(
                     ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
 
                     Spacer(modifier = Modifier.width(8.dp))
-                    
+
                     TagSwitch(seal.numTags) {
+                        viewModel.resetTags(seal)
                         viewModel.updateNumTags(seal.name, "NoTag")
                     }
                 }
@@ -322,11 +342,7 @@ fun SealCard(
                 ) {
 
                     val focusManager: FocusManager = LocalFocusManager.current
-//                    val keyboardController = LocalSoftwareKeyboardController.current
                     var isError by remember { mutableStateOf(false) }
-                    var tagIDVal by remember {
-                        mutableStateOf(seal.tagIdOne)
-                    }
                     Text(
                         "Tag ID",
                         style = MaterialTheme.typography.titleLarge
@@ -335,7 +351,7 @@ fun SealCard(
                     OutlinedTextField(
                         value = tagIDVal,
                         onValueChange = {
-                            val number: Int? = it.toIntOrNull()
+//                            val number: Int? = it.toIntOrNull()
                             tagIDVal = it
                             isError =
                                 it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
@@ -379,7 +395,7 @@ fun SealCard(
                                 Icons.Filled.Clear, contentDescription = "Clear text",
                                 Modifier.clickable {
                                     tagIDVal = ""
-                                    viewModel.clearTag(seal)
+                                    viewModel.clearTagOne(seal)
                                 })
                         }
                     )

@@ -275,7 +275,7 @@ fun PupCard(
                             Icons.Filled.Clear, contentDescription = "Clear text",
                             Modifier.clickable {
                                 tagIDVal = ""
-                                viewModel.clearTag(seal)
+                                viewModel.clearTagOne(seal)
                             })
                     }
                 )

@@ -31,13 +31,13 @@ data class WedCheckRecord(
 
 // Extension function to map WedCheckRecord to Seal
 fun WedCheckRecord.toSeal(): WedCheckSeal {
-    var name = ""
+//    var name = ""
     var ageString = ""
     if (ageClass == "A") {
-        name = "adult"
+//        name = "adult"
         ageString = "Adult"
     } else if (ageClass == "P") {
-        name = "pupOne"
+//        name = "pupOne"
         ageString = "Pup"
     }
 
@@ -79,7 +79,6 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         found = true,
         lastSeenSeason = season,
         massPups = pupinMassStudy,
-        name = name,
         numTags = "", //not intending to map this over to the observation screen per August 1, 2024 meeting
         momMassMeasurements = momMassMeasurements,
         numPreviousPups = numPreviousPups,
