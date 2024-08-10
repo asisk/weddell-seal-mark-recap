@@ -183,10 +183,7 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                     val numRelsList = listOf("0", "1", "2")
-                    SingleSelectButtonGroupSquare(
-                        txtOptions = numRelsList,
-                        valueInModel = newNumRelatives
-                    ) { newVal ->
+                    SingleSelectButtonGroupSquare(numRelsList, seal.numRelatives.toString()) { newVal ->
                         newNumRelatives = newVal
                         // case where the number of relatives is being reset
                         if (newVal.toInt() == 0 && seal.numRelatives > 0) {
@@ -325,7 +322,7 @@ fun SealCard(
                 ) {
 
                     val focusManager: FocusManager = LocalFocusManager.current
-                    val keyboardController = LocalSoftwareKeyboardController.current
+//                    val keyboardController = LocalSoftwareKeyboardController.current
                     var isError by remember { mutableStateOf(false) }
                     var tagIDVal by remember {
                         mutableStateOf(seal.tagIdOne)
@@ -426,7 +423,7 @@ fun SealCard(
                 style = MaterialTheme.typography.titleLarge
             )
             //TODO, consider an enum for this an other strings
-            val tagEventList = listOf<String>("Marked", "New", "Retag")
+            val tagEventList = listOf("Marked", "New", "Retag")
             SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
                 viewModel.updateTagEventType(seal, newText)
             }

@@ -48,35 +48,25 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         else -> "Unknown"
     }
 
-    val tissue = when (tissueSampled) {
-        "Need" -> "No"
-        "Done" -> "Yes"
-        else -> "NA"
-    }
+//    val tissue = when (tissueSampled) {
+//        "Need" -> "No"
+//        "Done" -> "Yes"
+//        else -> "NA"
+//    }
 
     var ageNumeric = "Unknown"
     if (ageYears > 0) {
         ageNumeric = ageYears.toString()
     }
 
-    var numTags = 0
-    var tagOneAlpha = ""
-    var tagOneNumber = 0
-    var tagTwoAlpha = ""
-    var tagTwoNumber = 0
-
     // Process tags and update variables
-
+    var numTags = 0
     val processedTagOne = processTags(tagIdOne)
-    tagOneAlpha = processedTagOne.tagAlpha
-    tagOneNumber = processedTagOne.tagNumber
     if (processedTagOne.tagValid) {
         numTags++
     }
 
     val processedTagTwo = processTags(tagIdTwo)
-    tagTwoAlpha = processedTagTwo.tagAlpha
-    tagTwoNumber = processedTagTwo.tagNumber
     if (processedTagTwo.tagValid) {
         numTags++
     }
@@ -90,7 +80,7 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         lastSeenSeason = season,
         massPups = pupinMassStudy,
         name = name,
-        numTags = numTags.toString(),
+        numTags = "", //not intending to map this over to the observation screen per August 1, 2024 meeting
         momMassMeasurements = momMassMeasurements,
         numPreviousPups = numPreviousPups,
         sex = sealSex,
@@ -98,12 +88,12 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         pupinTTStudy = pupinTTStudy,
         tagEventType = "",
         tagIdOne = tagIdOne,
-        tagOneAlpha = tagOneAlpha,
-        tagOneNumber = tagOneNumber,
+        tagOneAlpha = processedTagOne.tagAlpha,
+        tagOneNumber = processedTagOne.tagNumber,
         tagIdTwo = tagIdTwo,
-        tagTwoAlpha = tagTwoAlpha,
-        tagTwoNumber = tagTwoNumber,
-        tissueSampled = tissue,
+        tagTwoAlpha = processedTagTwo.tagAlpha,
+        tagTwoNumber = processedTagTwo.tagNumber,
+        tissueSampled = tissueSampled, // updated to map unchanged per August 1, 2024 meeting
         lastPhysio = lastPhysio,
         colony = colony
     )
@@ -128,11 +118,8 @@ fun processTags(tag: String?): TagProcessingResult {
         if (!tag.last().isLetter()) return
 
         tagValid = true
-
-        if (tag == "") {
-            finalTagAlpha = tag.last().toString()
-            finalTagNumber = tag.dropLast(1).toIntOrNull() ?: 0
-        }
+        finalTagAlpha = tag.last().toString()
+        finalTagNumber = tag.dropLast(1).toIntOrNull() ?: 0
     }
 
     validateTag(tag)

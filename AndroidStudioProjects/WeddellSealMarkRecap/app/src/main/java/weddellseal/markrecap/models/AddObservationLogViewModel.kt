@@ -680,42 +680,22 @@ class AddObservationLogViewModel(
         return false
     }
 
+    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
+    // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
     fun populateSeal(wedCheckSeal: WedCheckSeal) {
         primarySeal = primarySeal.copy(
             isStarted = true,  // should this be true yet?
-
             name = wedCheckSeal.name,
             age = wedCheckSeal.age,
             sex = wedCheckSeal.sex,
             numRelatives = wedCheckSeal.numRelatives,
-            numTags = wedCheckSeal.numTags,
-            condition = wedCheckSeal.condition,
-            pupPeed = wedCheckSeal.pupPeed,
             tagIdOne = wedCheckSeal.tagIdOne,
             tagOneNumber = wedCheckSeal.tagOneNumber,
             tagOneAlpha = wedCheckSeal.tagOneAlpha,
-            tagIdTwo = wedCheckSeal.tagIdTwo,
-            tagTwoNumber = wedCheckSeal.tagTwoNumber,
-            tagTwoAlpha = wedCheckSeal.tagTwoAlpha,
-            tagEventType = wedCheckSeal.tagEventType,
-            comment = wedCheckSeal.comment,
-            //TODO, update notebookDataString once the seal is populated,
-            // instead of mapping here
-
-            // historical fields
-            speNo = wedCheckSeal.speNo,
-            ageYears = wedCheckSeal.ageYears,
-            lastSeenSeason = wedCheckSeal.lastSeenSeason,
-            massPups = wedCheckSeal.massPups,
-            photoYears = wedCheckSeal.momMassMeasurements,
-            swimPups = wedCheckSeal.pupinTTStudy,
-            previousPups = wedCheckSeal.numPreviousPups,
-            tissueSampled = wedCheckSeal.tissueSampled,
+            tagEventType = "Marked",
             lastPhysio = wedCheckSeal.lastPhysio,
             colony = wedCheckSeal.colony
         )
-//        updateTagId(primarySeal) -- don't think this is necessary
-        updateNotebookEntry(primarySeal)
     }
 
     private fun getDeviceName(context: Context): String {
