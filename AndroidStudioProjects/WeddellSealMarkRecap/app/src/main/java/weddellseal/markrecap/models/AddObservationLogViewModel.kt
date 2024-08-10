@@ -197,15 +197,22 @@ class AddObservationLogViewModel(
     }
 
     fun resetTags(seal: Seal) {
-        updateTagOneNumber(seal, 0)
-        updateTagOneAlpha(seal, "")
-        updateTagIdOne(seal)
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(numTags = "", tagIdOne = "", tagIdTwo = "", tagOneAlpha = "", tagTwoAlpha = "", tagOneNumber = 0, tagTwoNumber = 0)
+                updateNotebookEntry(primarySeal)
+            }
 
-        updateTagTwoNumber(seal, 0)
-        updateTagTwoAlpha(seal, "")
-        updateTagIdTwo(seal)
+            "pupOne" -> {
+                pupOne = pupOne.copy(numTags = "", tagIdOne = "", tagIdTwo = "", tagOneAlpha = "", tagTwoAlpha = "", tagOneNumber = 0, tagTwoNumber = 0)
+                updateNotebookEntry(pupOne)
+            }
 
-        updateNotebookEntry(seal)
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(numTags = "", tagIdOne = "", tagIdTwo = "", tagOneAlpha = "", tagTwoAlpha = "", tagOneNumber = 0, tagTwoNumber = 0)
+                updateNotebookEntry(pupTwo)
+            }
+        }
     }
 
     fun updateAge(seal: Seal, input: String) {

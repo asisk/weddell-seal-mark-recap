@@ -417,7 +417,7 @@ fun SealCard(
                         style = MaterialTheme.typography.titleMedium
                     )
 
-                    val buttonListAlpha = listOf<String>("A", "C", "D")
+                    val buttonListAlpha = listOf("A", "C", "D")
                     SingleSelectTagAlphaButtonGroup(
                         buttonListAlpha,
                         seal.tagOneAlpha
