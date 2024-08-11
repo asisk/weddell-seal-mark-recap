@@ -58,7 +58,9 @@ fun SealCard(
     var newTagIdOne by remember { mutableStateOf(seal.tagIdOne) }
     var newTagIdTwo by remember { mutableStateOf(seal.tagIdTwo) }
     var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
-    var notebookStr by remember { mutableStateOf(seal.notebookDataString)}
+    var notebookStr by remember { mutableStateOf(seal.notebookDataString) }
+    val showDeleteDialog = remember { mutableStateOf(false) }
+
     // Synchronize newNumRelatives with the ViewModel whenever it changes
     LaunchedEffect(seal.numRelatives) {
         newNumRelatives = seal.numRelatives.toString()
@@ -197,16 +199,29 @@ fun SealCard(
                         seal.numRelatives.toString()
                     ) { newVal ->
                         newNumRelatives = newVal
-                        // case where the number of relatives is being reset
+
+                        // handle case where the number of relatives is being set to zero
                         if (newVal.toInt() == 0 && seal.numRelatives > 0) {
-                            // TODO, pop a warning and ask for confirmation before moving forward
-                            // because this action results in removing any entered data for pups
+                            // pop a warning and ask for confirmation before moving forward
+                            showDeleteDialog.value = true
                         } else {
-                            // TODO, consider firing this if the user confirms the action
                             viewModel.updateNumRelatives(seal, newVal)
                         }
                     }
                 }
+            }
+
+            // because this action results in removing any entered data for pups
+            // Show the dialog if showDialog is true
+            if (showDeleteDialog.value) {
+                RemoveDialog(
+                    viewModel,
+                    onDismissRequest = { showDeleteDialog.value = false },
+                    onConfirmation = {
+                        viewModel.removePups()
+                        showDeleteDialog.value = false
+                    },
+                )
             }
 
             Box(

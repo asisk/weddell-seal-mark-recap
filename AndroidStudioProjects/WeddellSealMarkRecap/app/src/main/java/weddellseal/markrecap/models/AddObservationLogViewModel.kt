@@ -146,20 +146,6 @@ class AddObservationLogViewModel(
         }
     }
 
-    private fun resetPup(seal: Seal) {
-        when (seal.name) {
-            "pupOne" -> {
-                pupOne = pupOne.copy(name = "pupOne", age = "Pup", isStarted = false)
-                updateNotebookEntry(pupOne)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(name = "pupTwo", age = "Pup", isStarted = false)
-                updateNotebookEntry(pupTwo)
-            }
-        }
-    }
-
     fun updateCondition(sealName: String, input: String) {
         var condSelected = input
         if (input == "Select an option") {
@@ -199,17 +185,41 @@ class AddObservationLogViewModel(
     fun resetTags(seal: Seal) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(numTags = "", tagIdOne = "", tagIdTwo = "", tagOneAlpha = "", tagTwoAlpha = "", tagOneNumber = 0, tagTwoNumber = 0)
+                primarySeal = primarySeal.copy(
+                    numTags = "",
+                    tagIdOne = "",
+                    tagIdTwo = "",
+                    tagOneAlpha = "",
+                    tagTwoAlpha = "",
+                    tagOneNumber = 0,
+                    tagTwoNumber = 0
+                )
                 updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(numTags = "", tagIdOne = "", tagIdTwo = "", tagOneAlpha = "", tagTwoAlpha = "", tagOneNumber = 0, tagTwoNumber = 0)
+                pupOne = pupOne.copy(
+                    numTags = "",
+                    tagIdOne = "",
+                    tagIdTwo = "",
+                    tagOneAlpha = "",
+                    tagTwoAlpha = "",
+                    tagOneNumber = 0,
+                    tagTwoNumber = 0
+                )
                 updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(numTags = "", tagIdOne = "", tagIdTwo = "", tagOneAlpha = "", tagTwoAlpha = "", tagOneNumber = 0, tagTwoNumber = 0)
+                pupTwo = pupTwo.copy(
+                    numTags = "",
+                    tagIdOne = "",
+                    tagIdTwo = "",
+                    tagOneAlpha = "",
+                    tagTwoAlpha = "",
+                    tagOneNumber = 0,
+                    tagTwoNumber = 0
+                )
                 updateNotebookEntry(pupTwo)
             }
         }
@@ -249,14 +259,6 @@ class AddObservationLogViewModel(
                 pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
                 updateNotebookEntry(pupTwo)
             }
-
-            // case where the number of relatives is being reset
-            if (number == 0 && primarySeal.numRelatives > 0) {
-                // reset the pups
-                resetPup(pupOne)
-                resetPup(pupTwo)
-
-            }
         }
     }
 
@@ -265,7 +267,7 @@ class AddObservationLogViewModel(
             "primary" -> {
                 if (input == "Male") {
                     primarySeal = primarySeal.copy(sex = input, numRelatives = 0, isStarted = true)
-                    updateNumRelatives(seal, "0")
+                    removePups()
                 } else {
                     primarySeal = primarySeal.copy(sex = input, isStarted = true)
                 }
@@ -410,6 +412,7 @@ class AddObservationLogViewModel(
             }
         }
     }
+
     fun updateTagTwoNumber(seal: Seal, input: Int) {
         when (seal.name) {
             "primary" -> {
@@ -534,6 +537,107 @@ class AddObservationLogViewModel(
         }
     }
 
+    private fun validateSeal(seal: Seal): Boolean {
+        if (seal.isStarted) {
+            if (seal.age != "" && seal.sex != "" && seal.tagIdOne != "" && seal.tagEventType != "" && seal.tagOneNumber > 0) {
+                return true
+            }
+        }
+        return false
+    }
+
+    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
+    // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
+    fun populateSeal(wedCheckSeal: WedCheckSeal) {
+        primarySeal = primarySeal.copy(
+            age = wedCheckSeal.age,
+            sex = wedCheckSeal.sex,
+            numRelatives = wedCheckSeal.numRelatives,
+            tagIdOne = wedCheckSeal.tagIdOne,
+            tagOneNumber = wedCheckSeal.tagOneNumber,
+            tagOneAlpha = wedCheckSeal.tagOneAlpha,
+            tagEventType = "Marked",
+            lastPhysio = wedCheckSeal.lastPhysio,
+            colony = wedCheckSeal.colony
+        )
+        updateNotebookEntry(primarySeal)
+    }
+
+    fun removeSeal(sealName: String) {
+        when (sealName) {
+            "primary" -> {
+                primarySeal = Seal(
+                    name = "primary",
+                    isStarted = false
+                )
+                // removing the primary seal results in removing pups, if present, as well
+                pupOne = Seal(
+                    name = "pupOne",
+                    age = "Pup",
+                    numRelatives = 1,
+                    isStarted = false
+                )
+                pupTwo = Seal(
+                    name = "pupTwo",
+                    age = "Pup",
+                    numRelatives = 2,
+                    isStarted = false
+                )
+            }
+
+            "pupOne" -> {
+                // if pupOne is removed and there's a second pup
+                if (pupTwo.isStarted) {
+                    // rename the second pup and update it's number of relatives
+                    pupTwo = pupTwo.copy(name = "PupOne", numRelatives = 1)
+                    //reassign it to pupOne
+                    pupOne = pupTwo
+                } else {
+                    pupOne = Seal(
+                        name = "pupOne",
+                        age = "Pup",
+                        numRelatives = 1,
+                        isStarted = false
+                    )
+                }
+
+                val parentNumRels = primarySeal.numRelatives - 1
+                primarySeal = primarySeal.copy(numRelatives = parentNumRels)
+            }
+
+            "pupTwo" -> {
+                pupTwo = Seal(
+                    name = "pupTwo",
+                    age = "Pup",
+                    numRelatives = 2,
+                    isStarted = false
+                )
+                // update parent num rels
+                val parentNumRels = primarySeal.numRelatives - 1
+                primarySeal = primarySeal.copy(numRelatives = parentNumRels)
+            }
+        }
+    }
+
+    fun removePups() {
+        primarySeal = primarySeal.copy(numRelatives = 0)
+
+        //called when primary seal number of relatives is set to zero
+        pupOne = Seal(
+            name = "pupOne",
+            age = "Pup",
+            numRelatives = 1,
+            isStarted = false
+        )
+        pupTwo = Seal(
+            name = "pupTwo",
+            age = "Pup",
+            numRelatives = 2,
+            isStarted = false
+        )
+    }
+
+
     fun isValid(): Boolean {
 //        if (!observationSaver.isEmpty() && !uiState.isSaving) {
         if (observationRepo.canAddObservation() && !uiState.isSaving) {
@@ -566,7 +670,7 @@ class AddObservationLogViewModel(
             }
         }
     }
-    // endregion
+// endregion
 
     // region Location management
     @SuppressLint("MissingPermission")
@@ -764,32 +868,6 @@ class AddObservationLogViewModel(
         } else {
             ""
         }
-    }
-
-    private fun validateSeal(seal: Seal): Boolean {
-        if (seal.isStarted) {
-            if (seal.age != "" && seal.sex != "" && seal.tagIdOne != "" && seal.tagEventType != "" && seal.tagOneNumber > 0) {
-                return true
-            }
-        }
-        return false
-    }
-
-    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
-    // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
-    fun populateSeal(wedCheckSeal: WedCheckSeal) {
-        primarySeal = primarySeal.copy(
-            age = wedCheckSeal.age,
-            sex = wedCheckSeal.sex,
-            numRelatives = wedCheckSeal.numRelatives,
-            tagIdOne = wedCheckSeal.tagIdOne,
-            tagOneNumber = wedCheckSeal.tagOneNumber,
-            tagOneAlpha = wedCheckSeal.tagOneAlpha,
-            tagEventType = "Marked",
-            lastPhysio = wedCheckSeal.lastPhysio,
-            colony = wedCheckSeal.colony
-        )
-        updateNotebookEntry(primarySeal)
     }
 
     private fun getDeviceName(context: Context): String {
