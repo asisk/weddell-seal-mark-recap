@@ -166,6 +166,23 @@ class AddObservationLogViewModel(
         }
     }
 
+
+    fun updateWeight(seal: Seal, number: Int) {
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(weight = number, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(weight = number, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(weight = number, isStarted = true)
+            }
+        }
+    }
+
     fun clearTagOne(seal: Seal) {
         updateTagOneNumber(seal, 0)
         updateTagOneAlpha(seal, "")
@@ -196,7 +213,6 @@ class AddObservationLogViewModel(
                 )
                 updateNotebookEntry(primarySeal)
             }
-
             "pupOne" -> {
                 pupOne = pupOne.copy(
                     numTags = "",
@@ -209,7 +225,6 @@ class AddObservationLogViewModel(
                 )
                 updateNotebookEntry(pupOne)
             }
-
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(
                     numTags = "",
@@ -450,6 +465,25 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun updateOldTags(seal: Seal) {
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true)
+                updateNotebookEntry(primarySeal)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true)
+                updateNotebookEntry(pupOne)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true)
+            }
+        }
+
+    }
+
     fun updateComment(sealName: String, input: String) {
         when (sealName) {
             "primary" -> {
@@ -550,15 +584,19 @@ class AddObservationLogViewModel(
     // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
     fun populateSeal(wedCheckSeal: WedCheckSeal) {
         primarySeal = primarySeal.copy(
+            speNo = wedCheckSeal.speNo,
             age = wedCheckSeal.age,
             sex = wedCheckSeal.sex,
             numRelatives = wedCheckSeal.numRelatives,
             tagIdOne = wedCheckSeal.tagIdOne,
             tagOneNumber = wedCheckSeal.tagOneNumber,
             tagOneAlpha = wedCheckSeal.tagOneAlpha,
+            oldTagIdOne = wedCheckSeal.tagIdOne,
+            oldTagIdTwo = wedCheckSeal.tagIdTwo,
             tagEventType = "Marked",
             lastPhysio = wedCheckSeal.lastPhysio,
-            colony = wedCheckSeal.colony
+            colony = wedCheckSeal.colony,
+            isWedCheck = true,
         )
         updateNotebookEntry(primarySeal)
     }
@@ -819,11 +857,11 @@ class AddObservationLogViewModel(
                         ageClass = ageClass,
                         sex = sex,
                         numRelatives = numRels,
-                        oldTagIDOne = seal.tagIdOne,
-                        oldTagIDTwo = seal.tagIdTwo,
+                        oldTagIDOne = seal.oldTagIdOne,
+                        oldTagIDTwo = seal.oldTagIdTwo,
                         tagIDOne = seal.tagIdOne,
                         tagOneIndicator = tagOneIndicator,
-                        tagIDTwo = seal.tagIdOne,
+                        tagIDTwo = seal.tagIdTwo,
                         tagTwoIndicator = tagTwoIndicator,
                         relativeTagIDOne = pupOneTagIdOne,
                         relativeTagIDTwo = pupTwoTagIdOne,
@@ -831,10 +869,10 @@ class AddObservationLogViewModel(
                         observerInitials = uiState.observerInitials,
                         flaggedEntry = "TBD", // TODO, need to figure out when this gets triggered
                         tagEvent = eventType,
+                        weight = seal.weight.toString(),
                         tissueSampled = seal.tissueSampled,
                         comments = seal.comment,
                         colony = uiState.colonyLocation,
-                        weight = seal.weight.toString()
                     )
                     //TODO, consider a validation check to see if fields are populated before inserting to database
                     observationRepo.addObservation(log)

@@ -7,6 +7,7 @@ data class Seal(
     val comment: String = "",
     val condition: String = "",
     var isStarted: Boolean = false,
+    var isWedCheck: Boolean = false,
     val lastPhysio: String = "",
     val lastSeenSeason: Int = 0,
     val massPups: String = "",
@@ -21,6 +22,8 @@ data class Seal(
     val speNo: Int = 0,
     val swimPups: String = "",
     val tagEventType: String = "",
+    val oldTagIdOne: String = "",
+    val oldTagIdTwo: String = "",
     val tagIdOne: String = "",
     val tagOneAlpha: String = "",
     val tagOneNumber: Int = 0,
@@ -29,5 +32,6 @@ data class Seal(
     val tagTwoNumber: Int = 0,
     val tissueTaken: Boolean = false,
     val tissueSampled: String = "",
+    val weightTaken: Boolean = false,
     val weight: Int = 0
 )

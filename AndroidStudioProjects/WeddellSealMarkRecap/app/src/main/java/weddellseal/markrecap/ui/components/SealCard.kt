@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,14 +50,14 @@ fun SealCard(
     viewModel: AddObservationLogViewModel,
     seal: Seal,
 ) {
-
-
-    val scrollState = rememberScrollState()
     var newNumRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
-    var noTagSelected by remember { mutableStateOf(false) }
-    var newTagIdOne by remember { mutableStateOf(seal.tagIdOne) }
-    var newTagIdTwo by remember { mutableStateOf(seal.tagIdTwo) }
+    var isWeightToggled by remember { mutableStateOf(false) }
+    var isCommentToggled by remember { mutableStateOf(false) }
+    var isRetag by remember { mutableStateOf(false) }
     var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
+    var tagIDValNew by remember { mutableStateOf(seal.tagIdOne) }
+    var oldTagOne by remember { mutableStateOf(seal.oldTagIdOne) }
+    var oldTagTwo by remember { mutableStateOf(seal.oldTagIdTwo) }
     var notebookStr by remember { mutableStateOf(seal.notebookDataString) }
     val showDeleteDialog = remember { mutableStateOf(false) }
 
@@ -68,6 +68,7 @@ fun SealCard(
 
     LaunchedEffect(seal.tagIdOne) {
         tagIDVal = seal.tagIdOne
+        tagIDValNew = seal.tagIdOne
     }
 
     LaunchedEffect(seal.notebookDataString) {
@@ -95,9 +96,10 @@ fun SealCard(
         //AGE
         Row(
             modifier = Modifier
-//                .fillMaxWidth(.7f)
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
@@ -109,67 +111,22 @@ fun SealCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(.8f)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-//                    .weight(2f)
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        //AGE
-                        Text(
-                            "Age",
-                            style = MaterialTheme.typography.titleLarge
+                    //AGE
+                    Text(
+                        "Age",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
+                    SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
+                        viewModel.updateAge(
+                            seal,
+                            newText
                         )
-                        val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
-                        SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
-                            viewModel.updateAge(
-                                seal,
-                                newText
-                            )
-                        }
                     }
                 }
             }
         }
-
         // SEX & PUP PEED
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-        ) {
-            Box(
-                modifier = Modifier
-//                    .weight(.6f)
-//                    .padding(end = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(.8f)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .weight(2f)
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Sex",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        val buttonListSex = listOf("Female", "Male", "Unknown")
-                        SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
-                            viewModel.updateSex(seal, newText)
-                        }
-                    }
-                }
-            }
-        }
-        // NUMBER OF RELATIVES
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -187,25 +144,100 @@ fun SealCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    Text(
+                        "Sex",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    val buttonListSex = listOf("Female", "Male", "Unknown")
+                    SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
+                        viewModel.updateSex(seal, newText)
+                    }
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(start = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        Modifier
+                            .weight(2f)
+                            .padding(6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // display pup peed only for pups
+                        if (seal.age == "Pup") {
+                            var isChecked by remember {
+                                mutableStateOf(false)
+                            }
+                            Text(
+                                text = "Pup Peed",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                            Checkbox(
+                                checked = isChecked,
+                                onCheckedChange = {
+                                    isChecked = it
+                                    viewModel.updatePupPeed(seal.name, it)
+                                },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
-                    // NUMBER OF RELATIVES
+        // NUMBER OF RELATIVES && CONDITION
+        Row(
+            modifier = Modifier
+//                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(.8f)
+//                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text(
                         "# of Rels",
                         style = MaterialTheme.typography.titleLarge
                     )
-                    val numRelsList = listOf("0", "1", "2")
-                    SingleSelectButtonGroupSquare(
-                        numRelsList,
-                        seal.numRelatives.toString()
-                    ) { newVal ->
-                        newNumRelatives = newVal
+                    if (seal.age == "Pup") {
+                        Text(
+                            seal.numRelatives.toString(),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    } else {
+                        val numRelsList = listOf("0", "1", "2")
+                        SingleSelectButtonGroupSquare(
+                            numRelsList,
+                            seal.numRelatives.toString()
+                        ) { newVal ->
+                            newNumRelatives = newVal
 
-                        // handle case where the number of relatives is being set to zero
-                        if (newVal.toInt() == 0 && seal.numRelatives > 0) {
-                            // pop a warning and ask for confirmation before moving forward
-                            showDeleteDialog.value = true
-                        } else {
-                            viewModel.updateNumRelatives(seal, newVal)
+                            // handle case where the number of relatives is being set to zero
+                            if (newVal.toInt() == 0 && seal.numRelatives > 0) {
+                                // pop a warning and ask for confirmation before moving forward
+                                showDeleteDialog.value = true
+                            } else {
+                                viewModel.updateNumRelatives(seal, newVal)
+                            }
                         }
                     }
                 }
@@ -215,7 +247,6 @@ fun SealCard(
             // Show the dialog if showDialog is true
             if (showDeleteDialog.value) {
                 RemoveDialog(
-                    viewModel,
                     onDismissRequest = { showDeleteDialog.value = false },
                     onConfirmation = {
                         viewModel.removePups()
@@ -258,6 +289,301 @@ fun SealCard(
                 }
             }
         }
+        // OLD TAG ID
+        if (isRetag || seal.isWedCheck) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(.4f)
+                        .padding(end = 8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        val focusManager: FocusManager = LocalFocusManager.current
+                        var isError by remember { mutableStateOf(false) }
+
+                        Text(
+                            "Old Tag ID One",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = seal.oldTagIdOne)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Old Tag ID Two",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = seal.oldTagIdTwo)
+                    }
+                }
+            }
+        }
+        // TAG EVENT TYPE
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+//                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Tag Event",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    //TODO, consider an enum for this an other strings
+                    val tagEventList = listOf("Marked", "New", "Retag")
+                    SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
+                        viewModel.updateTagEventType(seal, newText)
+                        if (newText == "Retag") {
+                            isRetag = true
+
+                            // shift the current tags to the old tags and reset the current tags to empty
+                            viewModel.updateOldTags(seal)
+                            viewModel.resetTags(seal)
+                        }
+                        // TODO, handle the case where if was Retag and now something else...revert the tags in the model
+                    }
+                }
+            }
+        }
+        //TAG ID
+        if (!isRetag && !seal.isWedCheck) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(.4f)
+                        .padding(end = 8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        val focusManager: FocusManager = LocalFocusManager.current
+                        var isError by remember { mutableStateOf(false) }
+
+                        Text(
+                            "Tag ID",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+
+                        // TAG ID & OLD TAG ID
+                        OutlinedTextField(
+                            value = tagIDVal,
+                            onValueChange = {
+//                            val number: Int? = it.toIntOrNull()
+                                tagIDVal = it
+                                isError =
+                                    it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
+                            },
+                            label = {
+                                Text(
+                                    "Number",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            },
+                            textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
+                            isError = isError,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = ContentAlpha.disabled
+                                ),
+                            ),
+                            placeholder = { Text("Enter Tag Number") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    // Handle "Done" button action
+
+                                    // change the focus
+                                    focusManager.clearFocus()
+
+                                    // save the input to the model
+                                    val number: Int? = tagIDVal.toIntOrNull()
+                                    if (number != null && !isError) {
+                                        viewModel.updateTagOneNumber(seal, number)
+                                    }
+                                },
+                            ),
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Filled.Clear, contentDescription = "Clear text",
+                                    Modifier.clickable {
+                                        tagIDVal = ""
+                                        viewModel.clearTagOne(seal)
+                                    })
+                            }
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(.4f)
+                        .padding(start = 8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        //TAG ALPHA BUTTONS
+                        Text(
+                            "Tag Alpha",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        val buttonListAlpha = listOf("A", "C", "D")
+                        SingleSelectTagAlphaButtonGroup(
+                            buttonListAlpha,
+                            seal.tagOneAlpha
+                        ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
+                    }
+                }
+            }
+        }
+
+        if (isRetag) {
+            //TAG ID NEW
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(.4f)
+                        .padding(end = 8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        val focusManager: FocusManager = LocalFocusManager.current
+                        var isError by remember { mutableStateOf(false) }
+
+                        Text(
+                            "New \n" +
+                                    "Tag ID",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+
+                        // TAG ID NEW
+                        OutlinedTextField(
+                            value = tagIDValNew,
+                            onValueChange = {
+//                            val number: Int? = it.toIntOrNull()
+                                tagIDValNew = it
+                                isError =
+                                    it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
+                            },
+                            label = {
+                                Text(
+                                    "Number",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            },
+                            textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
+                            isError = isError,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = ContentAlpha.disabled
+                                ),
+                            ),
+                            placeholder = { Text("Enter Tag Number") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    // Handle "Done" button action
+
+                                    // change the focus
+                                    focusManager.clearFocus()
+
+                                    // save the input to the model
+                                    val number: Int? = tagIDValNew.toIntOrNull()
+                                    if (number != null && !isError) {
+                                        viewModel.updateTagOneNumber(seal, number)
+                                    }
+                                },
+                            ),
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Filled.Clear, contentDescription = "Clear text",
+                                    Modifier.clickable {
+                                        tagIDValNew = ""
+                                        viewModel.clearTagOne(seal)
+                                    })
+                            }
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(.4f)
+                        .padding(start = 8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        //TAG ALPHA BUTTONS
+                        Text(
+                            "Tag Alpha",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        val buttonListAlpha = listOf("A", "C", "D")
+                        SingleSelectTagAlphaButtonGroup(
+                            buttonListAlpha,
+                            seal.tagOneAlpha
+                        ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
+                    }
+                }
+            }
+        }
+        // NUMBER OF TAGS && TISSUE
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -289,6 +615,7 @@ fun SealCard(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     TagSwitch(seal.numTags) {
+                        // actions on change of value
                         viewModel.resetTags(seal)
                         viewModel.updateNumTags(seal.name, "NoTag")
                     }
@@ -297,7 +624,7 @@ fun SealCard(
             Box(
                 modifier = Modifier
                     .weight(.4f)
-                    .padding(start = 8.dp)
+                    .padding(start = 8.dp, end = 4.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -305,8 +632,12 @@ fun SealCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
 
-                    // TISSUE SAMPLED
-                    val (checkedStateTissue, onStateChangeTissue) = remember { mutableStateOf(seal.tissueTaken) }
+                    // TISSUE
+                    val (checkedStateTissue, onStateChangeTissue) = remember {
+                        mutableStateOf(
+                            seal.tissueTaken
+                        )
+                    }
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -322,7 +653,7 @@ fun SealCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Tissue Sampled",
+                            text = "Tissue",
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(start = 16.dp)
                         )
@@ -332,12 +663,60 @@ fun SealCard(
                             onCheckedChange = null // null recommended for accessibility with screenreaders
                         )
                     }
-
-                    //TODO, add option to collect weight
                 }
             }
         }
-        //TAG ID
+        // COMMENTS
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+//                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Enter Comment",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Switch(
+                        checked = isCommentToggled,
+                        onCheckedChange = { isChecked ->
+                            isCommentToggled = isChecked
+                        }
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(.6f)
+//                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (isCommentToggled) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        CommentField(seal.comment) { newText ->
+                            viewModel.updateComment(seal.name, newText)
+                        }
+                    }
+                }
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -347,7 +726,33 @@ fun SealCard(
         ) {
             Box(
                 modifier = Modifier
-                    .weight(.3f)
+                    .weight(.4f)
+//                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (seal.age == "Pup") {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Enter Weight",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Switch(
+                            checked = isWeightToggled,
+                            onCheckedChange = { isChecked ->
+                                isWeightToggled = isChecked
+                            }
+                        )
+                    }
+                }
+            }
+            // PUP WEIGHT ENTRY FIELD
+            Box(
+                modifier = Modifier
+                    .weight(.6f)
                     .padding(end = 8.dp)
             ) {
                 Row(
@@ -355,135 +760,62 @@ fun SealCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    if (isWeightToggled) {
+                        val focusManager: FocusManager = LocalFocusManager.current
+                        var weightRecorded by remember { mutableStateOf("") }
 
-                    val focusManager: FocusManager = LocalFocusManager.current
-                    var isError by remember { mutableStateOf(false) }
-                    Text(
-                        "Tag ID",
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                    OutlinedTextField(
-                        value = tagIDVal,
-                        onValueChange = {
-//                            val number: Int? = it.toIntOrNull()
-                            tagIDVal = it
-                            isError =
-                                it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
-                        },
-                        label = {
-                            Text(
-                                "Number",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        },
-                        textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
-                        isError = isError,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = ContentAlpha.disabled
-                            ),
-                        ),
-                        placeholder = { Text("Enter Tag Number") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                // Handle "Done" button action
-
-                                // change the focus
-                                focusManager.clearFocus()
-
-                                // save the input to the model
-                                val number: Int? = tagIDVal.toIntOrNull()
-                                if (number != null && !isError) {
-                                    viewModel.updateTagOneNumber(seal, number)
-                                }
+                        OutlinedTextField(
+                            value = weightRecorded,
+                            onValueChange = {
+                                weightRecorded = it
                             },
-                        ),
-                        trailingIcon = {
-                            Icon(
-                                Icons.Filled.Clear, contentDescription = "Clear text",
-                                Modifier.clickable {
-                                    tagIDVal = ""
-                                    viewModel.clearTagOne(seal)
-                                })
-                        }
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-                    .padding(start = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    //TAG ALPHA BUTTONS
-                    Text(
-                        "Tag Alpha",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                            label = {
+                                Text(
+                                    "Weight",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            },
+                            textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
+                            colors = OutlinedTextFieldDefaults.colors(
+                                MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = ContentAlpha.disabled
+                                ),
+                            ),
+                            placeholder = { Text("Enter Weight in lbs") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    // Handle "Done" button action
 
-                    val buttonListAlpha = listOf("A", "C", "D")
-                    SingleSelectTagAlphaButtonGroup(
-                        buttonListAlpha,
-                        seal.tagOneAlpha
-                    ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
-                }
-            }
-        }
-        // TAG EVENT TYPE
-        val (checkedState, onStateChange) = remember { mutableStateOf(false) }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(.8f)
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Tag Event",
-                style = MaterialTheme.typography.titleLarge
-            )
-            //TODO, consider an enum for this an other strings
-            val tagEventList = listOf("Marked", "New", "Retag")
-            SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
-                viewModel.updateTagEventType(seal, newText)
-            }
-        }
-        // COMMENTS
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-//                    .fillMaxHeight()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-                    .padding(start = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    CommentField(seal.comment) { newText ->
-                        viewModel.updateComment(seal.name, newText)
+                                    // change the focus
+                                    focusManager.clearFocus()
+
+                                    // save the input to the model
+                                    val number: Int? = weightRecorded.toIntOrNull()
+                                    if (number != null) {
+                                        viewModel.updateWeight(seal, number)
+                                    }
+                                },
+                            ),
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Filled.Clear, contentDescription = "Clear text",
+                                    Modifier.clickable {
+                                        weightRecorded = ""
+//                                        viewModel.clearTagOne(seal)
+                                    })
+                            }
+                        )
                     }
                 }
             }
         }
     }
-//    }
 }

@@ -327,7 +327,6 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
                 // Show the dialog if showDialog is true
                 if (showDeleteDialog.value) {
                     RemoveDialog(
-                        viewModel,
                         onDismissRequest = { showDeleteDialog.value = false },
                         onConfirmation = {
                             // remove the current seal
