@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ContentAlpha
@@ -34,7 +33,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -174,7 +172,7 @@ fun SealCard(
                         // display pup peed only for pups
                         if (seal.age == "Pup") {
                             var isChecked by remember {
-                                mutableStateOf(false)
+                                mutableStateOf(seal.pupPeed)
                             }
                             Text(
                                 text = "Pup Peed",
@@ -578,7 +576,9 @@ fun SealCard(
                         SingleSelectTagAlphaButtonGroup(
                             buttonListAlpha,
                             seal.tagOneAlpha
-                        ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
+                        ) { newText ->
+                            viewModel.updateTagOneAlpha(seal, newText)
+                        }
                     }
                 }
             }
@@ -633,35 +633,53 @@ fun SealCard(
                 ) {
 
                     // TISSUE
-                    val (checkedStateTissue, onStateChangeTissue) = remember {
-                        mutableStateOf(
-                            seal.tissueTaken
-                        )
-                    }
+//                    val (checkedStateTissue, onStateChangeTissue) = remember {
+//                        mutableStateOf(
+//                            seal.tissueTaken
+//                        )
+//                    }
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .toggleable(
-                                value = checkedStateTissue,
-                                onValueChange = {
-                                    onStateChangeTissue(!checkedStateTissue)
-                                    viewModel.updateTissueTaken(seal.name, checkedStateTissue)
-                                },
-                                role = Role.Checkbox
-                            )
+//                            .toggleable(
+//                                value = isTissueChecked,
+//                                onValueChange = {
+//                                    viewModel.updateTissueTaken(seal.name, it)
+//                                },
+//                                role = Role.Checkbox
+//                            )
                             .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+//                        Text(
+//                            text = "Tissue",
+//                            style = MaterialTheme.typography.titleLarge,
+//                            modifier = Modifier.padding(start = 16.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(10.dp))
+//                        Checkbox(
+//                            checked = isTissueChecked,
+//                            onCheckedChange = null // null recommended for accessibility with screenreaders
+//                        )
+
+                        var isTissueChecked by remember {
+                            mutableStateOf(seal.tissueTaken)
+                        }
                         Text(
                             text = "Tissue",
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(start = 16.dp)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
                         Checkbox(
-                            checked = checkedStateTissue,
-                            onCheckedChange = null // null recommended for accessibility with screenreaders
+                            checked = isTissueChecked,
+                            onCheckedChange = {
+                                isTissueChecked = it
+                                viewModel.updateTissueTaken(seal.name, it)
+                            },
+                            modifier = Modifier
+                                .padding(8.dp)
                         )
+
                     }
                 }
             }

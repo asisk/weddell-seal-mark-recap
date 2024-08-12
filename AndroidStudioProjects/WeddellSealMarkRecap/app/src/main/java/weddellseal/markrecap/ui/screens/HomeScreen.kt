@@ -40,6 +40,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,7 +80,17 @@ fun HomeScaffold(
 ) {
     val context = LocalContext.current
     val state = viewModel.uiState
-    val showCensusDialog = remember { mutableStateOf(false) }
+    var showCensusDialog by remember { mutableStateOf(false) }
+    val locationList by viewModel.locations.collectAsState()
+    val observerList by viewModel.observers.collectAsState()
+
+    LaunchedEffect(Unit) {
+       if (locationList.isEmpty()) {
+           viewModel.fetchLocations()
+       }
+
+        //TODO, add in line for observers once data is available
+    }
 
     // Register ActivityResult to request Location permissions
     val requestFilePermissions =
@@ -253,7 +265,7 @@ fun HomeScaffold(
                             modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
                             onClick = {
-                                showCensusDialog.value = true
+                                showCensusDialog = true
                             },
                             icon = { Icon(Icons.Filled.Checklist, "Census", Modifier.size(36.dp)) },
                             text = {
@@ -283,7 +295,7 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            var observerSelected by remember { mutableStateOf("") }
+                            var observerSelected by remember { mutableStateOf(obsViewModel.uiState.observerInitials) }
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
@@ -294,16 +306,14 @@ fun HomeScaffold(
                                     style = MaterialTheme.typography.titleLarge
                                 )
                             }
-
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-
                                 DropdownField(
-                                    state.observerInitials,
-                                    obsViewModel.uiState.observerInitials
+                                    observerList,
+                                    observerSelected
                                 ) { valueSelected ->
                                     observerSelected = valueSelected
                                     obsViewModel.updateObserverInitials(valueSelected)
@@ -317,7 +327,7 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            var observationSiteSelected by remember { mutableStateOf("") }
+                            var observationSiteSelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
@@ -332,59 +342,14 @@ fun HomeScaffold(
                                     .fillMaxWidth(.8f)
                             ) {
                                 DropdownField(
-                                    state.colonyLocations,
-                                    obsViewModel.uiState.colonyLocation
+                                    locationList,
+                                    observationSiteSelected
                                 ) { valueSelected ->
-                                    observationSiteSelected = valueSelected
-                                    obsViewModel.updateColonySelection(observationSiteSelected)
+//                                    observationSiteSelected = valueSelected
+                                    obsViewModel.updateColonySelection(valueSelected)
                                 }
                             }
-
-//                            // Spacer to push the IconButton to the right
-//                            Spacer(modifier = Modifier.weight(1f))
-//
-//                            Column(modifier = Modifier.padding(4.dp)) {
-//                                IconButton(
-//                                    onClick = {
-//                                        // Show file picker to select CSV file
-//                                        pickCsvFile.launch("text/csv") // Mime type for plain text files, change as per requirement
-//                                    },
-//                                    modifier = Modifier.size(48.dp) // Adjust size as needed
-//                                ) {
-//                                    Icon(
-//                                        imageVector = Icons.Default.Upload,
-//                                        contentDescription = "Upload CSV"
-//                                    )
-//                                }
-//                            }
                         }
-//                        Row(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(6.dp),
-//                            horizontalArrangement = Arrangement.Start,
-//                            verticalAlignment = Alignment.CenterVertically
-//                        ) {
-//                            val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
-//                            var selection = "0"
-//                            Column(
-//                                modifier = Modifier
-//                                    .padding(4.dp)
-//                                    .fillMaxWidth(.3f)
-//                            ) {
-//                                Text(text = "Census #")
-//                            }
-//                            Column(
-//                                modifier = Modifier
-//                                    .padding(4.dp)
-//                                    .fillMaxWidth(.5f)
-//                            ) {
-//                                DropdownField(censusOptions) { newText ->
-//                                    selection = newText
-//                                    obsViewModel.updateCensusNumber(newText)
-//                                }
-//                            }
-//                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -415,11 +380,11 @@ fun HomeScaffold(
                     }
 
                     // Show the dialog if showDialog is true
-                    if (showCensusDialog.value) {
+                    if (showCensusDialog) {
                         CensusDialog(
                             obsViewModel,
-                            onDismissRequest = { showCensusDialog.value = false },
-                            onConfirmation = { showCensusDialog.value = false },
+                            onDismissRequest = { showCensusDialog = false },
+                            onConfirmation = { showCensusDialog = false },
                         )
                     }
                 }

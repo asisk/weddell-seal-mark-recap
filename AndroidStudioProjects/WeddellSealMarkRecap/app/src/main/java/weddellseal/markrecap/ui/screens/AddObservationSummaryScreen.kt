@@ -117,6 +117,9 @@ fun AddObservationSummaryScreen(
                 onClick = {
                     canSaveLog {
                         viewModel.createLog(adultSeal, pupOne, pupTwo)
+                        if (!viewModel.uiState.isSaving) {
+                            viewModel.removeSeal("primary")
+                        }
                     }
                 },
                 icon = { Icon(Icons.Filled.Save, "Save and Start New Observation") },

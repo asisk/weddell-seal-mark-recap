@@ -44,7 +44,7 @@ fun CensusDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "This is a dialog with buttons.",
+                    text = "Census selections",
                     modifier = Modifier.padding(16.dp),
                 )
 
@@ -55,7 +55,7 @@ fun CensusDialog(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val censusOptions = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8")
+                    val censusOptions = listOf("1", "2", "3", "4", "5", "6", "7", "8")
                     var selection by remember { mutableStateOf(obsViewModel.uiState.censusNumber) }
 
                     Column(

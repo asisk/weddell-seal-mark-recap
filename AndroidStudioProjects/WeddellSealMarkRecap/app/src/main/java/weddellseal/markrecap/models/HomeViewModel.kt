@@ -14,6 +14,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.data.ObservationRepository
@@ -38,8 +40,8 @@ class HomeViewModel(
         val loading: Boolean = true,
         val isSaving: Boolean = false,
         var uriForCSVWrite: Uri? = null,
-        var colonyLocations: List<String> = emptyList(),
-        var observerInitials: List<String> = emptyList(),
+//        var colonyLocations: List<String> = emptyList(),
+//        var observerInitials: List<String> = emptyList(),
         val date: String,
     )
 
@@ -57,19 +59,46 @@ class HomeViewModel(
         private set
 
     init {
-        loadData()
+        fetchLocations()
+        fetchObservers()
+    }
+//
+//    private fun loadData() {
+//        viewModelScope.launch {
+//            val colonyLocations =
+//                withContext(Dispatchers.IO) { supportingDataRepository.getLocations() }
+//            val observerInitials =
+//                withContext(Dispatchers.IO) { supportingDataRepository.getObserverInitials() }
+//            uiState = uiState.copy(
+//                colonyLocations = colonyLocations,
+//                observerInitials = observerInitials
+//            )
+//        }
+//    }
+
+    // MutableStateFlow to hold the list of locations
+    private val _locations = MutableStateFlow<List<String>>(emptyList())
+    val locations: StateFlow<List<String>> = _locations
+    // Function to fetch locations from the database
+    fun fetchLocations() {
+        viewModelScope.launch {
+            val fetchedLocations = withContext(Dispatchers.IO) {
+                supportingDataRepository.getLocations() // Fetch from DB
+            }
+            _locations.value = fetchedLocations
+        }
     }
 
-    private fun loadData() {
+    // MutableStateFlow to hold the list of observers
+    private val _observers = MutableStateFlow<List<String>>(emptyList())
+    val observers: StateFlow<List<String>> = _observers
+    // Function to fetch locations from the database
+    fun fetchObservers() {
         viewModelScope.launch {
-            val colonyLocations =
-                withContext(Dispatchers.IO) { supportingDataRepository.getLocations() }
-            val observerInitials =
-                withContext(Dispatchers.IO) { supportingDataRepository.getObserverInitials() }
-            uiState = uiState.copy(
-                colonyLocations = colonyLocations,
-                observerInitials = observerInitials
-            )
+            val fetchedObservers = withContext(Dispatchers.IO) {
+                supportingDataRepository.getObserverInitials() // Fetch from DB
+            }
+            _observers.value = fetchedObservers
         }
     }
 
@@ -120,15 +149,14 @@ class HomeViewModel(
             contentResolver.openInputStream(uri)?.use { stream ->
                 InputStreamReader(stream).buffered().use { reader ->
                     val headerRow = reader.readLine()?.split(",") ?: emptyList()
-                    val inOutIndex = headerRow.indexOf("InOut")
+                    val inOutIndex = headerRow.indexOf("In/Out")
                     val locationIndex = headerRow.indexOf("Location")
-                    val nLimitIndex = headerRow.indexOf("nLimit")
-                    val sLimitIndex = headerRow.indexOf("sLimit")
-                    val wLimitIndex = headerRow.indexOf("wLimit")
-                    val eLimitIndex = headerRow.indexOf("eLimit")
+                    val nLimitIndex = headerRow.indexOf("N_Limit")
+                    val sLimitIndex = headerRow.indexOf("S_Limit")
+                    val wLimitIndex = headerRow.indexOf("W_Limit")
+                    val eLimitIndex = headerRow.indexOf("E_Limit")
                     val adjLatIndex = headerRow.indexOf("Adj_Lat")
                     val adjLongIndex = headerRow.indexOf("Adj_Long")
-
                     if (listOf(
                             inOutIndex,
                             locationIndex,
@@ -169,7 +197,7 @@ class HomeViewModel(
                             // Add the parsed entity to the list
                             sealColonies.add(record)
                         }
-                        uiState = uiState.copy(colonyLocations = dropdownList)
+//                        uiState = uiState.copy(colonyLocations = dropdownList)
                     } else {
                         // Handle the case where one or more headers are missing
                         // This could be logging an error, showing a message to the user, etc.
@@ -202,6 +230,7 @@ class HomeViewModel(
             val csvData = withContext(Dispatchers.IO) {
                 readSealColoniesCsvData(context.contentResolver, uri)
             }
+            //TODO, add error handling to ensure that the file actually loaded
 
             // Insert CSV data into the database
             supportingDataRepository.insertColoniesData(csvData)
@@ -246,7 +275,7 @@ class HomeViewModel(
                         // Handle invalid row or missing columns
                     }
                 }
-                uiState = uiState.copy(observerInitials = dropdownList)
+//                uiState = uiState.copy(observerInitials = dropdownList)
             }
         }
 
