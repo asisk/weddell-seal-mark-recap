@@ -88,8 +88,9 @@ fun HomeScaffold(
        if (locationList.isEmpty()) {
            viewModel.fetchLocations()
        }
-
-        //TODO, add in line for observers once data is available
+        if (observerList.isEmpty()) {
+            viewModel.fetchObservers()
+        }
     }
 
     // Register ActivityResult to request Location permissions
@@ -315,7 +316,6 @@ fun HomeScaffold(
                                     observerList,
                                     observerSelected
                                 ) { valueSelected ->
-                                    observerSelected = valueSelected
                                     obsViewModel.updateObserverInitials(valueSelected)
                                 }
                             }
@@ -345,7 +345,6 @@ fun HomeScaffold(
                                     locationList,
                                     observationSiteSelected
                                 ) { valueSelected ->
-//                                    observationSiteSelected = valueSelected
                                     obsViewModel.updateColonySelection(valueSelected)
                                 }
                             }

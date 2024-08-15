@@ -14,6 +14,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.data.WedCheckRecord
@@ -35,7 +37,7 @@ class WedCheckViewModel(
 
     var wedCheckSeal by mutableStateOf(WedCheckSeal())
 
-    var uiState by mutableStateOf(
+    private val _uiState = MutableStateFlow(
         UiState(
             hasFileAccess = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE),
             date = SimpleDateFormat(
@@ -44,17 +46,21 @@ class WedCheckViewModel(
             ).format(System.currentTimeMillis()),
         )
     )
-        private set
+    val uiState: StateFlow<UiState> = _uiState
 
     data class UiState(
         val hasFileAccess: Boolean,
-        val loading: Boolean = true,
+        val loading: Boolean = false,
         var isSearching: Boolean = false,
         val sealNotFound: Boolean = false,
         val uriForCSVDataLoad: Uri? = null,
         val sealRecordDB: WedCheckRecord? = null,
         val date: String, //TODO, think about the proper date format, should it be UTC?
         val isError: Boolean = false,
+        val failedRows: List<String> = emptyList(),
+        val totalRows: Int = 0,
+        val isWedCheckLoading: Boolean = false,
+        val isWedCheckLoaded: Boolean = false,
     )
 
     fun hasPermission(permission: String): Boolean {
@@ -67,7 +73,7 @@ class WedCheckViewModel(
     fun onPermissionChange(permission: String, isGranted: Boolean) {
         when (permission) {
             Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                uiState = uiState.copy(hasFileAccess = isGranted)
+                _uiState.value = uiState.value.copy(hasFileAccess = isGranted)
             }
 
             else -> {
@@ -77,7 +83,7 @@ class WedCheckViewModel(
     }
 
     fun findSealSpeNo(sealTagID: String): Int {
-        uiState = uiState.copy(isSearching = true)
+        _uiState.value = uiState.value.copy(isSearching = true)
         // launch the search for a seal on a separate coroutine
         var speNo: Int = 0
         viewModelScope.launch {
@@ -90,13 +96,13 @@ class WedCheckViewModel(
                 speNo = returnVal
             }
         }
-        uiState = uiState.copy(isSearching = false)
+        _uiState.value = uiState.value.copy(isSearching = false)
 
         return speNo
     }
 
     fun findSealbyTagID(sealTagID: String) {
-        uiState = uiState.copy(isSearching = true)
+        _uiState.value = uiState.value.copy(isSearching = true)
 
         // launch the search for a seal on a separate coroutine
         viewModelScope.launch {
@@ -106,12 +112,10 @@ class WedCheckViewModel(
                 wedCheckRepo.findSealbyTagID(sealTagID)
             }
             if (seal != null) {
-                uiState =
-                    uiState.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
+                _uiState.value = uiState.value.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
                 wedCheckSeal = seal.toSeal()
             } else {
-                uiState =
-                    uiState.copy(
+                _uiState.value = uiState.value.copy(
                         sealRecordDB = null,
                         isSearching = false,
                         sealNotFound = true,
@@ -122,7 +126,7 @@ class WedCheckViewModel(
     }
 
     fun findSealbySpeNo(speno: Int) {
-        uiState = uiState.copy(isSearching = true)
+        _uiState.value = uiState.value.copy(isSearching = true)
 
         // launch the search for a seal on a separate coroutine
         viewModelScope.launch {
@@ -132,12 +136,10 @@ class WedCheckViewModel(
                 wedCheckRepo.findSealbySpeNo(speno)
             }
             if (seal != null) {
-                uiState =
-                    uiState.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
+                _uiState.value = uiState.value.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
                 wedCheckSeal = seal.toSeal()
             } else {
-                uiState =
-                    uiState.copy(
+                _uiState.value = uiState.value.copy(
                         sealRecordDB = null,
                         isSearching = false,
                         sealNotFound = true,
@@ -148,7 +150,7 @@ class WedCheckViewModel(
     }
 
     fun resetState() {
-        uiState = uiState.copy(
+        _uiState.value = uiState.value.copy(
             sealRecordDB = null,
             isSearching = false,
             sealNotFound = true,
@@ -160,21 +162,38 @@ class WedCheckViewModel(
     fun loadWedCheck(uri: Uri) {
         // Kick off this process on a coroutine
         viewModelScope.launch {
-            // Read CSV data on IO dispatcher
-            val csvData = withContext(Dispatchers.IO) {
-                readWedCheckData(context.contentResolver, uri)
-            }
+            _uiState.value = uiState.value.copy(loading = true, isWedCheckLoading = true)
+            try {
+                val (csvData, failedRows) = readWedCheckData(context.contentResolver, uri)
 
-            // Insert CSV data into the database
-            wedCheckRepo.insertCsvData(csvData)
+                _uiState.value = uiState.value.copy(
+                    loading = false,
+                    isWedCheckLoaded = true,
+                    totalRows = csvData.size + failedRows.size,
+                    isError = failedRows.isNotEmpty(),
+                    failedRows = failedRows
+                )
+
+                // Insert CSV data into the database
+                wedCheckRepo.insertCsvData(csvData)
+
+            } catch (e: Exception) {
+                _uiState.value = uiState.value.copy(
+                    loading = false,
+                    isWedCheckLoaded = false,
+                    isError = true
+                )
+            }
         }
     }
 
     private fun readWedCheckData(
         contentResolver: ContentResolver,
         uri: Uri
-    ): List<WedCheckRecord> {
+    ): Pair<List<WedCheckRecord>, List<String>> {
         val csvData: MutableList<WedCheckRecord> = mutableListOf()
+        val failedRows: MutableList<String> = mutableListOf()
+
         try {
             contentResolver.openInputStream(uri)?.use { stream ->
                 InputStreamReader(stream).buffered().use { reader ->
@@ -222,30 +241,37 @@ class WedCheckViewModel(
                         reader.forEachLine { line ->
                             // Split the line into fields based on the CSV delimiter (e.g., ',')
                             val row = line.split(",")
+                            try {
+                                // Parse fields and create an instance of a WedCheckRecord
+                                val record = WedCheckRecord(
+                                    id = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
+                                    speno = row.getOrNull(spenoIndex)?.toIntOrNull() ?: 0,
+                                    season = row.getOrNull(lastSeenIndex)?.toIntOrNull() ?: 0,
+                                    ageClass = row.getOrNull(ageClassIndex) ?: "",
+                                    sex = row.getOrNull(sexIndex) ?: "",
+                                    tagIdOne = row.getOrNull(tagOneIndex) ?: "",
+                                    tagIdTwo = row.getOrNull(tagTwoIndex) ?: "",
+                                    comments = row.getOrNull(noteIndex) ?: "",
+                                    ageYears = row.getOrNull(ageIndex)?.toIntOrNull() ?: 0,
+                                    tissueSampled = row.getOrNull(tissueIndex) ?: "",
+                                    pupinMassStudy = row.getOrNull(pupinMassStudyIndex) ?: "",
+                                    numPreviousPups = row.getOrNull(numPreviousPupsIndex) ?: "",
+                                    pupinTTStudy = row.getOrNull(pupinTTStudyIndex) ?: "",
+                                    momMassMeasurements = row.getOrNull(momMassMeasurementsIndex)
+                                        ?: "",
+                                    condition = row.getOrNull(conditionIndex) ?: "",
+                                    lastPhysio = row.getOrNull(lastPhysioIndex) ?: "",
+                                    colony = row.getOrNull(colonyIndex) ?: ""
+                                )
 
-                            // Parse fields and create an instance of a WedCheckRecord
-                            val record = WedCheckRecord(
-                                id = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
-                                speno = row.getOrNull(spenoIndex)?.toIntOrNull() ?: 0,
-                                season = row.getOrNull(lastSeenIndex)?.toIntOrNull() ?: 0,
-                                ageClass = row.getOrNull(ageClassIndex) ?: "",
-                                sex = row.getOrNull(sexIndex) ?: "",
-                                tagIdOne = row.getOrNull(tagOneIndex) ?: "",
-                                tagIdTwo = row.getOrNull(tagTwoIndex) ?: "",
-                                comments = row.getOrNull(noteIndex) ?: "",
-                                ageYears = row.getOrNull(ageIndex)?.toIntOrNull() ?: 0,
-                                tissueSampled = row.getOrNull(tissueIndex) ?: "",
-                                pupinMassStudy = row.getOrNull(pupinMassStudyIndex) ?: "",
-                                numPreviousPups = row.getOrNull(numPreviousPupsIndex) ?: "",
-                                pupinTTStudy = row.getOrNull(pupinTTStudyIndex) ?: "",
-                                momMassMeasurements = row.getOrNull(momMassMeasurementsIndex) ?: "",
-                                condition = row.getOrNull(conditionIndex) ?: "",
-                                lastPhysio = row.getOrNull(lastPhysioIndex) ?: "",
-                                colony = row.getOrNull(colonyIndex) ?: ""
-                            )
-
-                            // Add the parsed entity to the list
-                            csvData.add(record)
+                                // Add the parsed entity to the list
+                                csvData.add(record)
+                            } catch (e: Exception) {
+                                // Handle and log any errors in parsing the row
+                                e.printStackTrace()
+                                // Capture the raw row that failed
+                                failedRows.add(line)
+                            }
                         }
                     } else {
                         // Handle the case where one or more headers are missing
@@ -268,8 +294,6 @@ class WedCheckViewModel(
             e.printStackTrace()
             // TODO, Show an error message to the user, log the error, etc.
         }
-        return csvData
+        return Pair(csvData, failedRows)
     }
-
-    // end of model
 }

@@ -3,7 +3,6 @@ package weddellseal.markrecap.ui.screens
 import android.Manifest
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -21,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ fun AdminScreen(
     homeViewModel: HomeViewModel
 ) {
     val context = LocalContext.current
+    val uiStateWedCheck by wedCheckViewModel.uiState.collectAsState()
 
     // Register ActivityResult to request read file permissions
     val requestFilePermissions =
@@ -101,7 +103,7 @@ fun AdminScreen(
             },
             onDismiss = { showExplanationDialogForFileMatchError = false },
             title = "Error",
-            text = "File name does not match! Please rename your file to Colony_Locations.csv and try again!"
+            text = "File name does not match! Please rename your file and try again!"
         )
     }
 
@@ -120,7 +122,7 @@ fun AdminScreen(
                 }
             }
 
-            if (fileName == "AugustWedCheckTest.csv") {
+            if (fileName == "WedCheckFull04Aug2024.csv") {
 
                 //TODO, add validation to ensure that the file is right-sized
 //                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
@@ -131,16 +133,25 @@ fun AdminScreen(
 //                }
 
                 wedCheckViewModel.loadWedCheck(uri)
-                Toast.makeText(context, "WedCheck file loaded successfully!", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "WedCheck file loaded successfully!", Toast.LENGTH_SHORT)
+//                    .show()
                 // Display a success message & navigate the user back to the Home Screen
 
             } else if (fileName == "Colony_Locations.csv") {
                 homeViewModel.loadSealColoniesFile(uri)
-                Toast.makeText(context, "Seal Colony Locations file loaded successfully!", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(
+//                    context,
+//                    "Seal Colony Locations file loaded successfully!",
+//                    Toast.LENGTH_SHORT
+//                ).show()
 
-            } else if (fileName == "Observer_Initials.csv") {
+            } else if (fileName == "observers.csv") {
                 homeViewModel.loadObserversFile(uri)
-                Toast.makeText(context, "Observer Initials file loaded successfully!", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(
+//                    context,
+//                    "Observer Initials file loaded successfully!",
+//                    Toast.LENGTH_SHORT
+//                ).show()
 
             } else {
                 // Show an error message indicating that the selected file is not the expected file
@@ -290,6 +301,58 @@ fun AdminScreen(
                             }
                         )
                     }
+                    if (uiStateWedCheck.loading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else if (uiStateWedCheck.isWedCheckLoaded) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 30.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text("Total Rows in CSV: ${uiStateWedCheck.totalRows}")
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 30.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text("Successfully Loaded Rows: ${uiStateWedCheck.totalRows - uiStateWedCheck.failedRows.size}")
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 30.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                if (uiStateWedCheck.failedRows.isNotEmpty() && uiStateWedCheck.isWedCheckLoaded) {
+                                    Text("Failed Rows: ${uiStateWedCheck.failedRows.joinToString(", ")}")
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 30.dp),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        FailedRowsDisplay(uiStateWedCheck.failedRows)
+                                    }
+                                } else {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 30.dp),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Text("All rows loaded successfully.")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -297,7 +360,33 @@ fun AdminScreen(
 }
 
 @Composable
-fun FileLoadedToast() {
-    val context = LocalContext.current
-    Toast.makeText(context, "File Loaded", Toast.LENGTH_LONG).show()
+fun FailedRowsDisplay(failedRows: List<String>) {
+    if (failedRows.isNotEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Failed Rows",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.error
+            )
+
+            failedRows.forEachIndexed { index, row ->
+                Text(
+                    text = "Row ${index + 1}: $row",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onError
+                )
+            }
+        }
+    } else {
+        Text(
+            text = "No failed rows found.",
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
 }

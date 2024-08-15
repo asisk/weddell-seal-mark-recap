@@ -62,23 +62,11 @@ class HomeViewModel(
         fetchLocations()
         fetchObservers()
     }
-//
-//    private fun loadData() {
-//        viewModelScope.launch {
-//            val colonyLocations =
-//                withContext(Dispatchers.IO) { supportingDataRepository.getLocations() }
-//            val observerInitials =
-//                withContext(Dispatchers.IO) { supportingDataRepository.getObserverInitials() }
-//            uiState = uiState.copy(
-//                colonyLocations = colonyLocations,
-//                observerInitials = observerInitials
-//            )
-//        }
-//    }
 
     // MutableStateFlow to hold the list of locations
     private val _locations = MutableStateFlow<List<String>>(emptyList())
     val locations: StateFlow<List<String>> = _locations
+
     // Function to fetch locations from the database
     fun fetchLocations() {
         viewModelScope.launch {
@@ -92,6 +80,7 @@ class HomeViewModel(
     // MutableStateFlow to hold the list of observers
     private val _observers = MutableStateFlow<List<String>>(emptyList())
     val observers: StateFlow<List<String>> = _observers
+
     // Function to fetch locations from the database
     fun fetchObservers() {
         viewModelScope.launch {
@@ -257,25 +246,24 @@ class HomeViewModel(
         contentResolver.openInputStream(uri)?.use { stream ->
             InputStreamReader(stream).buffered().use { reader ->
                 val headerRow = reader.readLine()?.split(",") ?: emptyList()
-                val initialsIndex = headerRow.indexOf("ObserverInitials")
+                val initialsIndex = headerRow.indexOf("Initials")
 
                 reader.forEachLine { line ->
                     val row = line.split(",")
                     if (row.isNotEmpty() && initialsIndex != -1) {
                         val observer = row.getOrNull(initialsIndex) ?: ""
-                        dropdownList.add(observer.toString())
+                        dropdownList.add(observer)
 
                         val record = Observers(
                             observerId = 0,
                             initials = observer
                         )
-
                         observers.add(record)
                     } else {
                         // Handle invalid row or missing columns
+                        throw IllegalArgumentException("CSV file missing required headers")
                     }
                 }
-//                uiState = uiState.copy(observerInitials = dropdownList)
             }
         }
 
