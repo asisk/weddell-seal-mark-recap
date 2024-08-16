@@ -337,7 +337,14 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
                             // if it's the same (meaning it's the tab the user wants to delete),
                             // that tab is excluded from the new list
                             // after filtering, tabItems contains all items except the selected tab and is reassigned to tabItems
-                            tabItems = tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
+                            var updatedTabItems =
+                                tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
+
+                            // check that the number of items is not zero
+                            if (updatedTabItems.isNotEmpty()) {
+                                tabItems = tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
+                            }
+
                             selectedTabIndex = selectedTabIndex.coerceAtMost(tabItems.lastIndex)
                         },
                     )

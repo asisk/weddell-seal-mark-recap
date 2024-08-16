@@ -148,6 +148,12 @@ fun SealCard(
                     )
                     val buttonListSex = listOf("Female", "Male", "Unknown")
                     SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
+                        // change in sex to Male should result in removing any entered pups
+                        if (seal.numRelatives > 0 && newText == "Male") {
+                            newNumRelatives = "0"
+                            // pop a warning and ask for confirmation before moving forward
+                            showDeleteDialog.value = true
+                        }
                         viewModel.updateSex(seal, newText)
                     }
                 }
@@ -241,13 +247,13 @@ fun SealCard(
                 }
             }
 
-            // because this action results in removing any entered data for pups
+            // because this action results in removing any entered data
             // Show the dialog if showDialog is true
             if (showDeleteDialog.value) {
                 RemoveDialog(
                     onDismissRequest = { showDeleteDialog.value = false },
                     onConfirmation = {
-                        viewModel.removePups()
+                        viewModel.updateNumRelatives(seal, newNumRelatives)
                         showDeleteDialog.value = false
                     },
                 )

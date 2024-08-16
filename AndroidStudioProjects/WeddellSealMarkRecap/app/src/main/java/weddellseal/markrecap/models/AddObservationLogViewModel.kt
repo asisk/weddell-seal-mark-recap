@@ -264,18 +264,22 @@ class AddObservationLogViewModel(
     fun updateNumRelatives(seal: Seal, input: String) {
         val number: Int? = input.toIntOrNull()
         if (number != null) {
+            when (number) {
+                0 -> {
+                    removePups()
+                }
+                1 -> {
+                    pupOne = pupOne.copy(numRelatives = number, isStarted = true)
+                    updateNotebookEntry(pupOne)
+                }
+                2 -> {
+                    pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
+                    updateNotebookEntry(pupTwo)
+                }
+            }
+
             primarySeal = primarySeal.copy(numRelatives = number, isStarted = true)
             updateNotebookEntry(primarySeal)
-
-            if (number == 1) {
-                pupOne = pupOne.copy(numRelatives = number, isStarted = true)
-                updateNotebookEntry(pupOne)
-            }
-
-            if (number == 2) {
-                pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
-                updateNotebookEntry(pupTwo)
-            }
         }
     }
 
