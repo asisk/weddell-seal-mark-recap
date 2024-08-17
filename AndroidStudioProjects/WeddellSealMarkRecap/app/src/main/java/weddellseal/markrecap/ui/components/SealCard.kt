@@ -37,7 +37,7 @@ fun SealCard(
     var newNumRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
     var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
     var isCommentToggled by remember { mutableStateOf(seal.hasComment) }
-    var isRetag by remember { mutableStateOf(false) }
+    var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
     var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
     var tagIDValNew by remember { mutableStateOf(seal.tagIdOne) }
     var oldTagOne by remember { mutableStateOf(seal.oldTagIdOne) }
@@ -57,6 +57,10 @@ fun SealCard(
 
     LaunchedEffect(seal.notebookDataString) {
         notebookStr = seal.notebookDataString
+    }
+
+    LaunchedEffect(seal.tagEventType) {
+        isRetag = seal.tagEventType == "Retag"
     }
 
     Column() {
