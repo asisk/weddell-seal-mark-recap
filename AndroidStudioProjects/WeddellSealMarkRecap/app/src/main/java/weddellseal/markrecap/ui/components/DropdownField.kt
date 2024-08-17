@@ -26,14 +26,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun DropdownField(options : List<String>, selectedOption : String, onValueChange: (String) -> Unit) {
+fun DropdownField(options: List<String>, selectedOption: String, onValueChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf(selectedOption) }
+    val focusManager = LocalFocusManager.current
 
     Column {
         Card(
@@ -43,20 +45,26 @@ fun DropdownField(options : List<String>, selectedOption : String, onValueChange
             elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
             border = BorderStroke(1.dp, Color.LightGray), // Border appearance
         ) {
-            Row (
+            Row(
                 modifier = Modifier.padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
-            ){
+            ) {
                 BasicTextField(
                     value = selectedOption,
-                    onValueChange = { onValueChange(selectedOption) },
+                    onValueChange = {
+                        focusManager.clearFocus()
+
+                        onValueChange(selectedOption)
+                    },
                     enabled = false,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
+                            focusManager.clearFocus()
+
                             expanded = !expanded
                         }
                     )
@@ -94,6 +102,8 @@ fun DropdownField(options : List<String>, selectedOption : String, onValueChange
                 ) {
                     DropdownMenuItem(text = { Text(text = "Select an option") },
                         onClick = {
+                            focusManager.clearFocus()
+
                             selectedOption = "Select an option"
                             onValueChange(selectedOption)
                             expanded = false
@@ -102,6 +112,8 @@ fun DropdownField(options : List<String>, selectedOption : String, onValueChange
                     options.forEach { option ->
                         DropdownMenuItem(text = { Text(text = option) },
                             onClick = {
+                                focusManager.clearFocus()
+
                                 selectedOption = option
                                 onValueChange(selectedOption)
                                 expanded = false

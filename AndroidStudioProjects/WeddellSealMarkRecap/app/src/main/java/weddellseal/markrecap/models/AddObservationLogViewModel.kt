@@ -199,6 +199,46 @@ class AddObservationLogViewModel(
         updateNotebookEntry(seal)
     }
 
+    fun clearTag(seal: Seal) {
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(
+                    tagIdOne = "",
+                    tagIdTwo = "",
+                    tagOneAlpha = "",
+                    tagTwoAlpha = "",
+                    tagOneNumber = 0,
+                    tagTwoNumber = 0
+                )
+                updateNotebookEntry(primarySeal)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(
+                    tagIdOne = "",
+                    tagIdTwo = "",
+                    tagOneAlpha = "",
+                    tagTwoAlpha = "",
+                    tagOneNumber = 0,
+                    tagTwoNumber = 0
+                )
+                updateNotebookEntry(pupOne)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(
+                    tagIdOne = "",
+                    tagIdTwo = "",
+                    tagOneAlpha = "",
+                    tagTwoAlpha = "",
+                    tagOneNumber = 0,
+                    tagTwoNumber = 0
+                )
+                updateNotebookEntry(pupTwo)
+            }
+        }
+    }
+
     fun resetTags(seal: Seal) {
         when (seal.name) {
             "primary" -> {
@@ -268,10 +308,12 @@ class AddObservationLogViewModel(
                 0 -> {
                     removePups()
                 }
+
                 1 -> {
                     pupOne = pupOne.copy(numRelatives = number, isStarted = true)
                     updateNotebookEntry(pupOne)
                 }
+
                 2 -> {
                     pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
                     updateNotebookEntry(pupTwo)
@@ -577,6 +619,54 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun updateHasComment(sealName: String, checked: Boolean) {
+        when (sealName) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(hasComment = checked, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(hasComment = checked, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(hasComment = checked, isStarted = true)
+            }
+        }
+    }
+
+    fun resetPupFields(sealName: String) {
+        when (sealName) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(pupPeed = false, weightTaken = false, weight = 0, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(pupPeed = false, weightTaken = false, weight = 0, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(pupPeed = false, weightTaken = false, weight = 0, isStarted = true)
+            }
+        }
+    }
+
+
+    fun updateIsWeightTaken(sealName: String, checked: Boolean) {
+        when (sealName) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(weightTaken = checked, isStarted = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(weightTaken = checked, isStarted = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(weightTaken = checked, isStarted = true)
+            }
+        }
+    }
 
     fun updateNotebookEntry(seal: Seal) {
         val notebookEntry = notebookEntryValueSeal(seal)

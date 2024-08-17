@@ -16,13 +16,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 
 @Composable
 fun TagSwitch(
     valueInModel: String,
     onValChangeDo: (Boolean) -> Unit
-){
+) {
     var checked by remember { mutableStateOf(valueInModel == "NoTag") }
+    val focusManager = LocalFocusManager.current
 
     // Update checked state when valueInModel changes
     LaunchedEffect(valueInModel) {
@@ -37,6 +39,7 @@ fun TagSwitch(
     Switch(
         checked = checked,
         onCheckedChange = {
+            focusManager.clearFocus()
             checked = it
             onValChangeDo(it) // callback when the button is clicked
         },

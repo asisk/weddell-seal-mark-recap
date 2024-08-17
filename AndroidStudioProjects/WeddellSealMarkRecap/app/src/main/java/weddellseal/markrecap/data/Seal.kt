@@ -5,6 +5,7 @@ data class Seal(
     val ageYears: String = "",
     val colony: String = "",
     val comment: String = "",
+    val hasComment: Boolean = false,
     val condition: String = "",
     var isStarted: Boolean = false,
     var isWedCheck: Boolean = false,

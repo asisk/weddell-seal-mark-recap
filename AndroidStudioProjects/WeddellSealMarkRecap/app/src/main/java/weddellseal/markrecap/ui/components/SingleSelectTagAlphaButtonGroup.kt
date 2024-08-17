@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -20,6 +21,7 @@ fun SingleSelectTagAlphaButtonGroup(
     onValChangeDo: (String) -> Unit
 ) {
     var selectedButton by remember { mutableStateOf(valueInModel) }
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(valueInModel) {
         selectedButton = valueInModel
@@ -28,6 +30,9 @@ fun SingleSelectTagAlphaButtonGroup(
     txtOptions.forEach { option ->
         Button(
             onClick = {
+                // this hides the keyboard when a user selects the alpha button without selecting done on the keyboard
+                focusManager.clearFocus()
+
                 selectedButton = option
                 onValChangeDo(option)
             },

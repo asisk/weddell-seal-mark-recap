@@ -318,7 +318,6 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
                     }
                 }
                 Column(modifier = Modifier.fillMaxWidth()) {
-//                    tabItems.firstOrNull()?.content?.invoke()
                     if (tabItems.isNotEmpty()) {
                         tabItems[selectedTabIndex].content()
                     }
@@ -329,23 +328,26 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
                     RemoveDialog(
                         onDismissRequest = { showDeleteDialog.value = false },
                         onConfirmation = {
-                            // remove the current seal
-                            viewModel.removeSeal(tabItems[selectedTabIndex].sealName)
-                            showDeleteDialog.value = false
-                            // Remove the tab and update selectedTabIndex if necessary
-                            // filter checks whether the index of the current element (i) is different from the selectedTabIndex
-                            // if it's the same (meaning it's the tab the user wants to delete),
-                            // that tab is excluded from the new list
-                            // after filtering, tabItems contains all items except the selected tab and is reassigned to tabItems
-                            var updatedTabItems =
-                                tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
+                            if (tabItems.isNotEmpty()) {
+                                // remove the current seal
+                                viewModel.removeSeal(tabItems[selectedTabIndex].sealName)
+                                showDeleteDialog.value = false
+                                // Remove the tab and update selectedTabIndex if necessary
+                                // filter checks whether the index of the current element (i) is different from the selectedTabIndex
+                                // if it's the same (meaning it's the tab the user wants to delete),
+                                // that tab is excluded from the new list
+                                // after filtering, tabItems contains all items except the selected tab and is reassigned to tabItems
+                                var updatedTabItems =
+                                    tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
 
-                            // check that the number of items is not zero
-                            if (updatedTabItems.isNotEmpty()) {
-                                tabItems = tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
+                                // check that the number of items is not zero
+                                if (updatedTabItems.isNotEmpty()) {
+                                    tabItems =
+                                        tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
+                                }
+
+                                selectedTabIndex = selectedTabIndex.coerceAtMost(tabItems.lastIndex)
                             }
-
-                            selectedTabIndex = selectedTabIndex.coerceAtMost(tabItems.lastIndex)
                         },
                     )
                 }

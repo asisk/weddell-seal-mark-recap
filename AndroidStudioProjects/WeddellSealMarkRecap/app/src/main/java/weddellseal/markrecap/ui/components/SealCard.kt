@@ -1,6 +1,5 @@
 package weddellseal.markrecap.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,17 +8,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,14 +22,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.models.AddObservationLogViewModel
 
@@ -49,8 +35,8 @@ fun SealCard(
     seal: Seal,
 ) {
     var newNumRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
-    var isWeightToggled by remember { mutableStateOf(false) }
-    var isCommentToggled by remember { mutableStateOf(false) }
+    var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
+    var isCommentToggled by remember { mutableStateOf(seal.hasComment) }
     var isRetag by remember { mutableStateOf(false) }
     var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
     var tagIDValNew by remember { mutableStateOf(seal.tagIdOne) }
@@ -82,12 +68,8 @@ fun SealCard(
             verticalAlignment = Alignment.Top
         ) {
             // SEAL CARD HEADING/NOTEBOOK STRING
-            var headingStr = ""
-            if (seal.age.isNotEmpty()) {
-                headingStr = seal.age + " :  "
-            }
             Text(
-                headingStr + notebookStr,
+                notebookStr,
                 style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold
             )
         }
@@ -116,10 +98,11 @@ fun SealCard(
                     )
                     val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
                     SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
-                        viewModel.updateAge(
-                            seal,
-                            newText
-                        )
+                        //handle the case
+                        if (seal.age == "Pup" && seal.age != newText) {
+                            viewModel.resetPupFields(seal.name)
+                        }
+                        viewModel.updateAge(seal, newText)
                     }
                 }
             }
@@ -135,7 +118,6 @@ fun SealCard(
             Box(
                 modifier = Modifier
                     .weight(.9f)
-//                    .padding(end = 8.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -180,6 +162,8 @@ fun SealCard(
                             var isChecked by remember {
                                 mutableStateOf(seal.pupPeed)
                             }
+                            val focusManager = LocalFocusManager.current
+
                             Text(
                                 text = "Pup Peed",
                                 style = MaterialTheme.typography.titleLarge,
@@ -188,6 +172,8 @@ fun SealCard(
                             Checkbox(
                                 checked = isChecked,
                                 onCheckedChange = {
+                                    focusManager.clearFocus()
+
                                     isChecked = it
                                     viewModel.updatePupPeed(seal.name, it)
                                 },
@@ -262,7 +248,6 @@ fun SealCard(
             Box(
                 modifier = Modifier
                     .weight(.6f)
-//                    .padding(end = 8.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -312,10 +297,6 @@ fun SealCard(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-
-                        val focusManager: FocusManager = LocalFocusManager.current
-                        var isError by remember { mutableStateOf(false) }
-
                         Text(
                             "Old Tag ID One",
                             style = MaterialTheme.typography.titleLarge
@@ -391,64 +372,26 @@ fun SealCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
 
-                        val focusManager: FocusManager = LocalFocusManager.current
-                        var isError by remember { mutableStateOf(false) }
-
                         Text(
                             "Tag ID",
                             style = MaterialTheme.typography.titleLarge
                         )
 
                         // TAG ID & OLD TAG ID
-                        OutlinedTextField(
+                        TagIDOutlinedTextField(
                             value = tagIDVal,
-                            onValueChange = {
-//                            val number: Int? = it.toIntOrNull()
-                                tagIDVal = it
-                                isError =
-                                    it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
+                            labelText = "Number",
+                            placeholderText = "Enter Tag Number",
+                            errorMessage = "Tag numbers should be 3 or 4 digits long.",
+                            onValueChangeDo = {
+                                // save the input to the model
+                                val number: Int? = it.toIntOrNull()
+                                if (number != null) {
+                                    viewModel.updateTagOneNumber(seal, number)
+                                }
                             },
-                            label = {
-                                Text(
-                                    "Number",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            },
-                            textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
-                            isError = isError,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = ContentAlpha.disabled
-                                ),
-                            ),
-                            placeholder = { Text("Enter Tag Number") },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    // Handle "Done" button action
-
-                                    // change the focus
-                                    focusManager.clearFocus()
-
-                                    // save the input to the model
-                                    val number: Int? = tagIDVal.toIntOrNull()
-                                    if (number != null && !isError) {
-                                        viewModel.updateTagOneNumber(seal, number)
-                                    }
-                                },
-                            ),
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Filled.Clear, contentDescription = "Clear text",
-                                    Modifier.clickable {
-                                        tagIDVal = ""
-                                        viewModel.clearTagOne(seal)
-                                    })
+                            onClearValueDo = {
+                                viewModel.clearTag(seal)
                             }
                         )
                     }
@@ -499,9 +442,6 @@ fun SealCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
 
-                        val focusManager: FocusManager = LocalFocusManager.current
-                        var isError by remember { mutableStateOf(false) }
-
                         Text(
                             "New \n" +
                                     "Tag ID",
@@ -509,55 +449,20 @@ fun SealCard(
                         )
 
                         // TAG ID NEW
-                        OutlinedTextField(
+                        TagIDOutlinedTextField(
                             value = tagIDValNew,
-                            onValueChange = {
-//                            val number: Int? = it.toIntOrNull()
-                                tagIDValNew = it
-                                isError =
-                                    it.isEmpty() || !it.matches(Regex("\\d{4}")) // Ensure the input is exactly 4 digits
+                            labelText = "Number",
+                            placeholderText = "Enter Tag Number",
+                            errorMessage = "Tag numbers should be 3 or 4 digits long.",
+                            onValueChangeDo = {
+                                // save the input to the model
+                                val number: Int? = it.toIntOrNull()
+                                if (number != null) {
+                                    viewModel.updateTagOneNumber(seal, number)
+                                }
                             },
-                            label = {
-                                Text(
-                                    "Number",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            },
-                            textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
-                            isError = isError,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = ContentAlpha.disabled
-                                ),
-                            ),
-                            placeholder = { Text("Enter Tag Number") },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    // Handle "Done" button action
-
-                                    // change the focus
-                                    focusManager.clearFocus()
-
-                                    // save the input to the model
-                                    val number: Int? = tagIDValNew.toIntOrNull()
-                                    if (number != null && !isError) {
-                                        viewModel.updateTagOneNumber(seal, number)
-                                    }
-                                },
-                            ),
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Filled.Clear, contentDescription = "Clear text",
-                                    Modifier.clickable {
-                                        tagIDValNew = ""
-                                        viewModel.clearTagOne(seal)
-                                    })
+                            onClearValueDo = {
+                                viewModel.clearTag(seal)
                             }
                         )
                     }
@@ -623,7 +528,6 @@ fun SealCard(
                     TagSwitch(seal.numTags) {
                         // actions on change of value
                         viewModel.resetTags(seal)
-                        viewModel.updateNumTags(seal.name, "NoTag")
                     }
                 }
             }
@@ -633,60 +537,31 @@ fun SealCard(
                     .padding(start = 8.dp, end = 4.dp)
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    // TISSUE
-//                    val (checkedStateTissue, onStateChangeTissue) = remember {
-//                        mutableStateOf(
-//                            seal.tissueTaken
-//                        )
-//                    }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-//                            .toggleable(
-//                                value = isTissueChecked,
-//                                onValueChange = {
-//                                    viewModel.updateTissueTaken(seal.name, it)
-//                                },
-//                                role = Role.Checkbox
-//                            )
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-//                        Text(
-//                            text = "Tissue",
-//                            style = MaterialTheme.typography.titleLarge,
-//                            modifier = Modifier.padding(start = 16.dp)
-//                        )
-//                        Spacer(modifier = Modifier.width(10.dp))
-//                        Checkbox(
-//                            checked = isTissueChecked,
-//                            onCheckedChange = null // null recommended for accessibility with screenreaders
-//                        )
-
-                        var isTissueChecked by remember {
-                            mutableStateOf(seal.tissueTaken)
-                        }
-                        Text(
-                            text = "Tissue",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
-                        Checkbox(
-                            checked = isTissueChecked,
-                            onCheckedChange = {
-                                isTissueChecked = it
-                                viewModel.updateTissueTaken(seal.name, it)
-                            },
-                            modifier = Modifier
-                                .padding(8.dp)
-                        )
-
+                    var isTissueChecked by remember {
+                        mutableStateOf(seal.tissueTaken)
                     }
+                    val focusManager = LocalFocusManager.current
+
+                    Text(
+                        text = "Tissue",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                    Checkbox(
+                        checked = isTissueChecked,
+                        onCheckedChange = {
+                            focusManager.clearFocus()
+                            isTissueChecked = it
+                            viewModel.updateTissueTaken(seal.name, it)
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                    )
                 }
             }
         }
@@ -717,6 +592,7 @@ fun SealCard(
                         checked = isCommentToggled,
                         onCheckedChange = { isChecked ->
                             isCommentToggled = isChecked
+                            viewModel.updateHasComment(seal.name, isChecked)
                         }
                     )
                 }
@@ -741,102 +617,69 @@ fun SealCard(
                 }
             }
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
+        if (seal.age == "Pup") {
+
+            Row(
                 modifier = Modifier
-                    .weight(.4f)
-//                    .padding(end = 8.dp)
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .weight(.4f)
+//                    .padding(end = 8.dp)
                 ) {
-                    if (seal.age == "Pup") {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Enter Weight",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Switch(
-                            checked = isWeightToggled,
-                            onCheckedChange = { isChecked ->
-                                isWeightToggled = isChecked
-                            }
-                        )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (seal.age == "Pup") {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Enter Weight",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Switch(
+                                checked = isWeightToggled,
+                                onCheckedChange = { isChecked ->
+                                    isWeightToggled = isChecked
+                                    viewModel.updateIsWeightTaken(seal.name, isChecked)
+                                }
+                            )
+                        }
                     }
                 }
-            }
-            // PUP WEIGHT ENTRY FIELD
-            Box(
-                modifier = Modifier
-                    .weight(.6f)
-                    .padding(end = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                // PUP WEIGHT ENTRY FIELD
+                Box(
+                    modifier = Modifier
+                        .weight(.6f)
+                        .padding(end = 8.dp)
                 ) {
-                    if (isWeightToggled) {
-                        val focusManager: FocusManager = LocalFocusManager.current
-                        var weightRecorded by remember { mutableStateOf("") }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (isWeightToggled) {
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                            var weightRecorded by remember { mutableStateOf("") }
 
-                        OutlinedTextField(
-                            value = weightRecorded,
-                            onValueChange = {
-                                weightRecorded = it
-                            },
-                            label = {
-                                Text(
-                                    "Weight",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            },
-                            textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
-                            colors = OutlinedTextFieldDefaults.colors(
-                                MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = ContentAlpha.disabled
-                                ),
-                            ),
-                            placeholder = { Text("Enter Weight in lbs") },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    // Handle "Done" button action
-
-                                    // change the focus
-                                    focusManager.clearFocus()
-
-                                    // save the input to the model
-                                    val number: Int? = weightRecorded.toIntOrNull()
+                            PupWeightOutlinedTextField(
+                                value = weightRecorded,
+                                labelText = "Weight",
+                                placeholderText = "Enter in lbs",
+                                onValueChangeDo = {
+                                    val number: Int? = it.toIntOrNull()
                                     if (number != null) {
                                         viewModel.updateWeight(seal, number)
                                     }
-                                },
-                            ),
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Filled.Clear, contentDescription = "Clear text",
-                                    Modifier.clickable {
-                                        weightRecorded = ""
-//                                        viewModel.clearTagOne(seal)
-                                    })
-                            }
-                        )
+                                }
+                            )
+                        }
                     }
                 }
             }
