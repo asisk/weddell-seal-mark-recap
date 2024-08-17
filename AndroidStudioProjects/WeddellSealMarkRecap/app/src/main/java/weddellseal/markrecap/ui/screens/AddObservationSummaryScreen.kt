@@ -52,6 +52,10 @@ fun AddObservationSummaryScreen(
     //send the user back to the observation screen when a log is saved
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Successfully saved!")
+            }
+            viewModel.removeSeal("primary")
             navController.navigate(Screens.AddObservationLog.route)
         }
     }
@@ -59,9 +63,6 @@ fun AddObservationSummaryScreen(
     fun canSaveLog(callback: () -> Unit) {
         if (viewModel.isValid()) {
             callback()
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("Successfully saved!")
-            }
         } else {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar("You haven't completed all details")
@@ -92,16 +93,6 @@ fun AddObservationSummaryScreen(
                         }
                     }
                 },
-                // TODO, address whether the Summary page should allow a user to abandon their observation by navigating home
-//                actions = {
-//                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
-//                        Icon(
-//                            imageVector = Icons.Filled.Home,
-//                            contentDescription = "Home",
-//                            modifier = Modifier.size(48.dp)
-//                        )
-//                    }
-//                },
             )
         }
     ) { innerPadding ->
@@ -117,9 +108,6 @@ fun AddObservationSummaryScreen(
                 onClick = {
                     canSaveLog {
                         viewModel.createLog(adultSeal, pupOne, pupTwo)
-                        if (!viewModel.uiState.isSaving) {
-                            viewModel.removeSeal("primary")
-                        }
                     }
                 },
                 icon = { Icon(Icons.Filled.Save, "Save and Start New Observation") },

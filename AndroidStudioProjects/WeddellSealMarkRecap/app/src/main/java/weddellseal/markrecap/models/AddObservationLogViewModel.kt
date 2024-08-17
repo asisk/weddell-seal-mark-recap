@@ -896,7 +896,7 @@ class AddObservationLogViewModel(
 
     fun createLog(vararg seals: Seal) {
         viewModelScope.launch {
-            uiState = uiState.copy(isSaving = true)
+            uiState = uiState.copy(isSaving = true, isSaved = false)
 
             //write an entry to the database for each seal that has valid input
             for (seal in seals) {
@@ -908,9 +908,9 @@ class AddObservationLogViewModel(
                     }
 
                     var observers = ""
-//                    if (uiState.observerInitials != "Select an option") {
-//                        observers = uiState.observerInitials
-//                    }
+                    if (uiState.observerInitials != "Select an option") {
+                        observers = uiState.observerInitials
+                    }
 
                     var ageClass = ""
                     if (seal.age != "") {
