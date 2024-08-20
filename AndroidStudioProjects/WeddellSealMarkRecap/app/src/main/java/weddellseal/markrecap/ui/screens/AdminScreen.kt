@@ -3,11 +3,10 @@ package weddellseal.markrecap.ui.screens
 import android.Manifest
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -58,15 +60,16 @@ fun AdminScreen(
     homeViewModel: HomeViewModel
 ) {
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
     val uiStateWedCheck by wedCheckViewModel.uiState.collectAsState()
+    val uiStateHome by homeViewModel.uiState.collectAsState()
 
     // Register ActivityResult to request read file permissions
     val requestFilePermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 wedCheckViewModel.onPermissionChange(
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    isGranted
+                    Manifest.permission.READ_EXTERNAL_STORAGE, isGranted
                 )
 //                viewModel.fetchCurrentLocation()
             } else {
@@ -108,8 +111,8 @@ fun AdminScreen(
     }
 
     //TODO, how to handle partial versus whole update (WedCheck.csv versus WedCheckFull.csv)
-    val getCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+    val getWedCheckCSV = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         // Handle the selected locations file here
         if (uri != null) {
@@ -123,7 +126,6 @@ fun AdminScreen(
             }
 
             if (fileName == "WedCheckFull04Aug2024.csv") {
-
                 //TODO, add validation to ensure that the file is right-sized
 //                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
 //
@@ -131,38 +133,95 @@ fun AdminScreen(
 //                    val fileSize = file.length()
 //                    return fileSize <= MAX_FILE_SIZE_BYTES
 //                }
-
+                wedCheckViewModel.updateLastFileNameLoaded(fileName)
                 wedCheckViewModel.loadWedCheck(uri)
-//                Toast.makeText(context, "WedCheck file loaded successfully!", Toast.LENGTH_SHORT)
-//                    .show()
-                // Display a success message & navigate the user back to the Home Screen
 
-            } else if (fileName == "Colony_Locations.csv") {
-                homeViewModel.loadSealColoniesFile(uri)
-//                Toast.makeText(
-//                    context,
-//                    "Seal Colony Locations file loaded successfully!",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-
-            } else if (fileName == "observers.csv") {
-                homeViewModel.loadObserversFile(uri)
-//                Toast.makeText(
-//                    context,
-//                    "Observer Initials file loaded successfully!",
-//                    Toast.LENGTH_SHORT
-//                ).show()
+                if (wedCheckViewModel.uiState.value.isWedCheckLoaded) {
+                    // Display a success message
+                    Toast.makeText(
+                        context,
+                        "WedCheck file loaded successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
             } else {
                 // Show an error message indicating that the selected file is not the expected file
                 showExplanationDialogForFileMatchError = true
             }
+        }
+    }
 
+    val getColonyLocationsCSV = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        // Handle the selected locations file here
+        if (uri != null) {
+            var fileName = ""
+
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (displayNameIndex != -1 && cursor.moveToFirst()) {
+                    fileName = cursor.getString(displayNameIndex)
+                }
+            }
+
+            if (fileName == "Colony_Locations.csv") {
+                homeViewModel.updateLastColoniesFileNameLoaded(fileName)
+                homeViewModel.loadSealColoniesFile(uri)
+
+                if (homeViewModel.uiState.value.isColonyLocationsLoaded) {
+                    // Display a success message
+                    Toast.makeText(
+                        context,
+                        "Colonies file loaded successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            } else {
+                // Show an error message indicating that the selected file is not the expected file
+                showExplanationDialogForFileMatchError = true
+            }
+        }
+    }
+
+    val getObserversCSV = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        // Handle the selected locations file here
+        if (uri != null) {
+            var fileName = ""
+
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (displayNameIndex != -1 && cursor.moveToFirst()) {
+                    fileName = cursor.getString(displayNameIndex)
+                }
+            }
+
+            if (fileName == "observers.csv") {
+                homeViewModel.updateLastObserversFileNameLoaded(fileName)
+                homeViewModel.loadObserversFile(uri)
+
+                if (homeViewModel.uiState.value.isObserversLoaded) {
+                    // Display a success message
+                    Toast.makeText(
+                        context,
+                        "Observers file loaded successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            } else {
+                // Show an error message indicating that the selected file is not the expected file
+                showExplanationDialogForFileMatchError = true
+            }
         }
     }
 
     Scaffold(
-        // region UI - Top Bar & Action Buttons
+// region UI - Top Bar & Action Buttons
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -172,13 +231,10 @@ fun AdminScreen(
                 ),
                 title = {
                     Row(
-                        Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                        Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            modifier = Modifier
-                                .padding(20.dp),
+                            modifier = Modifier.padding(20.dp),
                             text = "Administration",
                             style = MaterialTheme.typography.titleLarge
                         )
@@ -199,24 +255,21 @@ fun AdminScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .scrollable(rememberScrollState(), Orientation.Vertical)
+                .verticalScroll(state = scrollState, enabled = true)
                 .fillMaxSize(),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
                 // Seal Pup Image
-                Image(
-                    painter = painterResource(R.drawable.pup1_2),
+                Image(painter = painterResource(R.drawable.pup1_2),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
                             alpha = 0.5f // Adjust this value for desired transparency
-                        }
-                )
+                        })
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -230,11 +283,10 @@ fun AdminScreen(
                             .padding(bottom = 30.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
+                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
                             onClick = {
-                                getCSV.launch("text/csv")
+                                getWedCheckCSV.launch("text/csv")
                             },
                             icon = {
                                 Icon(
@@ -248,8 +300,7 @@ fun AdminScreen(
                                     "Upload WedCheck File",
                                     style = MaterialTheme.typography.titleLarge
                                 )
-                            }
-                        )
+                            })
                     }
                     Row(
                         modifier = Modifier
@@ -257,10 +308,9 @@ fun AdminScreen(
                             .padding(bottom = 30.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
+                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
-                            onClick = { getCSV.launch("text/csv") },
+                            onClick = { getObserversCSV.launch("text/csv") },
                             icon = {
                                 Icon(
                                     Icons.Filled.Upload,
@@ -282,10 +332,9 @@ fun AdminScreen(
                             .padding(bottom = 30.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
+                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
-                            onClick = { getCSV.launch("text/csv") },
+                            onClick = { getColonyLocationsCSV.launch("text/csv") },
                             icon = {
                                 Icon(
                                     Icons.Filled.Upload,
@@ -298,60 +347,124 @@ fun AdminScreen(
                                     text = "Upload Seal Colony Locations",
                                     style = MaterialTheme.typography.titleLarge
                                 )
-                            }
-                        )
+                            })
                     }
-                    if (uiStateWedCheck.loading) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else if (uiStateWedCheck.isWedCheckLoaded) {
+
+                    FileLoadingView(
+                        isLoading = uiStateWedCheck.isWedCheckLoading,
+                        isLoaded = uiStateWedCheck.isWedCheckLoaded,
+                        totalRows = uiStateWedCheck.totalRows,
+                        failedRows = uiStateWedCheck.failedRows,
+                        fileName = uiStateWedCheck.lastWedCheckFileLoaded
+                    )
+
+                    FileLoadingView(
+                        isLoading = uiStateHome.loading,
+                        isLoaded = uiStateHome.isColonyLocationsLoaded,
+                        totalRows = uiStateHome.totalColoniesRows,
+                        failedRows = uiStateHome.failedColoniesRows,
+                        fileName = uiStateHome.lastColoniesFileNameLoaded
+                    )
+
+                    FileLoadingView(
+                        isLoading = uiStateHome.loading,
+                        isLoaded = uiStateHome.isObserversLoaded,
+                        totalRows = uiStateHome.totalObserversRows,
+                        failedRows = uiStateHome.failedObserversRows,
+                        fileName = uiStateHome.lastObserversFileNameLoaded
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FileLoadingView(
+    isLoading: Boolean,
+    isLoaded: Boolean,
+    totalRows: Int,
+    failedRows: List<String>,
+    fileName: String,
+) {
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else if (isLoaded) {
+
+        Card(
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 6.dp
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(30.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("CSV Loaded: $fileName")
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 30.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text("Total Rows: $totalRows")
+                }
+                if (failedRows.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 30.dp),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Text("Total Rows in CSV: ${uiStateWedCheck.totalRows}")
+                            Text("Failed Rows: ${failedRows.joinToString(", ")}")
                         }
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 30.dp),
+                                .fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Text("Successfully Loaded Rows: ${uiStateWedCheck.totalRows - uiStateWedCheck.failedRows.size}")
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 30.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                if (uiStateWedCheck.failedRows.isNotEmpty() && uiStateWedCheck.isWedCheckLoaded) {
-                                    Text("Failed Rows: ${uiStateWedCheck.failedRows.joinToString(", ")}")
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 30.dp),
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        FailedRowsDisplay(uiStateWedCheck.failedRows)
-                                    }
-                                } else {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 30.dp),
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Text("All rows loaded successfully.")
-                                    }
-                                }
-                            }
+                            FailedRowsDisplay(failedRows)
                         }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 15.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text("Successfully Loaded Rows: ${totalRows - failedRows.size}")
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text("All rows loaded successfully.")
                     }
                 }
             }

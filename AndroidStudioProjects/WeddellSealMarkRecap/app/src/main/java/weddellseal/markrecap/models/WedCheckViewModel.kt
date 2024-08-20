@@ -61,6 +61,7 @@ class WedCheckViewModel(
         val totalRows: Int = 0,
         val isWedCheckLoading: Boolean = false,
         val isWedCheckLoaded: Boolean = false,
+        val lastWedCheckFileLoaded: String = ""
     )
 
     fun hasPermission(permission: String): Boolean {
@@ -169,6 +170,7 @@ class WedCheckViewModel(
                 _uiState.value = uiState.value.copy(
                     loading = false,
                     isWedCheckLoaded = true,
+                    isWedCheckLoading = false,
                     totalRows = csvData.size + failedRows.size,
                     isError = failedRows.isNotEmpty(),
                     failedRows = failedRows
@@ -181,10 +183,17 @@ class WedCheckViewModel(
                 _uiState.value = uiState.value.copy(
                     loading = false,
                     isWedCheckLoaded = false,
+                    isWedCheckLoading = false,
                     isError = true
                 )
             }
         }
+    }
+
+    fun updateLastFileNameLoaded(fileName: String) {
+        _uiState.value = uiState.value.copy(
+            lastWedCheckFileLoaded = fileName
+        )
     }
 
     private fun readWedCheckData(

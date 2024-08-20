@@ -12,7 +12,7 @@ interface ObserversDao {
     @Query("SELECT initials FROM observers")
     fun getObserverInitials(): List<String>
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE) //the suspend keyword means that coroutines are supported
+    @Insert(onConflict = OnConflictStrategy.REPLACE) //the suspend keyword means that coroutines are supported
     suspend fun insert(data: List<Observers>)
 
 }

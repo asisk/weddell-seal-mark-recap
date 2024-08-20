@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
@@ -52,7 +54,7 @@ fun SealLookupScreen(
     obsViewModel: AddObservationLogViewModel
 ) {
     val uiStateWedCheck by wedCheckViewModel.uiState.collectAsState()
-
+    val scrollState = rememberScrollState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -107,7 +109,9 @@ fun SealLookupScreen(
                     .fillMaxWidth()
             ) { // SEAL LOOKUP
                 Column(
-                    modifier = Modifier.padding(30.dp)
+                    modifier = Modifier
+                        .padding(30.dp)
+                        .verticalScroll(state = scrollState, enabled = true)
                 ) {
                     Row(
                         modifier = Modifier
@@ -150,7 +154,7 @@ fun SealLookupScreen(
                                 onClick = {
                                     obsViewModel.populateSeal(wedCheckViewModel.wedCheckSeal)
                                     navController.navigate(Screens.AddObservationLog.route)
-                                          },
+                                },
                                 icon = { Icon(Icons.Filled.PostAdd, "Edit seal") },
                                 text = {
                                     Text(

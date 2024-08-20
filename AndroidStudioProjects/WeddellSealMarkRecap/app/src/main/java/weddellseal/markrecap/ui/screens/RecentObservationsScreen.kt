@@ -12,11 +12,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,8 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -47,6 +42,9 @@ import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModelFactory
 import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun RecentObservationsScreen(
@@ -64,7 +62,6 @@ fun RecentObservationsScreen(
     recentObsScaffold(navController, viewModel, state)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun recentObsScaffold(
     navController: NavHostController,
@@ -103,7 +100,13 @@ fun recentObsScaffold(
                     BottomNavigationItem(
                         label = { Text(text = "Build CSV File") },
                         selected = false,
-                        onClick = { createDocument.launch("observations.csv") },
+                        onClick = {
+                            val dateTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                            val currentDateTime = dateTimeFormat.format(Date())
+                            val filename = "observations_$currentDateTime.csv"
+
+                            createDocument.launch(filename)
+                        },
                         icon = { Icon(Icons.Filled.Build, null) }
                     )
                 }
@@ -130,87 +133,31 @@ fun recentObsScaffold(
             ) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
+                    userScrollEnabled = true
                 ) {
-//                    if (state.observations.isEmpty()) {
-//                        viewModel.populateObsView()
-//                    }
                     items(state.observations) { observation ->
-                        Text(text =
-                                "ID:  " + observation.id.toString() + "    " +
-                                "Entered:  " + observation.date + "    " +
-                                "Notebook Entry:  " + notebookEntryValueObservation(observation),
-                            modifier = Modifier.padding(8.dp))
+                        Text(
+                            text =
+                            "ID:  " + observation.id.toString() + "    " +
+                                    "Entered:  " + observation.date + "    " +
+                                    "Notebook Entry:  " + notebookEntryValueObservation(observation),
+                            modifier = Modifier.padding(8.dp)
+                        )
                         HorizontalDivider()
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun EmptyLogMessage(modifier: Modifier) {
-    Column(
-        modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            "Hi there \uD83D\uDC4B",
-            style = MaterialTheme.typography.headlineMedium,
-            fontFamily = FontFamily.Serif
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "Create a seal observation log by clicking the ✚ icon below \uD83D\uDC47",
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
-}
-
-@Composable
-fun CreateDocumentScreen() {
-    val createDocument =
-        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
-            // Handle the created document URI
-            if (uri != null) {
-                // Do something with the created document URI
+            if (viewModel.uiState.isError) {
+                Row(
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Error during CSV export!")
+                }
             }
-        }
-
-    fun saveFile(suggestedFileName: String) {
-        createDocument.launch(suggestedFileName)
-    }
-
-    Column {
-        Button(
-            onClick = {
-                createDocument.launch("observations.csv")
-            }
-        ) {
-            Text("Create Document")
-        }
-    }
-}
-
-@Composable
-fun FilePickerScreen(viewModel: RecentObservationsViewModel) {
-    val openFilePicker =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            // Handle the selected file URI
-            if (uri != null) {
-                // Do something with the selected file URI
-                viewModel.updateURI(uri)
-            }
-        }
-
-    Column {
-        Button(
-            onClick = {
-                openFilePicker.launch("file/*")
-            }
-        ) {
-            Text("Open File Picker")
         }
     }
 }

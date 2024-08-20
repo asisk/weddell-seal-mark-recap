@@ -793,7 +793,7 @@ class AddObservationLogViewModel(
 
     fun isValid(): Boolean {
 //        if (!observationSaver.isEmpty() && !uiState.isSaving) {
-        if (observationRepo.canAddObservation() && !uiState.isSaving) {
+        if (!uiState.isSaving) {
             return true
         }
         return false

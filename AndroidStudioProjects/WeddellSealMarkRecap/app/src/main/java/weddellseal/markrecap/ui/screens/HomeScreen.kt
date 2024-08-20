@@ -6,8 +6,6 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
@@ -79,18 +78,16 @@ fun HomeScaffold(
     viewModel: HomeViewModel
 ) {
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
     val state = viewModel.uiState
     var showCensusDialog by remember { mutableStateOf(false) }
-    val locationList by viewModel.locations.collectAsState()
+    val coloniesList by viewModel.colonies.collectAsState()
     val observerList by viewModel.observers.collectAsState()
 
     LaunchedEffect(Unit) {
-       if (locationList.isEmpty()) {
-           viewModel.fetchLocations()
-       }
-        if (observerList.isEmpty()) {
-            viewModel.fetchObservers()
-        }
+        viewModel.fetchLocations()
+
+        viewModel.fetchObservers()
     }
 
     // Register ActivityResult to request Location permissions
@@ -188,7 +185,7 @@ fun HomeScaffold(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .scrollable(rememberScrollState(), Orientation.Vertical)
+                .verticalScroll(state = scrollState, enabled = true)
                 .fillMaxSize(),
         ) {
             // Seal Pup Image
@@ -327,7 +324,7 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            var observationSiteSelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
+                            var colonySelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
@@ -342,8 +339,8 @@ fun HomeScaffold(
                                     .fillMaxWidth(.8f)
                             ) {
                                 DropdownField(
-                                    locationList,
-                                    observationSiteSelected
+                                    coloniesList,
+                                    colonySelected
                                 ) { valueSelected ->
                                     obsViewModel.updateColonySelection(valueSelected)
                                 }

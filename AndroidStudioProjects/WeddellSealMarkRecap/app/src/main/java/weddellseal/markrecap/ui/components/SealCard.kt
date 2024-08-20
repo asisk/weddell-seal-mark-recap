@@ -670,7 +670,7 @@ fun SealCard(
                         if (isWeightToggled) {
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            var weightRecorded by remember { mutableStateOf("") }
+                            var weightRecorded by remember { mutableStateOf(seal.weight.toString()) }
 
                             PupWeightOutlinedTextField(
                                 value = weightRecorded,

@@ -41,7 +41,8 @@ class RecentObservationsViewModel(
     data class UiState(
         val loading: Boolean = true,
         var uriForCSVWrite: Uri? = null,
-        var observations: List<ObservationLogEntry> = emptyList()
+        var observations: List<ObservationLogEntry> = emptyList(),
+        var isError: Boolean = false,
     )
 
     var uiState by mutableStateOf(
@@ -60,10 +61,8 @@ class RecentObservationsViewModel(
         viewModelScope.launch {
             try {
                 // Ensure there's a URI selected for writing the CSV file
-                val uriForCSVWrite = uiState.uriForCSVWrite
-                if (uriForCSVWrite == null) {
-                    throw NoUriSelectedException("No URI was selected")
-                }
+                val uriForCSVWrite =
+                    uiState.uriForCSVWrite ?: throw NoUriSelectedException("No URI was selected")
 
                 // Convert the URI to a file
                 val file = uriToFile(context, uriForCSVWrite)
@@ -75,16 +74,15 @@ class RecentObservationsViewModel(
                     observationRepo.writeDataToFile(uriForCSVWrite, context.contentResolver)
 
                 } else {
+                    uiState = uiState.copy(isError = true, loading = false)
                     throw NoUriSelectedException("No file found for the selected URI")
                 }
 
                 // Update the UI state (e.g., loading state)
-                uiState = uiState.copy(
-                    loading = false,
-                )
+                uiState = uiState.copy(isError = false, loading = false)
+
             } catch (e: Exception) {
-                // Handle any exceptions, e.g., log an error message or show a user-friendly error
-                e.printStackTrace()
+                uiState = uiState.copy(isError = true, loading = false)
             }
         }
     }
@@ -101,7 +99,8 @@ class RecentObservationsViewModel(
 }
 
 
-class NoUriSelectedException(message: String = "No URI was selected") : IllegalArgumentException(message)
+class NoUriSelectedException(message: String = "No URI was selected") :
+    IllegalArgumentException(message)
 
 class RecentObservationsViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")

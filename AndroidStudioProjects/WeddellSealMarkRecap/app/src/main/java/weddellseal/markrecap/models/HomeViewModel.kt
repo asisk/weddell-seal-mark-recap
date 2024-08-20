@@ -7,9 +7,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,19 +32,11 @@ class HomeViewModel(
     private val observationRepo: ObservationRepository,
     private val supportingDataRepository: SupportingDataRepository
 ) : AndroidViewModel(application) {
-    data class UiState(
-        val hasFileAccess: Boolean,
-        val loading: Boolean = true,
-        val isSaving: Boolean = false,
-        var uriForCSVWrite: Uri? = null,
-//        var colonyLocations: List<String> = emptyList(),
-//        var observerInitials: List<String> = emptyList(),
-        val date: String,
-    )
 
     private val context: Context
         get() = getApplication()
-    var uiState by mutableStateOf(
+
+    private val _uiState = MutableStateFlow(
         UiState(
             hasFileAccess = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE),
             date = SimpleDateFormat(
@@ -56,16 +45,40 @@ class HomeViewModel(
             ).format(System.currentTimeMillis()),
         )
     )
-        private set
+
+    val uiState: StateFlow<UiState> = _uiState
+
+    // MutableStateFlow to hold the list of observers
+    private val _observers = MutableStateFlow<List<String>>(emptyList())
+    val observers: StateFlow<List<String>> = _observers
+
+    // MutableStateFlow to hold the list of locations
+    private val _locations = MutableStateFlow<List<String>>(emptyList())
+    val colonies: StateFlow<List<String>> = _locations
+
+    data class UiState(
+        val hasFileAccess: Boolean,
+        val loading: Boolean = false,
+        val isSaving: Boolean = false,
+        var uriForCSVWrite: Uri? = null,
+        val failedColoniesRows: List<String> = emptyList(),
+        val totalColoniesRows: Int = 0,
+        val failedObserversRows: List<String> = emptyList(),
+        val totalObserversRows: Int = 0,
+        val isColonyLocationsLoading: Boolean = false,
+        val isColonyLocationsLoaded: Boolean = false,
+        val lastColoniesFileNameLoaded: String = "",
+        val isObserversLoading: Boolean = false,
+        val isObserversLoaded: Boolean = false,
+        val lastObserversFileNameLoaded: String = "",
+        val isError: Boolean = false,
+        val date: String,
+    )
 
     init {
         fetchLocations()
         fetchObservers()
     }
-
-    // MutableStateFlow to hold the list of locations
-    private val _locations = MutableStateFlow<List<String>>(emptyList())
-    val locations: StateFlow<List<String>> = _locations
 
     // Function to fetch locations from the database
     fun fetchLocations() {
@@ -73,13 +86,11 @@ class HomeViewModel(
             val fetchedLocations = withContext(Dispatchers.IO) {
                 supportingDataRepository.getLocations() // Fetch from DB
             }
-            _locations.value = fetchedLocations
+            if (fetchedLocations.isNotEmpty() && _locations.value.isEmpty()) {
+                _locations.value = fetchedLocations
+            }
         }
     }
-
-    // MutableStateFlow to hold the list of observers
-    private val _observers = MutableStateFlow<List<String>>(emptyList())
-    val observers: StateFlow<List<String>> = _observers
 
     // Function to fetch locations from the database
     fun fetchObservers() {
@@ -87,26 +98,10 @@ class HomeViewModel(
             val fetchedObservers = withContext(Dispatchers.IO) {
                 supportingDataRepository.getObserverInitials() // Fetch from DB
             }
-            _observers.value = fetchedObservers
+            if (fetchedObservers.isNotEmpty() && _observers.value.isEmpty()) {
+                _observers.value = fetchedObservers
+            }
         }
-    }
-
-    data class StudyArea(
-        val location: String = "",
-        val latitude: Double = 0.0,
-        val longitude: Double = 0.0,
-    )
-
-    var studyAreaState by mutableStateOf(StudyArea(location = "Default A"))
-        private set
-
-    fun isValid(): Boolean {
-//        if (!observationSaver.isEmpty() && !uiState.isSaving) {
-        if (observationRepo.canWriteStudyAreas() && !uiState.isSaving) {
-            return true
-        }
-        return false
-//        return !observationSaver.isEmpty() && !uiState.isSaving
     }
 
     fun hasPermission(permission: String): Boolean {
@@ -119,7 +114,7 @@ class HomeViewModel(
     fun onPermissionChange(permission: String, isGranted: Boolean) {
         when (permission) {
             Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                uiState = uiState.copy(hasFileAccess = isGranted)
+                _uiState.value = uiState.value.copy(hasFileAccess = isGranted)
             }
 
             else -> {
@@ -131,39 +126,39 @@ class HomeViewModel(
     private fun readSealColoniesCsvData(
         contentResolver: ContentResolver,
         uri: Uri
-    ): List<SealColony> {
-        val sealColonies: MutableList<SealColony> = mutableListOf()
-        val dropdownList = mutableListOf<String>()
-        try {
-            contentResolver.openInputStream(uri)?.use { stream ->
-                InputStreamReader(stream).buffered().use { reader ->
-                    val headerRow = reader.readLine()?.split(",") ?: emptyList()
-                    val inOutIndex = headerRow.indexOf("In/Out")
-                    val locationIndex = headerRow.indexOf("Location")
-                    val nLimitIndex = headerRow.indexOf("N_Limit")
-                    val sLimitIndex = headerRow.indexOf("S_Limit")
-                    val wLimitIndex = headerRow.indexOf("W_Limit")
-                    val eLimitIndex = headerRow.indexOf("E_Limit")
-                    val adjLatIndex = headerRow.indexOf("Adj_Lat")
-                    val adjLongIndex = headerRow.indexOf("Adj_Long")
-                    if (listOf(
-                            inOutIndex,
-                            locationIndex,
-                            nLimitIndex,
-                            sLimitIndex,
-                            wLimitIndex,
-                            eLimitIndex,
-                            adjLatIndex,
-                            adjLongIndex
-                        ).all { it != -1 }
-                    ) {
-                        reader.forEachLine { line ->
+    ): Pair<List<SealColony>, List<String>> {
+        val csvData: MutableList<SealColony> = mutableListOf()
+        val failedRows = mutableListOf<String>()
+
+        contentResolver.openInputStream(uri)?.use { stream ->
+            InputStreamReader(stream).buffered().use { reader ->
+
+                val headerRow = reader.readLine()?.split(",") ?: emptyList()
+                val inOutIndex = headerRow.indexOf("In/Out")
+                val locationIndex = headerRow.indexOf("Location")
+                val nLimitIndex = headerRow.indexOf("N_Limit")
+                val sLimitIndex = headerRow.indexOf("S_Limit")
+                val wLimitIndex = headerRow.indexOf("W_Limit")
+                val eLimitIndex = headerRow.indexOf("E_Limit")
+                val adjLatIndex = headerRow.indexOf("Adj_Lat")
+                val adjLongIndex = headerRow.indexOf("Adj_Long")
+
+                if (listOf(
+                        inOutIndex,
+                        locationIndex,
+                        nLimitIndex,
+                        sLimitIndex,
+                        wLimitIndex,
+                        eLimitIndex,
+                        adjLatIndex,
+                        adjLongIndex
+                    ).all { it != -1 }
+                ) {
+                    reader.forEachLine { line ->
+                        try {
                             val row = line.split(",")
                             val inOut = row.getOrNull(inOutIndex) ?: ""
-
                             val location = row.getOrNull(locationIndex) ?: ""
-                            dropdownList.add(location)
-
                             val nLimit = row.getOrNull(nLimitIndex)?.toDoubleOrNull() ?: 0.0
                             val sLimit = row.getOrNull(sLimitIndex)?.toDoubleOrNull() ?: 0.0
                             val wLimit = row.getOrNull(wLimitIndex)?.toDoubleOrNull() ?: 0.0
@@ -184,89 +179,148 @@ class HomeViewModel(
                             )
 
                             // Add the parsed entity to the list
-                            sealColonies.add(record)
-                        }
-//                        uiState = uiState.copy(colonyLocations = dropdownList)
-                    } else {
-                        // Handle the case where one or more headers are missing
-                        // This could be logging an error, showing a message to the user, etc.
-                        throw IllegalArgumentException("CSV file missing required headers")
-                    }
-                }
-            } ?: throw IOException("Unable to open input stream")
-        } catch (e: IOException) {
-            e.printStackTrace()
-            //TODO,  Handle IO exception
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-            //TODO
-        } catch (e: NumberFormatException) {
-            e.printStackTrace()
-            //TODO, Handle number format exception (if field3 cannot be parsed as an Int)
-        } catch (e: Exception) {
-            // Handle any other exceptions
-            e.printStackTrace()
-            // TODO, Show an error message to the user, log the error, etc.
-        }
+                            csvData.add(record)
 
-        return sealColonies
+                        } catch (e: Exception) {
+                            // Handle and log any errors in parsing the row
+                            e.printStackTrace()
+                            // Capture the raw row that failed
+                            failedRows.add(line)
+                        }
+                    }
+                } else {
+                    // one or more headers are missing
+                    throw IllegalArgumentException("CSV file missing required headers")
+                }
+            }
+        } ?: throw IOException("Unable to open input stream")
+
+        return Pair(csvData, failedRows)
     }
 
     fun loadSealColoniesFile(uri: Uri) {
         // Kick off this process on a coroutine
         viewModelScope.launch {
-            // Read CSV data on IO dispatcher
-            val csvData = withContext(Dispatchers.IO) {
-                readSealColoniesCsvData(context.contentResolver, uri)
-            }
-            //TODO, add error handling to ensure that the file actually loaded
+            _uiState.value = uiState.value.copy(loading = true, isColonyLocationsLoading = true)
 
-            // Insert CSV data into the database
-            supportingDataRepository.insertColoniesData(csvData)
+            try {
+
+                // Read CSV data on IO dispatcher
+                val (csvData, failedRows) = withContext(Dispatchers.IO) {
+                    readSealColoniesCsvData(context.contentResolver, uri)
+                }
+
+                _uiState.value = uiState.value.copy(
+                    loading = false,
+                    isColonyLocationsLoading = false,
+                    isColonyLocationsLoaded = true,
+                    totalColoniesRows = csvData.size + failedRows.size,
+                    isError = failedRows.isNotEmpty(),
+                    failedColoniesRows = failedRows
+                )
+
+                // Insert CSV data into the database
+                supportingDataRepository.insertColoniesData(csvData)
+
+            } catch (e: Exception) {
+                _uiState.value = uiState.value.copy(
+                    loading = false,
+                    isColonyLocationsLoading = false,
+                    isColonyLocationsLoaded = false,
+                    totalColoniesRows = 0,
+                    isError = true
+                )
+            }
         }
+    }
+
+    fun updateLastColoniesFileNameLoaded(fileName: String) {
+        _uiState.value = uiState.value.copy(
+            lastColoniesFileNameLoaded = fileName
+        )
     }
 
     fun loadObserversFile(uri: Uri) {
         // Kick off this process on a coroutine
         viewModelScope.launch {
-            // Read CSV data on IO dispatcher
-            val csvData = withContext(Dispatchers.IO) {
-                readObserverCsvData(context.contentResolver, uri)
-            }
+            _uiState.value = uiState.value.copy(loading = true, isObserversLoading = true)
 
-            // Insert CSV data into the database
-            supportingDataRepository.insertObserversData(csvData)
+            try {
+
+                // Read CSV data on IO dispatcher
+                val (csvData, failedRows) = withContext(Dispatchers.IO) {
+                    readObserverCsvData(context.contentResolver, uri)
+                }
+                _uiState.value = uiState.value.copy(
+                    loading = false,
+                    isObserversLoading = false,
+                    isObserversLoaded = true,
+                    totalObserversRows = csvData.size + failedRows.size,
+                    isError = failedRows.isNotEmpty(),
+                    failedObserversRows = failedRows
+                )
+
+                // Insert CSV data into the database
+                supportingDataRepository.insertObserversData(csvData)
+
+            } catch (e: Exception) {
+                _uiState.value = uiState.value.copy(
+                    loading = false,
+                    isObserversLoading = false,
+                    isObserversLoaded = false,
+                    isError = true,
+                    totalObserversRows = 0
+                )
+            }
         }
     }
 
+    fun updateLastObserversFileNameLoaded(fileName: String) {
+        _uiState.value = uiState.value.copy(
+            lastObserversFileNameLoaded = fileName
+        )
+    }
 
-    private fun readObserverCsvData(contentResolver: ContentResolver, uri: Uri): List<Observers> {
-        val observers: MutableList<Observers> = mutableListOf()
-        val dropdownList = mutableListOf<String>()
+    private fun readObserverCsvData(
+        contentResolver: ContentResolver,
+        uri: Uri,
+    ): Pair<List<Observers>, List<String>> {
+        val csvData: MutableList<Observers> = mutableListOf()
+        val failedRows = mutableListOf<String>()
+
         contentResolver.openInputStream(uri)?.use { stream ->
             InputStreamReader(stream).buffered().use { reader ->
+
                 val headerRow = reader.readLine()?.split(",") ?: emptyList()
                 val initialsIndex = headerRow.indexOf("Initials")
 
-                reader.forEachLine { line ->
-                    val row = line.split(",")
-                    if (row.isNotEmpty() && initialsIndex != -1) {
-                        val observer = row.getOrNull(initialsIndex) ?: ""
-                        dropdownList.add(observer)
+                if (initialsIndex != -1) {
+                    reader.forEachLine { line ->
 
-                        val record = Observers(
-                            observerId = 0,
-                            initials = observer
-                        )
-                        observers.add(record)
-                    } else {
-                        // Handle invalid row or missing columns
-                        throw IllegalArgumentException("CSV file missing required headers")
+                        try {
+
+                            val row = line.split(",")
+                            val observer = row.getOrNull(initialsIndex) ?: ""
+                            val record = Observers(
+                                observerId = 0,
+                                initials = observer
+                            )
+                            csvData.add(record)
+
+                        } catch (e: Exception) {
+                            // Handle and log any errors in parsing the row
+                            e.printStackTrace()
+                            // Capture the raw row that failed
+                            failedRows.add(line)
+                        }
                     }
+                } else {
+                    // one or more headers are missing
+                    throw IllegalArgumentException("CSV file missing required headers")
                 }
             }
-        }
+        } ?: throw IOException("Unable to open input stream")
 
-        return observers
+        return Pair(csvData, failedRows)
     }
 }
