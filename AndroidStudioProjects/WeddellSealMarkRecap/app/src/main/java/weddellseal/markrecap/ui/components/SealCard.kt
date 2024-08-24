@@ -25,18 +25,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.WedCheckViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SealCard(
     viewModel: AddObservationLogViewModel,
     seal: Seal,
+    wedCheckViewModel: WedCheckViewModel,
 ) {
     var newNumRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
     var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
-    var isCommentToggled by remember { mutableStateOf(seal.hasComment) }
     var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
     var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
     var tagIDValNew by remember { mutableStateOf(seal.tagIdOne) }
@@ -53,6 +55,20 @@ fun SealCard(
     LaunchedEffect(seal.tagIdOne) {
         tagIDVal = seal.tagIdOne
         tagIDValNew = seal.tagIdOne
+
+        // update the speNo if we don't have one
+        // and the tagID entry is complete
+        if (seal.speNo == 0 && seal.tagIdOne != "" && seal.tagOneAlpha != "" && !wedCheckViewModel.uiState.value.isSearching) {
+            if (seal.tagOneNumber.toString().length == 3 || seal.tagOneNumber.toString().length == 4) {
+                wedCheckViewModel.findSealSpeNo(seal.tagIdOne)
+
+                delay(1500) // Wait for 1500 milliseconds
+
+                if (wedCheckViewModel.uiState.value.speNoFound != 0) {
+                    viewModel.updateSpeNo(seal.name, wedCheckViewModel.uiState.value.speNoFound)
+                }
+            }
+        }
     }
 
     LaunchedEffect(seal.notebookDataString) {
@@ -135,7 +151,7 @@ fun SealCard(
                     val buttonListSex = listOf("Female", "Male", "Unknown")
                     SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
                         // change in sex to Male should result in removing any entered pups
-                        if (seal.numRelatives > 0 && newText == "Male") {
+                        if (seal.name == "primary" && seal.numRelatives > 0 && newText == "Male") {
                             newNumRelatives = "0"
                             // pop a warning and ask for confirmation before moving forward
                             showDeleteDialog.value = true
@@ -227,6 +243,8 @@ fun SealCard(
 
                             // handle case where the number of relatives is being set to zero
                             if (newVal.toInt() == 0 && seal.numRelatives > 0) {
+                                newNumRelatives = "0"
+
                                 // pop a warning and ask for confirmation before moving forward
                                 showDeleteDialog.value = true
                             } else {
@@ -517,22 +535,34 @@ fun SealCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     // NUMBER OF TAGS
+                    var isNoTagsChecked by remember { mutableStateOf(seal.numTags.toIntOrNull() == 0) }
+                    val focusManager = LocalFocusManager.current
+                    val numTagsList = listOf("1", "2")
+
                     Text(
                         "# of Tags",
                         style = MaterialTheme.typography.titleLarge
                     )
-                    val numTagsList = listOf("1", "2")
                     SingleSelectButtonGroupSquare(
                         numTagsList,
                         seal.numTags
                     ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
 
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    TagSwitch(seal.numTags) {
-                        // actions on change of value
-                        viewModel.resetTags(seal)
-                    }
+                    Text(
+                        text = "No Tag",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                    Checkbox(
+                        checked = isNoTagsChecked,
+                        onCheckedChange = {
+                            focusManager.clearFocus()
+                            isNoTagsChecked = it
+                            viewModel.updateNoTag(seal.name)
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                    )
                 }
             }
             Box(
@@ -580,30 +610,6 @@ fun SealCard(
 
             Box(
                 modifier = Modifier
-                    .weight(.4f)
-//                    .padding(end = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Enter Comment",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Switch(
-                        checked = isCommentToggled,
-                        onCheckedChange = { isChecked ->
-                            isCommentToggled = isChecked
-                            viewModel.updateHasComment(seal.name, isChecked)
-                        }
-                    )
-                }
-            }
-
-            Box(
-                modifier = Modifier
                     .weight(.6f)
 //                    .padding(end = 8.dp)
             ) {
@@ -612,11 +618,9 @@ fun SealCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (isCommentToggled) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        CommentField(seal.comment) { newText ->
-                            viewModel.updateComment(seal.name, newText)
-                        }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CommentField(seal.comment) { newText ->
+                        viewModel.updateComment(seal.name, newText)
                     }
                 }
             }

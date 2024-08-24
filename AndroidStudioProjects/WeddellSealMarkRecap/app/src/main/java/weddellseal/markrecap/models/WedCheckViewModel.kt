@@ -61,7 +61,9 @@ class WedCheckViewModel(
         val totalRows: Int = 0,
         val isWedCheckLoading: Boolean = false,
         val isWedCheckLoaded: Boolean = false,
-        val lastWedCheckFileLoaded: String = ""
+        val lastWedCheckFileLoaded: String = "",
+        val speNoFound: Int = 0,
+        val tagIdForSpeNo: String = "",
     )
 
     fun hasPermission(permission: String): Boolean {
@@ -83,10 +85,8 @@ class WedCheckViewModel(
         }
     }
 
-    fun findSealSpeNo(sealTagID: String): Int {
+    fun findSealSpeNo(sealTagID: String) {
         _uiState.value = uiState.value.copy(isSearching = true)
-        // launch the search for a seal on a separate coroutine
-        var speNo: Int = 0
         viewModelScope.launch {
             // Switch to the IO dispatcher for database operation
             val returnVal = withContext(Dispatchers.IO) {
@@ -94,12 +94,16 @@ class WedCheckViewModel(
             }
 
             if (returnVal != 0) {
-                speNo = returnVal
+                _uiState.value = uiState.value.copy(
+                    isSearching = false,
+                    sealNotFound = false,
+                    speNoFound = returnVal,
+                    tagIdForSpeNo = sealTagID
+                )
+            } else {
+                _uiState.value = uiState.value.copy(isSearching = false, sealNotFound = true)
             }
         }
-        _uiState.value = uiState.value.copy(isSearching = false)
-
-        return speNo
     }
 
     fun findSealbyTagID(sealTagID: String) {
@@ -113,15 +117,19 @@ class WedCheckViewModel(
                 wedCheckRepo.findSealbyTagID(sealTagID)
             }
             if (seal != null) {
-                _uiState.value = uiState.value.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
+                _uiState.value = uiState.value.copy(
+                    sealRecordDB = seal,
+                    isSearching = false,
+                    sealNotFound = false
+                )
                 wedCheckSeal = seal.toSeal()
             } else {
                 _uiState.value = uiState.value.copy(
-                        sealRecordDB = null,
-                        isSearching = false,
-                        sealNotFound = true,
-                        isError = true
-                    )
+                    sealRecordDB = null,
+                    isSearching = false,
+                    sealNotFound = true,
+                    isError = true
+                )
             }
         }
     }
@@ -137,15 +145,19 @@ class WedCheckViewModel(
                 wedCheckRepo.findSealbySpeNo(speno)
             }
             if (seal != null) {
-                _uiState.value = uiState.value.copy(sealRecordDB = seal, isSearching = false, sealNotFound = false)
+                _uiState.value = uiState.value.copy(
+                    sealRecordDB = seal,
+                    isSearching = false,
+                    sealNotFound = false
+                )
                 wedCheckSeal = seal.toSeal()
             } else {
                 _uiState.value = uiState.value.copy(
-                        sealRecordDB = null,
-                        isSearching = false,
-                        sealNotFound = true,
-                        isError = true
-                    )
+                    sealRecordDB = null,
+                    isSearching = false,
+                    sealNotFound = true,
+                    isError = true
+                )
             }
         }
     }

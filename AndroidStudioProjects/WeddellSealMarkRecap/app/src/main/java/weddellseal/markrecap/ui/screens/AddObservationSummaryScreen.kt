@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.ui.components.SummaryCard
@@ -52,11 +51,11 @@ fun AddObservationSummaryScreen(
     //send the user back to the observation screen when a log is saved
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("Successfully saved!")
-            }
-            viewModel.removeSeal("primary")
+//            coroutineScope.launch {
+//                snackbarHostState.showSnackbar("Successfully saved!")
+//            }
             navController.navigate(Screens.AddObservationLog.route)
+            viewModel.resetSaved()
         }
     }
 
@@ -64,9 +63,9 @@ fun AddObservationSummaryScreen(
         if (viewModel.isValid()) {
             callback()
         } else {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("You haven't completed all details")
-            }
+//            coroutineScope.launch {
+//                snackbarHostState.showSnackbar("You haven't completed all details")
+//            }
         }
     }
     // endregion
@@ -85,7 +84,7 @@ fun AddObservationSummaryScreen(
                 },
                 navigationIcon = {
                     if (navController.previousBackStackEntry != null) {
-                        IconButton(onClick = { navController.navigateUp() } ) {
+                        IconButton(onClick = { navController.navigateUp() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Edit Observation"
@@ -116,7 +115,3 @@ fun AddObservationSummaryScreen(
         }
     }
 }
-
-
-
-

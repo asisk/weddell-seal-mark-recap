@@ -139,7 +139,7 @@ fun SummaryCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (pupTwo.isStarted) {
-                        SummaryListItem("Pup Two", pupOne.notebookDataString)
+                        SummaryListItem("Pup Two", pupTwo.notebookDataString)
                     }
                 }
             }

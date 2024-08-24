@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
@@ -67,10 +68,11 @@ fun AddObservationLogScreen(
     wedCheckViewModel: WedCheckViewModel
 ) {
     val state = viewModel.uiState
-//    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    var adultSeal = viewModel.primarySeal
+
+    // vars not "by remember" because the screen needs to respond to input that changes the seal's model values
+    var primarySeal = viewModel.primarySeal
     var pupOne = viewModel.pupOne
     var pupTwo = viewModel.pupTwo
 
@@ -81,9 +83,9 @@ fun AddObservationLogScreen(
                 viewModel.onPermissionChange(ACCESS_FINE_LOCATION, isGranted)
                 viewModel.fetchCurrentLocation()
             } else {
-                //coroutineScope.launch {
-                //    snackbarHostState.showSnackbar("Location currently disabled due to denied permission.")
-                //}
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Location currently disabled due to denied permission.")
+                }
             }
         }
 
@@ -117,18 +119,13 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
-    fun saveAction() {
-        if (adultSeal.isStarted) {
-            if (adultSeal.speNo == 0) {
-                val speNo = wedCheckViewModel.findSealSpeNo(adultSeal.tagIdOne)
-                viewModel.updateSpeNo(adultSeal.name, speNo)
-            }
-
-            viewModel.updateNotebookEntry(adultSeal)
-            viewModel.updateNotebookEntry(pupOne)
-            viewModel.updateNotebookEntry(pupTwo)
-        }
-    }
+//    fun saveAction() {
+//        if (primarySeal.isStarted) {
+//            viewModel.updateNotebookEntry(primarySeal)
+//            viewModel.updateNotebookEntry(pupOne)
+//            viewModel.updateNotebookEntry(pupTwo)
+//        }
+//    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -161,17 +158,15 @@ fun AddObservationLogScreen(
                         )
                     }
                     val contentColor =
-                        if (adultSeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                        if (primarySeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
                             alpha = ContentAlpha.disabled
                         )
                     IconButton(
                         onClick = {
-                            saveAction()
-                            if (adultSeal.isStarted) {
-                                navController.navigate(Screens.AddObservationSummary.route)
-                            }
+//                            saveAction()
+                            navController.navigate(Screens.AddObservationSummary.route)
                         },
-                        enabled = adultSeal.isStarted
+                        enabled = primarySeal.isStarted
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Check,
@@ -189,7 +184,7 @@ fun AddObservationLogScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            TabbedCards(viewModel)
+            TabbedCards(viewModel, wedCheckViewModel)
         }
     }
 }
@@ -223,7 +218,7 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 data class TabItem(val title: String, val sealName: String, val content: @Composable () -> Unit)
 
 @Composable
-fun TabbedCards(viewModel: AddObservationLogViewModel) {
+fun TabbedCards(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val scrollState = rememberScrollState()
     var tabItems by remember { mutableStateOf(listOf<TabItem>()) }
@@ -235,7 +230,8 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
             add(TabItem("Seal", viewModel.primarySeal.name) {
                 SealCard(
                     viewModel,
-                    viewModel.primarySeal
+                    viewModel.primarySeal,
+                    wedCheckViewModel
                 )
             })
 
@@ -244,7 +240,8 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
                 add(TabItem("Pup One", viewModel.pupOne.name) {
                     SealCard(
                         viewModel,
-                        viewModel.pupOne
+                        viewModel.pupOne,
+                        wedCheckViewModel
                     )
                 })
             } else {
@@ -257,7 +254,8 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
                 add(TabItem("Pup Two", viewModel.pupTwo.name) {
                     SealCard(
                         viewModel,
-                        viewModel.pupTwo
+                        viewModel.pupTwo,
+                        wedCheckViewModel
                     )
                 })
             } else {
@@ -330,7 +328,7 @@ fun TabbedCards(viewModel: AddObservationLogViewModel) {
                         onConfirmation = {
                             if (tabItems.isNotEmpty()) {
                                 // remove the current seal
-                                viewModel.removeSeal(tabItems[selectedTabIndex].sealName)
+                                viewModel.resetSeal(tabItems[selectedTabIndex].sealName)
                                 showDeleteDialog.value = false
                                 // Remove the tab and update selectedTabIndex if necessary
                                 // filter checks whether the index of the current element (i) is different from the selectedTabIndex
