@@ -120,7 +120,9 @@ class WedCheckViewModel(
                 _uiState.value = uiState.value.copy(
                     sealRecordDB = seal,
                     isSearching = false,
-                    sealNotFound = false
+                    sealNotFound = false,
+                    speNoFound = seal.speno,
+                    tagIdForSpeNo = sealTagID
                 )
                 wedCheckSeal = seal.toSeal()
             } else {

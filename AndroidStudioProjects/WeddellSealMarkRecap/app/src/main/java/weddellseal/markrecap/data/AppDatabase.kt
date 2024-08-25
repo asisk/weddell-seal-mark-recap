@@ -13,7 +13,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class, SealColony::class, Observers::class], version = 7, exportSchema = false)
+@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class, SealColony::class, Observers::class], version = 8, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao
     abstract fun wedCheckDao(): WedCheckDao
@@ -22,7 +22,6 @@ abstract class AppDatabase : RoomDatabase() {
 
     //companion is visible to other classes
     companion object {
-//       const val DB_NAME = "DailyWeddellSealObservations"
         // Singleton prevents multiple instances of database opening at the
         // same time.
         @Volatile

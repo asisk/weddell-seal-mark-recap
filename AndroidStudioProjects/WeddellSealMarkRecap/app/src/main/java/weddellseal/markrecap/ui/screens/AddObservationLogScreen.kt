@@ -219,50 +219,22 @@ data class TabItem(val title: String, val sealName: String, val content: @Compos
 
 @Composable
 fun TabbedCards(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
     val scrollState = rememberScrollState()
-    var tabItems by remember { mutableStateOf(listOf<TabItem>()) }
     val showDeleteDialog = remember { mutableStateOf(false) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var tabItems by remember {
+        mutableStateOf(
+            createTabItems(viewModel, wedCheckViewModel)
+        )
+    }
 
-    // Initialize or update the tabs list based on conditions
-    LaunchedEffect(viewModel.primarySeal.numRelatives) {
-        tabItems = mutableListOf<TabItem>().apply {
-            add(TabItem("Seal", viewModel.primarySeal.name) {
-                SealCard(
-                    viewModel,
-                    viewModel.primarySeal,
-                    wedCheckViewModel
-                )
-            })
-
-            // manage the pupOne tab
-            if (viewModel.pupOne.isStarted) {
-                add(TabItem("Pup One", viewModel.pupOne.name) {
-                    SealCard(
-                        viewModel,
-                        viewModel.pupOne,
-                        wedCheckViewModel
-                    )
-                })
-            } else {
-                // Removing pup from tabItems if it exists
-                tabItems = tabItems.filter { it.title != "Pup One" }
-            }
-
-            // manage the pupTwo tab
-            if (viewModel.pupTwo.isStarted) {
-                add(TabItem("Pup Two", viewModel.pupTwo.name) {
-                    SealCard(
-                        viewModel,
-                        viewModel.pupTwo,
-                        wedCheckViewModel
-                    )
-                })
-            } else {
-                // Removing pup from tabItems if it exists
-                tabItems = tabItems.filter { it.title != "Pup Two" }
-            }
-        }
+    // Render the tabs list based on changes with number of relatives or pups started
+    LaunchedEffect(
+        viewModel.primarySeal.numRelatives,
+        viewModel.pupOne.isStarted,
+        viewModel.pupTwo.isStarted
+    ) {
+        tabItems = createTabItems(viewModel, wedCheckViewModel)
 
         // Ensure selectedTabIndex is within bounds after updating the list
         if (selectedTabIndex >= tabItems.size) {
@@ -330,21 +302,6 @@ fun TabbedCards(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedChe
                                 // remove the current seal
                                 viewModel.resetSeal(tabItems[selectedTabIndex].sealName)
                                 showDeleteDialog.value = false
-                                // Remove the tab and update selectedTabIndex if necessary
-                                // filter checks whether the index of the current element (i) is different from the selectedTabIndex
-                                // if it's the same (meaning it's the tab the user wants to delete),
-                                // that tab is excluded from the new list
-                                // after filtering, tabItems contains all items except the selected tab and is reassigned to tabItems
-                                var updatedTabItems =
-                                    tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
-
-                                // check that the number of items is not zero
-                                if (updatedTabItems.isNotEmpty()) {
-                                    tabItems =
-                                        tabItems.filterIndexed { i, _ -> i != selectedTabIndex }
-                                }
-
-                                selectedTabIndex = selectedTabIndex.coerceAtMost(tabItems.lastIndex)
                             }
                         },
                     )
@@ -352,4 +309,40 @@ fun TabbedCards(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedChe
             }
         }
     }
+}
+
+fun createTabItems(
+    viewModel: AddObservationLogViewModel,
+    wedCheckViewModel: WedCheckViewModel
+): List<TabItem> {
+    val items = mutableListOf<TabItem>()
+    items.add(TabItem("Seal", viewModel.primarySeal.name) {
+        SealCard(
+            viewModel,
+            viewModel.primarySeal,
+            wedCheckViewModel
+        )
+    })
+
+    if (viewModel.pupOne.isStarted) {
+        items.add(TabItem("Pup One", viewModel.pupOne.name) {
+            SealCard(
+                viewModel,
+                viewModel.pupOne,
+                wedCheckViewModel
+            )
+        })
+    }
+
+    if (viewModel.pupTwo.isStarted) {
+        items.add(TabItem("Pup Two", viewModel.pupTwo.name) {
+            SealCard(
+                viewModel,
+                viewModel.pupTwo,
+                wedCheckViewModel
+            )
+        })
+    }
+
+    return items
 }

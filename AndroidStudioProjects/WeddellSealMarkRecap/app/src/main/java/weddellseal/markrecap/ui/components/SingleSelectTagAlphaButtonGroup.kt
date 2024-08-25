@@ -1,8 +1,12 @@
 package weddellseal.markrecap.ui.components
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,9 +14,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SingleSelectTagAlphaButtonGroup(
@@ -37,24 +44,40 @@ fun SingleSelectTagAlphaButtonGroup(
                 onValChangeDo(option)
             },
             shape = RoundedCornerShape(8.dp), // Slightly rounded corners
+            modifier = Modifier
+                .width(60.dp)  // Set desired width
+                .height(60.dp)  // Set desired height
+                .border(
+                width = if (selectedButton == option) 8.dp else 0.dp,
+                color = if (selectedButton == option) Color.DarkGray else Color.Transparent,
+                shape = RoundedCornerShape(8.dp),
+            ),
             colors = ButtonDefaults.buttonColors(
                 containerColor = when (option) {
-                    "A" -> if (selectedButton == option) Color.Gray else Color.Yellow
-                    "C" -> if (selectedButton == option) Color.Gray else Color.Blue
-                    "D" -> if (selectedButton == option) Color.Gray else Color.Green
+                    "A" -> Color(0xFFEED11E)
+                    "C" -> Color(0xFF379DCD)
+                    "D" -> Color(0xFFB7CF83)
                     else -> Color.Unspecified
                 }
             )
         ) {
             Text(
-                option,
-                color = when (option) {
-                    "A" -> if (selectedButton == option) Color.White else Color.Black
-                    "C" -> if (selectedButton == option) Color.White else Color.White
-                    "D" -> if (selectedButton == option) Color.White else Color.Black
-                    else -> Color.Black
-                }
+                text = option,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            ),
+                                    color = Color.Black,
             )
+//            Text(
+//                text = option,
+//                style = MaterialTheme.typography.labelLarge.copy(
+//                    fontWeight = FontWeight.Bold,
+//                    fontSize = 18.sp
+//                ),
+//                color = Color.White, // High contrast color
+//                modifier = Modifier.shadow(1.dp, ambientColor = Color.Black) // Adding shadow for better contrast
+//            )
         }
     }
 }

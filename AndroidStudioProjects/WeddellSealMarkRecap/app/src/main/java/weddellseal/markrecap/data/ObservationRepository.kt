@@ -66,6 +66,7 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                                 obs.observerInitials ?: "",
                                 obs.flaggedEntry ?: "",
                                 obs.tagEvent ?: "",
+                                obs.reasonForRetag ?: "",
                                 obs.weight ?: "",
                                 obs.tissueSampled ?: "",
                                 obs.comments ?: "",

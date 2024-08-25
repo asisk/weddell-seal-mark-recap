@@ -95,8 +95,7 @@ class AddObservationLogViewModel(
             hasGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER),
             hasGooglePlay = 999,
             date = SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss aaa z",
-                Locale.US
+                "dd.MM.yyyy HH:mm:ss aaa z", Locale.US
             ).format(System.currentTimeMillis()),
             season = getCurrentYear().toString(),
             yearMonthDay = getCurrentDateFormatted(),
@@ -108,28 +107,21 @@ class AddObservationLogViewModel(
 
     var primarySeal by mutableStateOf(
         Seal(
-            name = "primary",
-            isStarted = false
+            name = "primary", isStarted = false
         )
     )
         private set
 
     var pupOne by mutableStateOf(
         Seal(
-            name = "pupOne",
-            age = "Pup",
-//            numRelatives = 1,
-            isStarted = false
+            name = "pupOne", age = "Pup", isStarted = false
         )
     )
         private set
 
     var pupTwo by mutableStateOf(
         Seal(
-            name = "pupTwo",
-            age = "Pup",
-//            numRelatives = 2,
-            isStarted = false
+            name = "pupTwo", age = "Pup", isStarted = false
         )
     )
         private set
@@ -151,20 +143,13 @@ class AddObservationLogViewModel(
     fun resetSaved() {
         // reset the values in the model once the records are save successfully
         primarySeal = Seal(
-            name = "primary",
-            isStarted = false
+            name = "primary", isStarted = false
         )
         pupOne = Seal(
-            name = "pupOne",
-            age = "Pup",
-            numRelatives = 1,
-            isStarted = false
+            name = "pupOne", age = "Pup", isStarted = false
         )
         pupTwo = Seal(
-            name = "pupTwo",
-            age = "Pup",
-            numRelatives = 2,
-            isStarted = false
+            name = "pupTwo", age = "Pup", isStarted = false
         )
 
         uiState = uiState.copy(isSaved = false)
@@ -259,6 +244,22 @@ class AddObservationLogViewModel(
                     tagTwoNumber = 0
                 )
                 updateNotebookEntry(pupTwo)
+            }
+        }
+    }
+
+    fun clearSpeNo(seal: Seal) {
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(speNo = 0)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(speNo = 0)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(speNo = 0)
             }
         }
     }
@@ -358,6 +359,24 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun updateRetagReason(sealName: String, input: String) {
+        when (sealName) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(reasonForRetag = input)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(reasonForRetag = input)
+                updateNotebookEntry(pupOne)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(reasonForRetag = input)
+                updateNotebookEntry(pupTwo)
+            }
+        }
+    }
+
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
@@ -387,11 +406,15 @@ class AddObservationLogViewModel(
 
                 1 -> {
                     pupOne = pupOne.copy(numRelatives = number, isStarted = true)
+                    pupTwo = pupTwo.copy(numRelatives = number, isStarted = false)
                     updateNotebookEntry(pupOne)
+                    updateNotebookEntry(pupTwo)
                 }
 
                 2 -> {
+                    pupOne = pupOne.copy(numRelatives = number, isStarted = true)
                     pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
+                    updateNotebookEntry(pupOne)
                     updateNotebookEntry(pupTwo)
                 }
             }
@@ -585,27 +608,21 @@ class AddObservationLogViewModel(
         when (seal.name) {
             "primary" -> {
                 primarySeal = primarySeal.copy(
-                    oldTagIdOne = seal.tagIdOne,
-                    oldTagIdTwo = seal.tagIdTwo,
-                    isStarted = true
+                    oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true
                 )
                 updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(
-                    oldTagIdOne = seal.tagIdOne,
-                    oldTagIdTwo = seal.tagIdTwo,
-                    isStarted = true
+                    oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true
                 )
                 updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(
-                    oldTagIdOne = seal.tagIdOne,
-                    oldTagIdTwo = seal.tagIdTwo,
-                    isStarted = true
+                    oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true
                 )
             }
         }
@@ -694,21 +711,20 @@ class AddObservationLogViewModel(
         when (sealName) {
             "primary" -> {
                 primarySeal = primarySeal.copy(
-                    pupPeed = false,
-                    weightTaken = false,
-                    weight = 0,
-                    isStarted = true
+                    pupPeed = false, weightTaken = false, weight = 0, isStarted = true
                 )
             }
 
             "pupOne" -> {
-                pupOne =
-                    pupOne.copy(pupPeed = false, weightTaken = false, weight = 0, isStarted = true)
+                pupOne = pupOne.copy(
+                    pupPeed = false, weightTaken = false, weight = 0, isStarted = true
+                )
             }
 
             "pupTwo" -> {
-                pupTwo =
-                    pupTwo.copy(pupPeed = false, weightTaken = false, weight = 0, isStarted = true)
+                pupTwo = pupTwo.copy(
+                    pupPeed = false, weightTaken = false, weight = 0, isStarted = true
+                )
             }
         }
     }
@@ -776,80 +792,100 @@ class AddObservationLogViewModel(
         updateNotebookEntry(primarySeal)
     }
 
+    fun mapWedCheckFields(name: String, wedCheckSeal: WedCheckSeal) {
+        when (name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(
+                    speNo = wedCheckSeal.speNo,
+                    oldTagIdOne = wedCheckSeal.tagIdOne,
+                    oldTagIdTwo = wedCheckSeal.tagIdTwo,
+                )
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(
+                    speNo = wedCheckSeal.speNo,
+                    oldTagIdOne = wedCheckSeal.tagIdOne,
+                    oldTagIdTwo = wedCheckSeal.tagIdTwo,
+                )
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(
+                    speNo = wedCheckSeal.speNo,
+                    oldTagIdOne = wedCheckSeal.tagIdOne,
+                    oldTagIdTwo = wedCheckSeal.tagIdTwo,
+                )
+            }
+        }
+    }
+
     fun resetSeal(sealName: String) {
         when (sealName) {
             "primary" -> {
                 primarySeal = Seal(
-                    name = "primary",
-                    isStarted = false
+                    name = "primary", isStarted = false
                 )
                 // removing the primary seal results in removing pups, if present, as well
                 pupOne = Seal(
                     name = "pupOne",
                     age = "Pup",
-                    numRelatives = 1,
                     isStarted = false
                 )
                 pupTwo = Seal(
                     name = "pupTwo",
                     age = "Pup",
-                    numRelatives = 2,
                     isStarted = false
                 )
             }
 
             "pupOne" -> {
+                // update parent num rels when pup one is removed
+                val parentNumRels = primarySeal.numRelatives - 1
+                primarySeal = primarySeal.copy(numRelatives = parentNumRels)
+
                 // if pupOne is removed and there's a second pup
                 if (pupTwo.isStarted) {
                     // rename the second pup and update it's number of relatives
-                    pupTwo = pupTwo.copy(name = "PupOne", numRelatives = 1)
+                    pupTwo = pupTwo.copy(name = "pupOne", numRelatives = primarySeal.numRelatives)
                     //reassign it to pupOne
                     pupOne = pupTwo
+                    //deactivate pupTwo
+                    pupTwo = Seal(name = "pupTwo", age = "Pup", isStarted = false)
                 } else {
                     pupOne = Seal(
                         name = "pupOne",
                         age = "Pup",
-                        numRelatives = 1,
+                        numRelatives = primarySeal.numRelatives,
                         isStarted = false
                     )
                 }
-
-                val parentNumRels = primarySeal.numRelatives - 1
-                primarySeal = primarySeal.copy(numRelatives = parentNumRels)
             }
 
             "pupTwo" -> {
                 pupTwo = Seal(
-                    name = "pupTwo",
-                    age = "Pup",
-                    numRelatives = 2,
-                    isStarted = false
+                    name = "pupTwo", age = "Pup", isStarted = false
                 )
-                // update parent num rels
+
+                // update parent and pup one num rels when puptwo is removed
                 val parentNumRels = primarySeal.numRelatives - 1
                 primarySeal = primarySeal.copy(numRelatives = parentNumRels)
+                if (pupOne.isStarted) {
+                    pupOne = pupOne.copy(numRelatives = parentNumRels)
+                }
             }
         }
     }
 
     fun removePups() {
-        primarySeal = primarySeal.copy(numRelatives = 0)
-
         //called when primary seal number of relatives is set to zero
         pupOne = Seal(
-            name = "pupOne",
-            age = "Pup",
-            numRelatives = 1,
-            isStarted = false
+            name = "pupOne", age = "Pup", isStarted = false
         )
         pupTwo = Seal(
-            name = "pupTwo",
-            age = "Pup",
-            numRelatives = 2,
-            isStarted = false
+            name = "pupTwo", age = "Pup", isStarted = false
         )
     }
-
 
     fun isValid(): Boolean {
 //        if (!observationSaver.isEmpty() && !uiState.isSaving) {
@@ -862,20 +898,17 @@ class AddObservationLogViewModel(
 
     fun hasPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
-            context,
-            permission
+            context, permission
         ) == PackageManager.PERMISSION_GRANTED
     }
 
     fun onPermissionChange(permission: String, isGranted: Boolean) {
-        when (permission) {
-            /*            Manifest.permission.ACCESS_COARSE_LOCATION -> {
+        when (permission) {/*            Manifest.permission.ACCESS_COARSE_LOCATION -> {
                             uiState = uiState.copy(hasLocationAccess = isGranted)
                         }*/
             Manifest.permission.ACCESS_FINE_LOCATION -> {
                 uiState = uiState.copy(hasLocationAccess = isGranted)
-            }
-            /*            Manifest.permission.CAMERA -> {
+            }/*            Manifest.permission.CAMERA -> {
                             uiState = uiState.copy(hasCameraAccess = isGranted)
                         }*/
             else -> {
@@ -900,20 +933,18 @@ class AddObservationLogViewModel(
             val geocoder = Geocoder(context, Locale.getDefault())
 
             if (Build.VERSION.SDK_INT >= 33) {
-                geocoder.getFromLocation(location.latitude, location.longitude, 1) { addresses ->
+                geocoder.getFromLocation(
+                    location.latitude, location.longitude, 1
+                ) { addresses ->
                     val address = addresses.firstOrNull()
                     val place = address?.locality ?: address?.subAdminArea ?: address?.adminArea
                     ?: address?.countryName
                 }
             } else {
-                val address =
-                    geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                        ?.firstOrNull()
-                        ?: return@addOnSuccessListener
-                val place =
-                    address.locality ?: address.subAdminArea ?: address.adminArea
-                    ?: address.countryName
-                    ?: return@addOnSuccessListener
+                val address = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                    ?.firstOrNull() ?: return@addOnSuccessListener
+                val place = address.locality ?: address.subAdminArea ?: address.adminArea
+                ?: address.countryName ?: return@addOnSuccessListener
             }
         }
     }
@@ -922,36 +953,31 @@ class AddObservationLogViewModel(
     @SuppressLint("MissingPermission")
     fun fetchCurrentLocation() {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_HIGH_ACCURACY,
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,
             object : CancellationToken() {
                 override fun onCanceledRequested(p0: OnTokenCanceledListener) =
                     CancellationTokenSource().token
 
                 override fun isCancellationRequested() = false
-            })
-            .addOnSuccessListener { currentLocation: Location? ->
-                if (currentLocation == null) {
-                    val errorMessage = "Cannot get current location"
-                    uiState = uiState.copy(currentLocation = errorMessage)
-                } else {
-                    val lat = currentLocation.latitude
-                    val lon = currentLocation.longitude
-                    val date = SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US).format(
-                        System.currentTimeMillis()
-                    )
-                    uiState = uiState.copy(
-                        currentLocation =
-                        "Lat : ${lat}\n" +
-                                "Long : ${lon}\n" +
-                                "updated: $date"
-                    )
-                    uiState = uiState.copy(
-                        latLong = "Lat : $lat Long : $lon"
-                    )
-                    uiState = uiState.copy(latitude = lat.toString(), longitude = lon.toString())
-                }
+            }).addOnSuccessListener { currentLocation: Location? ->
+            if (currentLocation == null) {
+                val errorMessage = "Cannot get current location"
+                uiState = uiState.copy(currentLocation = errorMessage)
+            } else {
+                val lat = currentLocation.latitude
+                val lon = currentLocation.longitude
+                val date = SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US).format(
+                    System.currentTimeMillis()
+                )
+                uiState = uiState.copy(
+                    currentLocation = "Lat : ${lat}\n" + "Long : ${lon}\n" + "updated: $date"
+                )
+                uiState = uiState.copy(
+                    latLong = "Lat : $lat Long : $lon"
+                )
+                uiState = uiState.copy(latitude = lat.toString(), longitude = lon.toString())
             }
+        }
     }
 
     fun createLog(vararg seals: Seal) {
@@ -993,17 +1019,29 @@ class AddObservationLogViewModel(
             sex = seal.sex[0].toString()
         }
 
-        var numRels = ""
-        var pupOneTagIdOne = ""
-        var pupTwoTagIdOne = ""
-        if (seal.numRelatives == 1) {
-            numRels = seal.numRelatives.toString()
-            pupOneTagIdOne = getPupTagIdOne(pupOne)
-        }
-        if (seal.numRelatives == 2) {
-            numRels = seal.numRelatives.toString()
-            pupOneTagIdOne = getPupTagIdOne(pupOne)
-            pupTwoTagIdOne = getPupTagIdOne(pupTwo)
+        var numRels = seal.numRelatives.toString()
+
+        var relTwoTagId = ""
+        var relOneTagId = ""
+        when (seal.name) {
+            "primary" -> {
+                relOneTagId = pupOne.tagIdOne
+                relTwoTagId = pupTwo.tagIdOne
+            }
+
+            "pupOne" -> {
+                relOneTagId = primarySeal.tagIdOne
+                relTwoTagId = pupTwo.tagIdOne
+            }
+
+            "pupTwo" -> {
+                relOneTagId = primarySeal.tagIdOne
+                relTwoTagId = pupOne.tagIdOne
+            }
+
+            else -> {
+                ""
+            }
         }
 
         var eventType = ""
@@ -1025,6 +1063,11 @@ class AddObservationLogViewModel(
                 }
 
                 "Retag" -> {
+                    tagOneIndicator = "+"
+                    val number: Int? = seal.numTags.toIntOrNull()
+                    if (number != null && number > 1) { // this is the definition for two tags
+                        tagTwoIndicator = "+"
+                    }
                     "R2"
                 }
 
@@ -1034,8 +1077,13 @@ class AddObservationLogViewModel(
             }
         }
 
-        if(seal.isNoTag) {
+        if (seal.isNoTag) {
             eventType = "M"
+        }
+
+        var reasonForRetag = ""
+        if (seal.reasonForRetag != "") {
+            reasonForRetag = seal.reasonForRetag
         }
 
         var condition = ""
@@ -1073,12 +1121,13 @@ class AddObservationLogViewModel(
             tagOneIndicator = tagOneIndicator,
             tagIDTwo = seal.tagIdTwo,
             tagTwoIndicator = tagTwoIndicator,
-            relativeTagIDOne = pupOneTagIdOne,
-            relativeTagIDTwo = pupTwoTagIdOne,
+            relativeTagIDOne = relOneTagId,
+            relativeTagIDTwo = relTwoTagId,
             sealCondition = condition,
             observerInitials = observers,
             flaggedEntry = "", // TODO, need to figure out when this gets triggered
             tagEvent = eventType,
+            reasonForRetag = reasonForRetag,
             weight = pupWeight,
             tissueSampled = tissue,
             comments = seal.comment,
@@ -1103,19 +1152,8 @@ class AddObservationLogViewModel(
         return currentTime.format(formatter)
     }
 
-    private fun getPupTagIdOne(pup: Seal): String {
-        return if (pup.isStarted) {
-//            return if (pup.isStarted && validateSeal(pup)) {
-            pup.tagIdOne
-        } else {
-            ""
-        }
-    }
-
     private fun getDeviceName(context: Context): String {
         return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
             ?: "Unknown Device"
     }
-
-
 }

@@ -31,6 +31,7 @@ data class Seal(
     val tagIdTwo: String = "",
     val tagTwoAlpha: String = "",
     val tagTwoNumber: Int = 0,
+    val reasonForRetag: String = "",
     val tissueTaken: Boolean = false,
     val tissueSampled: String = "",
     val weightTaken: Boolean = false,
