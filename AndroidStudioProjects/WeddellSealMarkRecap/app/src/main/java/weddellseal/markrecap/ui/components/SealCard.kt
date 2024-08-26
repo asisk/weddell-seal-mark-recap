@@ -394,13 +394,33 @@ fun SealCard(
                 //TODO, consider an enum for this an other strings
                 val tagEventList = listOf("Marked", "New", "Retag")
                 SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
-                    viewModel.updateTagEventType(seal, newText)
-                    if (newText == "Retag") {
-                        isRetag = true
-                        tagIDVal = ""
-                        viewModel.clearTagOne(seal)
-                        viewModel.clearTagTwo(seal)
+                    when (newText) {
+                        "Retag" -> {
+                            isRetag = true
+                            tagIDVal = ""
+                            viewModel.clearTagOne(seal)
+                            viewModel.clearTagTwo(seal)
+                        }
+
+                        "Marked" -> {
+                            if (isRetag && seal.speNo != 0) {
+                                tagIDVal = wedCheckViewModel.uiState.value.tagIdForSpeNo
+                                viewModel.revertTagID(seal.name, tagIDVal)
+                            }
+                            isRetag = false
+                        }
+
+                        "New" -> {
+                            tagIDVal = ""
+                            viewModel.clearTagOne(seal)
+                            viewModel.clearTagTwo(seal)
+                            viewModel.clearOldTags(seal.name)
+                            viewModel.clearSpeNo(seal)
+                            isRetag = false
+                        }
                     }
+
+                    viewModel.updateTagEventType(seal, newText)
                 }
             }
         }

@@ -43,22 +43,4 @@ class AppCSVWriteTest {
         database.close()
         File(file.name).delete()
     }
-
-//    @Test
-//    fun writeCSV_returnsTrue() = runBlocking{
-//        val obs = ObservationLogEntry(
-//            1, Date().toString(),
-//            "45.8759667, long: -111.27695", "last known location empty"
-//        );
-//
-//        val logs : List<ObservationLogEntry> = listOf(obs)
-//
-//        val latch = CountDownLatch(1)
-//        val job = async(Dispatchers.IO) {
-//            assertTrue(observationSaver.writeObservationsToCSV(file, logs))
-//            latch.countDown()
-//        }
-//        latch.await()
-//        job.cancelAndJoin()
-//    }
 }

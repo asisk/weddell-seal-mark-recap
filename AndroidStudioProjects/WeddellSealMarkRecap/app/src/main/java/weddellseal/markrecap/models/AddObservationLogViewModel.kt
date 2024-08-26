@@ -192,6 +192,22 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun clearOldTags(sealName: String) {
+        when (sealName) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(oldTagIdOne = "", oldTagIdTwo = "")
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(oldTagIdOne = "", oldTagIdTwo = "")
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(oldTagIdOne = "", oldTagIdTwo = "")
+            }
+        }
+    }
+
     fun clearTagOne(seal: Seal) {
         updateTagOneNumber(seal, 0)
         updateTagOneAlpha(seal, "")
@@ -244,6 +260,22 @@ class AddObservationLogViewModel(
                     tagTwoNumber = 0
                 )
                 updateNotebookEntry(pupTwo)
+            }
+        }
+    }
+
+    fun revertTagID(sealName: String, tagId: String) {
+        when (sealName) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(tagIdOne = tagId)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(tagIdOne = tagId)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(tagIdOne = tagId)
             }
         }
     }
@@ -445,6 +477,12 @@ class AddObservationLogViewModel(
 
     fun updatePupPeed(sealName: String, input: Boolean) {
         when (sealName) {
+            "primary" -> {
+                if (primarySeal.age == "Pup") {
+                    primarySeal = primarySeal.copy(pupPeed = true, isStarted = true)
+                }
+            }
+
             "pupOne" -> {
                 pupOne = pupOne.copy(pupPeed = input, isStarted = true)
             }
@@ -1096,6 +1134,11 @@ class AddObservationLogViewModel(
             pupWeight = seal.weight.toString()
         }
 
+        var comment = seal.comment
+        if (seal.pupPeed) {
+            comment = "pup peed,    $comment"
+        }
+
         var tissue = ""
         if (seal.tissueTaken) {
             tissue = "Tissue"
@@ -1130,7 +1173,7 @@ class AddObservationLogViewModel(
             reasonForRetag = reasonForRetag,
             weight = pupWeight,
             tissueSampled = tissue,
-            comments = seal.comment,
+            comments = comment,
             colony = uiState.colonyLocation,
         )
         return log
