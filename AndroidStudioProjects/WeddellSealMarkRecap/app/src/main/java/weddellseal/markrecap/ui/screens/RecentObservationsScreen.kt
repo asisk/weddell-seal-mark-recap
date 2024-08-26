@@ -5,30 +5,28 @@ package weddellseal.markrecap.ui.screens
  * Updated when a new observation is saved
 */
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -36,15 +34,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModelFactory
 import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun RecentObservationsScreen(
@@ -62,6 +58,7 @@ fun RecentObservationsScreen(
     recentObsScaffold(navController, viewModel, state)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun recentObsScaffold(
     navController: NavHostController,
@@ -72,46 +69,72 @@ fun recentObsScaffold(
     context.contentResolver
 
     // supports writing data to CSV
-    val createDocument =
-        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
-            // Handle the created document URI
-            if (uri != null) {
-                viewModel.updateURI(uri)
-                viewModel.exportLogs(context)
-            }
-        }
+//    val createDocument =
+//        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
+//            // Handle the created document URI
+//            if (uri != null) {
+//                viewModel.updateURI(uri)
+//                viewModel.exportLogs(context)
+//            }
+//        }
 
     Scaffold(
-        bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-            ) {
-                BottomNavigation(
-                    modifier = Modifier.fillMaxSize(),
-                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    BottomNavigationItem(
-                        label = { Text(text = "Home") },
-                        selected = false,
-                        onClick = { navController.navigate(Screens.HomeScreen.route) },
-                        icon = { Icon(Icons.Filled.Home, null) }
-                    )
-                    BottomNavigationItem(
-                        label = { Text(text = "Build CSV File") },
-                        selected = false,
-                        onClick = {
-                            val dateTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                            val currentDateTime = dateTimeFormat.format(Date())
-                            val filename = "observations_$currentDateTime.csv"
-
-                            createDocument.launch(filename)
-                        },
-                        icon = { Icon(Icons.Filled.Build, null) }
-                    )
-                }
-            }
+        topBar = {
+            TopAppBar(
+                title = {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "Saved Observations",
+                            fontSize = 36.sp // Adjust this value as needed
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.navigateUp()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Home,
+                            contentDescription = "Home",
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                },
+            )
         }
+
+//                bottomBar = {
+//            BottomAppBar(
+//                containerColor = MaterialTheme.colorScheme.primaryContainer,
+//                contentColor = MaterialTheme.colorScheme.primary,
+//            ) {
+//                BottomNavigation(
+//                    modifier = Modifier.fillMaxSize(),
+//                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
+//                ) {
+//                    BottomNavigationItem(
+//                        label = { Text(text = "Build CSV File") },
+//                        selected = false,
+//                        onClick = {
+//                            val dateTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+//                            val currentDateTime = dateTimeFormat.format(Date())
+//                            val filename = "observations_$currentDateTime.csv"
+//
+//                            createDocument.launch(filename)
+//                        },
+//                        icon = { Icon(Icons.Filled.Build, null) }
+//                    )
+//                }
+//            }
+//        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -119,11 +142,11 @@ fun recentObsScaffold(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Observations Collected",
-                modifier = Modifier.padding(15.dp),
-                style = MaterialTheme.typography.headlineSmall
-            )
+//            Text(
+//                text = "Observations Collected",
+//                modifier = Modifier.padding(15.dp),
+//                style = MaterialTheme.typography.headlineSmall
+//            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -147,17 +170,17 @@ fun recentObsScaffold(
                     }
                 }
             }
-            if (viewModel.uiState.isError) {
-                Row(
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Error during CSV export!")
-                }
-            }
+//            if (viewModel.uiState.isError) {
+//                Row(
+//                    modifier = Modifier
+//                        .padding(6.dp)
+//                        .fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.Center,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text("Error during CSV export!")
+//                }
+//            }
         }
     }
 }

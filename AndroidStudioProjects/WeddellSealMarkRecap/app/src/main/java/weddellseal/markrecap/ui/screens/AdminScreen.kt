@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Card
@@ -50,19 +51,33 @@ import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.HomeViewModel
+import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(
     navController: NavHostController,
     wedCheckViewModel: WedCheckViewModel,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    recentObservationsViewModel: RecentObservationsViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val uiStateWedCheck by wedCheckViewModel.uiState.collectAsState()
     val uiStateHome by homeViewModel.uiState.collectAsState()
+
+    val createDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
+            // Handle the created document URI
+            if (uri != null) {
+                recentObservationsViewModel.updateURI(uri)
+                recentObservationsViewModel.exportLogs(context)
+            }
+        }
 
     // Register ActivityResult to request read file permissions
     val requestFilePermissions =
@@ -248,6 +263,17 @@ fun AdminScreen(
                             modifier = Modifier.size(48.dp)
                         )
                     }
+                    IconButton(
+                        onClick = {
+                            val dateTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                            val currentDateTime = dateTimeFormat.format(Date())
+                            val filename = "observations_$currentDateTime.csv"
+
+                            createDocument.launch(filename)
+                        }
+                    ) {
+                        Icon(Icons.Filled.Build, null)
+                    }
                 },
             )
         },
@@ -373,6 +399,17 @@ fun AdminScreen(
                         failedRows = uiStateHome.failedObserversRows,
                         fileName = uiStateHome.lastObserversFileNameLoaded
                     )
+                }
+            }
+            if (recentObservationsViewModel.uiState.isError) {
+                Row(
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Error during CSV export!")
                 }
             }
         }

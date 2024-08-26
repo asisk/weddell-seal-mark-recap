@@ -16,14 +16,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import weddellseal.markrecap.ObservationLogApplication
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
 import java.io.File
@@ -102,11 +98,11 @@ class RecentObservationsViewModel(
 class NoUriSelectedException(message: String = "No URI was selected") :
     IllegalArgumentException(message)
 
-class RecentObservationsViewModelFactory : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        val app =
-            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
-        return RecentObservationsViewModel(app, app.observationRepo) as T
-    }
-}
+//class RecentObservationsViewModelFactory : ViewModelProvider.Factory {
+//    @Suppress("UNCHECKED_CAST")
+//    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+//        val app =
+//            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
+//        return RecentObservationsViewModel(app, app.observationRepo) as T
+//    }
+//}

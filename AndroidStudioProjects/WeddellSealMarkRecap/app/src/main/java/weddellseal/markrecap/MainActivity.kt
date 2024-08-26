@@ -19,6 +19,8 @@ import weddellseal.markrecap.models.AddLogViewModelFactory
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.models.HomeViewModelFactory
+import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.models.RecentObservationsViewModelFactory
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.screens.AddObservationLogScreen
@@ -61,6 +63,9 @@ class MainActivity : ComponentActivity() {
 
         val homeViewModelFactory = HomeViewModelFactory(application, observationRepository, supportingDataRepository)
         val homeViewModel: HomeViewModel by viewModels {homeViewModelFactory}
+
+        val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
+        val recentObservationsViewModel: RecentObservationsViewModel by viewModels {recentObservationsViewModelFactory}
 
         enableEdgeToEdge()
         setContent {
@@ -108,7 +113,8 @@ class MainActivity : ComponentActivity() {
                             AdminScreen(
                                 navController,
                                 wedCheckViewModel,
-                                homeViewModel
+                                homeViewModel,
+                                recentObservationsViewModel
                             )
                         }
                     }
