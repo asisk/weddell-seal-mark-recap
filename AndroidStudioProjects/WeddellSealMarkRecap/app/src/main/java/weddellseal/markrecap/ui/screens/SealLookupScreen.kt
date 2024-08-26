@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -121,21 +122,24 @@ fun SealLookupScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         var sealTagID by remember { mutableStateOf("") }
-
+                        var focusManager = LocalFocusManager.current
                         if (uiStateWedCheck.isError) {
                             SealNotFoundToast()
                         }
 
-                        SealSearchField(wedCheckViewModel) { newText ->
+                        SealSearchField(sealTagID, wedCheckViewModel) { newText ->
                             sealTagID = newText
                         }
 
                         if (!wedCheckViewModel.wedCheckSeal.found) {
                             IconButton(
                                 onClick = {
+                                    focusManager.clearFocus()
                                     // reset the current seal & start a new search
                                     wedCheckViewModel.resetState()
+
                                     wedCheckViewModel.findSealbyTagID(sealTagID)
+
                                 },
                                 modifier = Modifier.padding(bottom = 15.dp, end = 20.dp),
                             ) {

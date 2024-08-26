@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +57,8 @@ fun SummaryCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    SummaryListItem("Seal", primary.notebookDataString)
+//                    SummaryListItem("Seal", primary.notebookDataString)
+                    Text(primary.notebookDataString)
                 }
             }
 
@@ -96,7 +98,8 @@ fun SummaryCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (pupOne.isStarted) {
-                        SummaryListItem("Pup One", pupOne.notebookDataString)
+                        Text(pupOne.notebookDataString)
+//                        SummaryListItem("Pup One", pupOne.notebookDataString)
                     }
                 }
             }
@@ -139,7 +142,8 @@ fun SummaryCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (pupTwo.isStarted) {
-                        SummaryListItem("Pup Two", pupTwo.notebookDataString)
+                        Text(pupTwo.notebookDataString)
+//                        SummaryListItem("Pup Two", pupTwo.notebookDataString)
                     }
                 }
             }

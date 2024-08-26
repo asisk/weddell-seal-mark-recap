@@ -29,8 +29,12 @@ import androidx.compose.ui.unit.sp
 import weddellseal.markrecap.models.WedCheckViewModel
 
 @Composable
-fun SealSearchField(viewModel: WedCheckViewModel, onValueChanged: (String) -> Unit) {
-    var sealTagID by rememberSaveable { mutableStateOf("") }
+fun SealSearchField(
+    value: String,
+    viewModel: WedCheckViewModel,
+    onValueChanged: (String) -> Unit
+) {
+    var sealTagID by rememberSaveable { mutableStateOf(value) }
     val focusManager: FocusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -38,8 +42,8 @@ fun SealSearchField(viewModel: WedCheckViewModel, onValueChanged: (String) -> Un
         value = sealTagID,
         placeholder = { Text("Tag ID", fontSize = 25.sp) },
         onValueChange = { newText ->
+            sealTagID = newText
             onValueChanged(sealTagID)
-            sealTagID = newText.filter { it != ' ' }
         },
         label = { Text("Seal Tag ID", fontSize = 25.sp) },
         singleLine = true,

@@ -109,29 +109,32 @@ class WedCheckViewModel(
     fun findSealbyTagID(sealTagID: String) {
         _uiState.value = uiState.value.copy(isSearching = true)
 
-        // launch the search for a seal on a separate coroutine
-        viewModelScope.launch {
+        if (sealTagID != "") {
+            val searchValue = sealTagID.trim()
+            // launch the search for a seal on a separate coroutine
+            viewModelScope.launch {
 
-            // Switch to the IO dispatcher for database operation
-            val seal: WedCheckRecord = withContext(Dispatchers.IO) {
-                wedCheckRepo.findSealbyTagID(sealTagID)
-            }
-            if (seal != null) {
-                _uiState.value = uiState.value.copy(
-                    sealRecordDB = seal,
-                    isSearching = false,
-                    sealNotFound = false,
-                    speNoFound = seal.speno,
-                    tagIdForSpeNo = sealTagID
-                )
-                wedCheckSeal = seal.toSeal()
-            } else {
-                _uiState.value = uiState.value.copy(
-                    sealRecordDB = null,
-                    isSearching = false,
-                    sealNotFound = true,
-                    isError = true
-                )
+                // Switch to the IO dispatcher for database operation
+                val seal: WedCheckRecord = withContext(Dispatchers.IO) {
+                    wedCheckRepo.findSealbyTagID(searchValue)
+                }
+                if (seal != null) {
+                    _uiState.value = uiState.value.copy(
+                        sealRecordDB = seal,
+                        isSearching = false,
+                        sealNotFound = false,
+                        speNoFound = seal.speno,
+                        tagIdForSpeNo = sealTagID
+                    )
+                    wedCheckSeal = seal.toSeal()
+                } else {
+                    _uiState.value = uiState.value.copy(
+                        sealRecordDB = null,
+                        isSearching = false,
+                        sealNotFound = true,
+                        isError = true
+                    )
+                }
             }
         }
     }
