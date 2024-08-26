@@ -60,6 +60,7 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.ui.components.CensusDialog
 import weddellseal.markrecap.ui.components.DropdownField
+import weddellseal.markrecap.ui.components.MultiSelectDropdownObservers
 
 @Composable
 fun HomeScreen(
@@ -309,12 +310,23 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-                                DropdownField(
-                                    observerList,
-                                    observerSelected
-                                ) { valueSelected ->
-                                    obsViewModel.updateObserverInitials(valueSelected)
-                                }
+//                                DropdownField(
+//                                    observerList,
+//                                    observerSelected
+//                                ) { valueSelected ->
+//                                    obsViewModel.updateObserverInitials(valueSelected)
+//                                }
+                                MultiSelectDropdownObservers(
+                                    options = observerList,
+                                    selectedOptions = observerSelected,
+                                    onValueChange = { updatedItems ->
+                                        // Convert selected items back to a concatenated string
+                                        val concatenatedSelectedItems = updatedItems
+                                            .joinToString(separator = ", ")
+
+                                        obsViewModel.updateObserverInitials(concatenatedSelectedItems)
+                                    }
+                                )
                             }
                         }
                         Row(
