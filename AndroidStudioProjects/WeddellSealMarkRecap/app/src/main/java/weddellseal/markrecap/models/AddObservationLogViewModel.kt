@@ -209,7 +209,7 @@ class AddObservationLogViewModel(
     }
 
     fun clearTagOne(seal: Seal) {
-        updateTagOneNumber(seal, 0)
+        updateTagOneNumber(seal, "")
         updateTagOneAlpha(seal, "")
         updateTagIdOne(seal)
 
@@ -217,7 +217,7 @@ class AddObservationLogViewModel(
     }
 
     fun clearTagTwo(seal: Seal) {
-        updateTagTwoNumber(seal, 0)
+        updateTagTwoNumber(seal, "")
         updateTagTwoAlpha(seal, "")
         updateTagIdTwo(seal)
 
@@ -232,8 +232,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0
+                    tagOneNumber = "",
+                    tagTwoNumber = ""
                 )
                 updateNotebookEntry(primarySeal)
             }
@@ -244,8 +244,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0
+                    tagOneNumber = "",
+                    tagTwoNumber = ""
                 )
                 updateNotebookEntry(pupOne)
             }
@@ -256,8 +256,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0
+                    tagOneNumber = "",
+                    tagTwoNumber = ""
                 )
                 updateNotebookEntry(pupTwo)
             }
@@ -267,15 +267,15 @@ class AddObservationLogViewModel(
     fun revertTagID(sealName: String, tagId: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tagIdOne = tagId)
+                primarySeal = primarySeal.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagIdOne = tagId)
+                pupOne = pupOne.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagIdOne = tagId)
+                pupTwo = pupTwo.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
             }
         }
     }
@@ -305,8 +305,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0,
+                    tagOneNumber = "",
+                    tagTwoNumber = "",
                     tagEventType = ""
                 )
                 updateNotebookEntry(primarySeal)
@@ -319,8 +319,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0,
+                    tagOneNumber = "",
+                    tagTwoNumber = "",
                     tagEventType = ""
                 )
                 updateNotebookEntry(pupOne)
@@ -333,8 +333,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0,
+                    tagOneNumber = "",
+                    tagTwoNumber = "",
                     tagEventType = ""
                 )
                 updateNotebookEntry(pupTwo)
@@ -352,8 +352,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0,
+                    tagOneNumber = "",
+                    tagTwoNumber = "",
                     tagEventType = ""
                 )
                 updateNotebookEntry(primarySeal)
@@ -367,8 +367,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0,
+                    tagOneNumber = "",
+                    tagTwoNumber = "",
                     tagEventType = ""
                 )
                 updateNotebookEntry(pupOne)
@@ -382,8 +382,8 @@ class AddObservationLogViewModel(
                     tagIdTwo = "",
                     tagOneAlpha = "",
                     tagTwoAlpha = "",
-                    tagOneNumber = 0,
-                    tagTwoNumber = 0,
+                    tagOneNumber = "",
+                    tagTwoNumber = "",
                     tagEventType = ""
                 )
                 updateNotebookEntry(pupTwo)
@@ -533,13 +533,13 @@ class AddObservationLogViewModel(
 
     private fun updateTagIdOne(seal: Seal) {
         var tagOneNumStr = ""
-        if (seal.tagOneNumber > 0) {
-            tagOneNumStr = seal.tagOneNumber.toString()
+        if (seal.tagOneNumber.isNotEmpty()) {
+            tagOneNumStr = seal.tagOneNumber
         }
 
         var tagIdStr = tagOneNumStr + seal.tagOneAlpha
-        val number: Int? = seal.numTags.toIntOrNull()
 
+        val number: Int? = seal.numTags.toIntOrNull()
         if (number != null && number > 1) {
             tagIdStr = tagOneNumStr + seal.tagOneAlpha + seal.tagOneAlpha
         }
@@ -563,11 +563,11 @@ class AddObservationLogViewModel(
     }
 
     private fun updateTagIdTwo(seal: Seal) {
-        var tagIdStr = seal.tagOneNumber.toString() + seal.tagOneAlpha
+        var tagIdStr = seal.tagOneNumber + seal.tagOneAlpha
         val number: Int? = seal.numTags.toIntOrNull()
 
         if (number != null && number > 1) {
-            tagIdStr = seal.tagOneNumber.toString() + seal.tagOneAlpha + seal.tagOneAlpha
+            tagIdStr = seal.tagOneNumber + seal.tagOneAlpha + seal.tagOneAlpha
         }
 
         when (seal.name) {
@@ -586,7 +586,7 @@ class AddObservationLogViewModel(
     }
 
 
-    fun updateTagOneNumber(seal: Seal, input: Int) {
+    fun updateTagOneNumber(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
                 primarySeal = primarySeal.copy(tagOneNumber = input, isStarted = true)
@@ -605,7 +605,7 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateTagTwoNumber(seal: Seal, input: Int) {
+    fun updateTagTwoNumber(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
                 primarySeal = primarySeal.copy(tagTwoNumber = input, isStarted = true)

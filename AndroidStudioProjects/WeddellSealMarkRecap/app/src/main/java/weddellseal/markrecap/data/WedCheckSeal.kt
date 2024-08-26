@@ -23,9 +23,9 @@ data class WedCheckSeal(
     val tagEventType: String = "",
     val tagIdOne: String = "",
     val tagOneAlpha: String = "",
-    val tagOneNumber: Int = 0,
+    val tagOneNumber: String = "",
     val tagIdTwo: String = "",
     val tagTwoAlpha: String = "",
-    val tagTwoNumber: Int = 0,
+    val tagTwoNumber: String = "",
     val tissueSampled: String = ""
 )

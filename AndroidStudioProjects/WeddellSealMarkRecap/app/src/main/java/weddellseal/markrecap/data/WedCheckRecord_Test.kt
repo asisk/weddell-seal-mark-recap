@@ -13,16 +13,36 @@ class TagProcessorTest {
             numTags++
         }
         assertEquals("A", result.tagAlpha)
-        assertEquals(123, result.tagNumber)
+        assertEquals("123", result.tagNumber)
 
         val resultTwo = processTags("123A")
         if (resultTwo.tagValid) {
             numTags++
         }
         assertEquals("A", resultTwo.tagAlpha)
-        assertEquals(123, resultTwo.tagNumber)
+        assertEquals("123", resultTwo.tagNumber)
 
         assertEquals(2, numTags)
+    }
+
+    @Test
+    fun testProcessTags_withLeadingZero_Valid() {
+        var numTags = 0
+        val result = processTags("0302C")
+        if (result.tagValid) {
+            numTags++
+        }
+        assertEquals("C", result.tagAlpha)
+        assertEquals("0302", result.tagNumber)
+
+        val resultTwo = processTags("NA")
+        if (resultTwo.tagValid) {
+            numTags++
+        }
+        assertEquals("", resultTwo.tagAlpha)
+        assertEquals("", resultTwo.tagNumber)
+
+        assertEquals(1, numTags)
     }
 
     @Test
@@ -34,14 +54,14 @@ class TagProcessorTest {
         }
 
         assertEquals("", result.tagAlpha)
-        assertEquals(0, result.tagNumber)
+        assertEquals("", result.tagNumber)
 
         val resultTwo = processTags("789C")
         if (resultTwo.tagValid) {
             numTags++
         }
         assertEquals("C", resultTwo.tagAlpha)
-        assertEquals(789, resultTwo.tagNumber)
+        assertEquals("789", resultTwo.tagNumber)
 
         assertEquals(1, numTags)
     }
@@ -54,14 +74,14 @@ class TagProcessorTest {
             numTags++
         }
         assertEquals("D", result.tagAlpha)
-        assertEquals(101, result.tagNumber)
+        assertEquals("101", result.tagNumber)
 
         val resultTwo = processTags( "NoTag")
         if (resultTwo.tagValid) {
             numTags++
         }
         assertEquals("", resultTwo.tagAlpha)
-        assertEquals(0, resultTwo.tagNumber)
+        assertEquals("", resultTwo.tagNumber)
 
         assertEquals(1, numTags)
     }
@@ -73,17 +93,17 @@ class TagProcessorTest {
         if (result.tagValid) {
             numTags++
         }
-        assertEquals("", result.tagAlpha)
-        assertEquals(0, result.tagNumber)
+        assertEquals("e", result.tagAlpha)
+        assertEquals("badValu", result.tagNumber)
 
         val resultTwo = processTags("101D")
         if (resultTwo.tagValid) {
             numTags++
         }
         assertEquals("D", resultTwo.tagAlpha)
-        assertEquals(101, resultTwo.tagNumber)
+        assertEquals("101", resultTwo.tagNumber)
 
-        assertEquals(1, numTags)
+        assertEquals(2, numTags)
     }
 
     @Test
@@ -91,14 +111,14 @@ class TagProcessorTest {
         var numTags = 0
         val result = processTags("1234")
         assertEquals("", result.tagAlpha)
-        assertEquals(0, result.tagNumber)
+        assertEquals("", result.tagNumber)
 
         val resultTwo = processTags("101D")
         if (resultTwo.tagValid) {
             numTags++
         }
         assertEquals("D", resultTwo.tagAlpha)
-        assertEquals(101, resultTwo.tagNumber)
+        assertEquals("101", resultTwo.tagNumber)
 
         assertEquals(1, numTags)
     }
@@ -111,14 +131,14 @@ class TagProcessorTest {
             numTags++
         }
         assertEquals("", result.tagAlpha)
-        assertEquals(0, result.tagNumber)
+        assertEquals("", result.tagNumber)
 
         val resultTwo = processTags("NA")
         if (resultTwo.tagValid) {
             numTags++
         }
         assertEquals("", resultTwo.tagAlpha)
-        assertEquals(0, resultTwo.tagNumber)
+        assertEquals("", resultTwo.tagNumber)
 
         assertEquals(0, numTags)
     }
@@ -128,7 +148,7 @@ class TagProcessorTest {
         var numTags = 0
         val result = processTags("")
         assertEquals("", result.tagAlpha)
-        assertEquals(0, result.tagNumber)
+        assertEquals("", result.tagNumber)
         if (result.tagValid) {
             numTags++
         }
@@ -137,7 +157,7 @@ class TagProcessorTest {
             numTags++
         }
         assertEquals("", resultTwo.tagAlpha)
-        assertEquals(0, resultTwo.tagNumber)
+        assertEquals("", resultTwo.tagNumber)
 
         assertEquals(0, numTags)
     }
@@ -147,7 +167,7 @@ class TagProcessorTest {
         var numTags = 0
         val result = processTags(null)
         assertEquals("", result.tagAlpha)
-        assertEquals(0, result.tagNumber)
+        assertEquals("", result.tagNumber)
         if (result.tagValid) {
             numTags++
         }
@@ -156,7 +176,7 @@ class TagProcessorTest {
             numTags++
         }
         assertEquals("", resultTwo.tagAlpha)
-        assertEquals(0, resultTwo.tagNumber)
+        assertEquals("", resultTwo.tagNumber)
 
         assertEquals(0, numTags)    }
 }

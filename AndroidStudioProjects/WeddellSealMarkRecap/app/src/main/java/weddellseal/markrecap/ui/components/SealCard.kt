@@ -458,10 +458,10 @@ fun SealCard(
                         errorMessage = "Tag numbers should be 3 or 4 digits long.",
                         onValueChangeDo = {
                             // save the input to the model
-                            val number: Int? = it.toIntOrNull()
-                            if (number != null) {
-                                viewModel.updateTagOneNumber(seal, number)
-                            }
+//                            val number: Int? = it.toIntOrNull()
+//                            if (number != null) {
+                                viewModel.updateTagOneNumber(seal, it)
+//                            }
                         },
                         onClearValueDo = {
                             viewModel.clearTag(seal)
@@ -575,10 +575,10 @@ fun SealCard(
                         errorMessage = "Tag numbers should be 3 or 4 digits long.",
                         onValueChangeDo = {
                             // save the input to the model
-                            val number: Int? = it.toIntOrNull()
-                            if (number != null) {
-                                viewModel.updateTagOneNumber(seal, number)
-                            }
+//                            val number: Int? = it.toIntOrNull()
+//                            if (number != null) {
+                                viewModel.updateTagOneNumber(seal, it)
+//                            }
                         },
                         onClearValueDo = {
                             viewModel.clearTag(seal)
