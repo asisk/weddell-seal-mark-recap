@@ -38,14 +38,14 @@ fun SealCard(
     seal: Seal,
     wedCheckViewModel: WedCheckViewModel,
 ) {
-    var numRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
-    var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
-    var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
     var sealSpeNo by remember { mutableStateOf(seal.speNo.toString()) }
+    var numRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
+    var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
     var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
     var oldTagIDOneVal by remember { mutableStateOf(seal.oldTagIdOne) }
     var oldTagIDTwoVal by remember { mutableStateOf(seal.oldTagIdTwo) }
     var notebookStr by remember { mutableStateOf(seal.notebookDataString) }
+    var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(seal.numRelatives) {
@@ -152,14 +152,25 @@ fun SealCard(
                     "Age",
                     style = MaterialTheme.typography.titleLarge
                 )
-                val buttonListAge = listOf<String>("Adult", "Pup", "Yearling")
-                SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
-                    //handle the case
-                    if (seal.age == "Pup" && seal.age != newText) {
-                        viewModel.resetPupFields(seal.name)
+                val buttonListAge = listOf("Adult", "Pup", "Yearling")
+//                SingleSelectButtonGroup(buttonListAge, seal.age) { newText ->
+//                    //handle the case
+//                    if (seal.age == "Pup" && seal.age != newText) {
+//                        viewModel.resetPupFields(seal.name)
+//                    }
+//                    viewModel.updateAge(seal, newText)
+//                }
+                SegmentedButtonGroup(
+                    options = buttonListAge,
+                    selectedOption = seal.age,
+                    onOptionSelected = {
+                        //handle the case
+                        if (seal.age == "Pup" && seal.age != it) {
+                            viewModel.resetPupFields(seal.name)
+                        }
+                        viewModel.updateAge(seal, it)
                     }
-                    viewModel.updateAge(seal, newText)
-                }
+                )
             }
         }
     }
@@ -168,12 +179,12 @@ fun SealCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .weight(.9f)
+                .weight(1f)
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -185,20 +196,32 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
                 val buttonListSex = listOf("Female", "Male", "Unknown")
-                SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
-                    // change in sex to Male should result in removing any entered pups
-                    if (seal.name == "primary" && seal.numRelatives > 0 && newText == "Male") {
-                        numRelatives = "0"
-                        // pop a warning and ask for confirmation before moving forward
-                        showDeleteRelativesDialog.value = true
+//                SingleSelectButtonGroup(buttonListSex, seal.sex) { newText ->
+//                    // change in sex to Male should result in removing any entered pups
+//                    if (seal.name == "primary" && seal.numRelatives > 0 && newText == "Male") {
+//                        numRelatives = "0"
+//                        // pop a warning and ask for confirmation before moving forward
+//                        showDeleteRelativesDialog.value = true
+//                    }
+//                    viewModel.updateSex(seal, newText)
+//                }
+                SegmentedButtonGroup(
+                    options = buttonListSex,
+                    selectedOption = seal.sex,
+                    onOptionSelected = {
+                        if (seal.name == "primary" && seal.numRelatives > 0 && it == "Male") {
+                            numRelatives = "0"
+                            // pop a warning and ask for confirmation before moving forward
+                            showDeleteRelativesDialog.value = true
+                        }
+                        viewModel.updateSex(seal, it)
                     }
-                    viewModel.updateSex(seal, newText)
-                }
+                )
             }
         }
         Box(
             modifier = Modifier
-                .weight(.4f)
+                .weight(.3f)
                 .padding(start = 8.dp)
         ) {
             Row(
@@ -206,39 +229,39 @@ fun SealCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    Modifier
-                        .weight(2f)
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // display pup peed only for pups
-                    if (seal.age == "Pup") {
-                        var isChecked by remember {
-                            mutableStateOf(seal.pupPeed)
-                        }
-                        val focusManager = LocalFocusManager.current
-
-                        Text(
-                            text = "Pup Peed",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
-                        Checkbox(
-                            checked = isChecked,
-                            onCheckedChange = {
-                                focusManager.clearFocus()
-
-                                isChecked = it
-                                viewModel.updatePupPeed(seal.name, it)
-                            },
-                            modifier = Modifier
-                                .padding(8.dp)
-                        )
+//                Row(
+//                    Modifier
+////                        .weight(.4f)
+//                        .padding(6.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+                // display pup peed only for pups
+                if (seal.age == "Pup") {
+                    var isChecked by remember {
+                        mutableStateOf(seal.pupPeed)
                     }
+                    val focusManager = LocalFocusManager.current
+
+                    Text(
+                        text = "Pup" + "\n" + "Peed",
+                        style = MaterialTheme.typography.titleLarge,
+//                            modifier = Modifier.padding(start = 6.dp)
+                    )
+                    Checkbox(
+                        checked = isChecked,
+                        onCheckedChange = {
+                            focusManager.clearFocus()
+
+                            isChecked = it
+                            viewModel.updatePupPeed(seal.name, it)
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                    )
                 }
             }
+//            }
         }
     }
 
@@ -252,7 +275,7 @@ fun SealCard(
     ) {
         Box(
             modifier = Modifier
-                .weight(.8f)
+                .weight(.6f)
 //                    .padding(end = 8.dp)
         ) {
             Row(
@@ -264,26 +287,44 @@ fun SealCard(
                     "# of Rels",
                     style = MaterialTheme.typography.titleLarge
                 )
-                if (seal.age == "Pup") {
+                if (seal.age == "Pup" || seal.sex == "Male") {
                     Text(
                         numRelatives,
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
-                    val numRelsList = listOf("0", "1", "2")
-                    SingleSelectButtonGroupSquare(
-                        numRelsList,
-                        numRelatives
-                    ) { newVal ->
-                        // handle case where the number of relatives is being reduced
-                        if (newVal.toInt() < seal.numRelatives) {
-                            numRelatives = newVal
-                            // pop a warning and ask for confirmation before moving forward
-                            showDeleteRelativesDialog.value = true
-                        } else {
-                            viewModel.updateNumRelatives(seal, newVal)
+                    val numRelsList = listOf("1", "2")
+//                    SingleSelectButtonGroupSquare(
+//                        numRelsList,
+//                        numRelatives
+//                    ) { newVal ->
+//                        // handle case where the number of relatives is being reduced
+//                        if (newVal.toInt() < seal.numRelatives) {
+//                            numRelatives = newVal
+//                            // pop a warning and ask for confirmation before moving forward
+//                            showDeleteRelativesDialog.value = true
+//                        } else {
+//                            viewModel.updateNumRelatives(seal, newVal)
+//                        }
+//                    }
+                    SegmentedButtonGroup(
+                        options = numRelsList,
+                        selectedOption = if (seal.numRelatives != 0) seal.numRelatives.toString() else "",
+                        onOptionSelected = {
+                            // handle case where the number of relatives is being reduced
+                            if (it == "") {
+                                numRelatives = 0.toString()
+                                // pop a warning and ask for confirmation before moving forward
+                                showDeleteRelativesDialog.value = true
+                            } else if (it.toInt() < seal.numRelatives) {
+                                numRelatives = it
+                                // pop a warning and ask for confirmation before moving forward
+                                showDeleteRelativesDialog.value = true
+                            } else {
+                                viewModel.updateNumRelatives(seal, it)
+                            }
                         }
-                    }
+                    )
                 }
             }
         }
@@ -393,35 +434,67 @@ fun SealCard(
                 )
                 //TODO, consider an enum for this an other strings
                 val tagEventList = listOf("Marked", "New", "Retag")
-                SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
-                    when (newText) {
-                        "Retag" -> {
-                            isRetag = true
-                            tagIDVal = ""
-                            viewModel.clearTagOne(seal)
-                            viewModel.clearTagTwo(seal)
-                        }
-
-                        "Marked" -> {
-                            if (isRetag && seal.speNo != 0) {
-                                tagIDVal = wedCheckViewModel.uiState.value.tagIdForSpeNo
-                                viewModel.revertTagID(seal.name, tagIDVal)
+//                SingleSelectButtonGroup(tagEventList, seal.tagEventType) { newText ->
+//                    when (newText) {
+//                        "Retag" -> {
+//                            isRetag = true
+//                            tagIDVal = ""
+//                            viewModel.clearTagOne(seal)
+//                            viewModel.clearTagTwo(seal)
+//                        }
+//
+//                        "Marked" -> {
+//                            if (isRetag && seal.speNo != 0) {
+//                                tagIDVal = wedCheckViewModel.uiState.value.tagIdForSpeNo
+//                                viewModel.revertTagID(seal.name, tagIDVal)
+//                            }
+//                            isRetag = false
+//                        }
+//
+//                        "New" -> {
+//                            tagIDVal = ""
+//                            viewModel.clearTagOne(seal)
+//                            viewModel.clearTagTwo(seal)
+//                            viewModel.clearOldTags(seal.name)
+//                            viewModel.clearSpeNo(seal)
+//                            isRetag = false
+//                        }
+//                    }
+//
+//                    viewModel.updateTagEventType(seal, newText)
+//                }
+                SegmentedButtonGroup(
+                    options = tagEventList,
+                    selectedOption = seal.tagEventType,
+                    onOptionSelected = {
+                        when (it) {
+                            "Retag" -> {
+                                isRetag = true
+                                tagIDVal = ""
+                                viewModel.clearTagOne(seal)
+                                viewModel.clearTagTwo(seal)
                             }
-                            isRetag = false
-                        }
 
-                        "New" -> {
-                            tagIDVal = ""
-                            viewModel.clearTagOne(seal)
-                            viewModel.clearTagTwo(seal)
-                            viewModel.clearOldTags(seal.name)
-                            viewModel.clearSpeNo(seal)
-                            isRetag = false
+                            "Marked" -> {
+                                if (isRetag && seal.speNo != 0) {
+                                    tagIDVal = wedCheckViewModel.uiState.value.tagIdForSpeNo
+                                    viewModel.revertTagID(seal.name, tagIDVal)
+                                }
+                                isRetag = false
+                            }
+
+                            "New" -> {
+                                tagIDVal = ""
+                                viewModel.clearTagOne(seal)
+                                viewModel.clearTagTwo(seal)
+                                viewModel.clearOldTags(seal.name)
+                                viewModel.clearSpeNo(seal)
+                                isRetag = false
+                            }
                         }
+                        viewModel.updateTagEventType(seal, it)
                     }
-
-                    viewModel.updateTagEventType(seal, newText)
-                }
+                )
             }
         }
     }
@@ -460,7 +533,7 @@ fun SealCard(
                             // save the input to the model
 //                            val number: Int? = it.toIntOrNull()
 //                            if (number != null) {
-                                viewModel.updateTagOneNumber(seal, it)
+                            viewModel.updateTagOneNumber(seal, it)
 //                            }
                         },
                         onClearValueDo = {
@@ -577,7 +650,7 @@ fun SealCard(
                             // save the input to the model
 //                            val number: Int? = it.toIntOrNull()
 //                            if (number != null) {
-                                viewModel.updateTagOneNumber(seal, it)
+                            viewModel.updateTagOneNumber(seal, it)
 //                            }
                         },
                         onClearValueDo = {
@@ -635,10 +708,16 @@ fun SealCard(
                     "# of Tags",
                     style = MaterialTheme.typography.titleLarge
                 )
-                SingleSelectButtonGroupSquare(
-                    numTagsList,
-                    seal.numTags
-                ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
+//                SingleSelectButtonGroupSquare(
+//                    numTagsList,
+//                    seal.numTags
+//                ) { newVal -> viewModel.updateNumTags(seal.name, newVal) }
+
+                SegmentedButtonGroup(
+                    options = numTagsList,
+                    selectedOption = seal.numTags,
+                    onOptionSelected = { newVal -> viewModel.updateNumTags(seal.name, newVal) }
+                )
 
                 Text(
                     text = "No Tag",

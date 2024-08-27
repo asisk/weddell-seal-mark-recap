@@ -32,18 +32,16 @@ class SupportingDataRepository(
         }
     }
 
-    //TODO, remove below if unneeded
+    suspend fun clearObserversData() {
+        withContext(Dispatchers.IO) {
+            observersDao.clearObserversTable()
+        }
+    }
 
-//    companion object {
-//
-//        // For Singleton instantiation
-//        @Volatile
-//        private var INSTANCE: SupportingDataRepository? = null
-//
-//        fun getInstance(sealColoniesDao: SealColoniesDao) =
-//            INSTANCE ?: synchronized(this) {
-//                INSTANCE ?: SupportingDataRepository(sealColoniesDao).also { INSTANCE = it }
-//            }
-//    }
+    suspend fun clearColonyData() {
+        withContext(Dispatchers.IO) {
+            sealColoniesDao.clearColoniesTable()
+        }
+    }
 
 }

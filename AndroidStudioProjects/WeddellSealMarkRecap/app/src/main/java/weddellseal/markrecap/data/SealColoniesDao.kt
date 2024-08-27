@@ -14,4 +14,7 @@ interface SealColoniesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) //the suspend keyword means that coroutines are supported
     suspend fun insert(data: List<SealColony>)
 
+    @Query("DELETE FROM sealColonies")
+    suspend fun clearColoniesTable()
+
 }

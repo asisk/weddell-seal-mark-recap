@@ -2,9 +2,13 @@ package weddellseal.markrecap.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "sealColonies")
+@Entity(
+    tableName = "sealColonies",
+    indices = [Index(value = ["location"], unique = true)]
+)
 data class SealColony(
     @PrimaryKey(autoGenerate = true) val colonyId: Int = 0,
     @ColumnInfo(name = "inOut") val inOut: String,

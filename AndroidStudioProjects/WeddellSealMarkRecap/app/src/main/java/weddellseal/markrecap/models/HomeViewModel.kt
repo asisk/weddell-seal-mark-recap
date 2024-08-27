@@ -72,13 +72,14 @@ class HomeViewModel(
         val isObserversLoaded: Boolean = false,
         val lastObserversFileNameLoaded: String = "",
         val isError: Boolean = false,
+        val errorText: String = "",
         val date: String,
     )
 
-    init {
-        fetchLocations()
-        fetchObservers()
-    }
+//    init {
+//        fetchLocations()
+//        fetchObservers()
+//    }
 
     // Function to fetch locations from the database
     fun fetchLocations() {
@@ -229,6 +230,34 @@ class HomeViewModel(
                     isColonyLocationsLoaded = false,
                     totalColoniesRows = 0,
                     isError = true
+                )
+            }
+        }
+    }
+
+    fun clearObservers() {
+        // Kick off this process on a coroutine
+        viewModelScope.launch {
+            try {
+                supportingDataRepository.clearObserversData()
+            } catch (e: Exception) {
+                _uiState.value = uiState.value.copy(
+                    isError = true,
+                    errorText = "Error removing observers"
+                )
+            }
+        }
+    }
+
+    fun clearColonies() {
+        // Kick off this process on a coroutine
+        viewModelScope.launch {
+            try {
+                supportingDataRepository.clearColonyData()
+            } catch (e: Exception) {
+                _uiState.value = uiState.value.copy(
+                    isError = true,
+                    errorText = "Error removing colonies"
                 )
             }
         }

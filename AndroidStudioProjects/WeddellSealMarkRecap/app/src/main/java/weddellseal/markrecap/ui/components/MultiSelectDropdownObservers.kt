@@ -99,6 +99,12 @@ fun MultiSelectDropdownObservers(
         })
     }
 
+    LaunchedEffect(options) {
+        items = options.map { option ->
+            SelectableItem(option, option in selectedOptions)
+        }
+    }
+
     MultiSelectDropdown(
         items = items,
         label = "Select items"

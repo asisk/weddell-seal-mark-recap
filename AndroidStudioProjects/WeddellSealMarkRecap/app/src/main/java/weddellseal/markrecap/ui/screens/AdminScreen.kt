@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Card
@@ -360,6 +361,30 @@ fun AdminScreen(
                     ) {
                         ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
+                            onClick = { homeViewModel.clearObservers() },
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    "Clear Observers Dropdown",
+                                    Modifier.size(36.dp)
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = "Clear Observers Dropdown",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
+                            containerColor = Color.LightGray,
                             onClick = { getColonyLocationsCSV.launch("text/csv") },
                             icon = {
                                 Icon(
@@ -373,8 +398,27 @@ fun AdminScreen(
                                     text = "Upload Seal Colony Locations",
                                     style = MaterialTheme.typography.titleLarge
                                 )
-                            })
+                            }
+                        )
                     }
+
+                    ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
+                        containerColor = Color.LightGray,
+                        onClick = { homeViewModel.clearColonies() },
+                        icon = {
+                            Icon(
+                                Icons.Filled.Delete,
+                                "Clear Colonies Dropdown",
+                                Modifier.size(36.dp)
+                            )
+                        },
+                        text = {
+                            Text(text = "Clear Colonies Dropdown",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
+                    )
+
 
                     FileLoadingView(
                         isLoading = uiStateWedCheck.isWedCheckLoading,
