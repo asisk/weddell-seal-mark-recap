@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Upload
@@ -273,7 +272,11 @@ fun AdminScreen(
                             createDocument.launch(filename)
                         }
                     ) {
-                        Icon(Icons.Filled.Build, null)
+                        Image(
+                            painter = painterResource(id = R.drawable.export_notes),
+                            null,
+                            modifier = Modifier.size(36.dp)
+                        )
                     }
                 },
             )
@@ -413,7 +416,8 @@ fun AdminScreen(
                             )
                         },
                         text = {
-                            Text(text = "Clear Colonies Dropdown",
+                            Text(
+                                text = "Clear Colonies Dropdown",
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }

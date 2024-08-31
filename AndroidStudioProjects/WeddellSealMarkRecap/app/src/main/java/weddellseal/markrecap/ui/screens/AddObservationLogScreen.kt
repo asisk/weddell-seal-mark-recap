@@ -59,6 +59,7 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.components.RemoveDialog
 import weddellseal.markrecap.ui.components.SealCard
+import weddellseal.markrecap.ui.components.SealInvalidDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,11 +71,12 @@ fun AddObservationLogScreen(
     val state = viewModel.uiState
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-
     // vars not "by remember" because the screen needs to respond to input that changes the seal's model values
     var primarySeal = viewModel.primarySeal
     var pupOne = viewModel.pupOne
     var pupTwo = viewModel.pupTwo
+    var showConfirmEntryDialog = remember { mutableStateOf(false) }
+    val validationFailureStr by remember { mutableStateOf(viewModel.uiState.validationFailureReason) }
 
     // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
@@ -119,13 +121,38 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
-//    fun saveAction() {
-//        if (primarySeal.isStarted) {
-//            viewModel.updateNotebookEntry(primarySeal)
-//            viewModel.updateNotebookEntry(pupOne)
-//            viewModel.updateNotebookEntry(pupTwo)
-//        }
-//    }
+    // this should be activated after the saveAction() is triggered
+    LaunchedEffect(primarySeal.isValidated || pupOne.isValidated || pupTwo.isValidated) {
+        var showDialog = false
+        if (primarySeal.isValidated && !primarySeal.isValid) {
+            showDialog = true
+        }
+        if (pupOne.isValidated && !pupOne.isValid) {
+        }
+        if (pupTwo.isValidated && !pupTwo.isValid) {
+            showDialog = true
+        }
+
+        showConfirmEntryDialog.value = showDialog
+    }
+
+    // validates the seal against the wedcheck seal if present
+    fun saveAction() {
+        // TODO, what if the seal is not started
+        // TODO, what if the seal has event type of marked or retag but no wedcheck record found
+
+        if (primarySeal.isStarted) {
+            viewModel.validate(primarySeal)
+        }
+
+        if (pupOne.isStarted) {
+            viewModel.validate(pupOne)
+        }
+
+        if (pupTwo.isStarted) {
+            viewModel.validate(pupTwo)
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -144,7 +171,7 @@ fun AddObservationLogScreen(
                         IconButton(onClick = { navController.navigateUp() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Home"
+                                contentDescription = "Back"
                             )
                         }
                     }
@@ -163,8 +190,7 @@ fun AddObservationLogScreen(
                         )
                     IconButton(
                         onClick = {
-//                            saveAction()
-                            navController.navigate(Screens.AddObservationSummary.route)
+                            saveAction()
                         },
                         enabled = primarySeal.isStarted
                     ) {
@@ -185,6 +211,29 @@ fun AddObservationLogScreen(
                 .fillMaxSize()
         ) {
             TabbedCards(viewModel, wedCheckViewModel)
+        }
+        // because this action results in removing any entered data
+        // Show the dialog if showDialog is true
+        if (showConfirmEntryDialog.value) {
+            SealInvalidDialog(
+                viewModel,
+                onDismissRequest = { showConfirmEntryDialog.value = false },
+                onConfirmation = {
+                    // flag seals for review
+                    if (!primarySeal.isValid) {
+                        viewModel.flagSealForReview(primarySeal.name)
+                    }
+                    if (!pupOne.isValid) {
+                        viewModel.flagSealForReview(pupOne.name)
+                    }
+                    if (!pupTwo.isValid) {
+                        viewModel.flagSealForReview(pupTwo.name)
+                    }
+                    showConfirmEntryDialog.value = false
+
+                    navController.navigate(Screens.AddObservationSummary.route)
+                },
+            )
         }
     }
 }

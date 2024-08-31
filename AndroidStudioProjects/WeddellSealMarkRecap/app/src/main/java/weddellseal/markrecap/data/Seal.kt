@@ -6,6 +6,7 @@ data class Seal(
     val colony: String = "",
     val comment: String = "",
     val condition: String = "",
+    var flaggedForReview: Boolean = false,
     var isStarted: Boolean = false,
     var isNoTag: Boolean = false,
     var isWedCheck: Boolean = false,
@@ -35,5 +36,14 @@ data class Seal(
     val tissueTaken: Boolean = false,
     val tissueSampled: String = "",
     val weightTaken: Boolean = false,
-    val weight: Int = 0
+    val weight: Int = 0,
+    val isValid: Boolean = false,
+    val isValidated: Boolean = false,
+    val sexMatch: Boolean = false,
+    val numTagsMatch: Boolean = false,
+    val lastSeasonWithinTenYears: Boolean = false,
+    val hasWedCheckSpeno: Boolean = false,
+    val lastObservedDead: Boolean = false,
+    val reasonNotValid: String = "",
+    val oldTagMarks: Boolean = false,
 )

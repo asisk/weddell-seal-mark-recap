@@ -778,6 +778,50 @@ fun SealCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (seal.tagEventType == "New") {
+            Box(
+            modifier = Modifier
+                .weight(.3f)
+                .padding(start = 8.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+//                Row(
+//                    Modifier
+////                        .weight(.4f)
+//                        .padding(6.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+                // display pup peed only for pups
+                    var isChecked by remember {
+                        mutableStateOf(seal.oldTagMarks)
+                    }
+                    val focusManager = LocalFocusManager.current
+
+                    Text(
+                        text = "Old Tag Marks",
+                        style = MaterialTheme.typography.titleLarge,
+//                            modifier = Modifier.padding(start = 6.dp)
+                    )
+                    Checkbox(
+                        checked = isChecked,
+                        onCheckedChange = {
+                            focusManager.clearFocus()
+
+                            isChecked = it
+                            viewModel.updateOldTagMarks(seal.name, it)
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                    )
+                }
+            }
+//            }
+        }
 
         Box(
             modifier = Modifier

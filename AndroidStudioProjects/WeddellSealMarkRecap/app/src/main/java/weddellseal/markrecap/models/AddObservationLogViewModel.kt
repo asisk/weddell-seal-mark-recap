@@ -75,6 +75,7 @@ class AddObservationLogViewModel(
         val observerInitials: String = "Select an option",
         val censusNumber: String = "Select an option",
         val colonyLocation: String = "Select an option",
+        val validationFailureReason: String = "",
     )
 
     fun updateColonySelection(observationSiteSelected: String) {
@@ -126,6 +127,118 @@ class AddObservationLogViewModel(
     )
         private set
 
+    val wedCheckSealMap = mutableMapOf<Int, WedCheckSeal>()
+
+    // add a WedCheckSeal to the map
+    fun addWedCheckSeal(seal: WedCheckSeal) {
+        wedCheckSealMap[seal.speNo] = seal
+    }
+
+    //  retrieve a WedCheckSeal by speno
+    fun getWedCheckSeal(speNo: Int): WedCheckSeal? {
+        return wedCheckSealMap[speNo]
+    }
+
+    fun validate(seal: Seal) {
+        var sealValid = false
+        val sb = StringBuilder()
+        var sealName = seal.name
+        if (seal.name == "primary") {
+            sealName = "Seal"
+        }
+        sb.append("$sealName failed validation: ")
+
+        if (seal.tagEventType == "New") {
+            if (!seal.hasWedCheckSpeno) {
+                sealValid = true
+            }
+        } else if (seal.hasWedCheckSpeno) {
+            var wedCheckSeal = getWedCheckSeal(seal.speNo)
+            if (wedCheckSeal != null) { //TODO, what if can't find wedCheckSeal in the map???, should not happen but if does should we look it up?
+                var sexMatch = false
+                var numTagsMatch = false
+                var lastSeasonWithinTenYears = false
+                var wedCheckNotDead = false
+
+                if (seal.sex == wedCheckSeal.sex) {
+                    sexMatch = true
+                } else {
+                    sb.append(
+                        "\n " + "Sex doesn't match \n" +
+                                "\tYou entered:  " + seal.sex + "\n" +
+                                "\tWedCheck Seal Sex:  " + wedCheckSeal.sex
+                    )
+                }
+                if (seal.numTags == wedCheckSeal.numTags) {
+                    numTagsMatch = true
+                } else {
+                    sb.append(
+                        "\n " + "Number of tags doesn't match\n" +
+                                "\tYou entered:  " + seal.numTags + "\n" +
+                                "\tWedCheck Number of Tags:  " + wedCheckSeal.numTags
+                    )
+                }
+                if (wedCheckSeal.lastSeenSeason < 10) {
+                    lastSeasonWithinTenYears = true
+                } else {
+                    sb.append(
+                        "\n " + "Seal last seen more than ten years ago\n" +
+                                "\tWedCheck Last Seen Season:  " + wedCheckSeal.lastSeenSeason
+                    )
+                }
+                if (wedCheckSeal.condition != "Dead") {
+                    wedCheckNotDead = true
+                } else {
+                    sb.append(
+                        "\n " + "Seal last seen dead\n" +
+                                "\tYou entered:  " + seal.condition + "\n" +
+                                "\tWedCheck Seal Condition:  " + wedCheckSeal.condition
+                    )
+                }
+
+                if (sexMatch && numTagsMatch && lastSeasonWithinTenYears && wedCheckNotDead) {
+                    sealValid = true
+                } else {
+                    val validSB = StringBuilder()
+                    validSB.append(uiState.validationFailureReason)
+                    validSB.append("\n")
+                    validSB.append(sb.toString())
+                    uiState = uiState.copy(validationFailureReason = validSB.toString())
+                }
+            }
+        }
+
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(isValid = sealValid, isValidated = true, reasonNotValid = sb.toString())
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(isValid = sealValid, isValidated = true,reasonNotValid = sb.toString())
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(isValid = sealValid, isValidated = true,reasonNotValid = sb.toString())
+            }
+        }
+    }
+
+    fun flagSealForReview(name: String) {
+        when (name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(flaggedForReview = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(flaggedForReview = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(flaggedForReview = true)
+            }
+        }
+    }
+
     fun startPup(seal: Seal) {
         when (seal.name) {
             "pupOne" -> {
@@ -139,7 +252,7 @@ class AddObservationLogViewModel(
     }
 
     // called after navigation command from the summary screen to prevent the summary screen from
-    // preemptively navigating back to the observation screen
+// preemptively navigating back to the observation screen
     fun resetSaved() {
         // reset the values in the model once the records are save successfully
         primarySeal = Seal(
@@ -175,6 +288,21 @@ class AddObservationLogViewModel(
         }
     }
 
+    fun updateOldTagMarks(name: String, oldTagMarks: Boolean) {
+        when (name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(oldTagMarks = oldTagMarks)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(oldTagMarks = oldTagMarks)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(oldTagMarks = oldTagMarks)
+            }
+        }
+    }
 
     fun updateWeight(seal: Seal, number: Int) {
         when (seal.name) {
@@ -267,7 +395,8 @@ class AddObservationLogViewModel(
     fun revertTagID(sealName: String, tagId: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
+                primarySeal =
+                    primarySeal.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
             }
 
             "pupOne" -> {
@@ -831,10 +960,13 @@ class AddObservationLogViewModel(
     }
 
     fun mapWedCheckFields(name: String, wedCheckSeal: WedCheckSeal) {
+        addWedCheckSeal(wedCheckSeal)
+
         when (name) {
             "primary" -> {
                 primarySeal = primarySeal.copy(
                     speNo = wedCheckSeal.speNo,
+                    hasWedCheckSpeno = true,
                     oldTagIdOne = wedCheckSeal.tagIdOne,
                     oldTagIdTwo = wedCheckSeal.tagIdTwo,
                 )
@@ -843,6 +975,7 @@ class AddObservationLogViewModel(
             "pupOne" -> {
                 pupOne = pupOne.copy(
                     speNo = wedCheckSeal.speNo,
+                    hasWedCheckSpeno = true,
                     oldTagIdOne = wedCheckSeal.tagIdOne,
                     oldTagIdTwo = wedCheckSeal.tagIdTwo,
                 )
@@ -851,6 +984,7 @@ class AddObservationLogViewModel(
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(
                     speNo = wedCheckSeal.speNo,
+                    hasWedCheckSpeno = true,
                     oldTagIdOne = wedCheckSeal.tagIdOne,
                     oldTagIdTwo = wedCheckSeal.tagIdTwo,
                 )
@@ -885,7 +1019,8 @@ class AddObservationLogViewModel(
                 // if pupOne is removed and there's a second pup
                 if (pupTwo.isStarted) {
                     // rename the second pup and update it's number of relatives
-                    pupTwo = pupTwo.copy(name = "pupOne", numRelatives = primarySeal.numRelatives)
+                    pupTwo =
+                        pupTwo.copy(name = "pupOne", numRelatives = primarySeal.numRelatives)
                     //reassign it to pupOne
                     pupOne = pupTwo
                     //deactivate pupTwo
@@ -1059,6 +1194,14 @@ class AddObservationLogViewModel(
 
         var numRels = seal.numRelatives.toString()
 
+        var tagIdOne = seal.tagOneNumber + seal.tagOneAlpha
+        var tagIdTwo = "NoTag"
+        var numberOfTags = seal.numTags.toIntOrNull()
+        if (numberOfTags != null && numberOfTags == 2) {
+            tagIdOne = seal.tagOneNumber + seal.tagOneAlpha
+            tagIdTwo = seal.tagTwoNumber + seal.tagTwoAlpha
+        }
+
         var relTwoTagId = ""
         var relOneTagId = ""
         when (seal.name) {
@@ -1085,6 +1228,8 @@ class AddObservationLogViewModel(
         var eventType = ""
         var tagOneIndicator = ""
         var tagTwoIndicator = ""
+        var oldTagOne = ""
+        var oldTagTwo = ""
         if (seal.tagEventType.isNotEmpty()) {
             eventType = when (seal.tagEventType) {
                 "Marked" -> {
@@ -1101,6 +1246,8 @@ class AddObservationLogViewModel(
                 }
 
                 "Retag" -> {
+                    oldTagOne = seal.oldTagIdOne
+                    oldTagTwo = seal.oldTagIdTwo
                     tagOneIndicator = "+"
                     val number: Int? = seal.numTags.toIntOrNull()
                     if (number != null && number > 1) { // this is the definition for two tags
@@ -1134,14 +1281,26 @@ class AddObservationLogViewModel(
             pupWeight = seal.weight.toString()
         }
 
-        var comment = seal.comment
+        val sb = StringBuilder()
         if (seal.pupPeed) {
-            comment = "pup peed,    $comment"
+            sb.append("pup peed; ")
         }
+        if (seal.oldTagMarks) {
+            sb.append("old tag marks; ")
+        }
+        if (seal.reasonNotValid != "") {
+            sb.append(seal.reasonNotValid)
+        }
+        var comment = sb.append(seal.comment).toString()
 
         var tissue = ""
         if (seal.tissueTaken) {
             tissue = "Tissue"
+        }
+
+        var flagged = ""
+        if (seal.flaggedForReview) {
+            flagged = "C"
         }
 
         val log = ObservationLogEntry(
@@ -1158,17 +1317,17 @@ class AddObservationLogViewModel(
             ageClass = ageClass,
             sex = sex,
             numRelatives = numRels,
-            oldTagIDOne = seal.oldTagIdOne,
-            oldTagIDTwo = seal.oldTagIdTwo,
-            tagIDOne = seal.tagIdOne,
+            oldTagIDOne = oldTagOne,
+            oldTagIDTwo = oldTagTwo,
+            tagIDOne = tagIdOne,
             tagOneIndicator = tagOneIndicator,
-            tagIDTwo = seal.tagIdTwo,
+            tagIDTwo = tagIdTwo,
             tagTwoIndicator = tagTwoIndicator,
             relativeTagIDOne = relOneTagId,
             relativeTagIDTwo = relTwoTagId,
             sealCondition = condition,
             observerInitials = observers,
-            flaggedEntry = "", // TODO, need to figure out when this gets triggered
+            flaggedEntry = flagged,
             tagEvent = eventType,
             reasonForRetag = reasonForRetag,
             weight = pupWeight,
