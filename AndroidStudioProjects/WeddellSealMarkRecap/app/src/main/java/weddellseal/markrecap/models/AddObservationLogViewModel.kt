@@ -1143,7 +1143,7 @@ class AddObservationLogViewModel(
                     System.currentTimeMillis()
                 )
                 uiState = uiState.copy(
-                    currentLocation = "Lat : ${lat}\n" + "Long : ${lon}\n" + "updated: $date"
+                    currentLocation = "Lat : ${lat}    " + "Long : ${lon}\n" + "Updated: $date"
                 )
                 uiState = uiState.copy(
                     latLong = "Lat : $lat Long : $lon"

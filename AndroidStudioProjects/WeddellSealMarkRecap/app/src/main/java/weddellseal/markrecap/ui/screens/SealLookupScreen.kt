@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Search
@@ -69,27 +68,27 @@ fun SealLookupScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.navigateUp()
-                        wedCheckViewModel.resetState()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
                         navController.navigate(Screens.HomeScreen.route)
-                        wedCheckViewModel.resetState()
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Home,
                             contentDescription = "Home",
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(48.dp)
                         )
                     }
                 },
+//                actions = {
+//                    IconButton(onClick = {
+//                        navController.navigate(Screens.HomeScreen.route)
+//                        wedCheckViewModel.resetState()
+//                    }) {
+//                        Icon(
+//                            imageVector = Icons.Filled.Home,
+//                            contentDescription = "Home",
+//                            modifier = Modifier.size(36.dp)
+//                        )
+//                    }
+//                },
             )
         }
     ) { innerPadding ->

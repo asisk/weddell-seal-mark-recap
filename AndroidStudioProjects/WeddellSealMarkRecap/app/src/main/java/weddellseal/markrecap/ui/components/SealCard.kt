@@ -90,31 +90,29 @@ fun SealCard(
         }
     }
 
+    // SEAL CARD HEADING/NOTEBOOK STRING & SPENO
     Column() {
-        // NOTEBOOK DISPLAY
         Row(
             modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.Top
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // SEAL CARD HEADING/NOTEBOOK STRING & SPENO
-            Box(
-                modifier = Modifier
-                    .weight(.9f)
-//                    .padding(end = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(.8f)
-                ) {
+            Box() {
+                Row() {
                     Text(
                         notebookStr,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
-                    if (sealSpeNo.toIntOrNull() != 0) {
+                }
+            }
+            Box() {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    if (sealSpeNo != "") {
                         Text(
                             "Speno:",
                             style = MaterialTheme.typography.titleLarge,
@@ -129,6 +127,7 @@ fun SealCard(
             }
         }
     }
+
     //AGE
     Row(
         modifier = Modifier
@@ -140,7 +139,6 @@ fun SealCard(
         Box(
             modifier = Modifier
                 .weight(.9f)
-//                    .padding(end = 8.dp)
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -780,15 +778,15 @@ fun SealCard(
     ) {
         if (seal.tagEventType == "New") {
             Box(
-            modifier = Modifier
-                .weight(.3f)
-                .padding(start = 8.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .weight(.3f)
+                    .padding(start = 8.dp)
             ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
 //                Row(
 //                    Modifier
 ////                        .weight(.4f)
@@ -796,7 +794,7 @@ fun SealCard(
 //                    horizontalArrangement = Arrangement.SpaceBetween,
 //                    verticalAlignment = Alignment.CenterVertically
 //                ) {
-                // display pup peed only for pups
+                    // display pup peed only for pups
                     var isChecked by remember {
                         mutableStateOf(seal.oldTagMarks)
                     }

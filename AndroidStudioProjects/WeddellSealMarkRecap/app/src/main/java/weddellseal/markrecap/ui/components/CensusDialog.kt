@@ -44,7 +44,7 @@ fun CensusDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Census selections",
+                    text = "Select Census Number",
                     modifier = Modifier.padding(16.dp),
                 )
 
@@ -55,26 +55,41 @@ fun CensusDialog(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val censusOptions = listOf("1", "2", "3", "4", "5", "6", "7", "8")
+                    val censusOptions = listOf("1", "2", "3", "4")
                     var selection by remember { mutableStateOf(obsViewModel.uiState.censusNumber) }
 
-                    Column(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxWidth(.3f)
-                    ) {
-                        Text(text = "Census #")
-                    }
-                    Column(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxWidth(.5f)
-                    ) {
-                        DropdownField(censusOptions, obsViewModel.uiState.censusNumber) { newText ->
-                            selection = newText
-                            obsViewModel.updateCensusNumber(newText)
+//                        DropdownField(censusOptions, obsViewModel.uiState.censusNumber) { newText ->
+//                            selection = newText
+//                            obsViewModel.updateCensusNumber(newText)
+//                        }
+                    CensusButtonGroupSquare(
+                        txtOptions = censusOptions,
+                        valueInModel = obsViewModel.uiState.censusNumber,
+                        onValChangeDo = {
+                            selection = it
+                            obsViewModel.updateCensusNumber(it)
                         }
-                    }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val censusOptions = listOf("5", "6", "7", "8")
+                    var selection by remember { mutableStateOf(obsViewModel.uiState.censusNumber) }
+
+                    CensusButtonGroupSquare(
+                        txtOptions = censusOptions,
+                        valueInModel = obsViewModel.uiState.censusNumber,
+                        onValChangeDo = {
+                            selection = it
+                            obsViewModel.updateCensusNumber(it)
+                        }
+                    )
                 }
 
                 Row(

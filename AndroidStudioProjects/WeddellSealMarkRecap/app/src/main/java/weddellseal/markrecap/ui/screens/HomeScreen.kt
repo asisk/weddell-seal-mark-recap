@@ -324,7 +324,9 @@ fun HomeScaffold(
                                         val concatenatedSelectedItems = updatedItems
                                             .joinToString(separator = ", ")
 
-                                        obsViewModel.updateObserverInitials(concatenatedSelectedItems)
+                                        obsViewModel.updateObserverInitials(
+                                            concatenatedSelectedItems
+                                        )
                                     }
                                 )
                             }
@@ -392,7 +394,10 @@ fun HomeScaffold(
                         CensusDialog(
                             obsViewModel,
                             onDismissRequest = { showCensusDialog = false },
-                            onConfirmation = { showCensusDialog = false },
+                            onConfirmation = {
+                                showCensusDialog = false
+                                navController.navigate(Screens.AddObservationLog.route)
+                            },
                         )
                     }
                 }

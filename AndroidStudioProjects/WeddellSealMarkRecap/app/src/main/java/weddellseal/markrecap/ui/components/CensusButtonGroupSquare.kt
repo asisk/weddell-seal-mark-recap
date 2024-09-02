@@ -1,5 +1,6 @@
 package weddellseal.markrecap.ui.components
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -11,12 +12,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SingleSelectButtonGroupSquare(
+fun CensusButtonGroupSquare(
     txtOptions: List<String>,
     valueInModel: String,
     onValChangeDo: (String) -> Unit
@@ -41,7 +43,8 @@ fun SingleSelectButtonGroupSquare(
             colors = ButtonDefaults.elevatedButtonColors(
                 if (selectedButton == option) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
             ),
-            enabled = selectedButton != option
+            enabled = selectedButton != option,
+            modifier = Modifier.padding(4.dp)
         ) {
             Text(
                 color = Color.White,

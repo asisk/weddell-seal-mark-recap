@@ -255,14 +255,25 @@ fun AdminScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.navigate(Screens.HomeScreen.route)
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Home,
                             contentDescription = "Home",
                             modifier = Modifier.size(48.dp)
                         )
                     }
+                },
+                actions = {
+//                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
+//                        Icon(
+//                            imageVector = Icons.Filled.Home,
+//                            contentDescription = "Home",
+//                            modifier = Modifier.size(48.dp)
+//                        )
+//                    }
                     IconButton(
                         onClick = {
                             val dateTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)

@@ -7,28 +7,34 @@ package weddellseal.markrecap.ui.screens
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BabyChangingStation
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOff
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +42,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,6 +57,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -68,7 +77,6 @@ fun AddObservationLogScreen(
     viewModel: AddObservationLogViewModel,
     wedCheckViewModel: WedCheckViewModel
 ) {
-    val state = viewModel.uiState
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     // vars not "by remember" because the screen needs to respond to input that changes the seal's model values
@@ -76,7 +84,10 @@ fun AddObservationLogScreen(
     var pupOne = viewModel.pupOne
     var pupTwo = viewModel.pupTwo
     var showConfirmEntryDialog = remember { mutableStateOf(false) }
-    val validationFailureStr by remember { mutableStateOf(viewModel.uiState.validationFailureReason) }
+    var coordinates by remember { mutableStateOf(viewModel.uiState.currentLocation) }
+    var colony by remember { mutableStateOf(viewModel.uiState.colonyLocation) }
+    var census by remember { mutableStateOf(viewModel.uiState.censusNumber) }
+    var isObservationMode by remember { mutableStateOf(true) }
 
     // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
@@ -121,6 +132,21 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
+    LaunchedEffect(viewModel.uiState.currentLocation) {
+        coordinates = viewModel.uiState.currentLocation
+    }
+
+    LaunchedEffect(viewModel.uiState.colonyLocation) {
+        colony = viewModel.uiState.colonyLocation
+    }
+
+    LaunchedEffect(viewModel.uiState.censusNumber) {
+        census = viewModel.uiState.censusNumber
+        if (census != "Select an option") {
+            isObservationMode = false
+        }
+    }
+
     // this should be activated after the saveAction() is triggered
     LaunchedEffect(primarySeal.isValidated || pupOne.isValidated || pupTwo.isValidated) {
         var showDialog = false
@@ -159,24 +185,54 @@ fun AddObservationLogScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "Observation",
-                            fontSize = 36.sp // Adjust this value as needed
-                        )
-                    }
-                },
-                navigationIcon = {
-                    if (navController.previousBackStackEntry != null) {
-                        IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(.9f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    if (isObservationMode) "Observation" else "Census #$census",
+                                    fontSize = 36.sp // Adjust this value as needed
+                                )
+                            }
+                        }
+                        // TOGGLE MODE
+                        if (!isObservationMode) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(.4f)
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Exit Census",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(end = 10.dp)
+                                    )
+
+                                    Switch(
+                                        checked = isObservationMode,
+                                        onCheckedChange = { isObservationMode = it }
+                                    )
+                                }
+                            }
                         }
                     }
                 },
-                actions = {
+                navigationIcon = {
                     IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
                         Icon(
                             imageVector = Icons.Filled.Home,
@@ -184,6 +240,15 @@ fun AddObservationLogScreen(
                             modifier = Modifier.size(48.dp)
                         )
                     }
+                },
+                actions = {
+//                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
+//                        Icon(
+//                            imageVector = Icons.Filled.Home,
+//                            contentDescription = "Home",
+//                            modifier = Modifier.size(48.dp)
+//                        )
+//                    }
                     val contentColor =
                         if (primarySeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
                             alpha = ContentAlpha.disabled
@@ -210,6 +275,117 @@ fun AddObservationLogScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            // METADATA SECTION
+
+            // GPS Location & Updated Timestamp
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box() {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (viewModel.uiState.hasGPS && coordinates != "") {
+                            Icon(
+                                Icons.Filled.LocationOn,
+                                contentDescription = null,
+                                tint = Color(0xFF1D9C06),
+                                modifier = Modifier.padding(start = 10.dp, end = 10.dp)
+                            )
+                        } else {
+                            Icon(
+                                Icons.Filled.LocationOff,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.padding(end = 10.dp)
+                            )
+                        }
+                        Text(
+                            text = coordinates,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                }
+            }
+            // Colony Location
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box() {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Colony:  $colony",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                }
+            }
+
+            // CENSUS METADATA
+            if (viewModel.uiState.censusNumber != "Select an option" && !isObservationMode) {
+                // Prepopulate Options
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Box() {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ExtendedFloatingActionButton(
+                                icon = {
+                                    Icon(
+                                        Icons.Filled.BabyChangingStation,
+                                        "Mom & Pup",
+                                        Modifier.size(36.dp)
+                                    )
+                                },
+                                text = { Text("Mom & Pup") },
+                                onClick = { /* Your action here */ }
+                            )
+                            ExtendedFloatingActionButton(
+                                icon = {
+                                    Icon(
+                                        Icons.Filled.Female,
+                                        "Single Female",
+                                        Modifier.size(36.dp)
+                                    )
+                                },
+                                text = { Text("Single Female") },
+                                onClick = { /* Your action here */ }
+                            )
+                            ExtendedFloatingActionButton(
+                                icon = {
+                                    Icon(
+                                        Icons.Filled.Male,
+                                        "Single Male",
+                                        Modifier.size(36.dp)
+                                    )
+                                },
+                                text = { Text("Single Male") },
+                                onClick = { /* Your action here */ }
+                            )
+                        }
+                    }
+                }
+
+            }
+
+            // SEAL CARDS
             TabbedCards(viewModel, wedCheckViewModel)
         }
         // because this action results in removing any entered data
@@ -264,10 +440,17 @@ fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-data class TabItem(val title: String, val sealName: String, val content: @Composable () -> Unit)
+data class TabItem(
+    val title: String,
+    val sealName: String,
+    val content: @Composable () -> Unit
+)
 
 @Composable
-fun TabbedCards(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedCheckViewModel) {
+fun TabbedCards(
+    viewModel: AddObservationLogViewModel,
+    wedCheckViewModel: WedCheckViewModel
+) {
     val scrollState = rememberScrollState()
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -306,12 +489,26 @@ fun TabbedCards(viewModel: AddObservationLogViewModel, wedCheckViewModel: WedChe
                 )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .verticalScroll(state = scrollState, enabled = true)
+                .verticalScroll(state = scrollState, enabled = true),
+            colors = CardColors(
+                containerColor = Color.White,
+                contentColor = Color.Black,
+                disabledContainerColor = Color.White,
+                disabledContentColor = Color.Gray
+            ),
+            border = BorderStroke(
+                width = 2.dp,
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Gray,
+                        Color.Gray
+                    ) // Specify your gradient colors here
+                )
+            ),
         ) {
             Box(
                 modifier = Modifier
