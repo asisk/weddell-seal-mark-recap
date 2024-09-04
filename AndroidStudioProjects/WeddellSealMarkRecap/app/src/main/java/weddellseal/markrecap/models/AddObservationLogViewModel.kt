@@ -76,6 +76,8 @@ class AddObservationLogViewModel(
         val censusNumber: String = "Select an option",
         val colonyLocation: String = "Select an option",
         val validationFailureReason: String = "",
+        val isValidated: Boolean = false,
+        val validEntry: Boolean = false,
     )
 
     fun updateColonySelection(observationSiteSelected: String) {
@@ -127,7 +129,7 @@ class AddObservationLogViewModel(
     )
         private set
 
-    val wedCheckSealMap = mutableMapOf<Int, WedCheckSeal>()
+    var wedCheckSealMap = mutableMapOf<Int, WedCheckSeal>()
 
     // add a WedCheckSeal to the map
     fun addWedCheckSeal(seal: WedCheckSeal) {
@@ -139,20 +141,55 @@ class AddObservationLogViewModel(
         return wedCheckSealMap[speNo]
     }
 
+    fun clearValidationState() {
+//        wedCheckSealMap = mutableMapOf()
+
+        uiState =
+            uiState.copy(
+                validationFailureReason = "",
+                isValidated = false,
+                validEntry = false
+            )
+
+        primarySeal = primarySeal.copy(
+            isValid = false,
+            isValidated = false,
+            reasonNotValid = ""
+        )
+
+        pupOne = pupOne.copy(
+            isValid = false,
+            isValidated = false,
+            reasonNotValid = ""
+        )
+
+        pupTwo = pupTwo.copy(
+            isValid = false,
+            isValidated = false,
+            reasonNotValid = ""
+        )
+    }
+
     fun validate(seal: Seal) {
-        var sealValid = false
+        var sealValid = true
+        uiState =
+            uiState.copy(
+                validationFailureReason = "",
+                isValidated = false,
+                validEntry = false
+            )
+
         val sb = StringBuilder()
         var sealName = seal.name
         if (seal.name == "primary") {
             sealName = "Seal"
         }
-        sb.append("$sealName failed validation: ")
 
-        if (seal.tagEventType == "New") {
-            if (!seal.hasWedCheckSpeno) {
-                sealValid = true
+        if (seal.hasWedCheckSpeno && seal.speNo != 0) {
+            if (seal.tagEventType == "New") {
+                sealValid = false
             }
-        } else if (seal.hasWedCheckSpeno) {
+
             var wedCheckSeal = getWedCheckSeal(seal.speNo)
             if (wedCheckSeal != null) { //TODO, what if can't find wedCheckSeal in the map???, should not happen but if does should we look it up?
                 var sexMatch = false
@@ -163,62 +200,67 @@ class AddObservationLogViewModel(
                 if (seal.sex == wedCheckSeal.sex) {
                     sexMatch = true
                 } else {
-                    sb.append(
-                        "\n " + "Sex doesn't match \n" +
-                                "\tYou entered:  " + seal.sex + "\n" +
-                                "\tWedCheck Seal Sex:  " + wedCheckSeal.sex
-                    )
+                    sb.append("\n " + "Sex doesn't match")
                 }
                 if (seal.numTags == wedCheckSeal.numTags) {
                     numTagsMatch = true
                 } else {
-                    sb.append(
-                        "\n " + "Number of tags doesn't match\n" +
-                                "\tYou entered:  " + seal.numTags + "\n" +
-                                "\tWedCheck Number of Tags:  " + wedCheckSeal.numTags
-                    )
+                    sb.append("\n " + "Number of tags doesn't match")
                 }
                 if (wedCheckSeal.lastSeenSeason < 10) {
                     lastSeasonWithinTenYears = true
                 } else {
-                    sb.append(
-                        "\n " + "Seal last seen more than ten years ago\n" +
-                                "\tWedCheck Last Seen Season:  " + wedCheckSeal.lastSeenSeason
-                    )
+                    sb.append("\n " + "Seal last seen more than ten years ago")
                 }
                 if (wedCheckSeal.condition != "Dead") {
                     wedCheckNotDead = true
                 } else {
-                    sb.append(
-                        "\n " + "Seal last seen dead\n" +
-                                "\tYou entered:  " + seal.condition + "\n" +
-                                "\tWedCheck Seal Condition:  " + wedCheckSeal.condition
-                    )
+                    sb.append("\n " + "Seal last seen dead")
                 }
 
                 if (sexMatch && numTagsMatch && lastSeasonWithinTenYears && wedCheckNotDead) {
                     sealValid = true
                 } else {
+                    sealValid = false
                     val validSB = StringBuilder()
+                    validSB.append("$sealName failed validation!")
                     validSB.append(uiState.validationFailureReason)
                     validSB.append("\n")
                     validSB.append(sb.toString())
-                    uiState = uiState.copy(validationFailureReason = validSB.toString())
+                    uiState = uiState.copy(
+                        validationFailureReason = validSB.toString(),
+                        isValidated = true
+                    )
                 }
             }
         }
 
+        if (sealValid) {
+            uiState = uiState.copy(isValidated = true, validEntry = true)
+        }
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(isValid = sealValid, isValidated = true, reasonNotValid = sb.toString())
+                primarySeal = primarySeal.copy(
+                    isValid = sealValid,
+                    isValidated = true,
+                    reasonNotValid = sb.toString()
+                )
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(isValid = sealValid, isValidated = true,reasonNotValid = sb.toString())
+                pupOne = pupOne.copy(
+                    isValid = sealValid,
+                    isValidated = true,
+                    reasonNotValid = sb.toString()
+                )
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(isValid = sealValid, isValidated = true,reasonNotValid = sb.toString())
+                pupTwo = pupTwo.copy(
+                    isValid = sealValid,
+                    isValidated = true,
+                    reasonNotValid = sb.toString()
+                )
             }
         }
     }
@@ -255,6 +297,18 @@ class AddObservationLogViewModel(
 // preemptively navigating back to the observation screen
     fun resetSaved() {
         // reset the values in the model once the records are save successfully
+        wedCheckSealMap = mutableMapOf()
+
+        uiState = uiState.copy(
+            validationFailureReason = "",
+            isValidated = false,
+            validEntry = false,
+            isSaved = false,
+            isSaving = false,
+            isError = false,
+            errorMessage = ""
+        )
+
         primarySeal = Seal(
             name = "primary", isStarted = false
         )
@@ -264,8 +318,6 @@ class AddObservationLogViewModel(
         pupTwo = Seal(
             name = "pupTwo", age = "Pup", isStarted = false
         )
-
-        uiState = uiState.copy(isSaved = false)
     }
 
     fun updateCondition(sealName: String, input: String) {
@@ -566,21 +618,21 @@ class AddObservationLogViewModel(
                 }
 
                 1 -> {
-                    pupOne = pupOne.copy(numRelatives = number, isStarted = true)
-                    pupTwo = pupTwo.copy(numRelatives = number, isStarted = false)
+                    pupOne = pupOne.copy(numRelatives = input, isStarted = true)
+                    pupTwo = pupTwo.copy(numRelatives = input, isStarted = false)
                     updateNotebookEntry(pupOne)
                     updateNotebookEntry(pupTwo)
                 }
 
                 2 -> {
-                    pupOne = pupOne.copy(numRelatives = number, isStarted = true)
-                    pupTwo = pupTwo.copy(numRelatives = number, isStarted = true)
+                    pupOne = pupOne.copy(numRelatives = input, isStarted = true)
+                    pupTwo = pupTwo.copy(numRelatives = input, isStarted = true)
                     updateNotebookEntry(pupOne)
                     updateNotebookEntry(pupTwo)
                 }
             }
 
-            primarySeal = primarySeal.copy(numRelatives = number, isStarted = true)
+            primarySeal = primarySeal.copy(numRelatives = input, isStarted = true)
             updateNotebookEntry(primarySeal)
         }
     }
@@ -813,7 +865,7 @@ class AddObservationLogViewModel(
     }
 
     fun updateNumTags(sealName: String, input: String) {
-        val isTwoTags = input.toInt() == 2
+        val isTwoTags = input != "" && input.toInt() == 2
         when (sealName) {
             "primary" -> {
                 primarySeal = primarySeal.copy(numTags = input, isStarted = true)
@@ -945,7 +997,7 @@ class AddObservationLogViewModel(
             speNo = wedCheckSeal.speNo,
             age = wedCheckSeal.age,
             sex = wedCheckSeal.sex,
-            numRelatives = wedCheckSeal.numRelatives,
+            numRelatives = wedCheckSeal.numRelatives.toString(),
             tagIdOne = wedCheckSeal.tagIdOne,
             tagOneNumber = wedCheckSeal.tagOneNumber,
             tagOneAlpha = wedCheckSeal.tagOneAlpha,
@@ -993,6 +1045,13 @@ class AddObservationLogViewModel(
     }
 
     fun resetSeal(sealName: String) {
+        var parentNumRels = primarySeal.numRelatives
+        if (primarySeal.numRelatives != "" && primarySeal.numRelatives.toIntOrNull() != null) {
+            var number = parentNumRels.toInt()
+            number -= 1
+            parentNumRels = number.toString()
+        }
+
         when (sealName) {
             "primary" -> {
                 primarySeal = Seal(
@@ -1013,7 +1072,6 @@ class AddObservationLogViewModel(
 
             "pupOne" -> {
                 // update parent num rels when pup one is removed
-                val parentNumRels = primarySeal.numRelatives - 1
                 primarySeal = primarySeal.copy(numRelatives = parentNumRels)
 
                 // if pupOne is removed and there's a second pup
@@ -1040,14 +1098,17 @@ class AddObservationLogViewModel(
                     name = "pupTwo", age = "Pup", isStarted = false
                 )
 
-                // update parent and pup one num rels when puptwo is removed
-                val parentNumRels = primarySeal.numRelatives - 1
-                primarySeal = primarySeal.copy(numRelatives = parentNumRels)
+//                // update parent and pup one num rels when puptwo is removed
+//                val parentNumRels = primarySeal.numRelatives - 1
+//                primarySeal = primarySeal.copy(numRelatives = parentNumRels)
                 if (pupOne.isStarted) {
                     pupOne = pupOne.copy(numRelatives = parentNumRels)
                 }
             }
         }
+        updateNotebookEntry(primarySeal)
+        updateNotebookEntry(pupOne)
+        updateNotebookEntry(pupTwo)
     }
 
     fun removePups() {

@@ -39,7 +39,8 @@ fun SealCard(
     wedCheckViewModel: WedCheckViewModel,
 ) {
     var sealSpeNo by remember { mutableStateOf(seal.speNo.toString()) }
-    var numRelatives by remember { mutableStateOf(seal.numRelatives.toString()) }
+    var numRelatives by remember { mutableStateOf(seal.numRelatives) }
+    var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
     var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
     var tagIDVal by remember { mutableStateOf(seal.tagIdOne) }
     var oldTagIDOneVal by remember { mutableStateOf(seal.oldTagIdOne) }
@@ -49,30 +50,71 @@ fun SealCard(
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(seal.numRelatives) {
-        numRelatives = seal.numRelatives.toString()
+        numRelatives = if (seal.sex == "Male" && seal.name == "primary") {
+            "0"
+        } else {
+            seal.numRelatives
+        }
     }
 
     LaunchedEffect(seal.tagIdOne) {
         tagIDVal = seal.tagIdOne
 
-        // update the speNo if we don't have one
-        // and the tagID entry is complete
-        if (seal.speNo == 0 && seal.tagIdOne != "" && seal.tagOneAlpha != "" && !wedCheckViewModel.uiState.value.isSearching) {
-            if (seal.tagOneNumber.toString().length == 3 || seal.tagOneNumber.toString().length == 4) {
-                wedCheckViewModel.findSealbyTagID(seal.tagIdOne)
+//        // update the speNo if we don't have one
+//        // and the tagID entry is complete
+//        if (!wedCheckViewModel.uiState.value.isSearching) {
+//
+//            if (seal.tagIdOne != "" && seal.tagOneAlpha != "") {
+//                if (seal.tagOneNumber.length == 3 || seal.tagOneNumber.length == 4) {
+//                    if (seal.speNo == 0 || seal.tagIdOne != wedCheckViewModel.wedCheckSeal.tagIdOne) {
+//                        viewModel.clearSpeNo(seal)
+//                        wedCheckViewModel.resetState()
+//                        val searchStr = seal.tagOneNumber + seal.tagOneAlpha // avoid sending in tag ids with two alpha characters
+//                        wedCheckViewModel.findSealbyTagID(searchStr)
+//
+//                        delay(1500) // Wait for 1500 milliseconds
+//
+//                        if (wedCheckViewModel.wedCheckSeal.speNo != 0) {
+//                            viewModel.mapWedCheckFields(seal.name, wedCheckViewModel.wedCheckSeal)
+//                            oldTagIDOneVal = wedCheckViewModel.wedCheckSeal.tagIdOne
+//                            oldTagIDTwoVal = wedCheckViewModel.wedCheckSeal.tagIdTwo
+//                        }
+//                    }
+//                }
+//            }
+//        }
+    }
 
-                delay(1500) // Wait for 1500 milliseconds
+    LaunchedEffect(seal.tagOneAlpha) {
+        // update the speNo if we don't have one once we have a tag number and a tag alpha
+        if (!wedCheckViewModel.uiState.value.isSearching) {
+            if (seal.tagIdOne != "" && seal.tagOneAlpha != "") {
+                if (seal.tagOneNumber.length == 3 || seal.tagOneNumber.length == 4) {
 
-                if (wedCheckViewModel.wedCheckSeal.speNo != 0) {
-                    viewModel.mapWedCheckFields(seal.name, wedCheckViewModel.wedCheckSeal)
-                    oldTagIDOneVal = wedCheckViewModel.wedCheckSeal.tagIdOne
-                    oldTagIDTwoVal = wedCheckViewModel.wedCheckSeal.tagIdTwo
+                    // construct a string without two alpha characters
+                    // to allow comparison with WedCheck record
+                    // and searching for a WedCheck record
+                    val searchStr = seal.tagOneNumber + seal.tagOneAlpha
+
+                    if (seal.speNo == 0 || searchStr != wedCheckViewModel.wedCheckSeal.tagIdOne) {
+                        viewModel.clearSpeNo(seal)
+                        wedCheckViewModel.resetState()
+                        wedCheckViewModel.findSealbyTagID(searchStr)
+
+                        delay(1500) // Wait for 1500 milliseconds
+
+                        if (wedCheckViewModel.wedCheckSeal.speNo != 0) {
+                            viewModel.mapWedCheckFields(seal.name, wedCheckViewModel.wedCheckSeal)
+                            oldTagIDOneVal = wedCheckViewModel.wedCheckSeal.tagIdOne
+                            oldTagIDTwoVal = wedCheckViewModel.wedCheckSeal.tagIdTwo
+                        }
+                    }
                 }
             }
         }
     }
 
-    LaunchedEffect(seal.notebookDataString) {
+        LaunchedEffect(seal.notebookDataString) {
         notebookStr = seal.notebookDataString
     }
 
@@ -163,8 +205,19 @@ fun SealCard(
                     selectedOption = seal.age,
                     onOptionSelected = {
                         //handle the case
-                        if (seal.age == "Pup" && seal.age != it) {
+                        if (seal.age == "Pup" && seal.age != it) { // sex has been changed from pup to adult or yearling, clear pup fields
                             viewModel.resetPupFields(seal.name)
+                        }
+
+                        if (it == "Pup") {
+                            if (numRelatives != "" && numRelatives != "0") {
+                                possibleRelatives =
+                                    "0" //primary seals that are male do not have relatives
+                                // pop a warning and ask for confirmation before moving forward
+                                showDeleteRelativesDialog.value = true
+                            } else {
+                                viewModel.updateNumRelatives(seal, "0")
+                            }
                         }
                         viewModel.updateAge(seal, it)
                     }
@@ -207,10 +260,14 @@ fun SealCard(
                     options = buttonListSex,
                     selectedOption = seal.sex,
                     onOptionSelected = {
-                        if (seal.name == "primary" && seal.numRelatives > 0 && it == "Male") {
-                            numRelatives = "0"
-                            // pop a warning and ask for confirmation before moving forward
-                            showDeleteRelativesDialog.value = true
+                        if (seal.name == "primary" && it == "Male") {
+                            if (numRelatives != "" && numRelatives != "0") {
+                                possibleRelatives = "0" //primary seals that are male do not have relatives
+                                // pop a warning and ask for confirmation before moving forward
+                                showDeleteRelativesDialog.value = true
+                            } else {
+                                viewModel.updateNumRelatives(seal, "0")
+                            }
                         }
                         viewModel.updateSex(seal, it)
                     }
@@ -273,7 +330,7 @@ fun SealCard(
     ) {
         Box(
             modifier = Modifier
-                .weight(.6f)
+                .weight(.7f)
 //                    .padding(end = 8.dp)
         ) {
             Row(
@@ -285,13 +342,18 @@ fun SealCard(
                     "# of Rels",
                     style = MaterialTheme.typography.titleLarge
                 )
-                if (seal.age == "Pup" || seal.sex == "Male") {
+                if (seal.age == "Pup") {
+                    Text(
+                        numRelatives,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                } else if (seal.name == "primary" && seal.sex == "Male" && numRelatives == "0") {
                     Text(
                         numRelatives,
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
-                    val numRelsList = listOf("1", "2")
+                    val numRelsList = listOf("0", "1", "2")
 //                    SingleSelectButtonGroupSquare(
 //                        numRelsList,
 //                        numRelatives
@@ -307,15 +369,18 @@ fun SealCard(
 //                    }
                     SegmentedButtonGroup(
                         options = numRelsList,
-                        selectedOption = if (seal.numRelatives != 0) seal.numRelatives.toString() else "",
+                        selectedOption = numRelatives,
                         onOptionSelected = {
                             // handle case where the number of relatives is being reduced
+                            possibleRelatives = it  //value to be used if delete confirmed
                             if (it == "") {
-                                numRelatives = 0.toString()
-                                // pop a warning and ask for confirmation before moving forward
-                                showDeleteRelativesDialog.value = true
-                            } else if (it.toInt() < seal.numRelatives) {
-                                numRelatives = it
+                                if (seal.numRelatives != "0") { // no need to pop a dialog when zero is deselected by the user
+                                    // pop a warning and ask for confirmation before moving forward
+                                    showDeleteRelativesDialog.value = true
+                                } else {
+                                    numRelatives = it
+                                }
+                            } else if (seal.numRelatives != "" && it.toInt() < seal.numRelatives.toInt()) {
                                 // pop a warning and ask for confirmation before moving forward
                                 showDeleteRelativesDialog.value = true
                             } else {
@@ -333,15 +398,18 @@ fun SealCard(
             RemoveDialog(
                 onDismissRequest = { showDeleteRelativesDialog.value = false },
                 onConfirmation = {
-                    viewModel.updateNumRelatives(seal, numRelatives)
                     showDeleteRelativesDialog.value = false
+                    if (seal.sex == "Male") {
+                        possibleRelatives = "0"  // set the value to zero
+                    }
+                    viewModel.updateNumRelatives(seal, possibleRelatives) // use the value selected by the user to update the model value
                 },
             )
         }
 
         Box(
             modifier = Modifier
-                .weight(.6f)
+                .weight(.5f)
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -487,6 +555,7 @@ fun SealCard(
                                 viewModel.clearTagTwo(seal)
                                 viewModel.clearOldTags(seal.name)
                                 viewModel.clearSpeNo(seal)
+                                wedCheckViewModel.resetState()
                                 isRetag = false
                             }
                         }
@@ -539,6 +608,7 @@ fun SealCard(
                             if (seal.tagEventType != "Retag") {
                                 viewModel.clearSpeNo(seal)
                             }
+                            wedCheckViewModel.resetState()
                         }
                     )
                 }
@@ -701,7 +771,6 @@ fun SealCard(
                 var isNoTagsChecked by remember { mutableStateOf(seal.numTags.toIntOrNull() == 0) }
                 val focusManager = LocalFocusManager.current
                 val numTagsList = listOf("1", "2")
-
                 Text(
                     "# of Tags",
                     style = MaterialTheme.typography.titleLarge

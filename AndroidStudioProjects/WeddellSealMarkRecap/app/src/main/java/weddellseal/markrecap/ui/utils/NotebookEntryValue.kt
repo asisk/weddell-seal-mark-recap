@@ -3,7 +3,7 @@ package weddellseal.markrecap.ui.utils
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.Seal
 
-fun notebookEntryValueSeal(seal : Seal): String {
+fun notebookEntryValueSeal(seal: Seal): String {
     val sb = StringBuilder()
     var age = if (seal.age.isNotEmpty()) {
         seal.age[0].toString()
@@ -17,10 +17,9 @@ fun notebookEntryValueSeal(seal : Seal): String {
         ""
     }
 
-    val numRels = if (seal.numRelatives > 0) {
-        seal.numRelatives.toString()
-    } else {
-        ""
+    var numRels = ""
+    if (seal.numRelatives != "") {
+        numRels = seal.numRelatives
     }
 
     var tag = seal.tagIdOne
@@ -52,7 +51,7 @@ fun notebookEntryValueSeal(seal : Seal): String {
     return sb.toString();
 }
 
-fun notebookEntryValueObservation(obs : ObservationLogEntry): String {
+fun notebookEntryValueObservation(obs: ObservationLogEntry): String {
     val sb = StringBuilder()
     var age = if (obs.ageClass.isNotEmpty()) {
         obs.ageClass[0].toString()

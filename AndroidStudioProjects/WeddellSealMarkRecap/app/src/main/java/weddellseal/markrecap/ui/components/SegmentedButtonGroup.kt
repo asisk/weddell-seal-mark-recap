@@ -54,7 +54,7 @@ fun SegmentedButtonGroup(
                         currentSelection = ""
                         onOptionSelected("") // Deselect the button
                     } else {
-                        currentSelection = option
+//                        currentSelection = option // this could be the cause of a delay, but commented out to allow the logic for male numrelatives
                         onOptionSelected(option) // Select the button
                     }
                 },

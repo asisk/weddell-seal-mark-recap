@@ -19,6 +19,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,8 +35,12 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun DropdownField(options: List<String>, selectedOption: String, onValueChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(selectedOption) }
+    var currentSelection by remember { mutableStateOf(selectedOption) }
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(selectedOption) {
+        currentSelection = selectedOption
+    }
 
     Column {
         Card(
@@ -51,7 +56,7 @@ fun DropdownField(options: List<String>, selectedOption: String, onValueChange: 
                 horizontalArrangement = Arrangement.End
             ) {
                 BasicTextField(
-                    value = selectedOption,
+                    value = currentSelection,
                     onValueChange = {
                         focusManager.clearFocus()
 
@@ -104,8 +109,8 @@ fun DropdownField(options: List<String>, selectedOption: String, onValueChange: 
                         onClick = {
                             focusManager.clearFocus()
 
-                            selectedOption = "Select an option"
-                            onValueChange(selectedOption)
+                            currentSelection = "Select an option"
+                            onValueChange(currentSelection)
                             expanded = false
                         }
                     )
@@ -114,8 +119,8 @@ fun DropdownField(options: List<String>, selectedOption: String, onValueChange: 
                             onClick = {
                                 focusManager.clearFocus()
 
-                                selectedOption = option
-                                onValueChange(selectedOption)
+                                currentSelection = option
+                                onValueChange(currentSelection)
                                 expanded = false
                             }
                         )

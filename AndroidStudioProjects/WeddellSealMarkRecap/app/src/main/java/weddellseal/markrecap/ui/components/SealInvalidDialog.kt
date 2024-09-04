@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,6 +32,7 @@ fun SealInvalidDialog(
     onConfirmation: () -> Unit,
 ) {
     var reason by remember { mutableStateOf(viewModel.uiState.validationFailureReason) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(viewModel.uiState.validationFailureReason) {
         reason = viewModel.uiState.validationFailureReason
@@ -41,7 +44,8 @@ fun SealInvalidDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(375.dp)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(state = scrollState, enabled = true),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
@@ -52,11 +56,7 @@ fun SealInvalidDialog(
             ) {
                 Text(
                     text = "$reason",
-                    modifier = Modifier.padding(16.dp),
-                )
-                Text(
-                    text =  "Confirm Entry and Flag for Review",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(10.dp),
                 )
                 Row(
                     modifier = Modifier
@@ -67,13 +67,13 @@ fun SealInvalidDialog(
                         onClick = { onDismissRequest() },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Cancel")
+                        Text("Keep Editing")
                     }
                     TextButton(
                         onClick = { onConfirmation() },
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text("Yes, confirm entry")
+                        Text("Confirm Entry")
                     }
                 }
             }

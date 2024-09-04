@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.ui.components.SummaryCard
@@ -51,9 +52,9 @@ fun AddObservationSummaryScreen(
     //send the user back to the observation screen when a log is saved
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
-//            coroutineScope.launch {
-//                snackbarHostState.showSnackbar("Successfully saved!")
-//            }
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Successfully saved!")
+            }
             navController.navigate(Screens.AddObservationLog.route)
             viewModel.resetSaved()
         }
@@ -68,6 +69,7 @@ fun AddObservationSummaryScreen(
 //            }
         }
     }
+
     // endregion
 
     Scaffold(
@@ -105,7 +107,8 @@ fun AddObservationSummaryScreen(
                 modifier = Modifier.padding(16.dp),
                 containerColor = Color.LightGray,
                 onClick = {
-                    canSaveLog {
+                    if (viewModel.isValid()) {
+
                         viewModel.createLog(adultSeal, pupOne, pupTwo)
                     }
                 },

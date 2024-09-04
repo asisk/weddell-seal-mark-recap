@@ -79,7 +79,7 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         found = true,
         lastSeenSeason = season,
         massPups = pupinMassStudy,
-        numTags = "", //not intending to map this over to the observation screen per August 1, 2024 meeting
+        numTags = numTags.toString(), //not intending to map this over to the observation screen per August 1, 2024 meeting, but added to support validation
         momMassMeasurements = momMassMeasurements,
         numPreviousPups = numPreviousPups,
         sex = sealSex,

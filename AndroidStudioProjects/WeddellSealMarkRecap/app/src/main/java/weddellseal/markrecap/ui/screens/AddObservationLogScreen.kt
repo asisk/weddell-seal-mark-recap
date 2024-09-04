@@ -21,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BabyChangingStation
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Female
@@ -29,6 +28,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Male
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -83,7 +83,8 @@ fun AddObservationLogScreen(
     var primarySeal = viewModel.primarySeal
     var pupOne = viewModel.pupOne
     var pupTwo = viewModel.pupTwo
-    var showConfirmEntryDialog = remember { mutableStateOf(false) }
+    var saveEnabled by remember { mutableStateOf(false) }
+    var showConfirmEntryDialog by remember { mutableStateOf(false) }
     var coordinates by remember { mutableStateOf(viewModel.uiState.currentLocation) }
     var colony by remember { mutableStateOf(viewModel.uiState.colonyLocation) }
     var census by remember { mutableStateOf(viewModel.uiState.censusNumber) }
@@ -148,18 +149,85 @@ fun AddObservationLogScreen(
     }
 
     // this should be activated after the saveAction() is triggered
-    LaunchedEffect(primarySeal.isValidated || pupOne.isValidated || pupTwo.isValidated) {
+    LaunchedEffect(viewModel.uiState.isValidated) {
         var showDialog = false
-        if (primarySeal.isValidated && !primarySeal.isValid) {
+        if (viewModel.uiState.isValidated && !viewModel.uiState.validEntry) {
             showDialog = true
         }
-        if (pupOne.isValidated && !pupOne.isValid) {
+        showConfirmEntryDialog = showDialog
+    }
+
+    LaunchedEffect(viewModel.uiState.isSaved) {
+        if (viewModel.uiState.isSaved) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Entry successfully saved!")
+            }
+            viewModel.resetSaved()
         }
-        if (pupTwo.isValidated && !pupTwo.isValid) {
-            showDialog = true
+    }
+
+    fun checkSaveEnabled(): Boolean {
+        // High-level checks
+        if (!isObservationMode && census == "Select an option") return false
+        if (viewModel.uiState.observerInitials == "Select an option") return false
+        if (viewModel.uiState.colonyLocation == "Select an option") return false
+
+        // Seal checks
+        if (primarySeal.isStarted) {
+            if (primarySeal.age.isEmpty()) {
+                return false
+            } else if (primarySeal.age == "Pup" && primarySeal.condition.isEmpty()) {
+                return false
+            }
+            if (primarySeal.age.isEmpty() ||
+                primarySeal.sex.isEmpty() ||
+                primarySeal.numRelatives.isEmpty() ||
+                primarySeal.tagEventType.isEmpty()
+            ) return false
         }
 
-        showConfirmEntryDialog.value = showDialog
+        if (pupOne.isStarted) {
+            if (pupOne.age.isEmpty() ||
+                pupOne.sex.isEmpty() ||
+                pupOne.numRelatives.isEmpty() ||
+                pupOne.tagEventType.isEmpty() ||
+                pupOne.condition.isEmpty()
+            ) return false
+        }
+
+        if (pupTwo.isStarted) {
+            if (pupTwo.age.isEmpty() ||
+                pupTwo.sex.isEmpty() ||
+                pupTwo.numRelatives.isEmpty() ||
+                pupTwo.tagEventType.isEmpty() ||
+                pupTwo.condition.isEmpty()
+            ) return false
+        }
+
+        // All conditions passed
+        return true
+    }
+
+    LaunchedEffect(
+        viewModel.uiState.observerInitials,
+        viewModel.uiState.colonyLocation,
+        primarySeal.age,
+        primarySeal.sex,
+        primarySeal.numRelatives,
+        primarySeal.tagEventType,
+        primarySeal.condition,
+        pupOne.age,
+        pupOne.sex,
+        pupOne.numRelatives,
+        pupOne.tagEventType,
+        pupOne.condition,
+        pupTwo.age,
+        pupTwo.sex,
+        pupTwo.numRelatives,
+        pupTwo.tagEventType,
+        pupTwo.condition
+    ) {
+        saveEnabled = checkSaveEnabled()
     }
 
     // validates the seal against the wedcheck seal if present
@@ -177,6 +245,10 @@ fun AddObservationLogScreen(
 
         if (pupTwo.isStarted) {
             viewModel.validate(pupTwo)
+        }
+
+        if (viewModel.uiState.isValidated && viewModel.uiState.validEntry) {
+            viewModel.createLog(primarySeal, pupOne, pupTwo)
         }
     }
 
@@ -257,13 +329,13 @@ fun AddObservationLogScreen(
                         onClick = {
                             saveAction()
                         },
-                        enabled = primarySeal.isStarted
+                        enabled = saveEnabled
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = "Review",
+                            imageVector = Icons.Filled.Save,
+                            contentDescription = "Save Seal Entry",
                             modifier = Modifier.size(48.dp), // Change the size here
-                            tint = contentColor
+                            tint = if (saveEnabled) contentColor else Color.Gray // Adjust tint based on saveEnabled
                         )
                     }
                 },
@@ -390,10 +462,13 @@ fun AddObservationLogScreen(
         }
         // because this action results in removing any entered data
         // Show the dialog if showDialog is true
-        if (showConfirmEntryDialog.value) {
+        if (showConfirmEntryDialog) {
             SealInvalidDialog(
                 viewModel,
-                onDismissRequest = { showConfirmEntryDialog.value = false },
+                onDismissRequest = {
+                    showConfirmEntryDialog = false
+                    viewModel.clearValidationState()
+                },
                 onConfirmation = {
                     // flag seals for review
                     if (!primarySeal.isValid) {
@@ -405,7 +480,7 @@ fun AddObservationLogScreen(
                     if (!pupTwo.isValid) {
                         viewModel.flagSealForReview(pupTwo.name)
                     }
-                    showConfirmEntryDialog.value = false
+                    showConfirmEntryDialog = false
 
                     navController.navigate(Screens.AddObservationSummary.route)
                 },
