@@ -1200,7 +1200,7 @@ class AddObservationLogViewModel(
             } else {
                 val lat = currentLocation.latitude
                 val lon = currentLocation.longitude
-                val date = SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US).format(
+                val date = SimpleDateFormat("MM.dd.yyyy HH:mm:ss aaa z", Locale.US).format(
                     System.currentTimeMillis()
                 )
                 uiState = uiState.copy(
@@ -1253,7 +1253,7 @@ class AddObservationLogViewModel(
             sex = seal.sex[0].toString()
         }
 
-        var numRels = seal.numRelatives.toString()
+        var numRels = seal.numRelatives
 
         var tagIdOne = seal.tagOneNumber + seal.tagOneAlpha
         var tagIdTwo = "NoTag"

@@ -232,7 +232,6 @@ fun AddObservationLogScreen(
 
     // validates the seal against the wedcheck seal if present
     fun saveAction() {
-        // TODO, what if the seal is not started
         // TODO, what if the seal has event type of marked or retag but no wedcheck record found
 
         if (primarySeal.isStarted) {
@@ -367,13 +366,16 @@ fun AddObservationLogScreen(
                                 contentDescription = null,
                                 tint = Color(0xFF1D9C06),
                                 modifier = Modifier.padding(start = 10.dp, end = 10.dp)
+                                        .size(48.dp), // Change the size here
+
                             )
                         } else {
                             Icon(
                                 Icons.Filled.LocationOff,
                                 contentDescription = null,
-                                tint = Color.Gray,
+                                tint = Color.Red,
                                 modifier = Modifier.padding(end = 10.dp)
+                                    .size(48.dp), // Change the size here
                             )
                         }
                         Text(
@@ -482,7 +484,7 @@ fun AddObservationLogScreen(
                     }
                     showConfirmEntryDialog = false
 
-                    navController.navigate(Screens.AddObservationSummary.route)
+                    viewModel.createLog(primarySeal, pupOne, pupTwo)
                 },
             )
         }
