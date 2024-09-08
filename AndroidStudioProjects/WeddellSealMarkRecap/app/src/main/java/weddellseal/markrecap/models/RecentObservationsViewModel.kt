@@ -83,10 +83,10 @@ class RecentObservationsViewModel(
         }
     }
 
-    fun uriToFile(context: Context, uri: Uri): File? {
+    private fun uriToFile(context: Context, uri: Uri): File? {
         val documentFile = DocumentFile.fromSingleUri(context, uri)
         if (documentFile != null) {
-            val displayName = documentFile.name
+            val displayName = documentFile.name ?: return null // Return null if name is null
             val externalDir = Environment.getExternalStorageDirectory()
             return File(externalDir, displayName)
         }
@@ -94,15 +94,5 @@ class RecentObservationsViewModel(
     }
 }
 
-
 class NoUriSelectedException(message: String = "No URI was selected") :
     IllegalArgumentException(message)
-
-//class RecentObservationsViewModelFactory : ViewModelProvider.Factory {
-//    @Suppress("UNCHECKED_CAST")
-//    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-//        val app =
-//            extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
-//        return RecentObservationsViewModel(app, app.observationRepo) as T
-//    }
-//}

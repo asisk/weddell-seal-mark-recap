@@ -118,7 +118,7 @@ class WedCheckViewModel(
                 val seal: WedCheckRecord = withContext(Dispatchers.IO) {
                     wedCheckRepo.findSealbyTagID(searchValue)
                 }
-                if (seal != null) {
+                if (seal.speno != 0) {
                     _uiState.value = uiState.value.copy(
                         sealRecordDB = seal,
                         isSearching = false,
@@ -149,7 +149,7 @@ class WedCheckViewModel(
             val seal: WedCheckRecord = withContext(Dispatchers.IO) {
                 wedCheckRepo.findSealbySpeNo(speno)
             }
-            if (seal != null) {
+            if (seal.speno != 0) {
                 _uiState.value = uiState.value.copy(
                     sealRecordDB = seal,
                     isSearching = false,

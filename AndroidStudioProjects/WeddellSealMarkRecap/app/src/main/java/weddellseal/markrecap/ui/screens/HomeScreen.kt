@@ -80,7 +80,6 @@ fun HomeScaffold(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    val state = viewModel.uiState
     var showCensusDialog by remember { mutableStateOf(false) }
     val coloniesList by viewModel.colonies.collectAsState()
     val observerList by viewModel.observers.collectAsState()
@@ -166,7 +165,6 @@ fun HomeScaffold(
                             modifier = Modifier.size(48.dp)
                         )
                     }
-                    val contentColor = MaterialTheme.colorScheme.primary
                     IconButton(
                         onClick = {
                             navController.navigate(Screens.AdminScreen.route)

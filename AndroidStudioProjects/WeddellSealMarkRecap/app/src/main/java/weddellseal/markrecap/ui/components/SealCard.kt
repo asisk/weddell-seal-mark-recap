@@ -216,7 +216,7 @@ fun SealCard(
                                 // pop a warning and ask for confirmation before moving forward
                                 showDeleteRelativesDialog.value = true
                             } else {
-                                viewModel.updateNumRelatives(seal, "0")
+                                viewModel.updateNumRelatives( "0")
                             }
                         }
                         viewModel.updateAge(seal, it)
@@ -266,7 +266,7 @@ fun SealCard(
                                 // pop a warning and ask for confirmation before moving forward
                                 showDeleteRelativesDialog.value = true
                             } else {
-                                viewModel.updateNumRelatives(seal, "0")
+                                viewModel.updateNumRelatives( "0")
                             }
                         }
                         viewModel.updateSex(seal, it)
@@ -384,7 +384,7 @@ fun SealCard(
                                 // pop a warning and ask for confirmation before moving forward
                                 showDeleteRelativesDialog.value = true
                             } else {
-                                viewModel.updateNumRelatives(seal, it)
+                                viewModel.updateNumRelatives(it)
                             }
                         }
                     )
@@ -402,7 +402,7 @@ fun SealCard(
                     if (seal.sex == "Male") {
                         possibleRelatives = "0"  // set the value to zero
                     }
-                    viewModel.updateNumRelatives(seal, possibleRelatives) // use the value selected by the user to update the model value
+                    viewModel.updateNumRelatives( possibleRelatives) // use the value selected by the user to update the model value
                 },
             )
         }

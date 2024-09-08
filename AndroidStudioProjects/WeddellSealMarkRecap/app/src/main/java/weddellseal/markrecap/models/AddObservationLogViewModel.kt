@@ -39,6 +39,8 @@ import weddellseal.markrecap.ui.utils.sealValidation
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -145,6 +147,12 @@ class AddObservationLogViewModel(
         val currentTime = LocalTime.now()
         val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
         return currentTime.format(formatter)
+    }
+
+    private fun getCoordinatesLastUpdated() : String {
+        val currentDateTime = ZonedDateTime.now(ZoneId.systemDefault()) // Get the current date and time with timezone
+        val formatter = DateTimeFormatter.ofPattern("MM.dd.yyyy HH:mm:ss a z", Locale.US) // Define the desired format
+        return currentDateTime.format(formatter) // Format the current date and time
     }
 
     private fun getDeviceName(context: Context): String {
@@ -541,7 +549,7 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateNumRelatives(seal: Seal, input: String) {
+    fun updateNumRelatives(input: String) {
         val number: Int? = input.toIntOrNull()
         if (number != null) {
             when (number) {
@@ -1054,38 +1062,11 @@ class AddObservationLogViewModel(
 
     // region Location management
     @SuppressLint("MissingPermission")
-    fun fetchGeoCoderLocation() {
+    fun fetchCurrentLocation() {
         val isGooglePlay =
             GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context)
-        if (isGooglePlay != null) {
-            uiState.hasGooglePlay = isGooglePlay
-        }
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            location ?: return@addOnSuccessListener
+        uiState.hasGooglePlay = isGooglePlay
 
-            val geocoder = Geocoder(context, Locale.getDefault())
-
-            if (Build.VERSION.SDK_INT >= 33) {
-                geocoder.getFromLocation(
-                    location.latitude, location.longitude, 1
-                ) { addresses ->
-                    val address = addresses.firstOrNull()
-                    val place = address?.locality ?: address?.subAdminArea ?: address?.adminArea
-                    ?: address?.countryName
-                }
-            } else {
-                val address = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                    ?.firstOrNull() ?: return@addOnSuccessListener
-                val place = address.locality ?: address.subAdminArea ?: address.adminArea
-                ?: address.countryName ?: return@addOnSuccessListener
-            }
-        }
-    }
-
-    // region Location management
-    @SuppressLint("MissingPermission")
-    fun fetchCurrentLocation() {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,
             object : CancellationToken() {
@@ -1100,9 +1081,8 @@ class AddObservationLogViewModel(
             } else {
                 val lat = currentLocation.latitude
                 val lon = currentLocation.longitude
-                val date = SimpleDateFormat("MM.dd.yyyy HH:mm:ss aaa z", Locale.US).format(
-                    System.currentTimeMillis()
-                )
+                val date = getCoordinatesLastUpdated()
+
                 uiState = uiState.copy(
                     currentLocation = "Lat : ${lat}    " + "Long : ${lon}\n" + "Updated: $date"
                 )

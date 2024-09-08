@@ -58,10 +58,6 @@ fun buildLogEntry(
             relOneTagId = primarySeal.tagIdOne
             relTwoTagId = pupOne.tagIdOne
         }
-
-        else -> {
-            ""
-        }
     }
 
     var eventType = ""
