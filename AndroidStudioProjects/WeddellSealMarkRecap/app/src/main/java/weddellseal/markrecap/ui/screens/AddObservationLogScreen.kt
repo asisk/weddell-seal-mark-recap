@@ -232,7 +232,8 @@ fun AddObservationLogScreen(
 
     // validates the seal against the wedcheck seal if present
     fun saveAction() {
-        // TODO, what if the seal has event type of marked or retag but no wedcheck record found
+
+        // TODO, update the location
 
         if (primarySeal.isStarted) {
             viewModel.validate(primarySeal)
