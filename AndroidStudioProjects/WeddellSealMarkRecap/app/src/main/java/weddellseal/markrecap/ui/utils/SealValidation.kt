@@ -40,7 +40,7 @@ fun sealValidation(
             }
 
             // dead seals should not have new observations
-            if (wedCheckSeal.condition == "Dead") { // TODO, need to test this
+            if (wedCheckSeal.condition == "0") {
                 sealValid = false
                 validationFailureReasons.append("\n " + "Seal last seen dead")
             }
@@ -79,6 +79,13 @@ fun sealValidation(
                     if (seal.age != "Adult") {
                         sealValid = false
                         validationFailureReasons.append("\n Seal observed two years ago. Age class should be adult!")
+                    }
+                }
+
+                else -> {
+                    if (seal.age != wedCheckSeal.age) {
+                        sealValid = false
+                        validationFailureReasons.append("\n Age class should match.")
                     }
                 }
             }

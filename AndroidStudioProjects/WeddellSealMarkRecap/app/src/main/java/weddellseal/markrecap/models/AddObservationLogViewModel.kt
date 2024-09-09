@@ -924,6 +924,7 @@ class AddObservationLogViewModel(
             colony = wedCheckSeal.colony,
             isWedCheck = true,
         )
+        addWedCheckSeal(wedCheckSeal)
         updateNotebookEntry(primarySeal)
     }
 

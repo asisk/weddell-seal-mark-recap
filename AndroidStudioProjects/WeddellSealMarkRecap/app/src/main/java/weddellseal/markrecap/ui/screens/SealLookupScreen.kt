@@ -77,18 +77,6 @@ fun SealLookupScreen(
                         )
                     }
                 },
-//                actions = {
-//                    IconButton(onClick = {
-//                        navController.navigate(Screens.HomeScreen.route)
-//                        wedCheckViewModel.resetState()
-//                    }) {
-//                        Icon(
-//                            imageVector = Icons.Filled.Home,
-//                            contentDescription = "Home",
-//                            modifier = Modifier.size(36.dp)
-//                        )
-//                    }
-//                },
             )
         }
     ) { innerPadding ->

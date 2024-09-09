@@ -24,7 +24,6 @@ import weddellseal.markrecap.models.RecentObservationsViewModelFactory
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.screens.AddObservationLogScreen
-import weddellseal.markrecap.ui.screens.AddObservationSummaryScreen
 import weddellseal.markrecap.ui.screens.AdminScreen
 import weddellseal.markrecap.ui.screens.HomeScreen
 import weddellseal.markrecap.ui.screens.RecentObservationsScreen
@@ -33,14 +32,13 @@ import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
 class MainActivity : ComponentActivity() {
-    //    private lateinit var permissionManager: PermissionManager
     private lateinit var wedCheckRepository: WedCheckRepository
     private lateinit var observationRepository: ObservationRepository
     private lateinit var supportingDataRepository: SupportingDataRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        permissionManager = (application as ObservationLogApplication).permissions
+
         // Access the ObservationLogApplication instance
         val observationLogApplication = application as ObservationLogApplication
 
@@ -91,12 +89,6 @@ class MainActivity : ComponentActivity() {
                                 wedCheckViewModel
                             )
                         }
-                        composable(Screens.AddObservationSummary.route) {
-                            AddObservationSummaryScreen(
-                                navController,
-                                addObservationLogViewModel
-                            )
-                        }
                         composable(Screens.RecentObservations.route) {
                             RecentObservationsScreen(
                                 navController
@@ -128,7 +120,6 @@ sealed class Screens(val route: String) {
     object HomeScreen : Screens("home")
     object AdminScreen : Screens("admin")
     object AddObservationLog : Screens("add_log")
-    object AddObservationSummary : Screens("add_log_summary")
     object RecentObservations : Screens("view_db")
     object SealLookupScreen : Screens("seal_lookup")
 }

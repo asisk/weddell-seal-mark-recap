@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Male
+import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -59,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -66,6 +68,7 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.components.IneligibleForSaveDialog
 import weddellseal.markrecap.ui.components.RemoveDialog
 import weddellseal.markrecap.ui.components.SealCard
 import weddellseal.markrecap.ui.components.SealInvalidDialog
@@ -79,12 +82,15 @@ fun AddObservationLogScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    // vars not "by remember" because the screen needs to respond to input that changes the seal's model values
-    var primarySeal = viewModel.primarySeal
-    var pupOne = viewModel.pupOne
-    var pupTwo = viewModel.pupTwo
-    var saveEnabled by remember { mutableStateOf(false) }
+
+    // seals not "by remember" because the screen needs to respond to input that changes the seal's model values
+    val primarySeal = viewModel.primarySeal
+    val pupOne = viewModel.pupOne
+    val pupTwo = viewModel.pupTwo
+
     var showConfirmEntryDialog by remember { mutableStateOf(false) }
+    var showIneligibleDialog by remember { mutableStateOf(false) }
+    var ineligibleReason by remember { mutableStateOf("") }
     var coordinates by remember { mutableStateOf(viewModel.uiState.currentLocation) }
     var colony by remember { mutableStateOf(viewModel.uiState.colonyLocation) }
     var census by remember { mutableStateOf(viewModel.uiState.censusNumber) }
@@ -167,67 +173,111 @@ fun AddObservationLogScreen(
     }
 
     fun checkSaveEnabled(): Boolean {
+
         // High-level checks
-        if (!isObservationMode && census == "Select an option") return false
-        if (viewModel.uiState.observerInitials == "Select an option") return false
-        if (viewModel.uiState.colonyLocation == "Select an option") return false
+        val metadataSelectionsNeeded = StringBuilder()
+        var eligible = true
+        if (viewModel.uiState.colonyLocation == "Select an option") {
+            metadataSelectionsNeeded.append("Select a colony on the Home Screen.")
+            eligible = false
+        }
+        if (!isObservationMode && census == "Select an option") {
+            metadataSelectionsNeeded.append("\nSelect a census number on the Home Screen.")
+            eligible = false
+        }
+        if (viewModel.uiState.observerInitials == "Select an option") {
+            metadataSelectionsNeeded.append("\nSelect observer(s) on the Home Screen.")
+            eligible = false
+        }
+        if (!eligible) {
+            ineligibleReason = metadataSelectionsNeeded.toString()
+            return false
+        }
 
         // Seal checks
-        if (primarySeal.isStarted) {
-            if (primarySeal.age.isEmpty()) {
-                return false
-            } else if (primarySeal.age == "Pup" && primarySeal.condition.isEmpty()) {
-                return false
-            }
-            if (primarySeal.age.isEmpty() ||
-                primarySeal.sex.isEmpty() ||
-                primarySeal.numRelatives.isEmpty() ||
-                primarySeal.tagEventType.isEmpty()
-            ) return false
+        val sealSelectionsNeeded = StringBuilder()
+        if (primarySeal.age.isEmpty()) {
+            sealSelectionsNeeded.append("\nSelect an age for Seal.")
+            eligible = false
+        } else if (primarySeal.age == "Pup" && primarySeal.condition.isEmpty()) {
+            sealSelectionsNeeded.append("\nSelect condition for Pup.")
+            eligible = false
+        }
+        if (primarySeal.sex.isEmpty()) {
+            sealSelectionsNeeded.append("\nSelect a sex for Seal.")
+            eligible = false
+        }
+        if (primarySeal.numRelatives.isEmpty()) {
+            sealSelectionsNeeded.append("\nSelect a sex for Seal.")
+            eligible = false
+        }
+        if (primarySeal.tagEventType.isEmpty()) {
+            sealSelectionsNeeded.append("\nSelect a sex for Seal.")
+            eligible = false
+        }
+        if (!eligible) {
+            ineligibleReason = sealSelectionsNeeded.toString()
+            return false
         }
 
+        val pupOneSelectionsNeeded = StringBuilder()
         if (pupOne.isStarted) {
-            if (pupOne.age.isEmpty() ||
-                pupOne.sex.isEmpty() ||
-                pupOne.numRelatives.isEmpty() ||
-                pupOne.tagEventType.isEmpty() ||
-                pupOne.condition.isEmpty()
-            ) return false
+            if (pupOne.age.isEmpty()) {
+                pupOneSelectionsNeeded.append("\nSelect an age for Pup One.")
+                eligible = false
+            }
+            if (pupOne.age == "Pup" && pupOne.condition.isEmpty()) {
+                pupOneSelectionsNeeded.append("\nSelect condition for Pup One.")
+                eligible = false
+            }
+            if (pupOne.sex.isEmpty()) {
+                pupOneSelectionsNeeded.append("\nSelect a sex for Pup One.")
+                eligible = false
+            }
+            if (pupOne.numRelatives.isEmpty()) {
+                pupOneSelectionsNeeded.append("\nSelect a sex for Pup One.")
+                eligible = false
+            }
+            if (pupOne.tagEventType.isEmpty()) {
+                pupOneSelectionsNeeded.append("\nSelect a sex for Pup One.")
+                eligible = false
+            }
+        }
+        if (!eligible) {
+            ineligibleReason = pupOneSelectionsNeeded.toString()
+            return false
         }
 
+        val pupTwoSelectionsNeeded = StringBuilder()
         if (pupTwo.isStarted) {
-            if (pupTwo.age.isEmpty() ||
-                pupTwo.sex.isEmpty() ||
-                pupTwo.numRelatives.isEmpty() ||
-                pupTwo.tagEventType.isEmpty() ||
-                pupTwo.condition.isEmpty()
-            ) return false
+            if (pupTwo.age.isEmpty()) {
+                pupTwoSelectionsNeeded.append("\nSelect an age for Pup Two.")
+                eligible = false
+            }
+            if (pupTwo.age == "Pup" && pupTwo.condition.isEmpty()) {
+                pupTwoSelectionsNeeded.append("\nSelect condition for Pup Two.")
+                eligible = false
+            }
+            if (pupTwo.sex.isEmpty()) {
+                pupTwoSelectionsNeeded.append("\nSelect a sex for Pup Two.")
+                eligible = false
+            }
+            if (pupTwo.numRelatives.isEmpty()) {
+                pupTwoSelectionsNeeded.append("\nSelect a sex for Pup Two.")
+                eligible = false
+            }
+            if (pupTwo.tagEventType.isEmpty()) {
+                pupTwoSelectionsNeeded.append("\nSelect a sex for Pup Two.")
+                eligible = false
+            }
+        }
+        if (!eligible) {
+            ineligibleReason = pupOneSelectionsNeeded.toString()
+            return false
         }
 
         // All conditions passed
         return true
-    }
-
-    LaunchedEffect(
-        viewModel.uiState.observerInitials,
-        viewModel.uiState.colonyLocation,
-        primarySeal.age,
-        primarySeal.sex,
-        primarySeal.numRelatives,
-        primarySeal.tagEventType,
-        primarySeal.condition,
-        pupOne.age,
-        pupOne.sex,
-        pupOne.numRelatives,
-        pupOne.tagEventType,
-        pupOne.condition,
-        pupTwo.age,
-        pupTwo.sex,
-        pupTwo.numRelatives,
-        pupTwo.tagEventType,
-        pupTwo.condition
-    ) {
-        saveEnabled = checkSaveEnabled()
     }
 
     // validates the seal against the wedcheck seal if present
@@ -313,32 +363,6 @@ fun AddObservationLogScreen(
                         )
                     }
                 },
-                actions = {
-//                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
-//                        Icon(
-//                            imageVector = Icons.Filled.Home,
-//                            contentDescription = "Home",
-//                            modifier = Modifier.size(48.dp)
-//                        )
-//                    }
-                    val contentColor =
-                        if (primarySeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = ContentAlpha.disabled
-                        )
-                    IconButton(
-                        onClick = {
-                            saveAction()
-                        },
-                        enabled = saveEnabled
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Save,
-                            contentDescription = "Save Seal Entry",
-                            modifier = Modifier.size(48.dp), // Change the size here
-                            tint = if (saveEnabled) contentColor else Color.Gray // Adjust tint based on saveEnabled
-                        )
-                    }
-                },
             )
         }
     ) { innerPadding ->
@@ -349,6 +373,21 @@ fun AddObservationLogScreen(
         ) {
             // METADATA SECTION
 
+            Box() {
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp)
+                ) {
+                    Text(
+                        text = "GPS Coordinates:",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+            }
+
             // GPS Location & Updated Timestamp
             Row(
                 modifier = Modifier
@@ -357,7 +396,7 @@ fun AddObservationLogScreen(
             ) {
                 Box() {
                     Row(
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -366,8 +405,9 @@ fun AddObservationLogScreen(
                                 Icons.Filled.LocationOn,
                                 contentDescription = null,
                                 tint = Color(0xFF1D9C06),
-                                modifier = Modifier.padding(start = 10.dp, end = 10.dp)
-                                        .size(48.dp), // Change the size here
+                                modifier = Modifier
+                                    .padding(start = 10.dp, end = 10.dp)
+                                    .size(48.dp), // Change the size here
 
                             )
                         } else {
@@ -375,7 +415,8 @@ fun AddObservationLogScreen(
                                 Icons.Filled.LocationOff,
                                 contentDescription = null,
                                 tint = Color.Red,
-                                modifier = Modifier.padding(end = 10.dp)
+                                modifier = Modifier
+                                    .padding(start = 10.dp, end = 10.dp)
                                     .size(48.dp), // Change the size here
                             )
                         }
@@ -383,6 +424,33 @@ fun AddObservationLogScreen(
                             text = coordinates,
                             style = MaterialTheme.typography.titleMedium,
                         )
+                        val contentColor =
+                            if (primarySeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = ContentAlpha.disabled
+                            )
+
+                        ExtendedFloatingActionButton(
+                            modifier = Modifier
+                                .padding(start = 30.dp, end = 20.dp)
+                                .fillMaxWidth(),
+                            onClick = {
+                                if (checkSaveEnabled()) {
+                                    saveAction()
+                                } else {
+                                    showIneligibleDialog = true
+                                }
+                            },
+                            icon = { Icon(Icons.Filled.Save, "Save Seal") },
+                            text = {
+                                Text(
+                                    text = "Save",
+                                    fontSize = 18.sp, // Set your desired text size here
+                                    fontWeight = FontWeight.Bold, // Optional: set the font weight
+                                    color = Color.Black // Optional: set the text color
+                                )
+                            }
+                        )
+
                     }
                 }
             }
@@ -394,9 +462,11 @@ fun AddObservationLogScreen(
             ) {
                 Box() {
                     Row(
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, top = 20.dp)
                     ) {
                         Text(
                             text = "Colony:  $colony",
@@ -487,6 +557,15 @@ fun AddObservationLogScreen(
 
                     viewModel.createLog(primarySeal, pupOne, pupTwo)
                 },
+            )
+        }
+
+        if (showIneligibleDialog) {
+            IneligibleForSaveDialog(
+                ineligibleReason,
+                onDismissRequest = {
+                    showIneligibleDialog = false
+                }
             )
         }
     }
