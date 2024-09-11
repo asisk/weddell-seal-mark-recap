@@ -32,6 +32,7 @@ fun TagIDOutlinedTextField(
     labelText: String,
     placeholderText: String,
     errorMessage: String,
+    keyboardType: KeyboardType,
     onValueChangeDo: (String) -> Unit,
     onClearValueDo: () -> Unit
 ) {
@@ -64,14 +65,14 @@ fun TagIDOutlinedTextField(
         placeholder = { Text(placeholderText) },
         textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
+            focusedBorderColor = if (isError && errorMessage != "") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = if (isError && errorMessage != "") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
                 alpha = ContentAlpha.disabled
             ),
         ),
         singleLine = true,
         keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Number,
+            keyboardType = keyboardType,
         ),
         keyboardActions = KeyboardActions(
             onDone = {
@@ -91,7 +92,7 @@ fun TagIDOutlinedTextField(
         supportingText = {
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "Tag Number is 3 or 4 digits",
+                text = errorMessage,
                 textAlign = TextAlign.End,
             )
         }

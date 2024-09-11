@@ -358,18 +358,18 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun clearOldTags(sealName: String) {
+    fun clearOldTag(sealName: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(oldTagIdOne = "", oldTagIdTwo = "")
+                primarySeal = primarySeal.copy(oldTagIdOne = "")
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(oldTagIdOne = "", oldTagIdTwo = "")
+                pupOne = pupOne.copy(oldTagIdOne = "")
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(oldTagIdOne = "", oldTagIdTwo = "")
+                pupTwo = pupTwo.copy(oldTagIdOne = "")
             }
         }
     }
@@ -760,29 +760,20 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateOldTags(seal: Seal) {
+    fun updateOldTag(seal: Seal, oldTagIdOne: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(
-                    oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true
-                )
-                updateNotebookEntry(primarySeal)
+                primarySeal = primarySeal.copy(oldTagIdOne = seal.tagIdOne, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(
-                    oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true
-                )
-                updateNotebookEntry(pupOne)
+                pupOne = pupOne.copy(oldTagIdOne = seal.tagIdOne, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    oldTagIdOne = seal.tagIdOne, oldTagIdTwo = seal.tagIdTwo, isStarted = true
-                )
+                pupTwo = pupTwo.copy(oldTagIdOne = seal.tagIdOne, isStarted = true)
             }
         }
-
     }
 
     fun updateComment(sealName: String, input: String) {

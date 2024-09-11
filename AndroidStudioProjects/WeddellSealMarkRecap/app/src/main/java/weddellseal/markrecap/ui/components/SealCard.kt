@@ -25,6 +25,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import weddellseal.markrecap.data.Seal
@@ -77,7 +78,7 @@ fun SealCard(
                         seal.speNo == 0 || searchStr != wedCheckViewModel.wedCheckSeal.tagIdOne
 
                     // reassign the search string in the case of an event type of retag, because in that case we should not respond to changes in tagIdOne
-                    if (seal.tagEventType != "Retag") {
+                    if (seal.tagEventType == "Retag") {
                         searchStr =
                             seal.oldTagIdOne // tags are stored in the database with one alpha, so we can just use the full tag id value
                         doSearch =
@@ -496,155 +497,12 @@ fun SealCard(
             }
         }
     }
-    // OLD TAG ID
-    if (isRetag || seal.isWedCheck) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-                    .padding(end = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "Old Tag ID One",
-                        style = MaterialTheme.typography.titleLarge
-                    )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+    // TAG FIELDS (old tag id row - label & field, reason for retag row - label & dropdown, tag id row - label, field & alpha buttons)
+    if (!isNoTagsChecked) { // None of the tag fields should show if the No Tag checkbox has been selected
 
-                    //TODO, this needs to be an editable field
-                    Text(text = oldTagIDOneVal)
-                }
-            }
-        }
-    }
-
-    // REASON FOR RETAG
-    if (isRetag) {
-        val retagOptions =
-            listOf(
-                "None",
-                "1 of 4",
-                "2 of 4",
-                "3 of 4",
-                "Worn",
-                "Broken",
-                "Other"
-            )
-
-        Row(
-            modifier = Modifier
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxWidth(.4f)
-                ) {
-                    Text(
-                        "Reason for Retag",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(.5f)
-                ) {
-                    DropdownField(retagOptions, seal.reasonForRetag) { newText ->
-                        viewModel.updateRetagReason(
-                            seal.name,
-                            newText
-                        )
-                    }
-                }
-            }
-        }
-
-        //TAG ID NEW
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-                    .padding(end = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "New \n" +
-                                "Tag ID",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-
-                    TagIDOutlinedTextField(
-                        value = tagIDVal,
-                        labelText = "Number",
-                        placeholderText = "Enter Tag Number",
-                        errorMessage = "Tag numbers should be 3 or 4 digits long.",
-                        onValueChangeDo = {
-                            // save the input to the model
-                            viewModel.updateTagOneNumber(seal, it)
-                        },
-                        onClearValueDo = {
-                            viewModel.clearTag(seal)
-                        }
-                    )
-                }
-            }
-
-            //TAG ID NEW ALPHA BUTTONS
-            val buttonListAlpha = listOf("A", "C", "D")
-
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-                    .padding(start = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    SingleSelectTagAlphaButtonGroup(
-                        buttonListAlpha,
-                        seal.tagOneAlpha
-                    ) { newText ->
-                        viewModel.updateTagOneAlpha(seal, newText)
-                    }
-                }
-            }
-        }
-    }
-
-    //TODO, wondering about combining this and differentiating for retag within the composables that matter, instead of repeating the whole row
-    if (!isNoTagsChecked) {
-        if (!isRetag && !seal.isWedCheck) { //TODO, annotate why I'm checking for isWedCheck...can't remember
-            //TAG ID
+        // OLD TAG ID
+        if (isRetag || seal.isWedCheck) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -662,52 +520,150 @@ fun SealCard(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-
                         Text(
-                            "Tag ID",
+                            "Old Tag",
                             style = MaterialTheme.typography.titleLarge
                         )
 
-                        // TAG ID
+                        Spacer(modifier = Modifier.width(8.dp))
+
                         TagIDOutlinedTextField(
-                            value = tagIDVal,
-                            labelText = "Number",
-                            placeholderText = "Enter Tag Number",
-                            errorMessage = "Tag numbers should be 3 or 4 digits long.",
+                            value = oldTagIDOneVal,
+                            labelText = "Old Tag ID",
+                            placeholderText = "Enter Old Tag ID",
+                            errorMessage = "",
+                            keyboardType = KeyboardType.Text,
                             onValueChangeDo = {
                                 // save the input to the model
-                                viewModel.updateTagOneNumber(seal, it)
+                                viewModel.updateOldTag(seal, it)
                             },
                             onClearValueDo = {
-                                viewModel.clearTag(seal)
-                                if (seal.tagEventType != "Retag") {
-                                    viewModel.clearSpeNo(seal)
-                                }
-                                wedCheckViewModel.resetState()
+                                viewModel.clearOldTag(seal.name)
                             }
                         )
                     }
                 }
+            }
+        }
 
-                //TAG ALPHA BUTTONS
-                val buttonListAlpha = listOf("A", "C", "D")
+        // REASON FOR RETAG
+        if (isRetag) {
+            val retagOptions =
+                listOf(
+                    "None",
+                    "1 of 4",
+                    "2 of 4",
+                    "3 of 4",
+                    "Worn",
+                    "Broken",
+                    "Other"
+                )
 
-                Box(
-                    modifier = Modifier
-                        .weight(.4f)
-                        .padding(start = 8.dp)
+            Row(
+                modifier = Modifier
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically,
+                    Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .padding(4.dp)
+                            .fillMaxWidth(.4f)
                     ) {
-                        SingleSelectTagAlphaButtonGroup(
-                            buttonListAlpha,
-                            seal.tagOneAlpha
-                        ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
+                        Text(
+                            "Reason for Retag",
+                            style = MaterialTheme.typography.titleLarge
+                        )
                     }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(.5f)
+                    ) {
+                        DropdownField(retagOptions, seal.reasonForRetag) { newText ->
+                            viewModel.updateRetagReason(
+                                seal.name,
+                                newText
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        //TAG ID
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val errMessage = "Tag numbers should be 3 or 4 digits long."
+                    val fieldLabel = if (isRetag) "New\nTag ID" else "Tag ID"
+
+                    Text(
+                        fieldLabel,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    TagIDOutlinedTextField(
+                        value = tagIDVal,
+                        labelText = "Number",
+                        placeholderText = "Enter Tag Number",
+                        errorMessage = errMessage,
+                        keyboardType = KeyboardType.Number,
+                        onValueChangeDo = {
+                            // save the input to the model
+                            viewModel.updateTagOneNumber(seal, it)
+                        },
+                        onClearValueDo = {
+                            viewModel.clearTag(seal)
+
+                            if (seal.tagEventType != "Retag") {
+                                viewModel.clearSpeNo(seal)
+                            }
+
+                            // Not Retag or NoTag
+                            if (!isRetag && !seal.isWedCheck) {
+                                wedCheckViewModel.resetState() // TODO, why are we resetting the state here?
+                            }
+                        }
+                    )
+                }
+            }
+
+            //TAG ID ALPHA BUTTONS
+            val buttonListAlpha = listOf("A", "C", "D")
+
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(start = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    SingleSelectTagAlphaButtonGroup(
+                        buttonListAlpha,
+                        seal.tagOneAlpha
+                    ) { newText -> viewModel.updateTagOneAlpha(seal, newText) }
                 }
             }
         }
@@ -825,7 +781,7 @@ fun SealCard(
         }
     }
 
-    // COMMENT && OLD TAG MARKS
+// COMMENT && OLD TAG MARKS
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -889,7 +845,7 @@ fun SealCard(
         }
     }
 
-    // WEIGHT FOR PUPS ONLY
+// WEIGHT FOR PUPS ONLY
     if (seal.age == "Pup") {
         Row(
             modifier = Modifier
