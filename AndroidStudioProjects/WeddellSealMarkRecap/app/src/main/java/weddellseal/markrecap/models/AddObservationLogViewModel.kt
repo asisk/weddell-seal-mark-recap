@@ -475,7 +475,6 @@ class AddObservationLogViewModel(
                     tagTwoAlpha = "",
                     tagOneNumber = "",
                     tagTwoNumber = "",
-                    tagEventType = ""
                 )
                 updateNotebookEntry(primarySeal)
             }
@@ -490,7 +489,6 @@ class AddObservationLogViewModel(
                     tagTwoAlpha = "",
                     tagOneNumber = "",
                     tagTwoNumber = "",
-                    tagEventType = ""
                 )
                 updateNotebookEntry(pupOne)
             }
@@ -505,7 +503,6 @@ class AddObservationLogViewModel(
                     tagTwoAlpha = "",
                     tagOneNumber = "",
                     tagTwoNumber = "",
-                    tagEventType = ""
                 )
                 updateNotebookEntry(pupTwo)
             }
