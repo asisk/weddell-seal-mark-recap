@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 fun CensusButtonGroupSquare(
     txtOptions: List<String>,
     valueInModel: String,
-    onValChangeDo: (String) -> Unit
+    onValChangeDo: (String) -> Unit,
 ) {
     var selectedButton by remember { mutableStateOf(valueInModel) }
     val focusManager = LocalFocusManager.current
@@ -35,9 +35,8 @@ fun CensusButtonGroupSquare(
         ElevatedButton(
             onClick = {
                 focusManager.clearFocus()
-
-                selectedButton = option
-                onValChangeDo(option) // callback when the button is clicked
+                onValChangeDo(option)
+                selectedButton = option // select the button
             },
             shape = RoundedCornerShape(8.dp), // Slightly rounded corners
             colors = ButtonDefaults.elevatedButtonColors(

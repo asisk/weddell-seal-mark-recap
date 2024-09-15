@@ -9,10 +9,8 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
-import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -28,7 +26,6 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
-import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.data.SupportingDataRepository
@@ -36,9 +33,7 @@ import weddellseal.markrecap.data.WedCheckSeal
 import weddellseal.markrecap.ui.utils.buildLogEntry
 import weddellseal.markrecap.ui.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.sealValidation
-import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -62,7 +57,8 @@ class AddObservationLogViewModel(
         //val hasCameraAccess: Boolean,
         val isSaving: Boolean = false,
         val isSaved: Boolean = false,
-        val date: String,
+        val isCensusMode: Boolean = false,
+        val isPrefilled: Boolean = false,
         val hasGPS: Boolean = false,
         var hasGooglePlay: Int,
         val currentLocation: String = "current location empty",
@@ -74,7 +70,6 @@ class AddObservationLogViewModel(
         val errorMessage: String = "",
         val season: String = "",
         val yearMonthDay: String = "",
-        val time: String = "",
         val deviceID: String,
         val observerInitials: String = "Select an option",
         val censusNumber: String = "Select an option",
@@ -89,12 +84,10 @@ class AddObservationLogViewModel(
             hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
             hasGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER),
             hasGooglePlay = 999,
-            date = SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss aaa z", Locale.US
-            ).format(System.currentTimeMillis()),
+//            date = SimpleDateFormat(
+//                "dd.MM.yyyy HH:mm:ss aaa z", Locale.US
+//            ).format(System.currentTimeMillis()),
             season = getCurrentYear().toString(),
-            yearMonthDay = getCurrentDateFormatted(),
-            time = getCurrentTimeFormatted(),
             deviceID = getDeviceName(context),
         )
     )
@@ -137,21 +130,13 @@ class AddObservationLogViewModel(
         return LocalDate.now().year
     }
 
-    private fun getCurrentDateFormatted(): String {
-        val currentDate = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        return currentDate.format(formatter)
-    }
-
-    private fun getCurrentTimeFormatted(): String {
-        val currentTime = LocalTime.now()
-        val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
-        return currentTime.format(formatter)
-    }
-
-    private fun getCoordinatesLastUpdated() : String {
-        val currentDateTime = ZonedDateTime.now(ZoneId.systemDefault()) // Get the current date and time with timezone
-        val formatter = DateTimeFormatter.ofPattern("MM.dd.yyyy HH:mm:ss a z", Locale.US) // Define the desired format
+    private fun getCoordinatesLastUpdated(): String {
+        val currentDateTime =
+            ZonedDateTime.now(ZoneId.systemDefault()) // Get the current date and time with timezone
+        val formatter = DateTimeFormatter.ofPattern(
+            "MM.dd.yyyy HH:mm:ss a z",
+            Locale.US
+        ) // Define the desired format
         return currentDateTime.format(formatter) // Format the current date and time
     }
 
@@ -187,113 +172,6 @@ class AddObservationLogViewModel(
         )
     }
 
-    // validate is called when the observer attempts to save an entry
-    // the model state is used to prompt the user to review and confirm their entry if validation fails
-    // validation errors are saved to the seal state for inclusion in the output file
-    fun validate(seal: Seal) {
-        // reset the model state values that help determine whether the seal entry is valid
-        uiState =
-            uiState.copy(validationFailureReason = "", isValidated = false, validEntry = false)
-
-        // set the name used in the validation string to match the UI display
-        var sealName = seal.name
-        if (seal.name == "primary") {
-            sealName = "Seal"
-        }
-
-        // if the event type is marked or retag, the seal must have a speNo(matching WedCheck record)
-        val wedCheckSeal =
-            getWedCheckSeal(seal.speNo) // attempt to locate the WedCheck seal in the map stored in the model
-
-        // use the utility method to validate the seal
-        val (sealValid, validationErrors) = sealValidation(seal, getCurrentYear(), wedCheckSeal)
-
-        // update the model state with the validation state
-        if (sealValid) {
-            uiState = uiState.copy(isValidated = true, validEntry = true)
-        } else {
-            val invalidEntrySB = StringBuilder()
-            invalidEntrySB.append("$sealName failed validation!")
-            invalidEntrySB.append(uiState.validationFailureReason)
-            invalidEntrySB.append("\n")
-            invalidEntrySB.append(validationErrors)
-            uiState = uiState.copy(
-                validationFailureReason = invalidEntrySB.toString(),
-                isValidated = true
-            )
-        }
-
-        // update the seal with the validation state
-        when (seal.name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(
-                    isValid = sealValid,
-                    isValidated = true,
-                    reasonNotValid = validationErrors
-                )
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(
-                    isValid = sealValid,
-                    isValidated = true,
-                    reasonNotValid = validationErrors
-                )
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    isValid = sealValid,
-                    isValidated = true,
-                    reasonNotValid = validationErrors
-                )
-            }
-        }
-    }
-
-    fun flagSealForReview(name: String) {
-        when (name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(flaggedForReview = true)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(flaggedForReview = true)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(flaggedForReview = true)
-            }
-        }
-    }
-
-    // called after navigation command from the summary screen to prevent the summary screen from
-    // preemptively navigating back to the observation screen
-    fun resetSaved() {
-        // reset the values in the model once the records are save successfully
-        wedCheckSealMap = mutableMapOf()
-
-        uiState = uiState.copy(
-            validationFailureReason = "",
-            isValidated = false,
-            validEntry = false,
-            isSaved = false,
-            isSaving = false,
-            isError = false,
-            errorMessage = ""
-        )
-
-        primarySeal = Seal(
-            name = "primary", isStarted = false
-        )
-        pupOne = Seal(
-            name = "pupOne", age = "Pup", isStarted = false
-        )
-        pupTwo = Seal(
-            name = "pupTwo", age = "Pup", isStarted = false
-        )
-    }
-
     fun updateColonySelection(observationSiteSelected: String) {
         uiState = uiState.copy(colonyLocation = observationSiteSelected)
     }
@@ -304,6 +182,10 @@ class AddObservationLogViewModel(
 
     fun updateCensusNumber(censusNumber: String) {
         uiState = uiState.copy(censusNumber = censusNumber)
+    }
+
+    fun updateIsObservationMode(observationMode: Boolean) {
+        uiState = uiState.copy(isCensusMode = observationMode)
     }
 
     fun updateCondition(sealName: String, input: String) {
@@ -361,91 +243,55 @@ class AddObservationLogViewModel(
     fun clearOldTag(sealName: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(oldTagIdOne = "")
+                primarySeal = primarySeal.copy(oldTagId = "")
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(oldTagIdOne = "")
+                pupOne = pupOne.copy(oldTagId = "")
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(oldTagIdOne = "")
+                pupTwo = pupTwo.copy(oldTagId = "")
             }
         }
-    }
-
-    fun clearTagOne(seal: Seal) {
-        updateTagOneNumber(seal, "")
-        updateTagOneAlpha(seal, "")
-        updateTagIdOne(seal)
-
-        updateNotebookEntry(seal)
-    }
-
-    fun clearTagTwo(seal: Seal) {
-        updateTagTwoNumber(seal, "")
-        updateTagTwoAlpha(seal, "")
-        updateTagIdTwo(seal)
-
-        updateNotebookEntry(seal)
     }
 
     fun clearTag(seal: Seal) {
         when (seal.name) {
             "primary" -> {
                 primarySeal = primarySeal.copy(
-                    tagIdOne = "",
-                    tagIdTwo = "",
-                    tagOneAlpha = "",
-                    tagTwoAlpha = "",
-                    tagOneNumber = "",
-                    tagTwoNumber = ""
+                    tagAlpha = "",
+                    tagNumber = "",
                 )
                 updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(
-                    tagIdOne = "",
-                    tagIdTwo = "",
-                    tagOneAlpha = "",
-                    tagTwoAlpha = "",
-                    tagOneNumber = "",
-                    tagTwoNumber = ""
+                    tagAlpha = "",
+                    tagNumber = "",
                 )
                 updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(
-                    tagIdOne = "",
-                    tagIdTwo = "",
-                    tagOneAlpha = "",
-                    tagTwoAlpha = "",
-                    tagOneNumber = "",
-                    tagTwoNumber = ""
+                    tagAlpha = "",
+                    tagNumber = "",
                 )
                 updateNotebookEntry(pupTwo)
             }
         }
     }
 
-    fun revertTagID(sealName: String, tagId: String) {
-        when (sealName) {
-            "primary" -> {
-                primarySeal =
-                    primarySeal.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagIdOne = tagId, oldTagIdOne = "", oldTagIdTwo = "")
-            }
+    fun updateSpeNoForTagID(seal: Seal, wedCheckViewModel: WedCheckViewModel, searchStr: String) {
+        if (!wedCheckViewModel.uiState.value.isSearching) {
+            clearSpeNo(seal)
+            wedCheckViewModel.resetState()
+            wedCheckViewModel.findSealbyTagID(searchStr)
         }
     }
+
 
     fun clearSpeNo(seal: Seal) {
         when (seal.name) {
@@ -469,12 +315,8 @@ class AddObservationLogViewModel(
                 primarySeal = primarySeal.copy(
                     isNoTag = true,
                     numTags = "",
-                    tagIdOne = "",
-                    tagIdTwo = "",
-                    tagOneAlpha = "",
-                    tagTwoAlpha = "",
-                    tagOneNumber = "",
-                    tagTwoNumber = "",
+                    tagAlpha = "",
+                    tagNumber = "",
                 )
                 updateNotebookEntry(primarySeal)
             }
@@ -483,12 +325,8 @@ class AddObservationLogViewModel(
                 pupOne = pupOne.copy(
                     isNoTag = true,
                     numTags = "",
-                    tagIdOne = "",
-                    tagIdTwo = "",
-                    tagOneAlpha = "",
-                    tagTwoAlpha = "",
-                    tagOneNumber = "",
-                    tagTwoNumber = "",
+                    tagAlpha = "",
+                    tagNumber = "",
                 )
                 updateNotebookEntry(pupOne)
             }
@@ -497,12 +335,8 @@ class AddObservationLogViewModel(
                 pupTwo = pupTwo.copy(
                     isNoTag = true,
                     numTags = "",
-                    tagIdOne = "",
-                    tagIdTwo = "",
-                    tagOneAlpha = "",
-                    tagTwoAlpha = "",
-                    tagOneNumber = "",
-                    tagTwoNumber = "",
+                    tagAlpha = "",
+                    tagNumber = "",
                 )
                 updateNotebookEntry(pupTwo)
             }
@@ -611,133 +445,43 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateTagOneAlpha(seal: Seal, input: String) {
+    fun updateTagAlpha(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tagOneAlpha = input, isStarted = true)
-                updateTagIdOne(primarySeal)
+                primarySeal = primarySeal.copy(tagAlpha = input, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagOneAlpha = input, isStarted = true)
-                updateTagIdOne(pupOne)
+                pupOne = pupOne.copy(tagAlpha = input, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagOneAlpha = input, isStarted = true)
-                updateTagIdOne(pupTwo)
+                pupTwo = pupTwo.copy(tagAlpha = input, isStarted = true)
             }
         }
     }
 
-    fun updateTagTwoAlpha(seal: Seal, input: String) {
-        when (seal.name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(tagTwoAlpha = input, isStarted = true)
-                updateTagIdTwo(primarySeal)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagTwoAlpha = input, isStarted = true)
-                updateTagIdTwo(pupOne)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagTwoAlpha = input, isStarted = true)
-                updateTagIdTwo(pupTwo)
-            }
-        }
-    }
-
-    private fun updateTagIdOne(seal: Seal) {
-        var tagOneNumStr = ""
-        if (seal.tagOneNumber.isNotEmpty()) {
-            tagOneNumStr = seal.tagOneNumber
-        }
-
-        var tagIdStr = tagOneNumStr + seal.tagOneAlpha
-
-        val number: Int? = seal.numTags.toIntOrNull()
-        if (number != null && number > 1) {
-            tagIdStr = tagOneNumStr + seal.tagOneAlpha + seal.tagOneAlpha
+    fun updateTagNumber(seal: Seal, input: String) {
+        var tagNumber = input
+        // Function to extract numeric value
+        if (input.toIntOrNull() != null) {
+            tagNumber = input
         }
 
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tagIdOne = tagIdStr, isStarted = true)
+                primarySeal = primarySeal.copy(tagNumber = tagNumber, isStarted = true)
                 updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagIdOne = tagIdStr, isStarted = true)
+                pupOne = pupOne.copy(tagNumber = tagNumber, isStarted = true)
                 updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagIdOne = tagIdStr, isStarted = true)
+                pupTwo = pupTwo.copy(tagNumber = tagNumber, isStarted = true)
                 updateNotebookEntry(pupTwo)
-            }
-        }
-    }
-
-    private fun updateTagIdTwo(seal: Seal) {
-        var tagIdStr = seal.tagOneNumber + seal.tagOneAlpha
-        val number: Int? = seal.numTags.toIntOrNull()
-
-        if (number != null && number > 1) {
-            tagIdStr = seal.tagOneNumber + seal.tagOneAlpha + seal.tagOneAlpha
-        }
-
-        when (seal.name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(tagIdTwo = tagIdStr)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagIdTwo = tagIdStr)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagIdTwo = tagIdStr)
-            }
-        }
-    }
-
-
-    fun updateTagOneNumber(seal: Seal, input: String) {
-        when (seal.name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(tagOneNumber = input, isStarted = true)
-                updateTagIdOne(primarySeal)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagOneNumber = input, isStarted = true)
-                updateTagIdOne(pupOne)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagOneNumber = input, isStarted = true)
-                updateTagIdOne(pupTwo)
-            }
-        }
-    }
-
-    fun updateTagTwoNumber(seal: Seal, input: String) {
-        when (seal.name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(tagTwoNumber = input, isStarted = true)
-                updateTagIdTwo(primarySeal)
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(tagTwoNumber = input, isStarted = true)
-                updateTagIdTwo(pupOne)
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagTwoNumber = input, isStarted = true)
-                updateTagIdTwo(pupTwo)
             }
         }
     }
@@ -763,15 +507,15 @@ class AddObservationLogViewModel(
     fun updateOldTag(seal: Seal, oldTagIdOne: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(oldTagIdOne = seal.tagIdOne, isStarted = true)
+                primarySeal = primarySeal.copy(oldTagId = oldTagIdOne, isStarted = true)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(oldTagIdOne = seal.tagIdOne, isStarted = true)
+                pupOne = pupOne.copy(oldTagId = oldTagIdOne, isStarted = true)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(oldTagIdOne = seal.tagIdOne, isStarted = true)
+                pupTwo = pupTwo.copy(oldTagId = oldTagIdOne, isStarted = true)
             }
         }
     }
@@ -793,30 +537,20 @@ class AddObservationLogViewModel(
     }
 
     fun updateNumTags(sealName: String, input: String) {
-        val isTwoTags = input != "" && input.toInt() == 2
         when (sealName) {
             "primary" -> {
                 primarySeal = primarySeal.copy(numTags = input, isStarted = true)
-                updateTagIdOne(primarySeal)
-                if (isTwoTags) {
-                    updateTagIdTwo(primarySeal)
-                }
+                updateNotebookEntry(primarySeal)
             }
 
             "pupOne" -> {
                 pupOne = pupOne.copy(numTags = input, isStarted = true)
-                updateTagIdOne(pupOne)
-                if (isTwoTags) {
-                    updateTagIdTwo(pupOne)
-                }
+                updateNotebookEntry(pupOne)
             }
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(numTags = input, isStarted = true)
-                updateTagIdOne(pupTwo)
-                if (isTwoTags) {
-                    updateTagIdTwo(pupTwo)
-                }
+                updateNotebookEntry(pupTwo)
             }
         }
     }
@@ -859,7 +593,6 @@ class AddObservationLogViewModel(
         }
     }
 
-
     fun updateIsWeightTaken(sealName: String, checked: Boolean) {
         when (sealName) {
             "primary" -> {
@@ -876,7 +609,7 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun updateNotebookEntry(seal: Seal) {
+    private fun updateNotebookEntry(seal: Seal) {
         val notebookEntry = notebookEntryValueSeal(seal)
 
         when (seal.name) {
@@ -890,61 +623,6 @@ class AddObservationLogViewModel(
 
             "pupTwo" -> {
                 pupTwo = pupTwo.copy(notebookDataString = notebookEntry)
-            }
-        }
-    }
-
-    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
-    // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
-    fun populateSeal(wedCheckSeal: WedCheckSeal) {
-        primarySeal = primarySeal.copy(
-            speNo = wedCheckSeal.speNo,
-            age = wedCheckSeal.age,
-            sex = wedCheckSeal.sex,
-            numRelatives = wedCheckSeal.numRelatives.toString(),
-            tagIdOne = wedCheckSeal.tagIdOne,
-            tagOneNumber = wedCheckSeal.tagOneNumber,
-            tagOneAlpha = wedCheckSeal.tagOneAlpha,
-            oldTagIdOne = wedCheckSeal.tagIdOne,
-            oldTagIdTwo = wedCheckSeal.tagIdTwo,
-            tagEventType = "Marked",
-            lastPhysio = wedCheckSeal.lastPhysio,
-            colony = wedCheckSeal.colony,
-            isWedCheck = true,
-        )
-        addWedCheckSeal(wedCheckSeal)
-        updateNotebookEntry(primarySeal)
-    }
-
-    fun mapWedCheckFields(name: String, wedCheckSeal: WedCheckSeal) {
-        addWedCheckSeal(wedCheckSeal)
-
-        when (name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(
-                    speNo = wedCheckSeal.speNo,
-                    hasWedCheckSpeno = true,
-                    oldTagIdOne = wedCheckSeal.tagIdOne,
-                    oldTagIdTwo = wedCheckSeal.tagIdTwo,
-                )
-            }
-
-            "pupOne" -> {
-                pupOne = pupOne.copy(
-                    speNo = wedCheckSeal.speNo,
-                    hasWedCheckSpeno = true,
-                    oldTagIdOne = wedCheckSeal.tagIdOne,
-                    oldTagIdTwo = wedCheckSeal.tagIdTwo,
-                )
-            }
-
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    speNo = wedCheckSeal.speNo,
-                    hasWedCheckSpeno = true,
-                    oldTagIdOne = wedCheckSeal.tagIdOne,
-                    oldTagIdTwo = wedCheckSeal.tagIdTwo,
-                )
             }
         }
     }
@@ -1013,7 +691,7 @@ class AddObservationLogViewModel(
         updateNotebookEntry(pupTwo)
     }
 
-    fun removePups() {
+    private fun removePups() {
         //called when primary seal number of relatives is set to zero
         pupOne = Seal(
             name = "pupOne", age = "Pup", isStarted = false
@@ -1021,10 +699,6 @@ class AddObservationLogViewModel(
         pupTwo = Seal(
             name = "pupTwo", age = "Pup", isStarted = false
         )
-    }
-
-    fun isValid(): Boolean {
-        return !uiState.isSaving
     }
 
     fun hasPermission(permission: String): Boolean {
@@ -1047,7 +721,82 @@ class AddObservationLogViewModel(
             }
         }
     }
-// endregion
+
+    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
+    // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
+    fun populateSeal(wedCheckSeal: WedCheckSeal) {
+        // advance the age based on the last seen season
+        val currentYear = getCurrentYear()
+        var sealAgeAdvanced = "Adult"
+        when (wedCheckSeal.lastSeenSeason) {
+            currentYear -> { // seal last seen this year
+                // Age class CANNOT change for seals seen twice in a season
+                sealAgeAdvanced = wedCheckSeal.age
+            }
+
+            currentYear - 1 -> { // seal last seen last year
+                // Age class must advance for seals seen last year
+                val expectedAge = when (wedCheckSeal.age) {
+                    "Pup" -> "Yearling"
+                    "Yearling" -> "Adult"
+                    else -> "Adult"
+                }
+
+                sealAgeAdvanced = expectedAge
+            }
+
+            currentYear - 2 -> { // seal last seen 2 or more years ago
+                // Age class must be Adult if seal was observed two or more years ago
+                sealAgeAdvanced = "Adult"
+            }
+        }
+
+        primarySeal = primarySeal.copy(
+            speNo = wedCheckSeal.speNo,
+            age = sealAgeAdvanced, // expecting to advance the seal age based on the last season seen
+            sex = wedCheckSeal.sex,
+            numRelatives = wedCheckSeal.numRelatives.toString(),
+            tagNumber = wedCheckSeal.tagOneNumber,
+            tagAlpha = wedCheckSeal.tagOneAlpha,
+            oldTagId = wedCheckSeal.tagIdOne,
+            tagEventType = "Marked",
+            lastPhysio = wedCheckSeal.lastPhysio,
+            colony = wedCheckSeal.colony,
+            isWedCheck = true,
+        )
+        addWedCheckSeal(wedCheckSeal)
+        updateNotebookEntry(primarySeal)
+    }
+
+    fun mapWedCheckFields(name: String, wedCheckSeal: WedCheckSeal) {
+        addWedCheckSeal(wedCheckSeal)
+
+        when (name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(
+                    speNo = wedCheckSeal.speNo,
+                    hasWedCheckSpeno = true,
+                    oldTagId = wedCheckSeal.tagIdOne,
+                )
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(
+                    speNo = wedCheckSeal.speNo,
+                    hasWedCheckSpeno = true,
+                    oldTagId = wedCheckSeal.tagIdOne,
+                )
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(
+                    speNo = wedCheckSeal.speNo,
+                    hasWedCheckSpeno = true,
+                    oldTagId = wedCheckSeal.tagIdOne,
+                )
+            }
+        }
+    }
 
     // region Location management
     @SuppressLint("MissingPermission")
@@ -1083,11 +832,65 @@ class AddObservationLogViewModel(
         }
     }
 
-    fun createLog(vararg seals: Seal) {
+    private fun getRelativesTags(sealName: String): Pair<String, String> {
+        var relOneTagId = ""
+        var relTwoTagId = ""
+        when (sealName) {
+            "primary" -> {
+                relOneTagId = pupOne.tagNumber + pupOne.tagAlpha
+                relTwoTagId = pupTwo.tagNumber + pupTwo.tagAlpha
+            }
+
+            "pupOne" -> {
+                relOneTagId = primarySeal.tagNumber + primarySeal.tagAlpha
+                relTwoTagId = pupTwo.tagNumber + pupTwo.tagAlpha
+            }
+
+            "pupTwo" -> {
+                relOneTagId = primarySeal.tagNumber + primarySeal.tagAlpha
+                relTwoTagId = pupOne.tagNumber + pupOne.tagAlpha
+            }
+        }
+        return Pair(relOneTagId, relTwoTagId)
+    }
+
+    // called after navigation command from the summary screen to prevent the summary screen from
+    // preemptively navigating back to the observation screen
+    fun resetSaved() {
+        // reset the values in the model once the records are save successfully
+        wedCheckSealMap = mutableMapOf()
+
+        uiState = uiState.copy(
+            validationFailureReason = "",
+            isValidated = false,
+            validEntry = false,
+            isSaved = false,
+            isSaving = false,
+            isError = false,
+            errorMessage = "",
+            isPrefilled = false,
+        )
+
+        primarySeal = Seal(
+            name = "primary", isStarted = false
+        )
+        pupOne = Seal(
+            name = "pupOne", age = "Pup", isStarted = false
+        )
+        pupTwo = Seal(
+            name = "pupTwo", age = "Pup", isStarted = false
+        )
+    }
+
+    fun createLog() {
+        val sealsList = listOf(primarySeal, pupOne, pupTwo)
         uiState = uiState.copy(isSaving = true, isSaved = false)
-        for (seal in seals) {
+
+        for (seal in sealsList) {
             if (seal.isStarted) {
-                val log = buildLogEntry(uiState, seal, primarySeal, pupOne, pupTwo)
+                // get the tags for this seal's relatives
+                val (relOneTag, relTwoTag) = getRelativesTags(seal.name)
+                val log = buildLogEntry(uiState, seal, relOneTag, relTwoTag)
 
                 //write an entry to the database for each seal that has valid input
                 viewModelScope.launch {
@@ -1098,5 +901,119 @@ class AddObservationLogViewModel(
             }
         }
         uiState = uiState.copy(isSaving = false)
+    }
+
+    // validate is called when the observer saves an entry
+    // the model state is used to prompt the user to review and confirm their entry if validation fails
+    // validation errors are saved to the seal state for inclusion in the output file
+    fun validate(seal: Seal) {
+        // reset the model state values that help determine whether the seal entry is valid
+        uiState =
+            uiState.copy(validationFailureReason = "", isValidated = false, validEntry = false)
+
+        // set the name used in the validation string to match the UI display
+        var sealName = seal.name
+        if (seal.name == "primary") {
+            sealName = "Seal"
+        }
+
+        // if the event type is marked or retag, the seal must have a speNo(matching WedCheck record)
+        val wedCheckSeal =
+            getWedCheckSeal(seal.speNo) // attempt to locate the WedCheck seal in the map stored in the model
+
+        // use the utility method to validate the seal
+        val (sealValid, validationErrors) = sealValidation(seal, getCurrentYear(), wedCheckSeal)
+
+        // update the model state with the validation state
+        if (sealValid) {
+            uiState = uiState.copy(isValidated = true, validEntry = true)
+        } else {
+            val invalidEntrySB = StringBuilder()
+            invalidEntrySB.append("$sealName failed validation!")
+            invalidEntrySB.append(uiState.validationFailureReason)
+            invalidEntrySB.append("\n")
+            invalidEntrySB.append(validationErrors)
+            uiState = uiState.copy(
+                validationFailureReason = invalidEntrySB.toString(),
+                isValidated = true
+            )
+        }
+
+        // update the seal with the validation state
+        when (seal.name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(
+                    isValid = sealValid,
+                    isValidated = true,
+                    reasonNotValid = validationErrors
+                )
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(
+                    isValid = sealValid,
+                    isValidated = true,
+                    reasonNotValid = validationErrors
+                )
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(
+                    isValid = sealValid,
+                    isValidated = true,
+                    reasonNotValid = validationErrors
+                )
+            }
+        }
+    }
+
+    fun flagSealForReview(name: String) {
+        when (name) {
+            "primary" -> {
+                primarySeal = primarySeal.copy(flaggedForReview = true)
+            }
+
+            "pupOne" -> {
+                pupOne = pupOne.copy(flaggedForReview = true)
+            }
+
+            "pupTwo" -> {
+                pupTwo = pupTwo.copy(flaggedForReview = true)
+            }
+        }
+    }
+
+    fun prefillSingleMale() {
+        primarySeal = primarySeal.copy(
+            age = "Adult",
+            sex = "Male",
+            isStarted = true
+        )
+        uiState = uiState.copy(isPrefilled = true)
+    }
+
+    fun prefillSingleFemale() {
+        primarySeal = primarySeal.copy(
+            age = "Adult",
+            sex = "Female",
+            numRelatives = "0",
+            isStarted = true
+        )
+        uiState = uiState.copy(isPrefilled = true)
+    }
+
+    fun prefillMomAndPup() {
+        primarySeal = primarySeal.copy(
+            age = "Adult",
+            sex = "Female",
+            numRelatives = "1",
+            isStarted = true
+        )
+        pupOne = pupOne.copy(numRelatives = "1", isStarted = true)
+        uiState = uiState.copy(isPrefilled = true)
+    }
+
+    fun clearCensus() {
+        uiState = uiState.copy(censusNumber = "Select an option")
     }
 }

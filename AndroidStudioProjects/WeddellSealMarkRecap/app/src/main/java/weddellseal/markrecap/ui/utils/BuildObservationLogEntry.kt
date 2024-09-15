@@ -7,16 +7,15 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 fun buildLogEntry(
     uiState: AddObservationLogViewModel.UiState,
     seal: Seal,
-    primarySeal: Seal,
-    pupOne: Seal,
-    pupTwo: Seal
+    relativeOneTag: String,
+    relativeTwoTag: String,
 ): ObservationLogEntry {
-    var censusNumber = ""
+    var censusNumber = "0"
     if (uiState.censusNumber != "Select an option") {
         censusNumber = uiState.censusNumber
     }
 
-    var observers = ""
+    var observers = "Not Selected"
     if (uiState.observerInitials != "Select an option") {
         observers = uiState.observerInitials
     }
@@ -31,84 +30,77 @@ fun buildLogEntry(
         sex = seal.sex[0].toString()
     }
 
-    var numRels = seal.numRelatives
-
-    var tagIdOne = seal.tagOneNumber + seal.tagOneAlpha
-    var tagIdTwo = "NoTag"
-    var numberOfTags = seal.numTags.toIntOrNull()
-    if (numberOfTags != null && numberOfTags == 2) {
-        tagIdOne = seal.tagOneNumber + seal.tagOneAlpha
-        tagIdTwo = seal.tagTwoNumber + seal.tagTwoAlpha
-    }
-
-    var relTwoTagId = ""
-    var relOneTagId = ""
-    when (seal.name) {
-        "primary" -> {
-            relOneTagId = pupOne.tagIdOne
-            relTwoTagId = pupTwo.tagIdOne
-        }
-
-        "pupOne" -> {
-            relOneTagId = primarySeal.tagIdOne
-            relTwoTagId = pupTwo.tagIdOne
-        }
-
-        "pupTwo" -> {
-            relOneTagId = primarySeal.tagIdOne
-            relTwoTagId = pupOne.tagIdOne
-        }
-    }
+    val numRels = seal.numRelatives
 
     var eventType = ""
+    val numberOfTags = seal.numTags.toIntOrNull()
+    val isTwoTags = numberOfTags != null && numberOfTags == 2
+    var tagIdOne = seal.tagNumber + seal.tagAlpha
+    var tagIdTwo = "NoTag"
     var tagOneIndicator = ""
     var tagTwoIndicator = ""
     var oldTagOne = ""
     var oldTagTwo = ""
-    if (seal.tagEventType.isNotEmpty()) {
+    // if NoTag is selected, both tag columns should be NoTag, and event should be Marked
+    if (seal.isNoTag) {
+        eventType = "M"
+        tagIdOne = "NoTag"
+    } else if (seal.tagEventType.isNotEmpty()) {
         eventType = when (seal.tagEventType) {
             "Marked" -> {
+                if (isTwoTags) {
+                    tagIdTwo = tagIdOne
+                }
+
+                // value for the event type of Marked
                 "M"
             }
 
             "New" -> {
                 tagOneIndicator = "+"
-                val number: Int? = seal.numTags.toIntOrNull()
-                if (number != null && number > 1) { // this is the definition for two tags
+
+                if (isTwoTags) {
+                    tagIdTwo = tagIdOne
                     tagTwoIndicator = "+"
                 }
+
+                // value for the event type of New
                 "N"
             }
 
             "Retag" -> {
-                oldTagOne = seal.oldTagIdOne
-                oldTagTwo = seal.oldTagIdTwo
                 tagOneIndicator = "+"
-                val number: Int? = seal.numTags.toIntOrNull()
-                if (number != null && number > 1) { // this is the definition for two tags
+
+                if (isTwoTags) {
+                    tagIdTwo = tagIdOne
                     tagTwoIndicator = "+"
                 }
+
+                oldTagOne = seal.oldTagId
+
+                // old tag one is only populated when certain reasons for retagging are selected
+                if (seal.reasonForRetag == "1 of 4" || seal.reasonForRetag == "2 of 4" || seal.reasonForRetag == "3 of 4") { // seal is missing a tag
+                    oldTagTwo = "NoTag" // the animal is missing a tag, so the second old tag field is marked as "NoTag"
+                } else {
+                    oldTagTwo = oldTagOne // if the seal is not missing a tag, ie another retag reason is selected, the second value for old tag should match the first value
+                }
+
+                // value for the event type of Retag
                 "R2"
             }
 
-            else -> {
-                ""
-            }
+            else -> {""}
         }
-    }
-
-    if (seal.isNoTag) {
-        eventType = "M"
-    }
-
-    var reasonForRetag = ""
-    if (seal.reasonForRetag != "") {
-        reasonForRetag = seal.reasonForRetag
     }
 
     var condition = ""
     if (seal.condition != "" && seal.condition != "None") {
         condition = seal.condition.last().toString()
+    }
+
+    var tissue = ""
+    if (seal.tissueTaken) {
+        tissue = "Tissue"
     }
 
     var pupWeight = ""
@@ -123,15 +115,13 @@ fun buildLogEntry(
     if (seal.oldTagMarks) {
         sb.append("old tag marks; ")
     }
+    if (seal.tagEventType == "Retag" && seal.reasonForRetag != "") {
+        sb.append("reason for retag: ${seal.reasonForRetag}; ")
+    }
     if (seal.reasonNotValid != "") {
         sb.append(seal.reasonNotValid)
     }
-    var comment = sb.append(seal.comment).toString()
-
-    var tissue = ""
-    if (seal.tissueTaken) {
-        tissue = "Tissue"
-    }
+    val comment = sb.append(seal.comment).toString()
 
     var flagged = ""
     if (seal.flaggedForReview) {
@@ -139,13 +129,12 @@ fun buildLogEntry(
     }
 
     val log = ObservationLogEntry(
-        // passing zero, but Room entity will autopopulate the id
-        id = 0,
+        id = 0, // passing zero, but Room entity will autopopulate the id
         deviceID = uiState.deviceID,
         season = uiState.season,
         speno = seal.speNo.toString(),
-        date = uiState.yearMonthDay, // date format: yyyy-MM-dd
-        time = uiState.time, // time format: hh:mm:ss
+        date = getCurrentDateFormatted(), // date format: yyyy-MM-dd
+        time = getCurrentTimeFormatted(), // time format: hh:mm:ss
         censusID = censusNumber,
         latitude = uiState.latitude,  // example -77.73004, could also be 4 decimal precision
         longitude = uiState.longitude, // example 166.7941, could also be 2 decimal precision
@@ -158,13 +147,12 @@ fun buildLogEntry(
         tagOneIndicator = tagOneIndicator,
         tagIDTwo = tagIdTwo,
         tagTwoIndicator = tagTwoIndicator,
-        relativeTagIDOne = relOneTagId,
-        relativeTagIDTwo = relTwoTagId,
+        relativeTagIDOne = relativeOneTag,
+        relativeTagIDTwo = relativeTwoTag,
         sealCondition = condition,
         observerInitials = observers,
         flaggedEntry = flagged,
         tagEvent = eventType,
-        reasonForRetag = reasonForRetag,
         weight = pupWeight,
         tissueSampled = tissue,
         comments = comment,

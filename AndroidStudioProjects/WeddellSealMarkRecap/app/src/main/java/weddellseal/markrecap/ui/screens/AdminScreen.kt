@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -236,7 +237,7 @@ fun AdminScreen(
     }
 
     Scaffold(
-// region UI - Top Bar & Action Buttons
+    // region UI - Top Bar & Action Buttons
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -267,13 +268,6 @@ fun AdminScreen(
                     }
                 },
                 actions = {
-//                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
-//                        Icon(
-//                            imageVector = Icons.Filled.Home,
-//                            contentDescription = "Home",
-//                            modifier = Modifier.size(48.dp)
-//                        )
-//                    }
                     IconButton(
                         onClick = {
                             val dateTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
@@ -286,7 +280,8 @@ fun AdminScreen(
                         Image(
                             painter = painterResource(id = R.drawable.export_notes),
                             null,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp),
+                            colorFilter = ColorFilter.tint(Color.DarkGray) // Change the color here
                         )
                     }
                 },
@@ -433,7 +428,6 @@ fun AdminScreen(
                             )
                         }
                     )
-
 
                     FileLoadingView(
                         isLoading = uiStateWedCheck.isWedCheckLoading,

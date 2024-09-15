@@ -34,7 +34,6 @@ data class ObservationLogEntry(
     @ColumnInfo(name = "observer_initials") val observerInitials: String,
     @ColumnInfo(name = "flagged_entry") val flaggedEntry: String,
     @ColumnInfo(name = "tag_event") val tagEvent: String,
-    @ColumnInfo(name = "retag_reason") val reasonForRetag: String,
     @ColumnInfo(name = "weight") val weight: String,
     @ColumnInfo(name = "tissue_sampled") val tissueSampled: String,
     @ColumnInfo(name = "comments") val comments: String,

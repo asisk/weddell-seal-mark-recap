@@ -19,6 +19,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
@@ -34,29 +37,33 @@ fun TagIDOutlinedTextField(
     errorMessage: String,
     keyboardType: KeyboardType,
     onValueChangeDo: (String) -> Unit,
-    onClearValueDo: () -> Unit
+    onClearValueDo: () -> Unit,
+    onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
 ) {
     var text by remember { mutableStateOf(value) }
+//    var isError by remember { mutableStateOf(false) }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val focusManager =
         LocalFocusManager.current // State to manage whether the text field should lose focus
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    var isError by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() } // FocusRequester to manage focus programmatically
+    var isFocused by remember { mutableStateOf(false) } // Track focus state
 
     LaunchedEffect(value) {
         text = value
+    }
+
+    // Detect focus changes and trigger the callback
+    LaunchedEffect(isFocused) {
+        onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
     }
 
     OutlinedTextField(
         value = text,
         onValueChange = {
             text = it
-
-            // Ensure the input is exactly 3 or 4 digits
-            val isValidLength = text.length == 3 || text.length == 4
-            isError = it.isEmpty() || !isValidLength
-            if (!isError) {
+            if (it.isNotEmpty()) {
                 // save the input to the model
                 onValueChangeDo(it)
             }
@@ -65,8 +72,8 @@ fun TagIDOutlinedTextField(
         placeholder = { Text(placeholderText) },
         textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isError && errorMessage != "") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = if (isError && errorMessage != "") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(
                 alpha = ContentAlpha.disabled
             ),
         ),
@@ -95,6 +102,11 @@ fun TagIDOutlinedTextField(
                 text = errorMessage,
                 textAlign = TextAlign.End,
             )
-        }
+        },
+        modifier = Modifier
+            .onFocusChanged { focusState ->
+                isFocused = focusState.isFocused // Update focus state
+            }
+            .focusRequester(focusRequester)
     )
 }

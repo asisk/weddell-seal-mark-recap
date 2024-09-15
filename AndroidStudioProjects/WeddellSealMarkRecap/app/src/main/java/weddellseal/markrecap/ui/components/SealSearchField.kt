@@ -13,10 +13,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -35,21 +39,36 @@ fun SealSearchField(
     onValueChanged: (String) -> Unit
 ) {
     var sealTagID by rememberSaveable { mutableStateOf(value) }
-    val focusManager: FocusManager = LocalFocusManager.current
+    val focusManager =
+        LocalFocusManager.current // State to manage whether the text field should lose focus
+    val focusRequester =
+        remember { FocusRequester() } // FocusRequester to manage focus programmatically
+    var isFocused by remember { mutableStateOf(false) } // Track focus state
     val keyboardController = LocalSoftwareKeyboardController.current
 
     OutlinedTextField(
         value = sealTagID,
         placeholder = { Text("Tag ID", fontSize = 25.sp) },
         onValueChange = { newText ->
-            sealTagID = newText
+            sealTagID = newText.uppercase().trim()
             onValueChanged(sealTagID)
         },
         label = { Text("Seal Tag ID", fontSize = 25.sp) },
         singleLine = true,
         textStyle = TextStyle(fontSize = 25.sp),
         modifier = Modifier
-            .background(color = Color.Transparent),
+            .background(color = Color.Transparent)
+            .onFocusChanged { focusState ->
+                if (focusState.isFocused) {
+                    // Reset the field in the model when the text field gains focus
+                    if (viewModel.wedCheckSeal.found) {
+                        sealTagID = ""
+                        viewModel.resetState()
+                    }
+                }
+                isFocused = focusState.isFocused // Update focus state
+            }
+            .focusRequester(focusRequester),
         keyboardOptions = KeyboardOptions.Default.copy(
             imeAction = ImeAction.Search,
             capitalization = KeyboardCapitalization.Characters,

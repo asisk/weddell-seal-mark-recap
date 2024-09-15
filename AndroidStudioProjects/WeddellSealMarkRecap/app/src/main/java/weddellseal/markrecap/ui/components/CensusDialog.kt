@@ -25,10 +25,10 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 @Composable
 fun CensusDialog(
     obsViewModel: AddObservationLogViewModel,
-    onDismissRequest: () -> Unit,
+    onClearRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {
-    Dialog(onDismissRequest = { onDismissRequest() }) {
+    Dialog(onDismissRequest = { onClearRequest() }) {
         // Draw a rectangle shape with rounded corners inside the dialog
         Card(
             modifier = Modifier
@@ -43,6 +43,8 @@ fun CensusDialog(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+//                var selection by remember { mutableStateOf(obsViewModel.uiState.censusNumber) }
+
                 Text(
                     text = "Select Census Number",
                     modifier = Modifier.padding(16.dp),
@@ -56,19 +58,11 @@ fun CensusDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val censusOptions = listOf("1", "2", "3", "4")
-                    var selection by remember { mutableStateOf(obsViewModel.uiState.censusNumber) }
 
-//                        DropdownField(censusOptions, obsViewModel.uiState.censusNumber) { newText ->
-//                            selection = newText
-//                            obsViewModel.updateCensusNumber(newText)
-//                        }
                     CensusButtonGroupSquare(
                         txtOptions = censusOptions,
                         valueInModel = obsViewModel.uiState.censusNumber,
-                        onValChangeDo = {
-                            selection = it
-                            obsViewModel.updateCensusNumber(it)
-                        }
+                        onValChangeDo = { obsViewModel.updateCensusNumber(it) },
                     )
                 }
 
@@ -80,15 +74,11 @@ fun CensusDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val censusOptions = listOf("5", "6", "7", "8")
-                    var selection by remember { mutableStateOf(obsViewModel.uiState.censusNumber) }
 
                     CensusButtonGroupSquare(
                         txtOptions = censusOptions,
                         valueInModel = obsViewModel.uiState.censusNumber,
-                        onValChangeDo = {
-                            selection = it
-                            obsViewModel.updateCensusNumber(it)
-                        }
+                        onValChangeDo = { obsViewModel.updateCensusNumber(it) },
                     )
                 }
 
@@ -97,12 +87,12 @@ fun CensusDialog(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-//                    TextButton(
-//                        onClick = { onDismissRequest() },
-//                        modifier = Modifier.padding(8.dp),
-//                    ) {
-//                        Text("Dismiss")
-//                    }
+                    TextButton(
+                        onClick = { onClearRequest() },
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Text("Clear Selection")
+                    }
                     TextButton(
                         onClick = { onConfirmation() },
                         modifier = Modifier.padding(8.dp),

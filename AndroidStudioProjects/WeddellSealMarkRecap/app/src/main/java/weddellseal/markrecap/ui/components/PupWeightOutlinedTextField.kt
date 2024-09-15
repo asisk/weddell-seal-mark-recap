@@ -85,6 +85,7 @@ fun PupWeightOutlinedTextField(
                 }
             )
         },
+        suffix = { Text("lbs") },
         supportingText = {
             Text(
                 modifier = Modifier.fillMaxWidth(),

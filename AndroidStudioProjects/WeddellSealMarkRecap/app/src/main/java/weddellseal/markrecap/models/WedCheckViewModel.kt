@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -128,6 +129,8 @@ class WedCheckViewModel(
                         tagIdForSpeNo = sealTagID
                     )
                     wedCheckSeal = seal.toSeal()
+                    delay(1500) // Wait for 1500 milliseconds
+
                 } else {
                     _uiState.value = uiState.value.copy(
                         sealRecordDB = null,

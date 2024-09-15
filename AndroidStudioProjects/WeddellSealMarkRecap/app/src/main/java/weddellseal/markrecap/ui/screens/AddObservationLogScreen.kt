@@ -8,6 +8,7 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +29,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Male
-import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -58,6 +58,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -94,7 +95,8 @@ fun AddObservationLogScreen(
     var coordinates by remember { mutableStateOf(viewModel.uiState.currentLocation) }
     var colony by remember { mutableStateOf(viewModel.uiState.colonyLocation) }
     var census by remember { mutableStateOf(viewModel.uiState.censusNumber) }
-    var isObservationMode by remember { mutableStateOf(true) }
+    var isCensusMode by remember { mutableStateOf(false) }
+    var isPrefilled by remember { mutableStateOf(false) }
 
     // Register ActivityResult to request Location permissions
     val requestLocationPermissions =
@@ -139,6 +141,11 @@ fun AddObservationLogScreen(
         canAddLocation()
     }
 
+    // this should be current for every observation
+    LaunchedEffect(viewModel.uiState.isPrefilled) {
+        isPrefilled = viewModel.uiState.isPrefilled
+    }
+
     LaunchedEffect(viewModel.uiState.currentLocation) {
         coordinates = viewModel.uiState.currentLocation
     }
@@ -149,9 +156,10 @@ fun AddObservationLogScreen(
 
     LaunchedEffect(viewModel.uiState.censusNumber) {
         census = viewModel.uiState.censusNumber
-        if (census != "Select an option") {
-            isObservationMode = false
-        }
+    }
+
+    LaunchedEffect(viewModel.uiState.isCensusMode) {
+        isCensusMode = viewModel.uiState.isCensusMode
     }
 
     // this should be activated after the saveAction() is triggered
@@ -181,7 +189,7 @@ fun AddObservationLogScreen(
             metadataSelectionsNeeded.append("Select a colony on the Home Screen.")
             eligible = false
         }
-        if (!isObservationMode && census == "Select an option") {
+        if (isCensusMode && census == "Select an option") {
             metadataSelectionsNeeded.append("\nSelect a census number on the Home Screen.")
             eligible = false
         }
@@ -208,13 +216,19 @@ fun AddObservationLogScreen(
             eligible = false
         }
         if (primarySeal.numRelatives.isEmpty()) {
-            sealSelectionsNeeded.append("\nSelect a sex for Seal.")
+            sealSelectionsNeeded.append("\nSelect relatives for Seal.")
             eligible = false
         }
         if (primarySeal.tagEventType.isEmpty()) {
-            sealSelectionsNeeded.append("\nSelect a sex for Seal.")
+            sealSelectionsNeeded.append("\nSelect an event type for Seal.")
             eligible = false
         }
+        val tagNumberLength = primarySeal.tagNumber.length
+        if (!primarySeal.isNoTag && tagNumberLength != 3 && tagNumberLength != 4) {
+            sealSelectionsNeeded.append("\nSeal tag number needs to be 3 or 4 digits.")
+            eligible = false
+        }
+
         if (!eligible) {
             ineligibleReason = sealSelectionsNeeded.toString()
             return false
@@ -235,11 +249,16 @@ fun AddObservationLogScreen(
                 eligible = false
             }
             if (pupOne.numRelatives.isEmpty()) {
-                pupOneSelectionsNeeded.append("\nSelect a sex for Pup One.")
+                pupOneSelectionsNeeded.append("\nNumber of relatives is empty for Pup One.")
                 eligible = false
             }
             if (pupOne.tagEventType.isEmpty()) {
-                pupOneSelectionsNeeded.append("\nSelect a sex for Pup One.")
+                pupOneSelectionsNeeded.append("\nSelect a tag event for Pup One.")
+                eligible = false
+            }
+            val tagNumberLenPupOne = pupOne.tagNumber.length
+            if (!primarySeal.isNoTag && tagNumberLenPupOne != 3 && tagNumberLenPupOne != 4) {
+                sealSelectionsNeeded.append("\nPup One tag number needs to be 3 or 4 digits.")
                 eligible = false
             }
         }
@@ -263,11 +282,16 @@ fun AddObservationLogScreen(
                 eligible = false
             }
             if (pupTwo.numRelatives.isEmpty()) {
-                pupTwoSelectionsNeeded.append("\nSelect a sex for Pup Two.")
+                pupTwoSelectionsNeeded.append("\nNumber of relatives is empty for Pup Two.")
                 eligible = false
             }
             if (pupTwo.tagEventType.isEmpty()) {
-                pupTwoSelectionsNeeded.append("\nSelect a sex for Pup Two.")
+                pupTwoSelectionsNeeded.append("\nSelect a tag event for Pup Two.")
+                eligible = false
+            }
+            val tagNumberLenPupTwo = pupTwo.tagNumber.length
+            if (!primarySeal.isNoTag && tagNumberLenPupTwo != 3 && tagNumberLenPupTwo != 4) {
+                sealSelectionsNeeded.append("\nPup One tag number needs to be 3 or 4 digits.")
                 eligible = false
             }
         }
@@ -282,9 +306,6 @@ fun AddObservationLogScreen(
 
     // validates the seal against the wedcheck seal if present
     fun saveAction() {
-
-        // TODO, update the location
-
         if (primarySeal.isStarted) {
             viewModel.validate(primarySeal)
         }
@@ -298,7 +319,7 @@ fun AddObservationLogScreen(
         }
 
         if (viewModel.uiState.isValidated && viewModel.uiState.validEntry) {
-            viewModel.createLog(primarySeal, pupOne, pupTwo)
+            viewModel.createLog()
         }
     }
 
@@ -323,33 +344,33 @@ fun AddObservationLogScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    if (isObservationMode) "Observation" else "Census #$census",
+                                    if (isCensusMode) "Census #$census" else "Tag/Retag",
                                     fontSize = 36.sp // Adjust this value as needed
                                 )
                             }
                         }
-                        // TOGGLE MODE
-                        if (!isObservationMode) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(.4f)
+                        // TOGGLE CENSUS MODE
+                        Box(
+                            modifier = Modifier
+                                .weight(.4f)
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Row(
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = "Exit Census",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(end = 10.dp)
-                                    )
+                                Text(
+                                    text = "Census",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(end = 10.dp)
+                                )
 
-                                    Switch(
-                                        checked = isObservationMode,
-                                        onCheckedChange = { isObservationMode = it }
-                                    )
-                                }
+                                Switch(
+                                    checked = isCensusMode,
+                                    onCheckedChange = {
+                                        viewModel.updateIsObservationMode(it)
+                                    }
+                                )
                             }
                         }
                     }
@@ -435,6 +456,7 @@ fun AddObservationLogScreen(
                                 .fillMaxWidth(),
                             onClick = {
                                 if (checkSaveEnabled()) {
+                                    canAddLocation() // refresh the gps coordinates on save
                                     saveAction()
                                 } else {
                                     showIneligibleDialog = true
@@ -477,7 +499,7 @@ fun AddObservationLogScreen(
             }
 
             // CENSUS METADATA
-            if (viewModel.uiState.censusNumber != "Select an option" && !isObservationMode) {
+            if (viewModel.uiState.censusNumber != "Select an option" && isCensusMode) {
                 // Prepopulate Options
                 Row(
                     modifier = Modifier
@@ -500,7 +522,15 @@ fun AddObservationLogScreen(
                                     )
                                 },
                                 text = { Text("Mom & Pup") },
-                                onClick = { /* Your action here */ }
+                                onClick = {
+                                    // update viewModel with prefilled fields
+                                    if (primarySeal.age == "") {
+                                        viewModel.prefillMomAndPup()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .alpha(if (isPrefilled) 0.5f else 1f) // Change opacity when inactive
+                                    .clickable(enabled = !isPrefilled) { } // Disable clicks if already selected
                             )
                             ExtendedFloatingActionButton(
                                 icon = {
@@ -511,7 +541,15 @@ fun AddObservationLogScreen(
                                     )
                                 },
                                 text = { Text("Single Female") },
-                                onClick = { /* Your action here */ }
+                                onClick = {
+                                    // update viewModel with prefilled fields
+                                    if (primarySeal.age == "") {
+                                        viewModel.prefillSingleFemale()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .alpha(if (isPrefilled) 0.5f else 1f) // Change opacity when inactive
+                                    .clickable(enabled = !isPrefilled) { } // Disable clicks if already selected
                             )
                             ExtendedFloatingActionButton(
                                 icon = {
@@ -522,7 +560,15 @@ fun AddObservationLogScreen(
                                     )
                                 },
                                 text = { Text("Single Male") },
-                                onClick = { /* Your action here */ }
+                                onClick = {
+                                    // update viewModel with prefilled fields
+                                    if (primarySeal.age == "") {
+                                        viewModel.prefillSingleMale()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .alpha(if (isPrefilled) 0.5f else 1f) // Change opacity when inactive
+                                    .clickable(enabled = !isPrefilled) { } // Disable clicks if already selected
                             )
                         }
                     }
@@ -543,6 +589,8 @@ fun AddObservationLogScreen(
                     viewModel.clearValidationState()
                 },
                 onConfirmation = {
+                    canAddLocation() // refresh the gps coordinates
+
                     // flag seals for review
                     if (!primarySeal.isValid) {
                         viewModel.flagSealForReview(primarySeal.name)
@@ -553,9 +601,10 @@ fun AddObservationLogScreen(
                     if (!pupTwo.isValid) {
                         viewModel.flagSealForReview(pupTwo.name)
                     }
+
                     showConfirmEntryDialog = false
 
-                    viewModel.createLog(primarySeal, pupOne, pupTwo)
+                    viewModel.createLog()
                 },
             )
         }

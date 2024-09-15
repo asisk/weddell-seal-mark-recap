@@ -18,10 +18,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Dataset
 import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -172,7 +172,7 @@ fun HomeScaffold(
                         enabled = true
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Person,
+                            imageVector = Icons.Filled.AdminPanelSettings,
                             contentDescription = "Admin",
                             modifier = Modifier.size(48.dp), // Change the size here
                         )
@@ -342,7 +342,7 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.5f)
                             ) {
-                                Text(text = "Location", style = MaterialTheme.typography.titleLarge)
+                                Text(text = "Colony", style = MaterialTheme.typography.titleLarge)
                             }
 
                             Column(
@@ -391,7 +391,10 @@ fun HomeScaffold(
                     if (showCensusDialog) {
                         CensusDialog(
                             obsViewModel,
-                            onDismissRequest = { showCensusDialog = false },
+                            onClearRequest = {
+                                showCensusDialog = false
+                                obsViewModel.clearCensus()
+                            },
                             onConfirmation = {
                                 showCensusDialog = false
                                 navController.navigate(Screens.AddObservationLog.route)
