@@ -397,6 +397,7 @@ fun HomeScaffold(
                             },
                             onConfirmation = {
                                 showCensusDialog = false
+                                obsViewModel.updateIsObservationMode(true)
                                 navController.navigate(Screens.AddObservationLog.route)
                             },
                         )
