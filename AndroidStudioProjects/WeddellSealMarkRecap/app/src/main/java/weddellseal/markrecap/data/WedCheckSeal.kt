@@ -12,7 +12,7 @@ data class WedCheckSeal(
     val lastSeenSeason: Int = 0,
     val massPups: String = "",
     val name: String = "",
-    val numRelatives: Int = 0,
+    val numRelatives: String = "",
     val numTags: String = "",
     val momMassMeasurements: String = "",
     val numPreviousPups: String = "",
