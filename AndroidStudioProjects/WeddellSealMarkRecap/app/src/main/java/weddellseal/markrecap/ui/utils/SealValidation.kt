@@ -27,8 +27,8 @@ fun sealValidation(
             )
 
         } else { // check the entered field values against those in the WedCheck record
-            // sex must match
-            if (seal.sex != wedCheckSeal.sex) {
+            // sex must match unless entered as Unknown
+            if (seal.sex != "Unknown" && seal.sex != wedCheckSeal.sex) {
                 sealValid = false
                 validationFailureReasons.append("\n " + "Sex doesn't match")
             }
