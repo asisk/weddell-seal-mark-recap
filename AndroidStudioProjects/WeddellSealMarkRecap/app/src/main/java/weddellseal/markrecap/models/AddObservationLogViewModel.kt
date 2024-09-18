@@ -751,11 +751,14 @@ class AddObservationLogViewModel(
             }
         }
 
+        // number of Relatives shouldn't be populated for Female seals because it's likely that the seal has a pup
+        val numberRels = if (wedCheckSeal.sex == "Female") "" else wedCheckSeal.numRelatives
+
         primarySeal = primarySeal.copy(
             speNo = wedCheckSeal.speNo,
             age = sealAgeAdvanced, // expecting to advance the seal age based on the last season seen
             sex = wedCheckSeal.sex,
-            numRelatives = wedCheckSeal.numRelatives.toString(),
+            numRelatives = numberRels,
             tagNumber = wedCheckSeal.tagOneNumber,
             tagAlpha = wedCheckSeal.tagOneAlpha,
             oldTagId = wedCheckSeal.tagIdOne,
