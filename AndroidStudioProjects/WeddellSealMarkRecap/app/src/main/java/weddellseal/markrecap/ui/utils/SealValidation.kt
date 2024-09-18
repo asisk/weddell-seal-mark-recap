@@ -39,8 +39,9 @@ fun sealValidation(
                 validationFailureReasons.append("\n " + "Number of tags doesn't match")
             }
 
-            // dead seals should not have new observations
-            if (wedCheckSeal.condition == "0") {
+            // dead seals cannot be revived to the living! ;)
+            val sealCondition = if (seal.condition != "" && seal.condition != "None" && seal.condition != "Select an option") seal.condition.last().toString() else "99"
+            if (sealCondition != "0" && wedCheckSeal.condition == "0") {
                 sealValid = false
                 validationFailureReasons.append("\n " + "Seal last seen dead")
             }
