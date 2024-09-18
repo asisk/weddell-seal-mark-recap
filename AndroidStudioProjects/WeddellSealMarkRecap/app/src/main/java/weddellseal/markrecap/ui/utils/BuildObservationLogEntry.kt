@@ -94,7 +94,7 @@ fun buildLogEntry(
     }
 
     var condition = ""
-    if (seal.condition != "" && seal.condition != "None") {
+    if (seal.condition != "" && seal.condition != "None" && seal.condition != "Select an option") {
         condition = seal.condition.last().toString()
     }
 
