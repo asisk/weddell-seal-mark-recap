@@ -752,7 +752,7 @@ class AddObservationLogViewModel(
         }
 
         // number of Relatives shouldn't be populated for Female seals because it's likely that the seal has a pup
-        val numberRels = if (wedCheckSeal.sex == "Female") "" else wedCheckSeal.numRelatives
+        val numberRels = if (wedCheckSeal.sex == "Female") "" else "0"
 
         primarySeal = primarySeal.copy(
             speNo = wedCheckSeal.speNo,

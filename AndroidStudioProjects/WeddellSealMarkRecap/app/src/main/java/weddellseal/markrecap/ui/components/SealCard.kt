@@ -537,8 +537,7 @@ fun SealCard(
                             errorMessage = "",
                             keyboardType = KeyboardType.Text,
                             onValueChangeDo = {
-                                // save the input to the model
-                                // viewModel.updateOldTag(seal, it)
+                                // do nothing
                             },
                             onClearValueDo = {
                                 viewModel.clearOldTag(seal.name)
@@ -546,7 +545,7 @@ fun SealCard(
                             onFocusChange = { isFocused, lastValue ->
                                 if (!isFocused) {
                                     // save the input to the model
-                                    viewModel.updateOldTag(seal, lastValue)
+                                    viewModel.updateOldTag(seal, lastValue.uppercase().trim())
 
                                     // update the speNo if the Old Tag ID changes
                                     if (lastValue != "") {
