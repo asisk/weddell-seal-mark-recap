@@ -43,12 +43,12 @@ fun CensusButtonGroupSquare(
                 if (selectedButton == option) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
             ),
             enabled = selectedButton != option,
-            modifier = Modifier.padding(4.dp)
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp)
         ) {
             Text(
                 color = Color.White,
                 text = option,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.titleLarge
             )
         }
     }

@@ -7,8 +7,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -18,8 +26,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
 
 @Composable
@@ -28,13 +38,16 @@ fun CensusDialog(
     onClearRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {
+    val scrollState = rememberScrollState()
+
     Dialog(onDismissRequest = { onClearRequest() }) {
         // Draw a rectangle shape with rounded corners inside the dialog
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(375.dp)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(state = scrollState, enabled = true),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
@@ -43,11 +56,11 @@ fun CensusDialog(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-//                var selection by remember { mutableStateOf(obsViewModel.uiState.censusNumber) }
 
                 Text(
                     text = "Select Census Number",
                     modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.titleLarge
                 )
 
                 Row(
@@ -87,18 +100,32 @@ fun CensusDialog(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    TextButton(
-                        onClick = { onClearRequest() },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text("Clear Selection")
-                    }
-                    TextButton(
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        containerColor = Color.LightGray,
+                        onClick = { onClearRequest()},
+                        icon = { // no icon
+                        },
+                        text = {
+                            Text(
+                                "Clear Selection",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
+                    )
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier.padding(16.dp),
+                        containerColor = Color.LightGray,
                         onClick = { onConfirmation() },
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Text("Confirm & Begin Data Entry")
-                    }
+                        icon = { // no icon
+                        },
+                        text = {
+                            Text(
+                                "Begin Data Entry",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
+                    )
                 }
             }
         }
