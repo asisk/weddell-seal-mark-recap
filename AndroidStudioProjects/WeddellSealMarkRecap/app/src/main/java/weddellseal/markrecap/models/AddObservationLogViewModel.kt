@@ -990,6 +990,7 @@ class AddObservationLogViewModel(
         primarySeal = primarySeal.copy(
             age = "Adult",
             sex = "Male",
+            numRelatives = "0",
             isStarted = true
         )
         uiState = uiState.copy(isPrefilled = true)
