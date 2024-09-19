@@ -224,9 +224,15 @@ fun AddObservationLogScreen(
             eligible = false
         }
         val tagNumberLength = primarySeal.tagNumber.length
-        if (!primarySeal.isNoTag && tagNumberLength != 3 && tagNumberLength != 4) {
-            sealSelectionsNeeded.append("\nSeal tag number needs to be 3 or 4 digits.")
-            eligible = false
+        if (!primarySeal.isNoTag) { // when No Tag isn't selected
+            if (tagNumberLength != 3 && tagNumberLength != 4) { // check that the Tag ID field is the right length
+                sealSelectionsNeeded.append("\nSeal tag number needs to be 3 or 4 digits.")
+                eligible = false
+            }
+            if (primarySeal.numTags == "") { // check that the technician has indicated how many tags are present
+                sealSelectionsNeeded.append("\nSelect the number of tags for Seal.")
+                eligible = false
+            }
         }
 
         if (!eligible) {
@@ -257,9 +263,15 @@ fun AddObservationLogScreen(
                 eligible = false
             }
             val tagNumberLenPupOne = pupOne.tagNumber.length
-            if (!primarySeal.isNoTag && tagNumberLenPupOne != 3 && tagNumberLenPupOne != 4) {
-                sealSelectionsNeeded.append("\nPup One tag number needs to be 3 or 4 digits.")
-                eligible = false
+            if (!pupOne.isNoTag) { // when No Tag isn't selected
+                if (tagNumberLenPupOne != 3 && tagNumberLenPupOne != 4) { // check that the Tag ID field is the right length
+                    pupOneSelectionsNeeded.append("\nPup One tag number needs to be 3 or 4 digits.")
+                    eligible = false
+                }
+                if (pupOne.numTags == "") { // check that the technician has indicated how many tags are present
+                    pupOneSelectionsNeeded.append("\nSelect the number of tags for Pup One.")
+                    eligible = false
+                }
             }
         }
         if (!eligible) {
@@ -290,9 +302,15 @@ fun AddObservationLogScreen(
                 eligible = false
             }
             val tagNumberLenPupTwo = pupTwo.tagNumber.length
-            if (!primarySeal.isNoTag && tagNumberLenPupTwo != 3 && tagNumberLenPupTwo != 4) {
-                sealSelectionsNeeded.append("\nPup One tag number needs to be 3 or 4 digits.")
-                eligible = false
+            if (!pupTwo.isNoTag) { // when No Tag isn't selected
+                if (tagNumberLenPupTwo != 3 && tagNumberLenPupTwo != 4) { // check that the Tag ID field is the right length
+                    pupTwoSelectionsNeeded.append("\nPup Two tag number needs to be 3 or 4 digits.")
+                    eligible = false
+                }
+                if (pupTwo.numTags == "") { // check that the technician has indicated how many tags are present
+                    pupTwoSelectionsNeeded.append("\nSelect the number of tags for Pup Two.")
+                    eligible = false
+                }
             }
         }
         if (!eligible) {
