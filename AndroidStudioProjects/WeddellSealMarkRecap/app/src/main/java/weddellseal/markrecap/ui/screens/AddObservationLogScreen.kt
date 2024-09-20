@@ -61,6 +61,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -371,11 +372,15 @@ fun AddObservationLogScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                ),
                 title = {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        verticalAlignment = Alignment.Top
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Box(
                             modifier = Modifier
@@ -389,6 +394,7 @@ fun AddObservationLogScreen(
                             ) {
                                 Text(
                                     if (isCensusMode) "Census #$census" else "Tag/Retag",
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontSize = 36.sp // Adjust this value as needed
                                 )
                             }
@@ -499,6 +505,7 @@ fun AddObservationLogScreen(
                             modifier = Modifier
                                 .padding(start = 30.dp, end = 20.dp)
                                 .fillMaxWidth(),
+                            containerColor = Color.LightGray,
                             onClick = {
                                 if (checkSaveEnabled()) {
                                     canAddLocation() // refresh the gps coordinates on save
@@ -797,7 +804,7 @@ fun TabbedCards(
                 .border(
                     border = BorderStroke(
                         width = 2.dp,
-                        color = Color.Gray // Use a solid color for the border
+                        color = Color.DarkGray // Use a solid color for the border
                     ),
                     shape = RoundedCornerShape(8.dp) // Add rounded corners here
                 )

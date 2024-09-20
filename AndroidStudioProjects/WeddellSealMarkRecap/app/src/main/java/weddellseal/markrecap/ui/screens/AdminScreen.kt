@@ -48,6 +48,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
@@ -237,7 +238,7 @@ fun AdminScreen(
     }
 
     Scaffold(
-    // region UI - Top Bar & Action Buttons
+        // region UI - Top Bar & Action Buttons
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -252,7 +253,8 @@ fun AdminScreen(
                         Text(
                             modifier = Modifier.padding(20.dp),
                             text = "Administration",
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 36.sp // Adjust this value as needed
                         )
                     }
                 },
