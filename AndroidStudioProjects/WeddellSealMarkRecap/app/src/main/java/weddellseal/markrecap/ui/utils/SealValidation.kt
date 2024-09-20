@@ -56,6 +56,7 @@ fun sealValidation(
                     validationFailureReasons.append("\n " + "Seal last seen more than ten years ago")
                 }
 
+                // age class check
                 when (wedCheckSeal.lastSeenSeason) {
                     currentYear -> { // seal last seen this year
                         // Age class CANNOT change for seals seen twice in a season
@@ -79,18 +80,11 @@ fun sealValidation(
                         }
                     }
 
-                    currentYear - 2 -> { // seal last seen 2 or more years ago
-                        // Age class must be Adult if seal was observed two or more years ago
+                    // Age class must be Adult if seal was observed two or more years ago
+                    else -> {  // seal last seen 2 or more years ago
                         if (seal.age != "Adult") {
                             sealValid = false
-                            validationFailureReasons.append("\n Seal observed two years ago. Age class should be adult!")
-                        }
-                    }
-
-                    else -> {
-                        if (seal.age != wedCheckSeal.age) {
-                            sealValid = false
-                            validationFailureReasons.append("\n Age class should match.")
+                            validationFailureReasons.append("\n Seal observed two or more years ago. Age class should be Adult!")
                         }
                     }
                 }

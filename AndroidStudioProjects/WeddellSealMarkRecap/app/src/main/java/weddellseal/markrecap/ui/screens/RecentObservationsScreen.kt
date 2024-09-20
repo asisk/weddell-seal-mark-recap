@@ -19,32 +19,40 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.models.RecentObservationsViewModel
-import weddellseal.markrecap.models.RecentObservationsViewModelFactory
+import weddellseal.markrecap.ui.components.ObservationItem
 import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
 
 @Composable
 fun RecentObservationsScreen(
     navController: NavHostController,
-    viewModel: RecentObservationsViewModel = viewModel(factory = RecentObservationsViewModelFactory())
+    viewModel: RecentObservationsViewModel
 ) {
     val state = viewModel.uiState
 
@@ -54,28 +62,17 @@ fun RecentObservationsScreen(
         }
     }
 
-    recentObsScaffold(navController, viewModel, state)
+    RecentObsScaffold(navController, state)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun recentObsScaffold(
+fun RecentObsScaffold(
     navController: NavHostController,
-    viewModel: RecentObservationsViewModel,
     state: RecentObservationsViewModel.UiState
 ) {
     val context = LocalContext.current
     context.contentResolver
-
-    // supports writing data to CSV
-//    val createDocument =
-//        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
-//            // Handle the created document URI
-//            if (uri != null) {
-//                viewModel.updateURI(uri)
-//                viewModel.exportLogs(context)
-//            }
-//        }
 
     Scaffold(
         topBar = {
@@ -99,42 +96,8 @@ fun recentObsScaffold(
                         )
                     }
                 },
-//                actions = {
-//                    IconButton(onClick = { navController.navigate(Screens.HomeScreen.route) }) {
-//                        Icon(
-//                            imageVector = Icons.Filled.Home,
-//                            contentDescription = "Home",
-//                            modifier = Modifier.size(48.dp)
-//                        )
-//                    }
-//                },
             )
         }
-
-//                bottomBar = {
-//            BottomAppBar(
-//                containerColor = MaterialTheme.colorScheme.primaryContainer,
-//                contentColor = MaterialTheme.colorScheme.primary,
-//            ) {
-//                BottomNavigation(
-//                    modifier = Modifier.fillMaxSize(),
-//                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
-//                ) {
-//                    BottomNavigationItem(
-//                        label = { Text(text = "Build CSV File") },
-//                        selected = false,
-//                        onClick = {
-//                            val dateTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-//                            val currentDateTime = dateTimeFormat.format(Date())
-//                            val filename = "observations_$currentDateTime.csv"
-//
-//                            createDocument.launch(filename)
-//                        },
-//                        icon = { Icon(Icons.Filled.Build, null) }
-//                    )
-//                }
-//            }
-//        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -142,11 +105,7 @@ fun recentObsScaffold(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-//            Text(
-//                text = "Observations Collected",
-//                modifier = Modifier.padding(15.dp),
-//                style = MaterialTheme.typography.headlineSmall
-//            )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,28 +118,19 @@ fun recentObsScaffold(
                     userScrollEnabled = true
                 ) {
                     items(state.observations) { observation ->
-                        Text(
-                            text =
-                            "ID:  " + observation.id.toString() + "    " +
-                                    "Entered:  " + observation.date + "    " +
-                                    "Notebook Entry:  " + notebookEntryValueObservation(observation),
-                            modifier = Modifier.padding(8.dp)
-                        )
+//                        Text(
+//                            text =
+//                            "ID:  " + observation.id.toString() + "    " +
+//                                    "Entered:  " + observation.date + "    " +
+//                                    "Notebook Entry:  " + notebookEntryValueObservation(observation),
+//                            modifier = Modifier.padding(8.dp)
+//                        )
+                        ObservationItem(observation = observation)
+
                         HorizontalDivider()
                     }
                 }
             }
-//            if (viewModel.uiState.isError) {
-//                Row(
-//                    modifier = Modifier
-//                        .padding(6.dp)
-//                        .fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.Center,
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Text("Error during CSV export!")
-//                }
-//            }
         }
     }
 }

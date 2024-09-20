@@ -8,21 +8,33 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BabyChangingStation
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Home
@@ -36,6 +48,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,27 +75,32 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.components.IneligibleForSaveDialog
 import weddellseal.markrecap.ui.components.RemoveDialog
 import weddellseal.markrecap.ui.components.SealCard
 import weddellseal.markrecap.ui.components.SealInvalidDialog
+import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddObservationLogScreen(
     navController: NavHostController,
     viewModel: AddObservationLogViewModel,
-    wedCheckViewModel: WedCheckViewModel
+    wedCheckViewModel: WedCheckViewModel,
+    recentObsViewModel: RecentObservationsViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val recentObsState = recentObsViewModel.uiState
 
     // seals not "by remember" because the screen needs to respond to input that changes the seal's model values
     val primarySeal = viewModel.primarySeal
@@ -132,6 +150,12 @@ fun AddObservationLogScreen(
             viewModel.fetchCurrentLocation()
         } else {
             showExplanationDialogForLocationPermission = true
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        recentObsViewModel.observationsFlow.collect {
+            recentObsState.observations = it
         }
     }
 
@@ -341,6 +365,8 @@ fun AddObservationLogScreen(
         }
     }
 
+    // COMPOSABLES
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -408,10 +434,11 @@ fun AddObservationLogScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
-            // METADATA SECTION
 
+            // METADATA SECTION
             Box() {
                 Row(
                     horizontalArrangement = Arrangement.Start,
@@ -463,10 +490,10 @@ fun AddObservationLogScreen(
                             text = coordinates,
                             style = MaterialTheme.typography.titleMedium,
                         )
-                        val contentColor =
-                            if (primarySeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = ContentAlpha.disabled
-                            )
+//                        val contentColor =
+//                            if (primarySeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+//                                alpha = ContentAlpha.disabled
+//                            )
 
                         ExtendedFloatingActionButton(
                             modifier = Modifier
@@ -591,12 +618,60 @@ fun AddObservationLogScreen(
                         }
                     }
                 }
-
             }
 
             // SEAL CARDS
-            TabbedCards(viewModel, wedCheckViewModel)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+//                    .heightIn(max = 200.dp) // Limit the height of TabbedCards
+            ) {
+                TabbedCards(viewModel, wedCheckViewModel)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+//                    .heightIn(max = 200.dp) // Limit the height of TabbedCards
+            ) {
+                // RECENT OBSERVATIONS VIEW
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Recently \nEntered",
+                        modifier = Modifier.padding(10.dp),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 150.dp) // Limit the height
+                            .padding(10.dp)
+//                        .border(1.dp, Color.Gray) // Add border for visual purposes
+                    ) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            userScrollEnabled = true
+                        ) {
+                            items(recentObsState.observations) { observation ->
+                                Text(
+                                    text =
+                                    notebookEntryValueObservation(observation) +
+                                            "    " + observation.date + " " + observation.time + "    ",
+                                    modifier = Modifier.padding(8.dp),
+                                    style = MaterialTheme.typography.titleLarge,
+                                )
+                                HorizontalDivider()
+                            }
+                        }
+                    }
+                }
+            }
         }
+
         // because this action results in removing any entered data
         // Show the dialog if showDialog is true
         if (showConfirmEntryDialog) {
@@ -675,7 +750,6 @@ fun TabbedCards(
     viewModel: AddObservationLogViewModel,
     wedCheckViewModel: WedCheckViewModel
 ) {
-    val scrollState = rememberScrollState()
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var tabItems by remember {
@@ -698,7 +772,10 @@ fun TabbedCards(
         }
     }
 
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
         PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
             tabItems.forEachIndexed { index, tabItem ->
                 Tab(
@@ -713,69 +790,56 @@ fun TabbedCards(
                 )
             }
         }
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
-                .verticalScroll(state = scrollState, enabled = true),
-            colors = CardColors(
-                containerColor = Color.White,
-                contentColor = Color.Black,
-                disabledContainerColor = Color.White,
-                disabledContentColor = Color.Gray
-            ),
-            border = BorderStroke(
-                width = 2.dp,
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color.Gray,
-                        Color.Gray
-                    ) // Specify your gradient colors here
+                .padding(10.dp)
+                .border(
+                    border = BorderStroke(
+                        width = 2.dp,
+                        color = Color.Gray // Use a solid color for the border
+                    ),
+                    shape = RoundedCornerShape(8.dp) // Add rounded corners here
                 )
-            ),
         ) {
-            Box(
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-//                    .border(2.dp, Color.Red) // Adding a red outline for debugging
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                IconButton(
+                    onClick = {
+                        showDeleteDialog.value = true
+                    },
                 ) {
-                    IconButton(
-                        onClick = {
-                            showDeleteDialog.value = true
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Remove Tab",
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                }
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    if (tabItems.isNotEmpty()) {
-                        tabItems[selectedTabIndex].content()
-                    }
-                }
-
-                // Show the dialog if showDialog is true
-                if (showDeleteDialog.value) {
-                    RemoveDialog(
-                        onDismissRequest = { showDeleteDialog.value = false },
-                        onConfirmation = {
-                            if (tabItems.isNotEmpty()) {
-                                // remove the current seal
-                                viewModel.resetSeal(tabItems[selectedTabIndex].sealName)
-                                showDeleteDialog.value = false
-                            }
-                        },
+                    Icon(
+                        imageVector = Icons.Default.DeleteOutline,
+                        contentDescription = "Remove Tab",
+                        modifier = Modifier.size(48.dp)
                     )
                 }
+            }
+
+            // CONTENT
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (tabItems.isNotEmpty()) {
+                    tabItems[selectedTabIndex].content()
+                }
+            }
+
+            // Show the dialog if showDialog is true
+            if (showDeleteDialog.value) {
+                RemoveDialog(
+                    onDismissRequest = { showDeleteDialog.value = false },
+                    onConfirmation = {
+                        if (tabItems.isNotEmpty()) {
+                            // remove the current seal
+                            viewModel.resetSeal(tabItems[selectedTabIndex].sealName)
+                            showDeleteDialog.value = false
+                        }
+                    },
+                )
             }
         }
     }

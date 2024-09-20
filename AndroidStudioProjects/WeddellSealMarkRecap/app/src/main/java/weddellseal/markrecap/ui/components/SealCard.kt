@@ -39,7 +39,7 @@ fun SealCard(
 ) {
     val focusManager = LocalFocusManager.current
 
-    var sealSpeNo by remember { mutableStateOf(seal.speNo.toString()) }
+    var sealSpeNo by remember { mutableStateOf(if (seal.speNo != 0) seal.speNo.toString() else "") }
     var numRelatives by remember { mutableStateOf(seal.numRelatives) }
     var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
     var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
@@ -84,9 +84,26 @@ fun SealCard(
         isWeightToggled = seal.weightTaken
     }
 
+    LaunchedEffect(seal.oldTagId) {
+        if (seal.oldTagId != "" && isRetag) {
+            // check for an existing wedcheck seal record for this seal
+            // conduct search if we haven't already located a wedcheck record
+            val wedCheckSeal = viewModel.getWedCheckSeal(seal.oldTagId)
+            if (wedCheckSeal == null) {
+                // clear the speno & hasSpeno fields from our seal
+                viewModel.clearSpeNo(seal)
+
+                // find the seal
+                if (!wedCheckViewModel.uiState.value.isSearching) {
+                    wedCheckViewModel.findSealbyTagID(seal.oldTagId)
+                }
+            }
+        }
+    }
+
     LaunchedEffect(seal.tagNumber, seal.tagAlpha) {
         // update the speNo if we don't have one once we have a tag number and a tag alpha
-        if (seal.tagEventType != "Retag" && seal.tagNumber != "" && seal.tagAlpha != "") {
+        if (seal.tagNumber != "" && seal.tagAlpha != "") {
             if (seal.tagNumber.length == 3 || seal.tagNumber.length == 4) {
 
                 // construct a string without two alpha characters
@@ -94,20 +111,40 @@ fun SealCard(
                 // and searching for a WedCheck record
                 val searchStr = seal.tagNumber + seal.tagAlpha
 
-                // determine whether we need to do the search
-                val doSearch =
-                    seal.speNo == 0 || searchStr != wedCheckViewModel.wedCheckSeal.tagIdOne
+                // check for an existing wedcheck seal record for this seal
+                // conduct search if we haven't already located a wedcheck record
+                val wedCheckSeal = viewModel.getWedCheckSeal(searchStr)
+                if (wedCheckSeal == null) {
+                    // clear the speno & hasSpeno fields from our seal
+                    viewModel.clearSpeNo(seal)
 
-                if (doSearch) {
-                    viewModel.updateSpeNoForTagID(seal, wedCheckViewModel, searchStr)
+                    // find the seal
+                    if (!wedCheckViewModel.uiState.value.isSearching) {
+                        wedCheckViewModel.findSealbyTagID(searchStr)
+                    }
                 }
             }
         }
     }
 
+// there's a lag when finding the seal in the wedcheck model
+// this LaunchedEffect allows us to be aware the presence of a new wedCheckSeal
     LaunchedEffect(wedCheckViewModel.wedCheckSeal.speNo) {
-        if (wedCheckViewModel.wedCheckSeal.speNo != 0) {
-            viewModel.mapWedCheckFields(seal.name, wedCheckViewModel.wedCheckSeal)
+        if (wedCheckViewModel.wedCheckSeal.speNo != 0) { // check that the wedcheck seal was found
+            var tagID = seal.tagNumber + seal.tagAlpha
+            if (isRetag) { // if retag set the tag id to the old tag
+                tagID = seal.oldTagId
+            }
+
+            // only assign wedcheck fields if they are for this seal
+            if (wedCheckViewModel.wedCheckSeal.tagIdOne == tagID) {
+
+                //map the relevant wedcheck fields to our seal
+                if (seal.speNo != wedCheckViewModel.wedCheckSeal.speNo) {
+                    viewModel.mapSpeno(seal.name, wedCheckViewModel.wedCheckSeal)
+                    viewModel.addWedCheckSeal(tagID, wedCheckViewModel.wedCheckSeal)
+                }
+            }
         }
     }
 
@@ -127,8 +164,12 @@ fun SealCard(
         isRetag = seal.tagEventType == "Retag"
     }
 
-    // SEAL CARD HEADING/NOTEBOOK STRING & SPENO
-    Column() {
+// SEAL CARD HEADING/NOTEBOOK STRING & SPENO
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -169,7 +210,7 @@ fun SealCard(
         }
     }
 
-    //AGE
+//AGE
     val buttonListAge = listOf("Adult", "Pup", "Yearling")
     Row(
         modifier = Modifier
@@ -229,7 +270,7 @@ fun SealCard(
         }
     }
 
-    // SEX & PUP PEED
+// SEX & PUP PEED
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -317,7 +358,7 @@ fun SealCard(
         }
     }
 
-    // NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG, && CONDITION
+// NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG, && CONDITION
     val numRelsList = listOf("0", "1", "2")
 
     Row(
@@ -434,8 +475,8 @@ fun SealCard(
         }
     }
 
-    // TAG EVENT TYPE
-    //TODO, consider an enum for this an other strings
+// TAG EVENT TYPE
+//TODO, consider an enum for this an other strings
     val tagEventList = listOf("Marked", "New", "Retag")
 
     Row(
@@ -496,7 +537,7 @@ fun SealCard(
         }
     }
 
-    // TAG FIELDS (old tag id row - label & field, reason for retag row - label & dropdown, tag id row - label, field & alpha buttons)
+// TAG FIELDS (old tag id row - label & field, reason for retag row - label & dropdown, tag id row - label, field & alpha buttons)
     if (!isNoTagsChecked) { // None of the tag fields should show if the No Tag checkbox has been selected
 
         // OLD TAG ID
@@ -547,14 +588,19 @@ fun SealCard(
                                     // save the input to the model
                                     viewModel.updateOldTag(seal, lastValue.uppercase().trim())
 
-                                    // update the speNo if the Old Tag ID changes
-                                    if (lastValue != "") {
-                                        viewModel.updateSpeNoForTagID(
-                                            seal,
-                                            wedCheckViewModel,
-                                            lastValue
-                                        )
-                                    }
+//                                    // update the speNo if the Old Tag ID changes
+//                                    if (lastValue != "") {
+//                                        if (!wedCheckViewModel.uiState.value.isSearching) {
+//                                            viewModel.clearSpeNo(seal)
+//                                            wedCheckViewModel.findSealbyTagID(lastValue)
+//                                        }
+//
+//                                        viewModel.updateSpeNoForTagID(
+//                                            seal,
+//                                            wedCheckViewModel,
+//                                            lastValue
+//                                        )
+//                                    }
                                 }
                             }
                         )
@@ -692,7 +738,7 @@ fun SealCard(
         }
     }
 
-    // NUMBER OF TAGS, NO TAG && TISSUE
+// NUMBER OF TAGS, NO TAG && TISSUE
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -798,7 +844,7 @@ fun SealCard(
         }
     }
 
-    // COMMENT && OLD TAG MARKS
+// COMMENT && OLD TAG MARKS
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -849,8 +895,6 @@ fun SealCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Spacer(modifier = Modifier.width(8.dp))
-
                 CommentField(seal.comment) { newText ->
                     viewModel.updateComment(seal.name, newText)
                 }
@@ -858,7 +902,7 @@ fun SealCard(
         }
     }
 
-    // WEIGHT FOR PUPS ONLY
+// WEIGHT FOR PUPS ONLY
     if (seal.age == "Pup") {
         Row(
             modifier = Modifier

@@ -86,12 +86,14 @@ class MainActivity : ComponentActivity() {
                             AddObservationLogScreen(
                                 navController,
                                 addObservationLogViewModel,
-                                wedCheckViewModel
+                                wedCheckViewModel,
+                                recentObservationsViewModel
                             )
                         }
                         composable(Screens.RecentObservations.route) {
                             RecentObservationsScreen(
-                                navController
+                                navController,
+                                recentObservationsViewModel
                             )
                         }
                         composable(Screens.SealLookupScreen.route) {

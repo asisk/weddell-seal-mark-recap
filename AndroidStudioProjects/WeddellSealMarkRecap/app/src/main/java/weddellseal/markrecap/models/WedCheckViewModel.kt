@@ -108,7 +108,14 @@ class WedCheckViewModel(
     }
 
     fun findSealbyTagID(sealTagID: String) {
-        _uiState.value = uiState.value.copy(isSearching = true)
+        // clear the last seal from the wedcheck viewmodel
+         _uiState.value = uiState.value.copy(
+            sealRecordDB = null,
+            isSearching = true,
+            sealNotFound = true,
+            isError = false
+        )
+        wedCheckSeal = WedCheckSeal()
 
         if (sealTagID != "") {
             val searchValue = sealTagID.trim()
@@ -130,7 +137,6 @@ class WedCheckViewModel(
                     )
                     wedCheckSeal = seal.toSeal()
                     delay(1500) // Wait for 1500 milliseconds
-
                 } else {
                     _uiState.value = uiState.value.copy(
                         sealRecordDB = null,
@@ -154,7 +160,7 @@ class WedCheckViewModel(
                 wedCheckRepo.findSealbySpeNo(speno)
             }
             //ignore the linter, seal can in fact be null
-            if ( seal != null && seal.speno != 0) {
+            if (seal != null && seal.speno != 0) {
                 _uiState.value = uiState.value.copy(
                     sealRecordDB = seal,
                     isSearching = false,

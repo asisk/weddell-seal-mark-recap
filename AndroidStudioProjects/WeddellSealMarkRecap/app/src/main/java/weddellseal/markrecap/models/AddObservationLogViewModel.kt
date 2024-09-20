@@ -114,16 +114,16 @@ class AddObservationLogViewModel(
     )
         private set
 
-    private var wedCheckSealMap = mutableMapOf<Int, WedCheckSeal>()
+    private var wedCheckSealMap = mutableMapOf<String, WedCheckSeal>()
 
     // add a WedCheckSeal to the map
-    private fun addWedCheckSeal(seal: WedCheckSeal) {
-        wedCheckSealMap[seal.speNo] = seal
+    fun addWedCheckSeal(tag: String, seal: WedCheckSeal) {
+        wedCheckSealMap[tag] = seal
     }
 
-    //  retrieve a WedCheckSeal by speno
-    private fun getWedCheckSeal(speNo: Int): WedCheckSeal? {
-        return wedCheckSealMap[speNo]
+    // retrieve a WedCheckSeal by speno
+    fun getWedCheckSeal(tagID: String): WedCheckSeal? {
+        return wedCheckSealMap[tagID]
     }
 
     private fun getCurrentYear(): Int {
@@ -283,28 +283,26 @@ class AddObservationLogViewModel(
             }
         }
     }
-
-    fun updateSpeNoForTagID(seal: Seal, wedCheckViewModel: WedCheckViewModel, searchStr: String) {
-        if (!wedCheckViewModel.uiState.value.isSearching) {
-            clearSpeNo(seal)
-            wedCheckViewModel.resetState()
-            wedCheckViewModel.findSealbyTagID(searchStr)
-        }
-    }
+//
+//    fun updateWedCheckFields(seal: Seal, wedCheckViewModel: WedCheckViewModel, searchStr: String) {
+//        if (!wedCheckViewModel.uiState.value.isSearching) {
+//            wedCheckViewModel.findSealbyTagID(searchStr) // find the seal
+//        }
+//    }
 
 
     fun clearSpeNo(seal: Seal) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(speNo = 0)
+                primarySeal = primarySeal.copy(speNo = 0, hasWedCheckSpeno = false)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(speNo = 0)
+                pupOne = pupOne.copy(speNo = 0, hasWedCheckSpeno = false)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(speNo = 0)
+                pupTwo = pupTwo.copy(speNo = 0, hasWedCheckSpeno = false)
             }
         }
     }
@@ -767,19 +765,17 @@ class AddObservationLogViewModel(
             colony = wedCheckSeal.colony,
             isWedCheck = true,
         )
-        addWedCheckSeal(wedCheckSeal)
+        val tagID = wedCheckSeal.tagOneNumber + wedCheckSeal.tagOneAlpha
+        addWedCheckSeal(tagID, wedCheckSeal)
         updateNotebookEntry(primarySeal)
     }
 
-    fun mapWedCheckFields(name: String, wedCheckSeal: WedCheckSeal) {
-        addWedCheckSeal(wedCheckSeal)
-
+    fun mapSpeno(name: String, wedCheckSeal: WedCheckSeal) {
         when (name) {
             "primary" -> {
                 primarySeal = primarySeal.copy(
                     speNo = wedCheckSeal.speNo,
                     hasWedCheckSpeno = true,
-                    oldTagId = wedCheckSeal.tagIdOne,
                 )
             }
 
@@ -787,7 +783,6 @@ class AddObservationLogViewModel(
                 pupOne = pupOne.copy(
                     speNo = wedCheckSeal.speNo,
                     hasWedCheckSpeno = true,
-                    oldTagId = wedCheckSeal.tagIdOne,
                 )
             }
 
@@ -795,11 +790,11 @@ class AddObservationLogViewModel(
                 pupTwo = pupTwo.copy(
                     speNo = wedCheckSeal.speNo,
                     hasWedCheckSpeno = true,
-                    oldTagId = wedCheckSeal.tagIdOne,
                 )
             }
         }
     }
+
 
     // region Location management
     @SuppressLint("MissingPermission")
@@ -921,8 +916,12 @@ class AddObservationLogViewModel(
         }
 
         // if the event type is marked or retag, the seal must have a speNo(matching WedCheck record)
+        var tagID = seal.tagNumber + seal.tagAlpha
+        if (seal.tagEventType == "Retag") { // if retag set the tag id to the old tag
+            tagID = seal.oldTagId
+        }
         val wedCheckSeal =
-            getWedCheckSeal(seal.speNo) // attempt to locate the WedCheck seal in the map stored in the model
+            getWedCheckSeal(tagID) // attempt to locate the WedCheck seal in the map stored in the model
 
         // use the utility method to validate the seal
         val (sealValid, validationErrors) = sealValidation(seal, getCurrentYear(), wedCheckSeal)
