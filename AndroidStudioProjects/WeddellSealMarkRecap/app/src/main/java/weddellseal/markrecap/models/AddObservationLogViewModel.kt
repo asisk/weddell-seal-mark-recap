@@ -15,6 +15,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
@@ -26,6 +27,7 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
 import kotlinx.coroutines.launch
+import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.data.SupportingDataRepository
@@ -77,6 +79,7 @@ class AddObservationLogViewModel(
         val validationFailureReason: String = "",
         val isValidated: Boolean = false,
         val validEntry: Boolean = false,
+        val observationLogEntry: ObservationLogEntry? = null,
     )
 
     var uiState by mutableStateOf(
@@ -186,6 +189,10 @@ class AddObservationLogViewModel(
 
     fun updateIsObservationMode(observationMode: Boolean) {
         uiState = uiState.copy(isCensusMode = observationMode)
+    }
+
+    fun updateObservationEntry(observation: ObservationLogEntry) {
+        uiState = uiState.copy(observationLogEntry = observation)
     }
 
     fun updateCondition(sealName: String, input: String) {

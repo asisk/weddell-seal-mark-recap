@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.WedCheckRecord
 import weddellseal.markrecap.data.WedCheckRepository
 import weddellseal.markrecap.data.WedCheckSeal

@@ -29,52 +29,52 @@ fun WedCheckCard(
     ) {// Apply padding to left and right
 
         // SPENO
-        WedCheckDataDisplayRow("SPENO", if (seal.speNo == 0) "" else seal.speNo.toString())
+        DataDisplayRow("SPENO", if (seal.speNo == 0) "" else seal.speNo.toString())
 
         // TAGS
-        WedCheckDataDisplayRow("Tag 1", seal.tagIdOne)
-        WedCheckDataDisplayRow("Tag 2", seal.tagIdTwo)
+        DataDisplayRow("Tag 1", seal.tagIdOne)
+        DataDisplayRow("Tag 2", seal.tagIdTwo)
 
         // AGE
-        WedCheckDataDisplayRow("Age Class", seal.age)
+        DataDisplayRow("Age Class", seal.age)
 
         // AGE YEARS
-        WedCheckDataDisplayRow("Age Years", seal.ageYears)
+        DataDisplayRow("Age Years", seal.ageYears)
 
         // SEX
-        WedCheckDataDisplayRow("Sex", seal.sex)
+        DataDisplayRow("Sex", seal.sex)
 
         // TISSUE SAMPLED
-        WedCheckDataDisplayRow("Tissue Taken", seal.tissueSampled)
+        DataDisplayRow("Tissue Taken", seal.tissueSampled)
 
         // CONDITION
-        WedCheckDataDisplayRow("Condition", seal.condition)
+        DataDisplayRow("Condition", seal.condition)
 
         // PREVIOUS PUPS
-        WedCheckDataDisplayRow("Last Physio", seal.lastPhysio)
+        DataDisplayRow("Last Physio", seal.lastPhysio)
 
         // LAST SEEN
-        WedCheckDataDisplayRow(
+        DataDisplayRow(
             "Last Seen",
             if (seal.lastSeenSeason == 0) "" else seal.lastSeenSeason.toString()
         )
 
         // PREVIOUS PUPS
-        WedCheckDataDisplayRow("Colony", seal.colony)
+        DataDisplayRow("Colony", seal.colony)
 
         // PREVIOUS PUPS
-        WedCheckDataDisplayRow("Previous Pups", seal.numPreviousPups)
+        DataDisplayRow("Previous Pups", seal.numPreviousPups)
 
         // MASS PUPS
-        WedCheckDataDisplayRow("Mass Pups", seal.massPups)
+        DataDisplayRow("Mass Pups", seal.massPups)
 
         // SWIM PUPS
-        WedCheckDataDisplayRow("Swim Pups", seal.pupinTTStudy)
+        DataDisplayRow("Swim Pups", seal.pupinTTStudy)
 
         // PHOTO YEARS
-        WedCheckDataDisplayRow("Photo Years", seal.momMassMeasurements)
+        DataDisplayRow("Photo Years", seal.momMassMeasurements)
 
         // COMMENTS
-        WedCheckDataDisplayRow("Comments", seal.comment)
+        DataDisplayRow("Comments", seal.comment)
     }
 }

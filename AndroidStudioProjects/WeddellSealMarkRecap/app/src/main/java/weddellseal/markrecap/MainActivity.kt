@@ -26,6 +26,7 @@ import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.screens.AddObservationLogScreen
 import weddellseal.markrecap.ui.screens.AdminScreen
 import weddellseal.markrecap.ui.screens.HomeScreen
+import weddellseal.markrecap.ui.screens.ObservationViewer
 import weddellseal.markrecap.ui.screens.RecentObservationsScreen
 import weddellseal.markrecap.ui.screens.SealLookupScreen
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
@@ -56,14 +57,16 @@ class MainActivity : ComponentActivity() {
         val sealColoniesDao = observationLogApplication.getSealColoniesDao()
         supportingDataRepository = SupportingDataRepository(observersDao, sealColoniesDao)
 
-        val addLogViewModelFactory = AddLogViewModelFactory(application, observationRepository, supportingDataRepository)
+        val addLogViewModelFactory =
+            AddLogViewModelFactory(application, observationRepository, supportingDataRepository)
         val addObservationLogViewModel: AddObservationLogViewModel by viewModels { addLogViewModelFactory }
 
-        val homeViewModelFactory = HomeViewModelFactory(application, observationRepository, supportingDataRepository)
-        val homeViewModel: HomeViewModel by viewModels {homeViewModelFactory}
+        val homeViewModelFactory =
+            HomeViewModelFactory(application, observationRepository, supportingDataRepository)
+        val homeViewModel: HomeViewModel by viewModels { homeViewModelFactory }
 
         val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
-        val recentObservationsViewModel: RecentObservationsViewModel by viewModels {recentObservationsViewModelFactory}
+        val recentObservationsViewModel: RecentObservationsViewModel by viewModels { recentObservationsViewModelFactory }
 
         enableEdgeToEdge()
         setContent {
@@ -93,13 +96,20 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.RecentObservations.route) {
                             RecentObservationsScreen(
                                 navController,
-                                recentObservationsViewModel
+                                recentObservationsViewModel,
+                                addObservationLogViewModel
                             )
                         }
                         composable(Screens.SealLookupScreen.route) {
                             SealLookupScreen(
                                 navController,
                                 wedCheckViewModel,
+                                addObservationLogViewModel
+                            )
+                        }
+                        composable(Screens.ObservationViewer.route) {
+                            ObservationViewer(
+                                navController,
                                 addObservationLogViewModel
                             )
                         }
@@ -124,5 +134,6 @@ sealed class Screens(val route: String) {
     object AddObservationLog : Screens("add_log")
     object RecentObservations : Screens("view_db")
     object SealLookupScreen : Screens("seal_lookup")
+    object ObservationViewer : Screens("observation_viewer")
 }
 

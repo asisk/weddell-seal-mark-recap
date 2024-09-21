@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun WedCheckDataDisplayRow(label: String, value: String) {
+fun DataDisplayRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

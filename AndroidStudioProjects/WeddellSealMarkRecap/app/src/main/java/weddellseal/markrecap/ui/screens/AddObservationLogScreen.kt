@@ -86,6 +86,7 @@ import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.components.IneligibleForSaveDialog
+import weddellseal.markrecap.ui.components.ObservationItem
 import weddellseal.markrecap.ui.components.RemoveDialog
 import weddellseal.markrecap.ui.components.SealCard
 import weddellseal.markrecap.ui.components.SealInvalidDialog
@@ -657,20 +658,25 @@ fun AddObservationLogScreen(
                             .fillMaxWidth()
                             .heightIn(max = 150.dp) // Limit the height
                             .padding(10.dp)
-//                        .border(1.dp, Color.Gray) // Add border for visual purposes
+                            .border(1.dp, Color.LightGray) // Add border for visual purposes
                     ) {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                             userScrollEnabled = true
                         ) {
                             items(recentObsState.observations) { observation ->
-                                Text(
-                                    text =
-                                    notebookEntryValueObservation(observation) +
-                                            "    " + observation.date + " " + observation.time + "    ",
-                                    modifier = Modifier.padding(8.dp),
-                                    style = MaterialTheme.typography.titleLarge,
+                                ObservationItem(
+                                    onEditDo = {
+                                        // do nothing
+//                                obsViewModel.updateObservationEntry(observation)
+                                    },
+                                    onViewDo = {
+                                        viewModel.updateObservationEntry(observation)
+                                        navController.navigate(Screens.ObservationViewer.route)
+                                    },
+                                    observation = observation
                                 )
+
                                 HorizontalDivider()
                             }
                         }
@@ -804,7 +810,7 @@ fun TabbedCards(
                 .border(
                     border = BorderStroke(
                         width = 2.dp,
-                        color = Color.DarkGray // Use a solid color for the border
+                        color = Color.LightGray // Use a solid color for the border
                     ),
                     shape = RoundedCornerShape(8.dp) // Add rounded corners here
                 )

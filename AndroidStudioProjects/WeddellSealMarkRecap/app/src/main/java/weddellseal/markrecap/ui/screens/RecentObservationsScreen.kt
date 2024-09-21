@@ -19,9 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,10 +30,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,15 +38,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.data.ObservationLogEntry
+import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.ui.components.ObservationItem
-import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
 
 @Composable
 fun RecentObservationsScreen(
     navController: NavHostController,
-    viewModel: RecentObservationsViewModel
+    viewModel: RecentObservationsViewModel,
+    obsViewModel: AddObservationLogViewModel,
 ) {
     val state = viewModel.uiState
 
@@ -63,14 +56,15 @@ fun RecentObservationsScreen(
         }
     }
 
-    RecentObsScaffold(navController, state)
+    RecentObsScaffold(navController, state, obsViewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecentObsScaffold(
     navController: NavHostController,
-    state: RecentObservationsViewModel.UiState
+    state: RecentObservationsViewModel.UiState,
+    obsViewModel: AddObservationLogViewModel,
 ) {
     val context = LocalContext.current
     context.contentResolver
@@ -124,15 +118,17 @@ fun RecentObsScaffold(
                     userScrollEnabled = true
                 ) {
                     items(state.observations) { observation ->
-//                        Text(
-//                            text =
-//                            "ID:  " + observation.id.toString() + "    " +
-//                                    "Entered:  " + observation.date + "    " +
-//                                    "Notebook Entry:  " + notebookEntryValueObservation(observation),
-//                            modifier = Modifier.padding(8.dp)
-//                        )
-                        ObservationItem(observation = observation)
-
+                        ObservationItem(
+                            onEditDo = {
+                                // do nothing
+//                                obsViewModel.updateObservationEntry(observation)
+                            },
+                            onViewDo = {
+                                obsViewModel.updateObservationEntry(observation)
+                                navController.navigate(Screens.ObservationViewer.route)
+                            },
+                            observation = observation
+                        )
                         HorizontalDivider()
                     }
                 }

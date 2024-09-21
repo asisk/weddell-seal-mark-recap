@@ -21,12 +21,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
 
 @Composable
-fun ObservationItem(observation: ObservationLogEntry) {
+fun ObservationItem(
+    onEditDo: (String) -> Unit,
+    onViewDo: (ObservationLogEntry) -> Unit,
+    observation: ObservationLogEntry
+) {
     // State to control the visibility of the dropdown menu
     var expanded by remember { mutableStateOf(false) }
 
@@ -63,13 +68,13 @@ fun ObservationItem(observation: ObservationLogEntry) {
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                DropdownMenuItem(
-                    text = { Text("Edit") },
-                    onClick = { /* handle click */ })
+//                DropdownMenuItem(
+//                    text = { Text("Edit", color = Color.LightGray)},
+//                    onClick = { /* handle click */ })
 
                 DropdownMenuItem(
                     text = { Text("View") },
-                    onClick = { /* handle click */ })
+                    onClick = { onViewDo(observation) })
             }
         }
     }
