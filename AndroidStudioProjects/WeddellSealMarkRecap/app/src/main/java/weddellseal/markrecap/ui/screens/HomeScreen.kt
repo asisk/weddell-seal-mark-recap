@@ -83,7 +83,7 @@ fun HomeScaffold(
     val scrollState = rememberScrollState()
     var showCensusDialog by remember { mutableStateOf(false) }
     val coloniesList by viewModel.colonies.collectAsState()
-    val observerList by viewModel.observers.collectAsState()
+//    val observerList by viewModel.observers.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchLocations()
@@ -316,7 +316,7 @@ fun HomeScaffold(
 //                                }
                                 MultiSelectDropdownObservers(
                                     viewModel,
-                                    options = observerList,
+//                                    options = observerList,
                                     selectedOptions = observerSelected,
                                     onValueChange = { updatedItems ->
                                         // Convert selected items back to a concatenated string

@@ -87,37 +87,115 @@ fun MultiSelectDropdown(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultiSelectDropdownObservers(
     viewModel: HomeViewModel,
-    options: List<String>,
+//    options: List<String>,
     selectedOptions: String,
     onValueChange: (List<String>) -> Unit
 ) {
-
-    LaunchedEffect(Unit) {
-        viewModel.fetchObservers()
-    }
-
+    // Observe the observers list from the ViewModel
+    val options by viewModel.observers.collectAsState() // Collecting the list of observers
+    var expanded by remember { mutableStateOf(false) }
     // Initialize items with selection based on provided selectedOptions
-    var items by remember {
+//    var items by remember {
+//        mutableStateOf(options.map { option ->
+//            SelectableItem(option, option in selectedOptions)
+//        })
+//    }
+//    var selectedItems by remember { mutableStateOf(items) }
+
+    var selectedItems by remember {
         mutableStateOf(options.map { option ->
             SelectableItem(option, option in selectedOptions)
         })
     }
 
+    // Fetch observers only if the list is empty or data is considered stale
+    LaunchedEffect(Unit) {
+        if (viewModel.observers.value.isEmpty()) {
+            viewModel.fetchObservers()
+        }
+    }
+
     LaunchedEffect(options) {
-        items = options.map { option ->
+        selectedItems = options.map { option ->
             SelectableItem(option, option in selectedOptions)
         }
     }
 
-    MultiSelectDropdown(
-        items = items,
-        label = "Select items"
-    ) { updatedItems ->
-        items = updatedItems
+    // Function to update item selection
+    fun updateItemSelection(item: SelectableItem, isSelected: Boolean) {
+        val updatedItems = selectedItems.map {
+            if (it.title == item.title) it.copy(isSelected = isSelected) else it
+        }
+        selectedItems = updatedItems
+//        items = updatedItems
         // Convert selected items back to a list of strings
         onValueChange(updatedItems.filter { it.isSelected }.map { it.title })
     }
+
+    // Display selected items as a comma-separated string
+    val selectedText = selectedItems.filter { it.isSelected }.joinToString { it.title }
+
+    Column {
+        // Dropdown trigger
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            TextField(
+                readOnly = true,
+                value = selectedText.ifEmpty { "Select items" },
+                onValueChange = {},
+                label = { Text("Select items") },
+                trailingIcon = {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                            contentDescription = null
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+
+            // Dropdown menu items with checkboxes
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                selectedItems.forEach { item ->
+                    DropdownMenuItem(
+                        text = {
+                            Row {
+                                Checkbox(
+                                    checked = item.isSelected,
+                                    onCheckedChange = { isSelected ->
+                                        updateItemSelection(item, isSelected)
+                                    }
+                                )
+                                Text(text = item.title)
+                            }
+                        },
+                        onClick = {
+                            updateItemSelection(item, !item.isSelected)
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+//    MultiSelectDropdown(
+//        items = items,
+//        label = "Select items"
+//    ) { updatedItems ->
+//        items = updatedItems
+//        // Convert selected items back to a list of strings
+//        onValueChange(updatedItems.filter { it.isSelected }.map { it.title })
+//    }
 }
