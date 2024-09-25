@@ -14,7 +14,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun RemoveDialog(
+fun ConfirmEditDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {
@@ -46,7 +45,7 @@ fun RemoveDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "This will remove data you've entered in this view. Are you sure?",
+                    text = "This will alter previously entered data. Are you sure?",
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -79,7 +78,7 @@ fun RemoveDialog(
                         },
                         text = {
                             Text(
-                                "Yes, clear data entry screen.",
+                                "Yes, edit entry",
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }

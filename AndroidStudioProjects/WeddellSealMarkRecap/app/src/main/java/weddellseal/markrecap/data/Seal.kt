@@ -41,4 +41,6 @@ data class Seal(
     val tissue: String = "",
     val weight: Int = 0,
     val weightTaken: Boolean = false,
+    val observationID : Int = 0,
+    val isObservationLogEntry : Boolean = false,
 )

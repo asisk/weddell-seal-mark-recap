@@ -28,7 +28,7 @@ import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
 
 @Composable
 fun ObservationItem(
-    onEditDo: (String) -> Unit,
+    onEditDo: (ObservationLogEntry) -> Unit,
     onViewDo: (ObservationLogEntry) -> Unit,
     observation: ObservationLogEntry
 ) {
@@ -68,9 +68,9 @@ fun ObservationItem(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-//                DropdownMenuItem(
-//                    text = { Text("Edit", color = Color.LightGray)},
-//                    onClick = { /* handle click */ })
+                DropdownMenuItem(
+                    text = { Text("Edit")},
+                    onClick = { onEditDo(observation) })
 
                 DropdownMenuItem(
                     text = { Text("View") },

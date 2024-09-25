@@ -5,6 +5,7 @@ package weddellseal.markrecap.ui.screens
  * Updated when a new observation is saved
 */
 
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,10 +43,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.ui.components.CensusDialog
+import weddellseal.markrecap.ui.components.ConfirmEditDialog
 import weddellseal.markrecap.ui.components.ObservationItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecentObservationsScreen(
     navController: NavHostController,
@@ -49,25 +58,16 @@ fun RecentObservationsScreen(
     obsViewModel: AddObservationLogViewModel,
 ) {
     val state = viewModel.uiState
+    var showEditDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    context.contentResolver
+    var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.observationsFlow.collect {
             state.observations = it
         }
     }
-
-    RecentObsScaffold(navController, state, obsViewModel)
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RecentObsScaffold(
-    navController: NavHostController,
-    state: RecentObservationsViewModel.UiState,
-    obsViewModel: AddObservationLogViewModel,
-) {
-    val context = LocalContext.current
-    context.contentResolver
 
     Scaffold(
         topBar = {
@@ -120,8 +120,13 @@ fun RecentObsScaffold(
                     items(state.observations) { observation ->
                         ObservationItem(
                             onEditDo = {
-                                // do nothing
-//                                obsViewModel.updateObservationEntry(observation)
+                                if (!obsViewModel.primarySeal.isStarted) {
+                                    showEditDialog = true
+                                    observationToEdit = observation
+                                } else {
+                                    // Show a Toast message if the seal is already started
+                                    Toast.makeText(context, "Looks like you're already editing another seal! Finish or delete to edit this record.", Toast.LENGTH_LONG).show()
+                                }
                             },
                             onViewDo = {
                                 obsViewModel.updateObservationEntry(observation)
@@ -132,6 +137,26 @@ fun RecentObsScaffold(
                         HorizontalDivider()
                     }
                 }
+            }
+
+            // Show the dialog if showDialog is true
+            if (showEditDialog) {
+                ConfirmEditDialog(
+                    onDismissRequest = {
+                        showEditDialog = false
+                    },
+                    onConfirmation = {
+                        showEditDialog = false
+                        Toast.makeText(context, "You are about to edit this seal. To edit relatives, select records for editing separately.", Toast.LENGTH_LONG).show()
+
+                        // set the seal in the observationviewmodel & navigate to edit
+                        if (observationToEdit != null) {
+                            obsViewModel.resetSaved()
+                            obsViewModel.populateSealFromObservation(observationToEdit)
+                            navController.navigate(Screens.AddObservationLog.route)
+                        }
+                    },
+                )
             }
         }
     }

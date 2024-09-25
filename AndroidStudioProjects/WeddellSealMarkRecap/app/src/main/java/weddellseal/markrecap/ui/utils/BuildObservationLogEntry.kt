@@ -156,6 +156,7 @@ fun buildLogEntry(
         weight = pupWeight,
         tissueSampled = tissue,
         comments = comment,
+        retagReason = seal.reasonForRetag,
         colony = uiState.colonyLocation,
     )
     return log

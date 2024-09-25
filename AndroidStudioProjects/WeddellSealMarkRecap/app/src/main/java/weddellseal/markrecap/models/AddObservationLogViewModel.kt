@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -32,6 +33,7 @@ import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.data.SupportingDataRepository
 import weddellseal.markrecap.data.WedCheckSeal
+import weddellseal.markrecap.data.processTags
 import weddellseal.markrecap.ui.utils.buildLogEntry
 import weddellseal.markrecap.ui.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.sealValidation
@@ -80,6 +82,8 @@ class AddObservationLogViewModel(
         val isValidated: Boolean = false,
         val validEntry: Boolean = false,
         val observationLogEntry: ObservationLogEntry? = null,
+        val isEditMode: Boolean = false,
+        val recordID: Int = 0,
     )
 
     var uiState by mutableStateOf(
@@ -87,9 +91,6 @@ class AddObservationLogViewModel(
             hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
             hasGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER),
             hasGooglePlay = 999,
-//            date = SimpleDateFormat(
-//                "dd.MM.yyyy HH:mm:ss aaa z", Locale.US
-//            ).format(System.currentTimeMillis()),
             season = getCurrentYear().toString(),
             deviceID = getDeviceName(context),
         )
@@ -777,6 +778,97 @@ class AddObservationLogViewModel(
         updateNotebookEntry(primarySeal)
     }
 
+    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
+    // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
+    fun populateSealFromObservation(log: ObservationLogEntry?) {
+        // Create a String array for the data
+        if (log != null) {
+            var ageString = when (log.ageClass) {
+                "A" -> "Adult"
+                "P" -> "Pup"
+                "Y" -> "Yearling"
+                else -> ""
+            }
+
+            val sealSex = when (log.sex) {
+                "F" -> "Female"
+                "M" -> "Male"
+                "U" -> "Unknown"
+                else -> ""
+            }
+
+            val tagEvent = when (log.tagEvent) {
+                "M" -> "Marked"
+                "N" -> "New"
+                "R2" -> "Retag"
+                else -> ""
+            }
+
+            val condition = when (log.sealCondition) {
+                "0" -> "Dead - 0"
+                "1" -> "Poor - 1"
+                "2" -> "Fair - 2"
+                "3" -> "Good - 3"
+                "4" -> "Newborn - 4"
+                else -> "Select an option"
+            }
+
+            var processedTagOneNumber = ""
+            var processedTagOneAlpha = ""
+            var numTags = 0
+
+            if (log.tagIDOne != "NoTag") {
+                val processedTagOne = processTags(log.tagIDOne)
+                if (processedTagOne.tagValid) {
+                    numTags++
+                    processedTagOneNumber = processedTagOne.tagNumber
+                    processedTagOneAlpha = processedTagOne.tagAlpha
+                }
+
+                val processedTagTwo = processTags(log.tagIDTwo)
+                if (processedTagTwo.tagValid) {
+                    numTags++
+                }
+            }
+
+            primarySeal = primarySeal.copy(
+                colony = log.colony,
+                speNo = log.speno.toInt(),
+                age = ageString, // expecting to advance the seal age based on the last season seen
+                sex = sealSex,
+                numRelatives = log.numRelatives,
+                condition = condition,
+                tagNumber = processedTagOneNumber,
+                tagAlpha = processedTagOneAlpha,
+                oldTagId = log.oldTagIDOne,
+                tagEventType = tagEvent,
+                reasonForRetag = log.retagReason,
+                numTags = if (numTags > 0) numTags.toString() else "",
+                isNoTag = log.tagIDOne == "NoTag" && log.tagEvent == "Marked",
+                comment = log.comments,
+                weightTaken = log.weight != "",
+                weight = if (log.weight != "") log.weight.toInt() else 0,
+                tissueTaken = log.tissueSampled != "",
+                flaggedForReview = log.flaggedEntry != "",
+                isStarted = true,
+                hasWedCheckSpeno = true,
+                observationID = log.id,
+                isObservationLogEntry = true,
+            )
+
+            uiState = uiState.copy(
+                deviceID = log.deviceID,
+                season = log.season,
+                observerInitials = log.observerInitials,
+                censusNumber = log.censusID,
+                isCensusMode = false,
+                colonyLocation = log.colony
+            )
+        }
+        updateNotebookEntry(primarySeal)
+    }
+
+
     fun mapSpeno(name: String, wedCheckSeal: WedCheckSeal) {
         when (name) {
             "primary" -> {
@@ -901,6 +993,11 @@ class AddObservationLogViewModel(
                 viewModelScope.launch {
                     observationRepo.addObservation(log)
                 }
+
+                //TODO, consider overwriting the database entry, instead of appending a new entry
+//                if (primarySeal.observationID != 0) {
+//
+//                }
 
                 uiState = uiState.copy(isSaved = true)
             }

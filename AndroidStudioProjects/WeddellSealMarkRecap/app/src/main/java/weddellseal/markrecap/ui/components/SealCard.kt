@@ -381,13 +381,21 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                if (seal.age == "Pup" || seal.age == "Yearling") { // when the primary seal is a pup or yearling, there can be no other relatives
+                if (seal.name == "primary" && seal.isObservationLogEntry) {
+                    // when the primary seal has been populated from a observation log entry record
+                    Text(
+                        numRelatives,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                } else if (seal.age == "Pup" || seal.age == "Yearling") {
+                    // when the primary seal is a pup or yearling, there can be no other relatives
                     Text(
                         numRelatives,
                         style = MaterialTheme.typography.titleLarge
                     )
 
-                } else if (seal.name == "primary" && seal.sex == "Male" && numRelatives == "0") { // when the primary seal is a male, there can be no other relatives
+                } else if (seal.name == "primary" && seal.sex == "Male" && numRelatives == "0") {
+                    // when the primary seal is a male, there can be no other relatives
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         numRelatives,

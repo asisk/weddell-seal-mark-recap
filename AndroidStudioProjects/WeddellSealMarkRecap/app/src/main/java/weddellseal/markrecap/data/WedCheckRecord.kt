@@ -52,6 +52,8 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         ageString = "Adult"
     } else if (ageClass == "P") {
         ageString = "Pup"
+    } else if (ageClass == "Y") {
+        ageString = "Yearling"
     }
 
     val sealSex = when (sex) {

@@ -5,22 +5,17 @@ package weddellseal.markrecap.ui.screens
  */
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,9 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BabyChangingStation
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Female
@@ -44,8 +36,6 @@ import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -73,24 +63,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.components.ConfirmEditDialog
 import weddellseal.markrecap.ui.components.IneligibleForSaveDialog
 import weddellseal.markrecap.ui.components.ObservationItem
 import weddellseal.markrecap.ui.components.RemoveDialog
 import weddellseal.markrecap.ui.components.SealCard
 import weddellseal.markrecap.ui.components.SealInvalidDialog
-import weddellseal.markrecap.ui.utils.notebookEntryValueObservation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +93,10 @@ fun AddObservationLogScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val recentObsState = recentObsViewModel.uiState
+    var showEditDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    context.contentResolver
+    var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
 
     // seals not "by remember" because the screen needs to respond to input that changes the seal's model values
     val primarySeal = viewModel.primarySeal
@@ -667,8 +661,13 @@ fun AddObservationLogScreen(
                             items(recentObsState.observations) { observation ->
                                 ObservationItem(
                                     onEditDo = {
-                                        // do nothing
-//                                obsViewModel.updateObservationEntry(observation)
+                                        if (!viewModel.primarySeal.isStarted) {
+                                            showEditDialog = true
+                                            observationToEdit = observation
+                                        } else {
+                                            // Show a Toast message if the seal is already started
+                                            Toast.makeText(context, "Looks like you're already editing another seal! Save or clear, then edit this record.", Toast.LENGTH_LONG).show()
+                                        }
                                     },
                                     onViewDo = {
                                         viewModel.updateObservationEntry(observation)
@@ -721,6 +720,26 @@ fun AddObservationLogScreen(
                 onDismissRequest = {
                     showIneligibleDialog = false
                 }
+            )
+        }
+
+        // Show the dialog if showDialog is true
+        if (showEditDialog) {
+            ConfirmEditDialog(
+                onDismissRequest = {
+                    showEditDialog = false
+                },
+                onConfirmation = {
+                    showEditDialog = false
+                    Toast.makeText(context, "You are about to edit this seal. To edit relatives, select records for editing separately.", Toast.LENGTH_LONG).show()
+
+                    // set the seal in the observation view model & navigate to edit
+                    if (observationToEdit != null) {
+                        viewModel.resetSaved()
+                        viewModel.populateSealFromObservation(observationToEdit)
+                        navController.navigate(Screens.AddObservationLog.route)
+                    }
+                },
             )
         }
     }

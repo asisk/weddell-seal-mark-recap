@@ -219,9 +219,6 @@ fun AdminScreen(
                         "$fileName loaded successfully!",
                         Toast.LENGTH_SHORT
                     ).show()
-                } else {
-                    // Show an error message indicating that the selected file is not the expected file
-                    showExplanationDialogForFileMatchError = true
                 }
 
             } else {
