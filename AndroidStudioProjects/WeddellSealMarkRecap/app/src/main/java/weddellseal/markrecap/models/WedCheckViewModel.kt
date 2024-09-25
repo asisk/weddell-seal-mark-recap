@@ -19,7 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.data.ObservationLogEntry
+import weddellseal.markrecap.data.FailedRow
+import weddellseal.markrecap.data.FileUploadEntity
+import weddellseal.markrecap.data.Result
 import weddellseal.markrecap.data.WedCheckRecord
 import weddellseal.markrecap.data.WedCheckRepository
 import weddellseal.markrecap.data.WedCheckSeal
@@ -59,7 +61,8 @@ class WedCheckViewModel(
         val sealRecordDB: WedCheckRecord? = null,
         val date: String, //TODO, think about the proper date format, should it be UTC?
         val isError: Boolean = false,
-        val failedRows: List<String> = emptyList(),
+        val failedRows: List<FailedRow> = emptyList(),
+        val fileLoadError: String = "",
         val totalRows: Int = 0,
         val isWedCheckLoading: Boolean = false,
         val isWedCheckLoaded: Boolean = false,
@@ -110,7 +113,7 @@ class WedCheckViewModel(
 
     fun findSealbyTagID(sealTagID: String) {
         // clear the last seal from the wedcheck viewmodel
-         _uiState.value = uiState.value.copy(
+        _uiState.value = uiState.value.copy(
             sealRecordDB = null,
             isSearching = true,
             sealNotFound = true,
@@ -189,26 +192,33 @@ class WedCheckViewModel(
         wedCheckSeal = WedCheckSeal()
     }
 
-    fun loadWedCheck(uri: Uri) {
-        // Kick off this process on a coroutine
-        viewModelScope.launch {
-            _uiState.value = uiState.value.copy(loading = true, isWedCheckLoading = true)
-            try {
-                val (csvData, failedRows) = readWedCheckData(context.contentResolver, uri)
 
-                _uiState.value = uiState.value.copy(
-                    loading = false,
-                    isWedCheckLoaded = true,
-                    isWedCheckLoading = false,
-                    totalRows = csvData.size + failedRows.size,
-                    isError = failedRows.isNotEmpty(),
-                    failedRows = failedRows
+    fun loadWedCheck(uri: Uri, filename: String) {
+        viewModelScope.launch {
+            var fileUploadId: Long = -1L
+            try {
+                _uiState.value = uiState.value.copy(loading = true, isWedCheckLoading = true)
+
+                // 1. Insert FileUploadEntity and get the fileUploadId
+                fileUploadId = insertFileUploadRecord(filename)
+
+                // 2. Read CSV data
+                val (csvData, failedRows) = readWedCheckData(uri, fileUploadId)
+
+                // 3. Insert CSV data into the database
+                val insertedCount = insertCsvData(fileUploadId, csvData)
+
+                // 4. Update file upload status based on the result
+                wedCheckRepo.updateFileUploadStatus(
+                    fileUploadId,
+                    if (insertedCount > 0) "successful" else "failed"
                 )
 
-                // Insert CSV data into the database
-                wedCheckRepo.insertCsvData(csvData)
+                // 5. Update the UI state
+                updateUIState(insertedCount, failedRows)
 
             } catch (e: Exception) {
+                wedCheckRepo.updateFileUploadStatus(fileUploadId, "failed")
                 _uiState.value = uiState.value.copy(
                     loading = false,
                     isWedCheckLoaded = false,
@@ -219,6 +229,44 @@ class WedCheckViewModel(
         }
     }
 
+    private suspend fun insertFileUploadRecord(filename: String): Long {
+        return wedCheckRepo.insertFileUpload(
+            FileUploadEntity(id = 0, filename = filename, status = "pending")
+        )
+    }
+
+    private fun readWedCheckData(
+        uri: Uri,
+        fileUploadId: Long
+    ): Pair<List<WedCheckRecord>, List<FailedRow>> {
+        return readWedCheckData(context.contentResolver, uri, fileUploadId)
+    }
+
+    private suspend fun insertCsvData(
+        fileUploadId: Long,
+        csvData: List<WedCheckRecord>,
+    ): Int {
+        return when (val result = wedCheckRepo.insertCsvData(fileUploadId, csvData)) {
+            is Result.Success -> result.data
+            is Result.Error -> {
+                // Update file upload status to "failed"
+                wedCheckRepo.updateFileUploadStatus(fileUploadId, "failed")
+                throw Exception(result.message)
+            }
+        }
+    }
+
+    private fun updateUIState(insertedCount: Int, failedRows: List<FailedRow>) {
+        _uiState.value = uiState.value.copy(
+            loading = false,
+            isWedCheckLoaded = insertedCount > 0,
+            isWedCheckLoading = false,
+            totalRows = insertedCount,
+            isError = failedRows.isNotEmpty(),
+            failedRows = failedRows
+        )
+    }
+
     fun updateLastFileNameLoaded(fileName: String) {
         _uiState.value = uiState.value.copy(
             lastWedCheckFileLoaded = fileName
@@ -227,110 +275,138 @@ class WedCheckViewModel(
 
     private fun readWedCheckData(
         contentResolver: ContentResolver,
-        uri: Uri
-    ): Pair<List<WedCheckRecord>, List<String>> {
+        uri: Uri,
+        fileUploadId: Long
+    ): Pair<List<WedCheckRecord>, List<FailedRow>> {
         val csvData: MutableList<WedCheckRecord> = mutableListOf()
-        val failedRows: MutableList<String> = mutableListOf()
+        val failedRows: MutableList<FailedRow> = mutableListOf()
+        var lineNumber = 0
 
         try {
             contentResolver.openInputStream(uri)?.use { stream ->
                 InputStreamReader(stream).buffered().use { reader ->
                     // Read the CSV header
-                    // Assuming the first line contains the column headers
                     val headerRow = reader.readLine()?.split(",") ?: emptyList()
-                    val spenoIndex = headerRow.indexOf("speno")
-                    val lastSeenIndex = headerRow.indexOf("last_seen")
-                    val ageClassIndex = headerRow.indexOf("ac")
-                    val sexIndex = headerRow.indexOf("newsex")
-                    val tagOneIndex = headerRow.indexOf("tag1")
-                    val tagTwoIndex = headerRow.indexOf("tag2")
-                    val noteIndex = headerRow.indexOf("note")
-                    val ageIndex = headerRow.indexOf("age")
-                    val tissueIndex = headerRow.indexOf("tissue")
-                    val pupinMassStudyIndex = headerRow.indexOf("PupinMassStudy")
-                    val numPreviousPupsIndex = headerRow.indexOf("NbPreviousPups")
-                    val pupinTTStudyIndex = headerRow.indexOf("PupinTTStudy")
-                    val momMassMeasurementsIndex = headerRow.indexOf("MomMassMeasurements")
-                    val conditionIndex = headerRow.indexOf("cond")
-                    val lastPhysioIndex = headerRow.indexOf("last physio")
-                    val colonyIndex = headerRow.indexOf("colony")
 
-                    // verify that all columns were found
-                    if (listOf(
-                            spenoIndex,
-                            lastSeenIndex,
-                            ageClassIndex,
-                            sexIndex,
-                            tagOneIndex,
-                            tagTwoIndex,
-                            noteIndex,
-                            ageIndex,
-                            tissueIndex,
-                            pupinMassStudyIndex,
-                            numPreviousPupsIndex,
-                            pupinTTStudyIndex,
-                            momMassMeasurementsIndex,
-                            conditionIndex,
-                            lastPhysioIndex,
-                            colonyIndex
-                        ).all { it != -1 }
-                    ) {
-                        // Read each line of the CSV file
-                        reader.forEachLine { line ->
-                            // Split the line into fields based on the CSV delimiter (e.g., ',')
-                            val row = line.split(",")
-                            try {
-                                // Parse fields and create an instance of a WedCheckRecord
-                                val record = WedCheckRecord(
-                                    id = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
-                                    speno = row.getOrNull(spenoIndex)?.toIntOrNull() ?: 0,
-                                    season = row.getOrNull(lastSeenIndex)?.toIntOrNull() ?: 0,
-                                    ageClass = row.getOrNull(ageClassIndex) ?: "",
-                                    sex = row.getOrNull(sexIndex) ?: "",
-                                    tagIdOne = row.getOrNull(tagOneIndex) ?: "",
-                                    tagIdTwo = row.getOrNull(tagTwoIndex) ?: "",
-                                    comments = row.getOrNull(noteIndex) ?: "",
-                                    ageYears = row.getOrNull(ageIndex)?.toIntOrNull() ?: 0,
-                                    tissueSampled = row.getOrNull(tissueIndex) ?: "",
-                                    pupinMassStudy = row.getOrNull(pupinMassStudyIndex) ?: "",
-                                    numPreviousPups = row.getOrNull(numPreviousPupsIndex) ?: "",
-                                    pupinTTStudy = row.getOrNull(pupinTTStudyIndex) ?: "",
-                                    momMassMeasurements = row.getOrNull(momMassMeasurementsIndex)
-                                        ?: "",
-                                    condition = row.getOrNull(conditionIndex) ?: "",
-                                    lastPhysio = row.getOrNull(lastPhysioIndex) ?: "",
-                                    colony = row.getOrNull(colonyIndex) ?: ""
+                    // Column indices based on the header
+                    val requiredHeaders = mapOf(
+                        "speno" to "speno",
+                        "last_seen" to "lastSeen",
+                        "ac" to "ageClass",
+                        "newsex" to "sex",
+                        "tag1" to "tagOne",
+                        "tag2" to "tagTwo",
+                        "note" to "note",
+                        "age" to "age",
+                        "tissue" to "tissue",
+                        "PupinMassStudy" to "pupinMassStudy",
+                        "NbPreviousPups" to "numPreviousPups",
+                        "PupinTTStudy" to "pupinTTStudy",
+                        "MomMassMeasurements" to "momMassMeasurements",
+                        "cond" to "condition",
+                        "last physio" to "lastPhysio",
+                        "colony" to "colony"
+                    )
+
+                    val columnIndices = requiredHeaders.mapValues { headerRow.indexOf(it.key) }
+
+                    // Check if any required headers are missing
+                    val missingHeaders = columnIndices.filterValues { it == -1 }.keys
+                    if (missingHeaders.isNotEmpty()) {
+                        failedRows.add(
+                            FailedRow(
+                                rowNumber = 0,
+                                errorMessage = "CSV file missing required headers"
+                            )
+                        )
+                        return Pair(csvData, failedRows)
+                    }
+
+                    // Read each line of the CSV file
+                    reader.forEachLine { line ->
+                        lineNumber++ // Increment line number for each iteration
+                        // Split the line into fields based on the CSV delimiter (e.g., ',')
+                        val row = line.split(",")
+
+                        try {
+                            // Parse fields and create an instance of a WedCheckRecord
+
+                            // handle is the possibility that the value is missing or invalid in the row, which is why getOrNull and ?: "" are used
+                            val speno = row.getOrNull(columnIndices["speno"]!!)?.toIntOrNull()
+                                ?: throw IllegalArgumentException("Invalid or missing speno")
+
+                            val record = WedCheckRecord(
+                                speno = speno,  // Guaranteed to be a valid Int due to the check above
+                                season = row.getOrNull(columnIndices["lastSeen"]!!)?.toIntOrNull()
+                                    ?: 0,  // Guaranteed to be a valid Int due to the check above
+                                ageClass = row.getOrNull(columnIndices["lastObservedAgeClass"]!!)
+                                    ?: "",
+                                sex = row.getOrNull(columnIndices["sex"]!!) ?: "",
+                                tagIdOne = row.getOrNull(columnIndices["tagNumberOne"]!!) ?: "",
+                                tagIdTwo = row.getOrNull(columnIndices["tagNumberTwo"]!!) ?: "",
+                                comments = row.getOrNull(columnIndices["comments"]!!) ?: "",
+                                ageYears = row.getOrNull(columnIndices["ageYears"]!!)?.toIntOrNull()
+                                    ?: 0,
+                                tissueSampled = row.getOrNull(columnIndices["tissue"]!!) ?: "NA",
+                                pupinMassStudy = row.getOrNull(columnIndices["pupinMassStudy"]!!)
+                                    ?: "",
+                                numPreviousPups = row.getOrNull(columnIndices["numPreviousPups"]!!)
+                                    ?: "",
+                                pupinTTStudy = row.getOrNull(columnIndices["pupinTTStudy"]!!) ?: "",
+                                momMassMeasurements = row.getOrNull(columnIndices["momMassMeasurements"]!!)
+                                    ?: "",
+                                condition = row.getOrNull(columnIndices["condition"]!!) ?: "",
+                                lastPhysio = row.getOrNull(columnIndices["lastPhysio"]!!) ?: "",
+                                colony = row.getOrNull(columnIndices["colony"]!!) ?: "",
+                                fileUploadId = fileUploadId // This remains the same as it’s coming from your system, not the CSV
+                            )
+
+                            // Add the parsed entity to the list
+                            csvData.add(record)
+
+                        } catch (e: NumberFormatException) {
+                            // Handle and log number format issues
+                            failedRows.add(
+                                FailedRow(
+                                    rowNumber = lineNumber,
+                                    errorMessage = "Invalid number format in row $lineNumber: ${e.localizedMessage}"
                                 )
-
-                                // Add the parsed entity to the list
-                                csvData.add(record)
-                            } catch (e: Exception) {
-                                // Handle and log any errors in parsing the row
-                                e.printStackTrace()
-                                // Capture the raw row that failed
-                                failedRows.add(line)
-                            }
+                            )
+                        } catch (e: Exception) {
+                            // Handle and log any errors in parsing the row
+                            e.printStackTrace()
+                            // Capture the failed row with details like row number and error message
+                            failedRows.add(
+                                FailedRow(
+                                    rowNumber = lineNumber,
+                                    errorMessage = "Error in row $lineNumber: ${e.localizedMessage ?: "Unknown error"}"
+                                )
+                            )
                         }
-                    } else {
-                        // Handle the case where one or more headers are missing
-                        // This could be logging an error, showing a message to the user, etc.
-                        throw IllegalArgumentException("CSV file missing required headers")
                     }
                 }
             } ?: throw IOException("Unable to open input stream")
         } catch (e: IOException) {
-            e.printStackTrace()
-            //TODO,  Handle IO exception
+            failedRows.add(
+                FailedRow(
+                    rowNumber = 0,
+                    errorMessage = "I/O error: ${e.localizedMessage}"
+                )
+            )
         } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-            //TODO
-        } catch (e: NumberFormatException) {
-            e.printStackTrace()
-            //TODO, Handle number format exception (if field3 cannot be parsed as an Int)
+            failedRows.add(
+                FailedRow(
+                    rowNumber = 0,
+                    errorMessage = "Invalid CSV format: ${e.localizedMessage}"
+                )
+            )
         } catch (e: Exception) {
-            // Handle any other exceptions
-            e.printStackTrace()
-            // TODO, Show an error message to the user, log the error, etc.
+            failedRows.add(
+                FailedRow(
+                    rowNumber = 0,
+                    errorMessage = "Unknown error: ${e.localizedMessage}"
+                )
+            )
         }
         return Pair(csvData, failedRows)
     }

@@ -87,8 +87,6 @@ fun HomeScaffold(
 
     LaunchedEffect(Unit) {
         viewModel.fetchLocations()
-
-        viewModel.fetchObservers()
     }
 
     // Register ActivityResult to request Location permissions
@@ -317,6 +315,7 @@ fun HomeScaffold(
 //                                    obsViewModel.updateObserverInitials(valueSelected)
 //                                }
                                 MultiSelectDropdownObservers(
+                                    viewModel,
                                     options = observerList,
                                     selectedOptions = observerSelected,
                                     onValueChange = { updatedItems ->

@@ -6,9 +6,16 @@ package weddellseal.markrecap.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "observationLogs")
+@Entity(
+    tableName = "observationLogs",
+    indices = [
+        Index(value = ["speno"]), // Index for faster lookups on speno
+        Index(value = ["tag_id_one"])  // Index for faster lookups on tagNumberOne
+    ]
+)
 data class ObservationLogEntry(
     @PrimaryKey(autoGenerate = true) val id: Int,
     @ColumnInfo(name = "device_id") val deviceID: String,
@@ -38,4 +45,6 @@ data class ObservationLogEntry(
     @ColumnInfo(name = "tissue_sampled") val tissueSampled: String,
     @ColumnInfo(name = "comments") val comments: String,
     @ColumnInfo(name = "colony") val colony: String,
+    @ColumnInfo(name = "updatedAt")  val updatedAt: Long? = null, // Timestamp for noting if a record has been updated
+    @ColumnInfo(name = "deletedAt")  val deletedAt: Long? = null // Timestamp for soft delete
 )

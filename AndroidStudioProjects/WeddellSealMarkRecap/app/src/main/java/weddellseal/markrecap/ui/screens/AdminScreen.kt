@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,6 +27,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -52,6 +57,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.data.FailedRow
+import weddellseal.markrecap.data.FileUploadEntity
 import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
@@ -68,9 +75,11 @@ fun AdminScreen(
     recentObservationsViewModel: RecentObservationsViewModel
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
     val uiStateWedCheck by wedCheckViewModel.uiState.collectAsState()
     val uiStateHome by homeViewModel.uiState.collectAsState()
+    val fileUploads by homeViewModel.fileUploads.collectAsState()
+    // Track which file name failed
+    var filenameStr by remember { mutableStateOf("") }
 
     val createDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
@@ -119,11 +128,11 @@ fun AdminScreen(
     if (showExplanationDialogForFileMatchError) {
         FileAccessExplanationDialog(
             onConfirm = {
-                showExplanationDialogForFileMatchError = false
+//                showExplanationDialogForFileMatchError = false
             },
             onDismiss = { showExplanationDialogForFileMatchError = false },
             title = "Error",
-            text = "File name does not match! Please rename your file and try again!"
+            text = "File name does not match expected value: $filenameStr! Please rename your file and try again!"
         )
     }
 
@@ -134,7 +143,7 @@ fun AdminScreen(
         // Handle the selected locations file here
         if (uri != null) {
             var fileName = ""
-
+            filenameStr = "WedCheckFull.csv or WedCheck.csv"
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (displayNameIndex != -1 && cursor.moveToFirst()) {
@@ -142,7 +151,8 @@ fun AdminScreen(
                 }
             }
 
-            if (fileName == "WedCheckFull04Aug2024.csv") {
+            // Support uploading the full wedcheck file
+            if (fileName == "WedCheckFull.csv" || fileName == "WedCheck.csv") {
                 //TODO, add validation to ensure that the file is right-sized
 //                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
 //
@@ -151,13 +161,13 @@ fun AdminScreen(
 //                    return fileSize <= MAX_FILE_SIZE_BYTES
 //                }
                 wedCheckViewModel.updateLastFileNameLoaded(fileName)
-                wedCheckViewModel.loadWedCheck(uri)
+                wedCheckViewModel.loadWedCheck(uri, fileName)
 
                 if (wedCheckViewModel.uiState.value.isWedCheckLoaded) {
                     // Display a success message
                     Toast.makeText(
                         context,
-                        "WedCheck file loaded successfully!",
+                        "$fileName loaded successfully!",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -175,6 +185,7 @@ fun AdminScreen(
         // Handle the selected locations file here
         if (uri != null) {
             var fileName = ""
+            filenameStr = "Colony_Locations.csv"
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -185,13 +196,13 @@ fun AdminScreen(
 
             if (fileName == "Colony_Locations.csv") {
                 homeViewModel.updateLastColoniesFileNameLoaded(fileName)
-                homeViewModel.loadSealColoniesFile(uri)
+                homeViewModel.loadSealColoniesFile(uri, fileName)
 
                 if (homeViewModel.uiState.value.isColonyLocationsLoaded) {
                     // Display a success message
                     Toast.makeText(
                         context,
-                        "Colonies file loaded successfully!",
+                        "$fileName loaded successfully!",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -209,6 +220,7 @@ fun AdminScreen(
         // Handle the selected locations file here
         if (uri != null) {
             var fileName = ""
+            filenameStr = "observers.csv"
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -219,13 +231,13 @@ fun AdminScreen(
 
             if (fileName == "observers.csv") {
                 homeViewModel.updateLastObserversFileNameLoaded(fileName)
-                homeViewModel.loadObserversFile(uri)
+                homeViewModel.loadObserversFile(uri, fileName)
 
                 if (homeViewModel.uiState.value.isObserversLoaded) {
                     // Display a success message
                     Toast.makeText(
                         context,
-                        "Observers file loaded successfully!",
+                        "$fileName loaded successfully!",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -293,7 +305,7 @@ fun AdminScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .verticalScroll(state = scrollState, enabled = true)
+//                .verticalScroll(state = scrollState, enabled = true)
                 .fillMaxSize(),
         ) {
             Box(
@@ -315,158 +327,355 @@ fun AdminScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 30.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
-                            onClick = {
-                                getWedCheckCSV.launch("text/csv")
-                            },
-                            icon = {
-                                Icon(
-                                    Icons.Filled.Upload,
-                                    "Upload WedCheck File",
-                                    Modifier.size(36.dp)
-                                )
-                            },
-                            text = {
-                                Text(
-                                    "Upload WedCheck File",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            })
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 30.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
-                            onClick = { getObserversCSV.launch("text/csv") },
-                            icon = {
-                                Icon(
-                                    Icons.Filled.Upload,
-                                    "Upload Observer Initials",
-                                    Modifier.size(36.dp)
-                                )
-                            },
-                            text = {
-                                Text(
-                                    text = "Upload Observer Initials",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 30.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
-                            onClick = { homeViewModel.clearObservers() },
-                            icon = {
-                                Icon(
-                                    Icons.Filled.Delete,
-                                    "Clear Observers Dropdown",
-                                    Modifier.size(36.dp)
-                                )
-                            },
-                            text = {
-                                Text(
-                                    text = "Clear Observers Dropdown",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 30.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
-                            onClick = { getColonyLocationsCSV.launch("text/csv") },
-                            icon = {
-                                Icon(
-                                    Icons.Filled.Upload,
-                                    "Upload Seal Colony Locations",
-                                    Modifier.size(36.dp)
-                                )
-                            },
-                            text = {
-                                Text(
-                                    text = "Upload Seal Colony Locations",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-                        )
-                    }
+                    // File Upload Table Viewer
+                    FileUploadList(fileUploads)
 
-                    ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
-                        containerColor = Color.LightGray,
-                        onClick = { homeViewModel.clearColonies() },
-                        icon = {
-                            Icon(
-                                Icons.Filled.Delete,
-                                "Clear Colonies Dropdown",
-                                Modifier.size(36.dp)
-                            )
-                        },
-                        text = {
-                            Text(
-                                text = "Clear Colonies Dropdown",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                        }
+                    // Card for WedCheck Upload
+                    FileUploadCard(
+                        title = "Upload WedCheck File",
+                        onUpload = { getWedCheckCSV.launch("text/csv") }
                     )
 
-                    FileLoadingView(
-                        isLoading = uiStateWedCheck.isWedCheckLoading,
-                        isLoaded = uiStateWedCheck.isWedCheckLoaded,
-                        totalRows = uiStateWedCheck.totalRows,
-                        failedRows = uiStateWedCheck.failedRows,
-                        fileName = uiStateWedCheck.lastWedCheckFileLoaded
+                    // Card for Observers Upload and Clear
+                    FileUploadCard(
+                        title = "Upload Observer Initials",
+                        onUpload = { getObserversCSV.launch("text/csv") },
+                        onDelete = { homeViewModel.clearObservers() }
                     )
 
-                    FileLoadingView(
-                        isLoading = uiStateHome.loading,
-                        isLoaded = uiStateHome.isColonyLocationsLoaded,
-                        totalRows = uiStateHome.totalColoniesRows,
-                        failedRows = uiStateHome.failedColoniesRows,
-                        fileName = uiStateHome.lastColoniesFileNameLoaded
+                    // Card for Colony Locations Upload and Clear
+                    FileUploadCard(
+                        title = "Upload Seal Colony Locations",
+                        onUpload = { getColonyLocationsCSV.launch("text/csv") },
+                        onDelete = { homeViewModel.clearColonies() }
                     )
 
-                    FileLoadingView(
-                        isLoading = uiStateHome.loading,
-                        isLoaded = uiStateHome.isObserversLoaded,
-                        totalRows = uiStateHome.totalObserversRows,
-                        failedRows = uiStateHome.failedObserversRows,
-                        fileName = uiStateHome.lastObserversFileNameLoaded
+                    // Card for Loaded Files
+                    LoadedFilesCard(
+                        wedCheckState = uiStateWedCheck,
+                        homeViewModelState = uiStateHome,
                     )
+
+                    // Handle Errors in CSV Export
+                    if (recentObservationsViewModel.uiState.isError) {
+                        ErrorText("Error during CSV export!")
+                    }
+
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(bottom = 30.dp),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
+//                            containerColor = Color.LightGray,
+//                            onClick = {
+//                                getWedCheckCSV.launch("text/csv")
+//                            },
+//                            icon = {
+//                                Icon(
+//                                    Icons.Filled.Upload,
+//                                    "Upload WedCheck File",
+//                                    Modifier.size(36.dp)
+//                                )
+//                            },
+//                            text = {
+//                                Text(
+//                                    "Upload WedCheck File",
+//                                    style = MaterialTheme.typography.titleLarge
+//                                )
+//                            })
+//                    }
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(bottom = 30.dp),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
+//                            containerColor = Color.LightGray,
+//                            onClick = { getObserversCSV.launch("text/csv") },
+//                            icon = {
+//                                Icon(
+//                                    Icons.Filled.Upload,
+//                                    "Upload Observer Initials",
+//                                    Modifier.size(36.dp)
+//                                )
+//                            },
+//                            text = {
+//                                Text(
+//                                    text = "Upload Observer Initials",
+//                                    style = MaterialTheme.typography.titleLarge
+//                                )
+//                            }
+//                        )
+//                    }
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(bottom = 30.dp),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
+//                            containerColor = Color.LightGray,
+//                            onClick = { homeViewModel.clearObservers() },
+//                            icon = {
+//                                Icon(
+//                                    Icons.Filled.Delete,
+//                                    "Clear Observers Dropdown",
+//                                    Modifier.size(36.dp)
+//                                )
+//                            },
+//                            text = {
+//                                Text(
+//                                    text = "Clear Observers Dropdown",
+//                                    style = MaterialTheme.typography.titleLarge
+//                                )
+//                            }
+//                        )
+//                    }
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(bottom = 30.dp),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
+//                            containerColor = Color.LightGray,
+//                            onClick = { getColonyLocationsCSV.launch("text/csv") },
+//                            icon = {
+//                                Icon(
+//                                    Icons.Filled.Upload,
+//                                    "Upload Seal Colony Locations",
+//                                    Modifier.size(36.dp)
+//                                )
+//                            },
+//                            text = {
+//                                Text(
+//                                    text = "Upload Seal Colony Locations",
+//                                    style = MaterialTheme.typography.titleLarge
+//                                )
+//                            }
+//                        )
+//                    }
+//
+//                    ExtendedFloatingActionButton(modifier = Modifier.padding(16.dp),
+//                        containerColor = Color.LightGray,
+//                        onClick = { homeViewModel.clearColonies() },
+//                        icon = {
+//                            Icon(
+//                                Icons.Filled.Delete,
+//                                "Clear Colonies Dropdown",
+//                                Modifier.size(36.dp)
+//                            )
+//                        },
+//                        text = {
+//                            Text(
+//                                text = "Clear Colonies Dropdown",
+//                                style = MaterialTheme.typography.titleLarge
+//                            )
+//                        }
+//                    )
+//
+//                    FileLoadingView(
+//                        isLoading = uiStateWedCheck.isWedCheckLoading,
+//                        isLoaded = uiStateWedCheck.isWedCheckLoaded,
+//                        totalRows = uiStateWedCheck.totalRows,
+//                        failedRows = uiStateWedCheck.failedRows,
+//                        fileName = uiStateWedCheck.lastWedCheckFileLoaded
+//                    )
+//
+//                    FileLoadingView(
+//                        isLoading = uiStateHome.loading,
+//                        isLoaded = uiStateHome.isColonyLocationsLoaded,
+//                        totalRows = uiStateHome.totalColoniesRows,
+//                        failedRows = uiStateHome.failedColoniesRows,
+//                        fileName = uiStateHome.lastColoniesFileNameLoaded
+//                    )
+//
+//                    FileLoadingView(
+//                        isLoading = uiStateHome.loading,
+//                        isLoaded = uiStateHome.isObserversLoaded,
+//                        totalRows = uiStateHome.totalObserversRows,
+//                        failedRows = uiStateHome.failedObserversRows,
+//                        fileName = uiStateHome.lastObserversFileNameLoaded
+//                    )
+//                }
+//            }
+//            if (recentObservationsViewModel.uiState.isError) {
+//                Row(
+//                    modifier = Modifier
+//                        .padding(6.dp)
+//                        .fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.Center,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text("Error during CSV export!")
+//                }
+//            }
                 }
             }
-            if (recentObservationsViewModel.uiState.isError) {
-                Row(
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Error during CSV export!")
-                }
+        }
+    }
+}
+
+@Composable
+fun FileUploadCard(
+    title: String,
+    onUpload: () -> Unit,
+    onDelete: (() -> Unit)? = null // Optional delete action
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp) // Use CardDefaults for elevation
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = title, style = MaterialTheme.typography.headlineLarge)
+
+            // Upload Button
+            ExtendedFloatingActionButton(
+                onClick = onUpload,
+                containerColor = Color.LightGray,
+                icon = {
+                    Icon(
+                        Icons.Filled.Upload,
+                        contentDescription = "Upload",
+                        Modifier.size(36.dp)
+                    )
+                },
+                text = { Text(text = "Upload", style = MaterialTheme.typography.bodyLarge) }
+            )
+
+            // Optional Delete Button
+            onDelete?.let {
+                Spacer(modifier = Modifier.height(16.dp))
+                ExtendedFloatingActionButton(
+                    onClick = onDelete,
+                    containerColor = Color.Red,
+                    icon = {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "Delete",
+                            Modifier.size(36.dp)
+                        )
+                    },
+                    text = { Text(text = "Clear", style = MaterialTheme.typography.bodyLarge) }
+                )
             }
+        }
+    }
+}
+
+@Composable
+fun LoadedFilesCard(
+    wedCheckState: WedCheckViewModel.UiState,
+    homeViewModelState: HomeViewModel.UiState,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp) // Use CardDefaults for elevation
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Loaded Files", style = MaterialTheme.typography.headlineLarge)
+
+            // WedCheck File Status
+            FileLoadingView(
+                isLoading = wedCheckState.isWedCheckLoading,
+                isLoaded = wedCheckState.isWedCheckLoaded,
+                totalRows = wedCheckState.totalRows,
+                failedRows = wedCheckState.failedRows,
+                fileName = wedCheckState.lastWedCheckFileLoaded
+            )
+
+            // Observer File Status
+            FileLoadingView(
+                isLoading = homeViewModelState.isObserversLoading,
+                isLoaded = homeViewModelState.isObserversLoaded,
+                totalRows = homeViewModelState.totalObserversRows,
+                failedRows = homeViewModelState.failedObserversRows,
+                fileName = homeViewModelState.lastObserversFileNameLoaded
+            )
+
+            // Colony File Status
+            FileLoadingView(
+                isLoading = homeViewModelState.isColonyLocationsLoading,
+                isLoaded = homeViewModelState.isColonyLocationsLoaded,
+                totalRows = homeViewModelState.totalColoniesRows,
+                failedRows = homeViewModelState.failedColoniesRows,
+                fileName = homeViewModelState.lastColoniesFileNameLoaded
+            )
+        }
+    }
+}
+
+@Composable
+fun ErrorText(message: String) {
+    Row(
+        modifier = Modifier
+            .padding(6.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(message, color = Color.Red, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+fun FileUploadList(fileUploads: List<FileUploadEntity>) {
+    if (fileUploads.isEmpty()) {
+        Text("No file uploads found.")
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(fileUploads) { file ->
+                FileUploadItem(fileUpload = file)
+            }
+        }
+    }
+}
+
+@Composable
+fun FileUploadItem(fileUpload: FileUploadEntity) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+
+            Text(
+                "File Name: ${fileUpload.filename}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                " : ${
+                    SimpleDateFormat(
+                        "yyyy-MM-dd HH:mm:ss",
+                        Locale.US
+                    ).format(Date(fileUpload.createdAt))
+                }",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(" : ${fileUpload.status}", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -476,7 +685,7 @@ fun FileLoadingView(
     isLoading: Boolean,
     isLoaded: Boolean,
     totalRows: Int,
-    failedRows: List<String>,
+    failedRows: List<FailedRow>,
     fileName: String,
 ) {
     if (isLoading) {
@@ -534,13 +743,6 @@ fun FileLoadingView(
                         ) {
                             Text("Failed Rows: ${failedRows.joinToString(", ")}")
                         }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            FailedRowsDisplay(failedRows)
-                        }
                     }
                 } else {
                     Row(
@@ -565,7 +767,7 @@ fun FileLoadingView(
 }
 
 @Composable
-fun FailedRowsDisplay(failedRows: List<String>) {
+fun FailedRowsDisplay(failedRows: List<FailedRow>) {
     if (failedRows.isNotEmpty()) {
         Column(
             modifier = Modifier
@@ -578,9 +780,9 @@ fun FailedRowsDisplay(failedRows: List<String>) {
                 color = MaterialTheme.colorScheme.error
             )
 
-            failedRows.forEachIndexed { index, row ->
+            failedRows.forEach { row ->
                 Text(
-                    text = "Row ${index + 1}: $row",
+                    text = "Row ${row.rowNumber}: ${row.errorMessage}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onError
                 )

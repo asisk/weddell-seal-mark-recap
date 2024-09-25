@@ -13,10 +13,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class, SealColony::class, Observers::class], version = 10, exportSchema = false)
+@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class, SealColony::class, Observers::class, FileUploadEntity::class], version = 14, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao
     abstract fun wedCheckDao(): WedCheckDao
+    abstract fun fileUploadDao() : FileUploadDao
     abstract fun sealColoniesDao() : SealColoniesDao
     abstract fun observersDao() : ObserversDao
 

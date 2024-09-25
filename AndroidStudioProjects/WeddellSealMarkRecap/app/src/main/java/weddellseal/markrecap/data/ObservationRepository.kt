@@ -21,7 +21,7 @@ class ObservationRepository(private val observationDao: ObservationDao) {
      * Returns a LiveData-wrapped List of Observations.
      */
     val observations: LiveData<List<ObservationLogEntry>> = liveData {
-        // Observe observations from the database (just like a normal LiveData + Room return)
+        // Observe active observations from the database (just like a normal LiveData + Room return)
         val observationsLiveData = observationDao.loadAllObservations()
 
         // Map the LiveData, applying the sort criteria
@@ -31,7 +31,7 @@ class ObservationRepository(private val observationDao: ObservationDao) {
     suspend fun writeDataToFile(uri: Uri, contentResolver: ContentResolver) {
         withContext(Dispatchers.IO) {
             try {
-                // Fetch all observations from the database
+                // Fetch all observations from the database that have not been deleted
                 val data: List<ObservationLogEntry> = observationDao.getObservationsForCSVWrite()
 
                 contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -85,9 +85,17 @@ class ObservationRepository(private val observationDao: ObservationDao) {
             }
         }
     }
-    fun canAddObservation() = true
 
     suspend fun addObservation(log: ObservationLogEntry) {
         observationDao.insert(log)
+    }
+
+    suspend fun softDeleteAllObservations() {
+        observationDao.softDeleteObservations()
+    }
+
+    suspend fun updateObservationEntry(log: ObservationLogEntry) {
+        // Example of updating an existing entry with ID 1
+        observationDao.updateObservationLogEntry(log)
     }
 }

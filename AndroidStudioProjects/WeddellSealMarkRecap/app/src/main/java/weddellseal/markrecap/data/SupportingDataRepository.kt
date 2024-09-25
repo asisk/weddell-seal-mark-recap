@@ -1,13 +1,35 @@
 package weddellseal.markrecap.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 
 class SupportingDataRepository(
     private val observersDao: ObserversDao,
-    private val sealColoniesDao: SealColoniesDao
+    private val sealColoniesDao: SealColoniesDao,
+    private val fileUploadDao: FileUploadDao
 ) {
+
+    // Return flow of file uploads from the DAO
+    val fileUploads: Flow<List<FileUploadEntity>> = fileUploadDao.getAllFileUploads()
+
+    // used to refresh the database with a current list of observers
+    suspend fun insertObserversData(fileUploadId: Long, csvData: List<Observers>): Int {
+        return withContext(Dispatchers.IO) {
+            observersDao.insertObserversRecords(fileUploadId, csvData)
+        }
+    }
+
+    // used to refresh the database with a current list of locations
+    suspend fun insertColoniesData(fileUploadId: Long, csvData: List<SealColony>): Int {
+        return withContext(Dispatchers.IO) {
+            sealColoniesDao.insertColonyRecords(
+                fileUploadId,
+                csvData
+            )
+        }
+    }
 
     fun getObserverInitials(): List<String> {
         return observersDao.getObserverInitials()
@@ -18,17 +40,9 @@ class SupportingDataRepository(
         return sealColoniesDao.getSealColonyNames()
     }
 
-    // used to refresh the database with a current list of observers
-    suspend fun insertObserversData(csvData: List<Observers>) {
+    suspend fun deleteObserversByFileUpload(fileUploadId: Long) {
         withContext(Dispatchers.IO) {
-            observersDao.insert(csvData)
-        }
-    }
-
-    // used to refresh the database with a current list of locations
-    suspend fun insertColoniesData(csvData: List<SealColony>) {
-        withContext(Dispatchers.IO) {
-            sealColoniesDao.insert(csvData)
+            observersDao.deleteById(fileUploadId)
         }
     }
 
@@ -38,10 +52,25 @@ class SupportingDataRepository(
         }
     }
 
+    suspend fun deleteSealColoniesByFileUpload(fileUploadId: Long) {
+        withContext(Dispatchers.IO) {
+            sealColoniesDao.deleteById(fileUploadId)
+        }
+    }
+
     suspend fun clearColonyData() {
         withContext(Dispatchers.IO) {
             sealColoniesDao.clearColoniesTable()
         }
+    }
+
+    // Insert file upload entry and get the fileUploadId
+    suspend fun insertFileUpload(fileUpload: FileUploadEntity): Long {
+        return fileUploadDao.insertFileUpload(fileUpload)
+    }
+
+    suspend fun updateFileUploadStatus(fileUploadId: Long, status: String) {
+        fileUploadDao.updateFileUploadStatus(fileUploadId, status)
     }
 
 }

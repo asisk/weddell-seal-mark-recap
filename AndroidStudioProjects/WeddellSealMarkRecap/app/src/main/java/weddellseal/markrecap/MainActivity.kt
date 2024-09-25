@@ -45,7 +45,8 @@ class MainActivity : ComponentActivity() {
 
         // Set up the WedCheck model to be shared between views
         val wedCheckDao = observationLogApplication.getWedCheckDao()
-        wedCheckRepository = WedCheckRepository(wedCheckDao)
+        val fileUploadDao = observationLogApplication.getFileUploadDao()
+        wedCheckRepository = WedCheckRepository(wedCheckDao, fileUploadDao)
 
         val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository)
         val wedCheckViewModel: WedCheckViewModel by viewModels { wedCheckViewModelFactory }
@@ -55,7 +56,7 @@ class MainActivity : ComponentActivity() {
 
         val observersDao = observationLogApplication.getObserversDao()
         val sealColoniesDao = observationLogApplication.getSealColoniesDao()
-        supportingDataRepository = SupportingDataRepository(observersDao, sealColoniesDao)
+        supportingDataRepository = SupportingDataRepository(observersDao, sealColoniesDao, fileUploadDao)
 
         val addLogViewModelFactory =
             AddLogViewModelFactory(application, observationRepository, supportingDataRepository)

@@ -6,38 +6,51 @@ package weddellseal.markrecap.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "wedCheck")
+@Entity(
+    tableName = "wedCheck",
+    foreignKeys = [ForeignKey(
+        entity = FileUploadEntity::class,       // The parent table entity (FileUploadEntity)
+        parentColumns = arrayOf("id"),          // The primary key column in the parent table (FileUploadEntity)
+        childColumns = arrayOf("fileUploadId"), // The column in the child table (wedCheck) that references the parent
+        onDelete = ForeignKey.CASCADE           // Optional: delete related rows if the file record is deleted
+    )],
+    indices = [
+        Index(value = ["fileUploadId"]),            // Index for faster lookups on fileUploadId
+        Index(value = ["speno"], unique = true),    // Index for speno, ensure it's unique
+        Index(value = ["tagNumberOne"])             // Index for faster lookups on tagNumberOne
+    ]
+)
+// Since speno is the primary key, each record is uniquely identified by speno.
 data class WedCheckRecord(
-    @PrimaryKey(autoGenerate = true) val id: Int,
-    @ColumnInfo(name = "speno") val speno: Int,
-    @ColumnInfo(name = "lastSeenSeason") val season: Int, // date format: yyyy
+    @PrimaryKey val speno: Int,
+    @ColumnInfo(name = "lastSeenSeason") val season: Int,                       // date format: yyyy
     @ColumnInfo(name = "lastObservedAgeClass") val ageClass: String,
     @ColumnInfo(name = "sex") val sex: String,
     @ColumnInfo(name = "tagNumberOne") val tagIdOne: String,
     @ColumnInfo(name = "tagNumberTwo") val tagIdTwo: String,
     @ColumnInfo(name = "comments") val comments: String,
     @ColumnInfo(name = "ageYears") val ageYears: Int,
-    @ColumnInfo(name = "tissue") val tissueSampled: String, // NA possible value
-    @ColumnInfo(name = "pupinMassStudy") val pupinMassStudy: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "numPreviousPups") val numPreviousPups: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "pupinTTStudy") val pupinTTStudy: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "momMassMeasurements") val momMassMeasurements: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "condition") val condition: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "lastPhysio") val lastPhysio: String, // NA possible value, otherwise its a number
-    @ColumnInfo(name = "colony") val colony: String, // NA possible value, otherwise its a number
+    @ColumnInfo(name = "tissue") val tissueSampled: String,                     // NA possible value
+    @ColumnInfo(name = "pupinMassStudy") val pupinMassStudy: String,            // NA possible value, otherwise its a number
+    @ColumnInfo(name = "numPreviousPups") val numPreviousPups: String,          // NA possible value, otherwise its a number
+    @ColumnInfo(name = "pupinTTStudy") val pupinTTStudy: String,                // NA possible value, otherwise its a number
+    @ColumnInfo(name = "momMassMeasurements") val momMassMeasurements: String,  // NA possible value, otherwise its a number
+    @ColumnInfo(name = "condition") val condition: String,                      // NA possible value, otherwise its a number
+    @ColumnInfo(name = "lastPhysio") val lastPhysio: String,                    // NA possible value, otherwise its a number
+    @ColumnInfo(name = "colony") val colony: String,                            // NA possible value, otherwise its a number
+    @ColumnInfo(name = "fileUploadId") val fileUploadId: Long                   // Foreign key reference
 )
 
 // Extension function to map WedCheckRecord to Seal
 fun WedCheckRecord.toSeal(): WedCheckSeal {
-//    var name = ""
     var ageString = ""
     if (ageClass == "A") {
-//        name = "adult"
         ageString = "Adult"
     } else if (ageClass == "P") {
-//        name = "pupOne"
         ageString = "Pup"
     }
 
@@ -47,12 +60,6 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         "U" -> "Unknown"
         else -> "Unknown"
     }
-
-//    val tissue = when (tissueSampled) {
-//        "Need" -> "No"
-//        "Done" -> "Yes"
-//        else -> "NA"
-//    }
 
     var ageNumeric = "Unknown"
     if (ageYears > 0) {
