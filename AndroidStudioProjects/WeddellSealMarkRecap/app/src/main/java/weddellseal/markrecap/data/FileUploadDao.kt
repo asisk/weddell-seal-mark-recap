@@ -14,7 +14,7 @@ interface FileUploadDao {
     @Query("SELECT * FROM fileUploads WHERE id = :fileId")
     suspend fun getFileUploadById(fileId: Long): FileUploadEntity
 
-    @Query("SELECT * FROM fileUploads")
+    @Query("SELECT * FROM fileUploads ORDER BY id DESC")
     fun getAllFileUploads(): Flow<List<FileUploadEntity>>
 
     @Query("UPDATE fileUploads SET status = :status WHERE id = :id")

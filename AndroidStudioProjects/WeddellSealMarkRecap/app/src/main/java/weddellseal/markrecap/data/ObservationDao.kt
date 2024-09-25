@@ -16,16 +16,20 @@ import androidx.room.Query
 interface ObservationDao {
     //uses LiveData to display database entries in the UI
     @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id DESC")
+    fun loadCurrentObservations(): LiveData<List<ObservationLogEntry>>
+
+    //uses LiveData to display database entries in the UI
+    @Query("SELECT * FROM observationLogs ORDER BY id DESC")
     fun loadAllObservations(): LiveData<List<ObservationLogEntry>>
-
-    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL")
-    fun getObservationsForCSVWrite(): List<ObservationLogEntry>
-
-    @Query("SELECT * FROM observationLogs")
-    fun getObservationsForSeasonView(): List<ObservationLogEntry>
 
     @Query("SELECT * FROM observationLogs WHERE id = :obsId AND deletedAt IS NULL")
     fun loadObsById(obsId: Int): LiveData<ObservationLogEntry>
+
+    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL")
+    suspend fun getCurrentObservations(): List<ObservationLogEntry>
+
+    @Query("SELECT * FROM observationLogs ORDER BY insertedAt DESC ")
+    suspend fun getObservationsForSeasonView(): List<ObservationLogEntry>
 
     @Query("SELECT COUNT(*) FROM observationLogs WHERE deletedAt IS NULL")
     suspend fun getCount(): Int
@@ -36,7 +40,6 @@ interface ObservationDao {
     // Soft delete all records that haven't been deleted yet (where deletedAt is NULL)
     @Query("UPDATE observationLogs SET deletedAt = :deletedAt WHERE deletedAt IS NULL")
     suspend fun softDeleteObservations(deletedAt: Long = System.currentTimeMillis())
-
 
     // New query & functions to support editing an existing ObservationLogEntry
     @Query(

@@ -327,24 +327,28 @@ class HomeViewModel(
                 val headerRow = reader.readLine()?.split(",") ?: emptyList()
 
                 // Define the required headers and their corresponding column names
-                val requiredHeaders = mapOf(
-                    "In/Out" to "inOutIndex",
-                    "Location" to "locationIndex",
-                    "N_Limit" to "nLimitIndex",
-                    "S_Limit" to "sLimitIndex",
-                    "W_Limit" to "wLimitIndex",
-                    "E_Limit" to "eLimitIndex",
-                    "Adj_Lat" to "adjLatIndex",
-                    "Adj_Long" to "adjLongIndex"
+                val inOutIndex = headerRow.indexOf("In/Out")
+                val locationIndex = headerRow.indexOf("Location")
+                val nLimitIndex = headerRow.indexOf("N_Limit")
+                val sLimitIndex = headerRow.indexOf("S_Limit")
+                val wLimitIndex = headerRow.indexOf("W_Limit")
+                val eLimitIndex = headerRow.indexOf("E_Limit")
+                val adjLatIndex = headerRow.indexOf("Adj_Lat")
+                val adjLongIndex = headerRow.indexOf("Adj_Long")
+
+                val requiredHeaders = listOf(
+                    inOutIndex,
+                    locationIndex,
+                    nLimitIndex,
+                    sLimitIndex,
+                    wLimitIndex,
+                    eLimitIndex,
+                    adjLatIndex,
+                    adjLongIndex
                 )
 
-                // Get the indices of each required header
-                val columnIndices = requiredHeaders.mapValues { headerRow.indexOf(it.key) }
-
-                // Check if all required headers are present
-                val missingHeaders = columnIndices.filterValues { it == -1 }.keys
-
-                if (missingHeaders.isNotEmpty()) {
+                // Check if any required headers are missing
+                if (!requiredHeaders.all { it != -1 }) {
                     // Handle missing headers (e.g., throw an error, log, or show a message to the user)
                     failedRows.add(
                         FailedRow(
@@ -362,20 +366,14 @@ class HomeViewModel(
 
                         val record = SealColony(
                             colonyId = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
-                            inOut = row.getOrNull(columnIndices["inOutIndex"]!!) ?: "",
-                            location = row.getOrNull(columnIndices["locationIndex"]!!) ?: "",
-                            nLimit = row.getOrNull(columnIndices["nLimitIndex"]!!)?.toDoubleOrNull()
-                                ?: 0.0,
-                            sLimit = row.getOrNull(columnIndices["sLimitIndex"]!!)?.toDoubleOrNull()
-                                ?: 0.0,
-                            wLimit = row.getOrNull(columnIndices["wLimitIndex"]!!)?.toDoubleOrNull()
-                                ?: 0.0,
-                            eLimit = row.getOrNull(columnIndices["eLimitIndex"]!!)?.toDoubleOrNull()
-                                ?: 0.0,
-                            adjLat = row.getOrNull(columnIndices["adjLatIndex"]!!)?.toDoubleOrNull()
-                                ?: 0.0,
-                            adjLong = row.getOrNull(columnIndices["adjLongIndex"]!!)
-                                ?.toDoubleOrNull() ?: 0.0,
+                            inOut = row.getOrNull(inOutIndex) ?: "",
+                            location = row.getOrNull(locationIndex) ?: "",
+                            nLimit = row.getOrNull(nLimitIndex)?.toDoubleOrNull() ?: 0.0,
+                            sLimit = row.getOrNull(sLimitIndex)?.toDoubleOrNull() ?: 0.0,
+                            wLimit = row.getOrNull(wLimitIndex)?.toDoubleOrNull() ?: 0.0,
+                            eLimit = row.getOrNull(eLimitIndex)?.toDoubleOrNull() ?: 0.0,
+                            adjLat = row.getOrNull(adjLatIndex)?.toDoubleOrNull() ?: 0.0,
+                            adjLong = row.getOrNull(adjLongIndex)?.toDoubleOrNull() ?: 0.0,
                             fileUploadId = fileUploadId // Foreign key reference
                         )
 
@@ -420,10 +418,9 @@ class HomeViewModel(
                         try {
 
                             val row = line.split(",")
-                            val observer = row.getOrNull(initialsIndex) ?: ""
                             val record = Observers(
                                 observerId = 0,
-                                initials = observer,
+                                initials = row.getOrNull(initialsIndex) ?: "",
                                 fileUploadId = fileUploadId // Foreign key reference
                             )
                             csvData.add(record)

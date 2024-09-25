@@ -288,31 +288,45 @@ class WedCheckViewModel(
                     // Read the CSV header
                     val headerRow = reader.readLine()?.split(",") ?: emptyList()
 
+                    val spenoIndex = headerRow.indexOf("speno")
+                    val lastSeenIndex = headerRow.indexOf("last_seen")
+                    val ageClassIndex = headerRow.indexOf("ac")
+                    val sexIndex = headerRow.indexOf("newsex")
+                    val tagOneIndex = headerRow.indexOf("tag1")
+                    val tagTwoIndex = headerRow.indexOf("tag2")
+                    val noteIndex = headerRow.indexOf("note")
+                    val ageIndex = headerRow.indexOf("age")
+                    val tissueIndex = headerRow.indexOf("tissue")
+                    val pupinMassStudyIndex = headerRow.indexOf("PupinMassStudy")
+                    val numPreviousPupsIndex = headerRow.indexOf("NbPreviousPups")
+                    val pupinTTStudyIndex = headerRow.indexOf("PupinTTStudy")
+                    val momMassMeasurementsIndex = headerRow.indexOf("MomMassMeasurements")
+                    val conditionIndex = headerRow.indexOf("cond")
+                    val lastPhysioIndex = headerRow.indexOf("last physio")
+                    val colonyIndex = headerRow.indexOf("colony")
+
                     // Column indices based on the header
-                    val requiredHeaders = mapOf(
-                        "speno" to "speno",
-                        "last_seen" to "lastSeen",
-                        "ac" to "ageClass",
-                        "newsex" to "sex",
-                        "tag1" to "tagOne",
-                        "tag2" to "tagTwo",
-                        "note" to "note",
-                        "age" to "age",
-                        "tissue" to "tissue",
-                        "PupinMassStudy" to "pupinMassStudy",
-                        "NbPreviousPups" to "numPreviousPups",
-                        "PupinTTStudy" to "pupinTTStudy",
-                        "MomMassMeasurements" to "momMassMeasurements",
-                        "cond" to "condition",
-                        "last physio" to "lastPhysio",
-                        "colony" to "colony"
+                    val requiredHeaders = listOf(
+                        spenoIndex,
+                        lastSeenIndex,
+                        ageClassIndex,
+                        sexIndex,
+                        tagOneIndex,
+                        tagTwoIndex,
+                        noteIndex,
+                        ageIndex,
+                        tissueIndex,
+                        pupinMassStudyIndex,
+                        numPreviousPupsIndex,
+                        pupinTTStudyIndex,
+                        momMassMeasurementsIndex,
+                        conditionIndex,
+                        lastPhysioIndex,
+                        colonyIndex
                     )
 
-                    val columnIndices = requiredHeaders.mapValues { headerRow.indexOf(it.key) }
-
                     // Check if any required headers are missing
-                    val missingHeaders = columnIndices.filterValues { it == -1 }.keys
-                    if (missingHeaders.isNotEmpty()) {
+                    if (!requiredHeaders.all { it != -1 }) {
                         failedRows.add(
                             FailedRow(
                                 rowNumber = 0,
@@ -332,32 +346,27 @@ class WedCheckViewModel(
                             // Parse fields and create an instance of a WedCheckRecord
 
                             // handle is the possibility that the value is missing or invalid in the row, which is why getOrNull and ?: "" are used
-                            val speno = row.getOrNull(columnIndices["speno"]!!)?.toIntOrNull()
+                            val speno = row.getOrNull(spenoIndex)?.toIntOrNull()
                                 ?: throw IllegalArgumentException("Invalid or missing speno")
 
                             val record = WedCheckRecord(
-                                speno = speno,  // Guaranteed to be a valid Int due to the check above
-                                season = row.getOrNull(columnIndices["lastSeen"]!!)?.toIntOrNull()
-                                    ?: 0,  // Guaranteed to be a valid Int due to the check above
-                                ageClass = row.getOrNull(columnIndices["lastObservedAgeClass"]!!)
+                                speno = speno,
+                                season = row.getOrNull(lastSeenIndex)?.toIntOrNull() ?: 0,
+                                ageClass = row.getOrNull(ageClassIndex) ?: "",
+                                sex = row.getOrNull(sexIndex) ?: "",
+                                tagIdOne = row.getOrNull(tagOneIndex) ?: "",
+                                tagIdTwo = row.getOrNull(tagTwoIndex) ?: "",
+                                comments = row.getOrNull(noteIndex) ?: "",
+                                ageYears = row.getOrNull(ageIndex)?.toIntOrNull() ?: 0,
+                                tissueSampled = row.getOrNull(tissueIndex) ?: "",
+                                pupinMassStudy = row.getOrNull(pupinMassStudyIndex) ?: "",
+                                numPreviousPups = row.getOrNull(numPreviousPupsIndex) ?: "",
+                                pupinTTStudy = row.getOrNull(pupinTTStudyIndex) ?: "",
+                                momMassMeasurements = row.getOrNull(momMassMeasurementsIndex)
                                     ?: "",
-                                sex = row.getOrNull(columnIndices["sex"]!!) ?: "",
-                                tagIdOne = row.getOrNull(columnIndices["tagNumberOne"]!!) ?: "",
-                                tagIdTwo = row.getOrNull(columnIndices["tagNumberTwo"]!!) ?: "",
-                                comments = row.getOrNull(columnIndices["comments"]!!) ?: "",
-                                ageYears = row.getOrNull(columnIndices["ageYears"]!!)?.toIntOrNull()
-                                    ?: 0,
-                                tissueSampled = row.getOrNull(columnIndices["tissue"]!!) ?: "NA",
-                                pupinMassStudy = row.getOrNull(columnIndices["pupinMassStudy"]!!)
-                                    ?: "",
-                                numPreviousPups = row.getOrNull(columnIndices["numPreviousPups"]!!)
-                                    ?: "",
-                                pupinTTStudy = row.getOrNull(columnIndices["pupinTTStudy"]!!) ?: "",
-                                momMassMeasurements = row.getOrNull(columnIndices["momMassMeasurements"]!!)
-                                    ?: "",
-                                condition = row.getOrNull(columnIndices["condition"]!!) ?: "",
-                                lastPhysio = row.getOrNull(columnIndices["lastPhysio"]!!) ?: "",
-                                colony = row.getOrNull(columnIndices["colony"]!!) ?: "",
+                                condition = row.getOrNull(conditionIndex) ?: "",
+                                lastPhysio = row.getOrNull(lastPhysioIndex) ?: "",
+                                colony = row.getOrNull(colonyIndex) ?: "",
                                 fileUploadId = fileUploadId // This remains the same as it’s coming from your system, not the CSV
                             )
 

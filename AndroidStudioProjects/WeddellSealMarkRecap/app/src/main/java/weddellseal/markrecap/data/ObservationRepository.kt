@@ -22,17 +22,27 @@ class ObservationRepository(private val observationDao: ObservationDao) {
      */
     val observations: LiveData<List<ObservationLogEntry>> = liveData {
         // Observe active observations from the database (just like a normal LiveData + Room return)
-        val observationsLiveData = observationDao.loadAllObservations()
+        val observationsLiveData = observationDao.loadCurrentObservations()
 
         // Map the LiveData, applying the sort criteria
         emitSource(observationsLiveData)
     }
 
-    suspend fun writeDataToFile(uri: Uri, contentResolver: ContentResolver) {
+    suspend  fun getCurrentObservations(): List<ObservationLogEntry> {
+        val observations: List<ObservationLogEntry> = observationDao.getCurrentObservations()
+        return observations
+    }
+
+    suspend fun getAllObservations(): List<ObservationLogEntry> {
+        val observations: List<ObservationLogEntry> = observationDao.getObservationsForSeasonView()
+        return observations
+    }
+
+    suspend fun writeDataToFile(uri: Uri, contentResolver: ContentResolver, observations: List<ObservationLogEntry>) {
         withContext(Dispatchers.IO) {
             try {
                 // Fetch all observations from the database that have not been deleted
-                val data: List<ObservationLogEntry> = observationDao.getObservationsForCSVWrite()
+                val data: List<ObservationLogEntry> = observations
 
                 contentResolver.openOutputStream(uri)?.use { outputStream ->
                     OutputStreamWriter(outputStream).use { writer ->
@@ -72,8 +82,6 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                                 obs.colony
                             )
                             csvWriter.writeNext(obsFields)
-                            println("Record $ written")
-
                         }
                         println("All records written")
 
@@ -98,4 +106,5 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         // Example of updating an existing entry with ID 1
         observationDao.updateObservationLogEntry(log)
     }
+
 }

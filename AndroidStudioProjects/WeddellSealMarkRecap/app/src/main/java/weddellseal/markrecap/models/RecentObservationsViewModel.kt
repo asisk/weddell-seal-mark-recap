@@ -11,6 +11,7 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -39,6 +40,7 @@ class RecentObservationsViewModel(
         var uriForCSVWrite: Uri? = null,
         var observations: List<ObservationLogEntry> = emptyList(),
         var isError: Boolean = false,
+        var errorMessage: String = ""
     )
 
     var uiState by mutableStateOf(
@@ -67,18 +69,84 @@ class RecentObservationsViewModel(
                 if (file != null) {
                     // Create an Intent to share the file
                     // Save observations to the file
-                    observationRepo.writeDataToFile(uriForCSVWrite, context.contentResolver)
+                    val currentObservations = observationRepo.getCurrentObservations()
+                    if (currentObservations.isNotEmpty()) {
+                        observationRepo.writeDataToFile(
+                            uriForCSVWrite,
+                            context.contentResolver,
+                            currentObservations
+                        )
+                    } else {
+                        uiState = uiState.copy(
+                            isError = true,
+                            loading = false,
+                            errorMessage = "No Records to Export"
+                        )
+                    }
 
                 } else {
-                    uiState = uiState.copy(isError = true, loading = false)
-                    throw NoUriSelectedException("No file found for the selected URI")
+                    uiState = uiState.copy(
+                        isError = true,
+                        loading = false,
+                        errorMessage = "No File Found"
+                    )
                 }
 
                 // Update the UI state (e.g., loading state)
                 uiState = uiState.copy(isError = false, loading = false)
 
             } catch (e: Exception) {
-                uiState = uiState.copy(isError = true, loading = false)
+                Log.d("Error", e.message ?: "Unknown error")
+                uiState =
+                    uiState.copy(isError = true, loading = false, errorMessage = "Unknown Error")
+            }
+        }
+    }
+
+    fun exportAllLogs(context: Context) {
+        viewModelScope.launch {
+            try {
+                // Ensure there's a URI selected for writing the CSV file
+                val uriForCSVWrite =
+                    uiState.uriForCSVWrite ?: throw NoUriSelectedException("No URI was selected")
+
+                // Convert the URI to a file
+                val file = uriToFile(context, uriForCSVWrite)
+
+                // Check if the file is not null
+                if (file != null) {
+                    // Create an Intent to share the file
+                    // Save observations to the file
+                    val allObservations = observationRepo.getAllObservations()
+                    if (allObservations.isNotEmpty()) {
+                        observationRepo.writeDataToFile(
+                            uriForCSVWrite,
+                            context.contentResolver,
+                            allObservations
+                        )
+                    } else {
+                        uiState = uiState.copy(
+                            isError = true,
+                            loading = false,
+                            errorMessage = "No Records to Export"
+                        )
+                    }
+
+
+                } else {
+                    uiState = uiState.copy(
+                        isError = true,
+                        loading = false,
+                        errorMessage = "File not found"
+                    )
+                }
+
+                // Update the UI state (e.g., loading state)
+                uiState = uiState.copy(isError = false, loading = false)
+
+            } catch (e: Exception) {
+                uiState =
+                    uiState.copy(isError = true, loading = false, errorMessage = "Unknown Error")
             }
         }
     }
@@ -91,6 +159,13 @@ class RecentObservationsViewModel(
             return File(externalDir, displayName)
         }
         return null
+    }
+
+    fun markObservationsAsDeleted() {
+        viewModelScope.launch {
+
+            observationRepo.softDeleteAllObservations()
+        }
     }
 }
 

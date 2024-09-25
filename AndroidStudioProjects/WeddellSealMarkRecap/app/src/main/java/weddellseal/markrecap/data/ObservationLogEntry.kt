@@ -45,6 +45,7 @@ data class ObservationLogEntry(
     @ColumnInfo(name = "tissue_sampled") val tissueSampled: String,
     @ColumnInfo(name = "comments") val comments: String,
     @ColumnInfo(name = "colony") val colony: String,
+    @ColumnInfo(name = "insertedAt")  val insertedAt: Long = System.currentTimeMillis(), // Timestamp for noting if a record has been updated
     @ColumnInfo(name = "updatedAt")  val updatedAt: Long? = null, // Timestamp for noting if a record has been updated
     @ColumnInfo(name = "deletedAt")  val deletedAt: Long? = null // Timestamp for soft delete
 )

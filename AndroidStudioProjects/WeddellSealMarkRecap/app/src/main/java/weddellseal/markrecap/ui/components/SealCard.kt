@@ -103,7 +103,7 @@ fun SealCard(
 
     LaunchedEffect(seal.tagNumber, seal.tagAlpha) {
         // update the speNo if we don't have one once we have a tag number and a tag alpha
-        if (seal.tagNumber != "" && seal.tagAlpha != "") {
+        if (!isRetag && seal.tagNumber != "" && seal.tagAlpha != "") {
             if (seal.tagNumber.length == 3 || seal.tagNumber.length == 4) {
 
                 // construct a string without two alpha characters
