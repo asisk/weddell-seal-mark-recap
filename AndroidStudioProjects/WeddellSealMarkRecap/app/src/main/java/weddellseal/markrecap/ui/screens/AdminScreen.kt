@@ -1,6 +1,8 @@
 package weddellseal.markrecap.ui.screens
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
@@ -8,8 +10,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -103,7 +103,6 @@ fun AdminScreen(
             }
         }
 
-
     // Register ActivityResult to request read file permissions
     val requestFilePermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -150,7 +149,6 @@ fun AdminScreen(
         )
     }
 
-    //TODO, how to handle partial versus whole update (WedCheck.csv versus WedCheckFull.csv)
     val getWedCheckCSV = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
@@ -262,6 +260,22 @@ fun AdminScreen(
             }
         }
     }
+
+    val requestCSVFile =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    // Handle the file access here, e.g., pass the URI to ViewModel
+                    getObserversCSV.launch("text/csv")
+                }
+            }
+        }
+
+    val pickCSVFileIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = "text/csv"
+    }
+
 
     Scaffold(
         // region UI - Top Bar & Action Buttons
@@ -410,7 +424,6 @@ fun AdminScreen(
                             modifier = Modifier.padding(16.dp),
                             containerColor = Color.LightGray,
                             onClick = {
-                                val dateTimeFormat =
                                 SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                                 val currentDateTime = dateTimeFormat.format(Date())
                                 val filename = "all_observations_$currentDateTime.csv"
@@ -464,7 +477,11 @@ fun AdminScreen(
                         // Card for Observers Upload and Clear
                         FileUploadCard(
                             title = "Upload Observer Initials",
-                            onUpload = { getObserversCSV.launch("text/csv") },
+                            onUpload = {
+                                requestCSVFile.launch(pickCSVFileIntent)
+
+//                                getObserversCSV.launch("text/csv")
+                            },
 //                                onDelete = { homeViewModel.clearObservers() },
                             isLoaded = { homeViewModel.uiState.value.isObserversLoaded },
                             isLoading = { homeViewModel.uiState.value.isObserversLoading },
