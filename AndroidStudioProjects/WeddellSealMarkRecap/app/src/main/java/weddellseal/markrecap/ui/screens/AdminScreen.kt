@@ -261,12 +261,35 @@ fun AdminScreen(
         }
     }
 
+    // Function to handle the file selection logic
+    fun handleFileSelection(uri: Uri?) {
+        if (uri != null) {
+            var fileName = ""
+            val filenameStr = "observers.csv"
+
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (displayNameIndex != -1 && cursor.moveToFirst()) {
+                    fileName = cursor.getString(displayNameIndex)
+                }
+            }
+
+            if (fileName == "observers.csv") {
+                homeViewModel.updateLastObserversFileNameLoaded(fileName)
+                homeViewModel.loadObserversFile(uri, fileName)
+            } else {
+                // Show an error message indicating that the selected file is not the expected file
+                showExplanationDialogForFileMatchError = true
+            }
+        }
+    }
+
     val requestCSVFile =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
                     // Handle the file access here, e.g., pass the URI to ViewModel
-                    getObserversCSV.launch("text/csv")
+                    handleFileSelection(uri)
                 }
             }
         }
@@ -425,6 +448,8 @@ fun AdminScreen(
                             containerColor = Color.LightGray,
                             onClick = {
                                 SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                                val dateTimeFormat =
+                                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                                 val currentDateTime = dateTimeFormat.format(Date())
                                 val filename = "all_observations_$currentDateTime.csv"
 
