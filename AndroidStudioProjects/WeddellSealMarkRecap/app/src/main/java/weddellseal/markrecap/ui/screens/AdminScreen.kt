@@ -84,6 +84,7 @@ fun AdminScreen(
     val fileUploads by homeViewModel.fileUploads.collectAsState()
     // Track which file name failed
     var filenameStr by remember { mutableStateOf("") }
+    val pickerResult = remember { mutableStateOf<Uri?>( null) }
 
     val createCurrentObservationsDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
@@ -150,10 +151,10 @@ fun AdminScreen(
     }
 
     val getWedCheckCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
+        contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
         // Handle the selected locations file here
-        if (uri != null) {
+        uri?.let {
             var fileName = ""
             filenameStr = "WedCheckFull.csv or WedCheck.csv"
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -192,10 +193,10 @@ fun AdminScreen(
     }
 
     val getColonyLocationsCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
+        contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
         // Handle the selected locations file here
-        if (uri != null) {
+        uri?.let {
             var fileName = ""
             filenameStr = "Colony_Locations.csv"
 
@@ -227,10 +228,10 @@ fun AdminScreen(
     }
 
     val getObserversCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
+        contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
         // Handle the selected locations file here
-        if (uri != null) {
+        uri?.let {
             var fileName = ""
             filenameStr = "observers.csv"
 
@@ -260,45 +261,6 @@ fun AdminScreen(
             }
         }
     }
-
-    // Function to handle the file selection logic
-    fun handleFileSelection(uri: Uri?) {
-        if (uri != null) {
-            var fileName = ""
-            val filenameStr = "observers.csv"
-
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (displayNameIndex != -1 && cursor.moveToFirst()) {
-                    fileName = cursor.getString(displayNameIndex)
-                }
-            }
-
-            if (fileName == "observers.csv") {
-                homeViewModel.updateLastObserversFileNameLoaded(fileName)
-                homeViewModel.loadObserversFile(uri, fileName)
-            } else {
-                // Show an error message indicating that the selected file is not the expected file
-                showExplanationDialogForFileMatchError = true
-            }
-        }
-    }
-
-    val requestCSVFile =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let { uri ->
-                    // Handle the file access here, e.g., pass the URI to ViewModel
-                    handleFileSelection(uri)
-                }
-            }
-        }
-
-    val pickCSVFileIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-        addCategory(Intent.CATEGORY_OPENABLE)
-        type = "text/csv"
-    }
-
 
     Scaffold(
         // region UI - Top Bar & Action Buttons
@@ -483,7 +445,7 @@ fun AdminScreen(
                         // Card for WedCheck Upload
                         FileUploadCard(
                             title = "Upload WedCheck File",
-                            onUpload = { getWedCheckCSV.launch("text/csv") },
+                            onUpload = { getWedCheckCSV.launch(arrayOf("text/csv")) },
                             isLoaded = { wedCheckViewModel.uiState.value.isWedCheckLoaded },
                             isLoading = { wedCheckViewModel.uiState.value.isWedCheckLoading },
                             failedRows = { wedCheckViewModel.uiState.value.failedRows },
@@ -503,9 +465,7 @@ fun AdminScreen(
                         FileUploadCard(
                             title = "Upload Observer Initials",
                             onUpload = {
-                                requestCSVFile.launch(pickCSVFileIntent)
-
-//                                getObserversCSV.launch("text/csv")
+                                getObserversCSV.launch(arrayOf("text/csv"))
                             },
 //                                onDelete = { homeViewModel.clearObservers() },
                             isLoaded = { homeViewModel.uiState.value.isObserversLoaded },
@@ -526,7 +486,7 @@ fun AdminScreen(
                         // Card for Colony Locations Upload and Clear
                         FileUploadCard(
                             title = "Upload Seal Colony Locations",
-                            onUpload = { getColonyLocationsCSV.launch("text/csv") },
+                            onUpload = { getColonyLocationsCSV.launch(arrayOf("text/csv")) },
 //                                onDelete = {   homeViewModel.clearColonies() },
                             isLoaded = { homeViewModel.uiState.value.isColonyLocationsLoaded },
                             isLoading = { homeViewModel.uiState.value.isColonyLocationsLoading },
