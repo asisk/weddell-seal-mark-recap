@@ -89,16 +89,10 @@ fun HomeScaffold(
         viewModel.fetchLocations()
     }
 
-    // Register ActivityResult to request Location permissions
     val requestFilePermissions =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 viewModel.onPermissionChange(Manifest.permission.READ_EXTERNAL_STORAGE, isGranted)
-//                viewModel.fetchCurrentLocation()
-            } else {
-                //coroutineScope.launch {
-                //    snackbarHostState.showSnackbar("Location currently disabled due to denied permission.")
-                //}
             }
         }
 
@@ -109,11 +103,9 @@ fun HomeScaffold(
             onConfirm = {
                 requestFilePermissions.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                 showExplanationDialogForReadAccessPermission = false
-//                isPermissionGranted = true
             },
             onDismiss = {
                 showExplanationDialogForReadAccessPermission = false
-//                isPermissionGranted = true
             },
             title = "File access",
             text = "Weddell Seal Mark Recap app would like access to your stored files",
