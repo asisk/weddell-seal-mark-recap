@@ -40,6 +40,11 @@ class SupportingDataRepository(
         return sealColoniesDao.getSealColonyNames()
     }
 
+    // used to search for a seal colony by passing in the device latitude and longitude
+    suspend fun findColony(searchLatitude: Double, searchLongitude: Double): SealColony? {
+        return sealColoniesDao.findColonyByLatLong(searchLatitude,searchLongitude)
+    }
+
     suspend fun deleteObserversByFileUpload(fileUploadId: Long) {
         withContext(Dispatchers.IO) {
             observersDao.deleteById(fileUploadId)

@@ -21,8 +21,11 @@ import weddellseal.markrecap.data.FailedRow
 import weddellseal.markrecap.data.FileUploadEntity
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Observers
+import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.data.SealColony
 import weddellseal.markrecap.data.SupportingDataRepository
+import weddellseal.markrecap.location.Coordinates
+import weddellseal.markrecap.location.fetchCurrentLocation
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
@@ -65,6 +68,9 @@ class HomeViewModel(
     private val _locations = MutableStateFlow<List<String>>(emptyList())
     val colonies: StateFlow<List<String>> = _locations
 
+    private val _colonyQueried = MutableStateFlow<SealColony?>(null)
+    val colonyIdentified: MutableStateFlow<SealColony?> = _colonyQueried
+
     data class UiState(
         val hasFileAccess: Boolean,
         val loading: Boolean = false,
@@ -84,6 +90,8 @@ class HomeViewModel(
         val isError: Boolean = false,
         val errorText: String = "",
         val date: String,
+        val deviceCoordinates: Coordinates? = null,
+        val colonyQueried: SealColony? = null
     )
 
     fun hasPermission(permission: String): Boolean {
@@ -103,6 +111,27 @@ class HomeViewModel(
                 Log.e("Permission change", "Unexpected permission: $permission")
             }
         }
+    }
+
+    // locate the colony name by querying the database
+    // TODO, how often should this be updated? 5 min, 10 min?
+    fun findColony(): String {
+        var colonyName = "NONE"
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val currentCoordinates = context.fetchCurrentLocation()
+                if (currentCoordinates != null) {
+                    _uiState.value = uiState.value.copy(deviceCoordinates = currentCoordinates)
+                    val colony = supportingDataRepository.findColony(currentCoordinates.latitude, currentCoordinates.longitude)
+                    if (colony != null) {
+                        _uiState.value = uiState.value.copy(colonyQueried = colony)
+                        colonyName = colony.location
+                    }
+                }
+            }
+        }
+
+        return colonyName
     }
 
     // Function to fetch locations from the database

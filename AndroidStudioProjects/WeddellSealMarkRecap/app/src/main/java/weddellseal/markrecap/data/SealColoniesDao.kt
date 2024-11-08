@@ -37,8 +37,8 @@ interface SealColoniesDao {
     // fall within the boundaries (sLimit, nLimit, wLimit, and eLimit).
     // :adjLat is the input latitude.
     // :adjLong is the input longitude.
-    @Query("SELECT * FROM sealColonies WHERE :adjLat BETWEEN sLimit AND nLimit AND :adjLong BETWEEN wLimit AND eLimit")
-    suspend fun findColonyByLatLong(adjLat: Double, adjLong: Double): List<SealColony>
+    @Query("SELECT * FROM sealColonies WHERE :deviceLatitude BETWEEN sLimit AND nLimit AND :deviceLongitude BETWEEN wLimit AND eLimit")
+    suspend fun findColonyByLatLong(deviceLatitude: Double, deviceLongitude: Double): SealColony?
 
     @Query("DELETE FROM sealColonies WHERE colonyId = :id")
     suspend fun deleteById(id: Long)

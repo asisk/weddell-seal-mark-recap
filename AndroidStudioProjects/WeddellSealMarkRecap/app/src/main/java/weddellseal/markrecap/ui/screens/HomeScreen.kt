@@ -83,7 +83,7 @@ fun HomeScaffold(
     val scrollState = rememberScrollState()
     var showCensusDialog by remember { mutableStateOf(false) }
     val coloniesList by viewModel.colonies.collectAsState()
-//    val observerList by viewModel.observers.collectAsState()
+    val currentColony by viewModel.colonyIdentified.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchLocations()
@@ -134,7 +134,6 @@ fun HomeScaffold(
     }
 
     Scaffold(
-        // region UI - Top Bar & Action Button
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -292,7 +291,7 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            var observerSelected by remember { mutableStateOf(obsViewModel.uiState.observerInitials) }
+                            val observerSelected by remember { mutableStateOf(obsViewModel.uiState.observerInitials) }
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
@@ -308,15 +307,8 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-//                                DropdownField(
-//                                    observerList,
-//                                    observerSelected
-//                                ) { valueSelected ->
-//                                    obsViewModel.updateObserverInitials(valueSelected)
-//                                }
                                 MultiSelectDropdownObservers(
                                     viewModel,
-//                                    options = observerList,
                                     selectedOptions = observerSelected,
                                     onValueChange = { updatedItems ->
                                         // Convert selected items back to a concatenated string
@@ -337,7 +329,11 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            var colonySelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
+                            val colonySelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
+
+                            // TODO, test that the colony name is findable and updated
+                            Text (currentColony?.location.toString())
+
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
