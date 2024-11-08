@@ -261,44 +261,6 @@ fun AdminScreen(
         }
     }
 
-    // Function to handle the file selection logic
-    fun handleFileSelection(uri: Uri?) {
-        if (uri != null) {
-            var fileName = ""
-            val filenameStr = "observers.csv"
-
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (displayNameIndex != -1 && cursor.moveToFirst()) {
-                    fileName = cursor.getString(displayNameIndex)
-                }
-            }
-
-            if (fileName == "observers.csv") {
-                homeViewModel.updateLastObserversFileNameLoaded(fileName)
-                homeViewModel.loadObserversFile(uri, fileName)
-            } else {
-                // Show an error message indicating that the selected file is not the expected file
-                showExplanationDialogForFileMatchError = true
-            }
-        }
-    }
-
-    val requestCSVFile =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let { uri ->
-                    // Handle the file access here, e.g., pass the URI to ViewModel
-                    handleFileSelection(uri)
-                }
-            }
-        }
-
-    val pickCSVFileIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-        addCategory(Intent.CATEGORY_OPENABLE)
-        type = "text/csv"
-    }
-
 
     Scaffold(
         // region UI - Top Bar & Action Buttons
@@ -503,9 +465,7 @@ fun AdminScreen(
                         FileUploadCard(
                             title = "Upload Observer Initials",
                             onUpload = {
-                                requestCSVFile.launch(pickCSVFileIntent)
-
-//                                getObserversCSV.launch("text/csv")
+                                getObserversCSV.launch("text/csv")
                             },
 //                                onDelete = { homeViewModel.clearObservers() },
                             isLoaded = { homeViewModel.uiState.value.isObserversLoaded },
