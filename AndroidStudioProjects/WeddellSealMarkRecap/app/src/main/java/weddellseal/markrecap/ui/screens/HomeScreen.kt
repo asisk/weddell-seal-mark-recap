@@ -332,7 +332,7 @@ fun HomeScaffold(
                             val colonySelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
 
                             // TODO, test that the colony name is findable and updated
-                            Text (currentColony?.location.toString())
+//                            Text (currentColony?.location.toString())
 
                             Column(
                                 modifier = Modifier

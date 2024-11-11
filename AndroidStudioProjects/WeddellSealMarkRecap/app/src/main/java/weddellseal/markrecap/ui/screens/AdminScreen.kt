@@ -1,11 +1,9 @@
 package weddellseal.markrecap.ui.screens
 
-import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -58,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
@@ -79,11 +78,12 @@ fun AdminScreen(
     recentObservationsViewModel: RecentObservationsViewModel
 ) {
     val context = LocalContext.current
-    val uiStateWedCheck by wedCheckViewModel.uiState.collectAsState()
-    val uiStateHome by homeViewModel.uiState.collectAsState()
+
     val fileUploads by homeViewModel.fileUploads.collectAsState()
     // Track which file name failed
     var filenameStr by remember { mutableStateOf("") }
+    var selectedFilename by remember { mutableStateOf("") }
+    var selectedDirectoryUri by remember { mutableStateOf<Uri?>(null) }
 
     val createCurrentObservationsDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
@@ -103,39 +103,6 @@ fun AdminScreen(
             }
         }
 
-    // Register ActivityResult to request read file permissions
-    val requestFilePermissions =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                wedCheckViewModel.onPermissionChange(
-                    Manifest.permission.READ_EXTERNAL_STORAGE, isGranted
-                )
-//                viewModel.fetchCurrentLocation()
-            } else {
-                //coroutineScope.launch {
-                //    snackbarHostState.showSnackbar("Location currently disabled due to denied permission.")
-                //}
-            }
-        }
-
-    // Add explanation dialog for File permissions
-    var showExplanationDialogForReadAccessPermission by remember { mutableStateOf(false) }
-    if (showExplanationDialogForReadAccessPermission) {
-        FileAccessExplanationDialog(
-            onConfirm = {
-                requestFilePermissions.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-                showExplanationDialogForReadAccessPermission = false
-//                isPermissionGranted = true
-            },
-            onDismiss = {
-                showExplanationDialogForReadAccessPermission = false
-//                isPermissionGranted = true
-            },
-            title = "File access",
-            text = "Weddell Seal Mark Recap app would like access to your stored files",
-        )
-    }
-
     // Add explanation dialog for file name validation error
     var showExplanationDialogForFileMatchError by remember { mutableStateOf(false) }
     if (showExplanationDialogForFileMatchError) {
@@ -145,17 +112,16 @@ fun AdminScreen(
             },
             onDismiss = { showExplanationDialogForFileMatchError = false },
             title = "Error",
-            text = "File name does not match expected value: $filenameStr! Please rename your file and try again!"
+            text = "File name: $selectedFilename does not match expected value: $filenameStr! Please rename your file and try again!"
         )
     }
 
-    val getWedCheckCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-    ) { uri: Uri? ->
-        // Handle the selected locations file here
+    // Function to handle the file selection logic
+    fun handleFileSelection(uri: Uri?, expectedFileName: String) {
         if (uri != null) {
             var fileName = ""
-            filenameStr = "WedCheckFull.csv or WedCheck.csv"
+            Log.d("FileSelection", "URI: $uri")
+
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (displayNameIndex != -1 && cursor.moveToFirst()) {
@@ -163,142 +129,105 @@ fun AdminScreen(
                 }
             }
 
-            // Support uploading the full wedcheck file
-            if (fileName == "WedCheckFull.csv" || fileName == "WedCheck.csv") {
-                //TODO, add validation to ensure that the file is right-sized
+            selectedFilename = fileName
+            Log.d("FileSelection", "File name: $fileName")
+
+            //TODO, add validation to ensure that the file is right-sized
 //                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
 //
 //                private fun isFileSizeWithinLimit(file: File): Boolean {
 //                    val fileSize = file.length()
 //                    return fileSize <= MAX_FILE_SIZE_BYTES
 //                }
-                wedCheckViewModel.updateLastFileNameLoaded(fileName)
-                wedCheckViewModel.loadWedCheck(uri, fileName)
 
-                if (wedCheckViewModel.uiState.value.isWedCheckLoaded) {
-                    // Display a success message
-                    Toast.makeText(
-                        context,
-                        "$fileName loaded successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+            if (fileName == expectedFileName) {
+                when (expectedFileName) {
+                    "observers.csv" -> {
+                        homeViewModel.updateLastObserversFileNameLoaded(fileName)
+                        homeViewModel.loadObserversFile(uri, fileName)
+                    }
+
+                    "WedCheck.csv" -> {
+                        wedCheckViewModel.updateLastFileNameLoaded(fileName)
+                        wedCheckViewModel.loadWedCheck(uri, fileName)
+                    }
+
+                    "WedCheckFull.csv" -> {
+                        wedCheckViewModel.updateLastFileNameLoaded(fileName)
+                        wedCheckViewModel.loadWedCheck(uri, fileName)
+                    }
+
+                    "Colony_Locations.csv" -> {
+                        homeViewModel.updateLastColoniesFileNameLoaded(fileName)
+                        homeViewModel.loadSealColoniesFile(uri, fileName)
+                    }
                 }
-
             } else {
                 // Show an error message indicating that the selected file is not the expected file
                 showExplanationDialogForFileMatchError = true
+                Log.e("FileSelection", "File name does not match expected file")
             }
         }
     }
 
-    val getColonyLocationsCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-    ) { uri: Uri? ->
-        // Handle the selected locations file here
-        if (uri != null) {
-            var fileName = ""
-            filenameStr = "Colony_Locations.csv"
+    val observersLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        handleFileSelection(uri, "observers.csv")
+    }
 
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (displayNameIndex != -1 && cursor.moveToFirst()) {
-                    fileName = cursor.getString(displayNameIndex)
-                }
-            }
+    val wedCheckLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        handleFileSelection(uri, "WedCheck.csv")
+    }
 
-            if (fileName == "Colony_Locations.csv") {
-                homeViewModel.updateLastColoniesFileNameLoaded(fileName)
-                homeViewModel.loadSealColoniesFile(uri, fileName)
+    val colonyLocationsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        handleFileSelection(uri, "Colony_Locations.csv")
+    }
 
-                if (homeViewModel.uiState.value.isColonyLocationsLoaded) {
-                    // Display a success message
-                    Toast.makeText(
-                        context,
-                        "$fileName loaded successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+    fun handleDirectorySelection(uri: Uri) {
+        val directory = DocumentFile.fromTreeUri(context, uri)
 
+        if (directory != null && directory.isDirectory) {
+            // Iterate through files in the directory
+            val files = directory.listFiles()
+
+            // Find the file you are interested in, e.g., "observers.csv"
+            val targetFile = files.firstOrNull { it.name == "observers.csv" }
+
+            if (targetFile != null && targetFile.isFile) {
+                // Process the file, e.g., by opening an input stream
+//                openFile(targetFile.uri)
+                handleFileSelection(targetFile.uri, "observers.csv")
             } else {
-                // Show an error message indicating that the selected file is not the expected file
-                showExplanationDialogForFileMatchError = true
+                Log.e("FileSelection", "Expected file not found in directory")
+                // Show an error message or handle the case where the file isn't found
             }
+        } else {
+            Log.e("FileSelection", "Selected URI is not a directory or is inaccessible")
         }
     }
 
-    val getObserversCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-    ) { uri: Uri? ->
-        // Handle the selected locations file here
-        if (uri != null) {
-            var fileName = ""
-            filenameStr = "observers.csv"
+    // Launcher for picking a file in a specific directory
+    val observersDirectoryPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            // Persist URI permissions for the selected directory
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
 
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (displayNameIndex != -1 && cursor.moveToFirst()) {
-                    fileName = cursor.getString(displayNameIndex)
-                }
-            }
+            // Store the selected directory URI in ViewModel
+            selectedDirectoryUri = uri
 
-            if (fileName == "observers.csv") {
-                homeViewModel.updateLastObserversFileNameLoaded(fileName)
-                homeViewModel.loadObserversFile(uri, fileName)
-
-                if (homeViewModel.uiState.value.isObserversLoaded) {
-                    // Display a success message
-                    Toast.makeText(
-                        context,
-                        "$fileName loaded successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-            } else {
-                // Show an error message indicating that the selected file is not the expected file
-                showExplanationDialogForFileMatchError = true
-            }
+            handleDirectorySelection(uri)
         }
     }
-
-    // Function to handle the file selection logic
-    fun handleFileSelection(uri: Uri?) {
-        if (uri != null) {
-            var fileName = ""
-            val filenameStr = "observers.csv"
-
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (displayNameIndex != -1 && cursor.moveToFirst()) {
-                    fileName = cursor.getString(displayNameIndex)
-                }
-            }
-
-            if (fileName == "observers.csv") {
-                homeViewModel.updateLastObserversFileNameLoaded(fileName)
-                homeViewModel.loadObserversFile(uri, fileName)
-            } else {
-                // Show an error message indicating that the selected file is not the expected file
-                showExplanationDialogForFileMatchError = true
-            }
-        }
-    }
-
-    val requestCSVFile =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let { uri ->
-                    // Handle the file access here, e.g., pass the URI to ViewModel
-                    handleFileSelection(uri)
-                }
-            }
-        }
-
-    val pickCSVFileIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-        addCategory(Intent.CATEGORY_OPENABLE)
-        type = "text/csv"
-    }
-
 
     Scaffold(
         // region UI - Top Bar & Action Buttons
@@ -483,7 +412,9 @@ fun AdminScreen(
                         // Card for WedCheck Upload
                         FileUploadCard(
                             title = "Upload WedCheck File",
-                            onUpload = { getWedCheckCSV.launch("text/csv") },
+                            onUpload = {
+                                wedCheckLauncher.launch(arrayOf("text/csv")) //verify that permissions have been granted
+                            },
                             isLoaded = { wedCheckViewModel.uiState.value.isWedCheckLoaded },
                             isLoading = { wedCheckViewModel.uiState.value.isWedCheckLoading },
                             failedRows = { wedCheckViewModel.uiState.value.failedRows },
@@ -503,9 +434,8 @@ fun AdminScreen(
                         FileUploadCard(
                             title = "Upload Observer Initials",
                             onUpload = {
-                                requestCSVFile.launch(pickCSVFileIntent)
-
-//                                getObserversCSV.launch("text/csv")
+//                                observersLauncher.launch(arrayOf("text/csv"))
+                                observersDirectoryPicker.launch(null)
                             },
 //                                onDelete = { homeViewModel.clearObservers() },
                             isLoaded = { homeViewModel.uiState.value.isObserversLoaded },
@@ -526,7 +456,9 @@ fun AdminScreen(
                         // Card for Colony Locations Upload and Clear
                         FileUploadCard(
                             title = "Upload Seal Colony Locations",
-                            onUpload = { getColonyLocationsCSV.launch("text/csv") },
+                            onUpload = {
+                                colonyLocationsLauncher.launch(arrayOf("text/csv"))
+                            },
 //                                onDelete = {   homeViewModel.clearColonies() },
                             isLoaded = { homeViewModel.uiState.value.isColonyLocationsLoaded },
                             isLoading = { homeViewModel.uiState.value.isColonyLocationsLoading },
@@ -560,6 +492,7 @@ fun AdminScreen(
                                 userScrollEnabled = true
                             ) {
                                 items(fileUploads) { file ->
+
                                     FileUploadItem(fileUpload = file)
 
                                     HorizontalDivider()
