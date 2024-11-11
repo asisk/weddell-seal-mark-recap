@@ -43,6 +43,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,7 +57,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
@@ -83,7 +83,6 @@ fun AdminScreen(
     // Track which file name failed
     var filenameStr by remember { mutableStateOf("") }
     var selectedFilename by remember { mutableStateOf("") }
-    var selectedDirectoryUri by remember { mutableStateOf<Uri?>(null) }
 
     val createCurrentObservationsDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
@@ -170,63 +169,22 @@ fun AdminScreen(
         }
     }
 
-    val observersLauncher = rememberLauncherForActivityResult(
+    val observersFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         handleFileSelection(uri, "observers.csv")
     }
 
-    val wedCheckLauncher = rememberLauncherForActivityResult(
+    val wedCheckFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         handleFileSelection(uri, "WedCheck.csv")
     }
 
-    val colonyLocationsLauncher = rememberLauncherForActivityResult(
+    val colonyFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         handleFileSelection(uri, "Colony_Locations.csv")
-    }
-
-    fun handleDirectorySelection(uri: Uri) {
-        val directory = DocumentFile.fromTreeUri(context, uri)
-
-        if (directory != null && directory.isDirectory) {
-            // Iterate through files in the directory
-            val files = directory.listFiles()
-
-            // Find the file you are interested in, e.g., "observers.csv"
-            val targetFile = files.firstOrNull { it.name == "observers.csv" }
-
-            if (targetFile != null && targetFile.isFile) {
-                // Process the file, e.g., by opening an input stream
-//                openFile(targetFile.uri)
-                handleFileSelection(targetFile.uri, "observers.csv")
-            } else {
-                Log.e("FileSelection", "Expected file not found in directory")
-                // Show an error message or handle the case where the file isn't found
-            }
-        } else {
-            Log.e("FileSelection", "Selected URI is not a directory or is inaccessible")
-        }
-    }
-
-    // Launcher for picking a file in a specific directory
-    val observersDirectoryPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        uri?.let {
-            // Persist URI permissions for the selected directory
-            context.contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-
-            // Store the selected directory URI in ViewModel
-            selectedDirectoryUri = uri
-
-            handleDirectorySelection(uri)
-        }
     }
 
     Scaffold(
@@ -401,7 +359,6 @@ fun AdminScreen(
                         )
                     }
 
-
                     Row(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically,
@@ -413,7 +370,7 @@ fun AdminScreen(
                         FileUploadCard(
                             title = "Upload WedCheck File",
                             onUpload = {
-                                wedCheckLauncher.launch(arrayOf("text/csv")) //verify that permissions have been granted
+                                wedCheckFilePicker.launch(arrayOf("*/*"))
                             },
                             isLoaded = { wedCheckViewModel.uiState.value.isWedCheckLoaded },
                             isLoading = { wedCheckViewModel.uiState.value.isWedCheckLoading },
@@ -434,8 +391,7 @@ fun AdminScreen(
                         FileUploadCard(
                             title = "Upload Observer Initials",
                             onUpload = {
-//                                observersLauncher.launch(arrayOf("text/csv"))
-                                observersDirectoryPicker.launch(null)
+                                observersFilePicker.launch(arrayOf("*/*"))
                             },
 //                                onDelete = { homeViewModel.clearObservers() },
                             isLoaded = { homeViewModel.uiState.value.isObserversLoaded },
@@ -457,7 +413,7 @@ fun AdminScreen(
                         FileUploadCard(
                             title = "Upload Seal Colony Locations",
                             onUpload = {
-                                colonyLocationsLauncher.launch(arrayOf("text/csv"))
+                                colonyFilePicker.launch(arrayOf("*/*"))
                             },
 //                                onDelete = {   homeViewModel.clearColonies() },
                             isLoaded = { homeViewModel.uiState.value.isColonyLocationsLoaded },
