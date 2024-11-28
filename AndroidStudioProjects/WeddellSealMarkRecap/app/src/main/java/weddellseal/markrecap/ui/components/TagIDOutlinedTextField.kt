@@ -1,10 +1,10 @@
 package weddellseal.markrecap.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
@@ -47,7 +47,8 @@ fun TagIDOutlinedTextField(
 
     val focusManager =
         LocalFocusManager.current // State to manage whether the text field should lose focus
-    val focusRequester = remember { FocusRequester() } // FocusRequester to manage focus programmatically
+    val focusRequester =
+        remember { FocusRequester() } // FocusRequester to manage focus programmatically
     var isFocused by remember { mutableStateOf(false) } // Track focus state
 
     LaunchedEffect(value) {
@@ -57,6 +58,10 @@ fun TagIDOutlinedTextField(
     // Detect focus changes and trigger the callback
     LaunchedEffect(isFocused) {
         onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
+        Log.d(
+            "TagIDOutlinedTextField LaunchedEffect",
+            "Trimming the field value to remove spaces and calling the onFocusChange lambda"
+        )
     }
 
     OutlinedTextField(
@@ -74,7 +79,7 @@ fun TagIDOutlinedTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(
-                alpha = ContentAlpha.disabled
+                alpha = 0.38f // Instead of `ContentAlpha.disabled`, use a manual alpha value
             ),
         ),
         singleLine = true,
@@ -85,6 +90,7 @@ fun TagIDOutlinedTextField(
             onDone = {
                 focusManager.clearFocus()
                 keyboardController?.hide()
+                Log.d("LaunchedEffect in TagIDOutlinedTextField", "Clearing field focus")
             }
         ),
         trailingIcon = {
@@ -106,6 +112,8 @@ fun TagIDOutlinedTextField(
         modifier = Modifier
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused // Update focus state
+                Log.d("TagIDOutlinedTextField", "Focus change detected isFocused: $isFocused, calling onFocusChange lambda")
+                onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
             }
             .focusRequester(focusRequester)
     )

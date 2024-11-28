@@ -119,6 +119,7 @@ class WedCheckViewModel(
             sealNotFound = true,
             isError = false
         )
+        Log.d("findSealbyTagID in WedCheckViewModel", "Clearing wedcheck seal")
         wedCheckSeal = WedCheckSeal()
 
         if (sealTagID != "") {

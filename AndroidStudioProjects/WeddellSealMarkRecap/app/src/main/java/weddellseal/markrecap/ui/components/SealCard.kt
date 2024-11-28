@@ -1,5 +1,6 @@
 package weddellseal.markrecap.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,7 +45,7 @@ fun SealCard(
     var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
     var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
     var tagNumber by remember { mutableStateOf(seal.tagNumber) }
-    var oldTagIDOneVal by remember { mutableStateOf(seal.oldTagId) }
+    var oldTagID by remember { mutableStateOf(seal.oldTagId) }
     var notebookStr by remember { mutableStateOf(seal.notebookDataString) }
     var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
     var isNoTagsChecked by remember { mutableStateOf(seal.numTags.toIntOrNull() == 0) }
@@ -70,7 +71,7 @@ fun SealCard(
     }
 
     LaunchedEffect(seal.oldTagId) {
-        oldTagIDOneVal = seal.oldTagId
+        oldTagID = seal.oldTagId
     }
 
     LaunchedEffect(seal.tissueTaken) {
@@ -86,6 +87,7 @@ fun SealCard(
     }
 
     LaunchedEffect(seal.oldTagId) {
+        Log.d("LaunchedEffect", "change in oldTagId detected")
         if (seal.oldTagId != "" && isRetag) {
             // check for an existing wedcheck seal record for this seal
             // conduct search if we haven't already located a wedcheck record
@@ -96,6 +98,7 @@ fun SealCard(
 
                 // find the seal
                 if (!wedCheckViewModel.uiState.value.isSearching) {
+                    Log.d("LaunchedEffect", "looking up seal")
                     wedCheckViewModel.findSealbyTagID(seal.oldTagId)
                 }
             }
@@ -103,6 +106,7 @@ fun SealCard(
     }
 
     LaunchedEffect(seal.tagNumber, seal.tagAlpha) {
+        Log.d("LaunchedEffect", "change in either tagNumber or tagAlpha detected")
         // update the speNo if we don't have one once we have a tag number and a tag alpha
         if (!isRetag && seal.tagNumber != "" && seal.tagAlpha != "") {
             if (seal.tagNumber.length == 3 || seal.tagNumber.length == 4) {
@@ -121,6 +125,7 @@ fun SealCard(
 
                     // find the seal
                     if (!wedCheckViewModel.uiState.value.isSearching) {
+                        Log.d("LaunchedEffect", "looking up seal")
                         wedCheckViewModel.findSealbyTagID(searchStr)
                     }
                 }
@@ -220,7 +225,12 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
+            .padding(10.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -279,7 +289,12 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
+            .padding(10.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -368,7 +383,12 @@ fun SealCard(
 
     Row(
         modifier = Modifier
-            .padding(10.dp),
+            .padding(10.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -585,7 +605,7 @@ fun SealCard(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         TagIDOutlinedTextField(
-                            value = oldTagIDOneVal,
+                            value = oldTagID,
                             labelText = "Old Tag ID",
                             placeholderText = "Enter Old Tag ID",
                             errorMessage = "",
@@ -598,22 +618,9 @@ fun SealCard(
                             },
                             onFocusChange = { isFocused, lastValue ->
                                 if (!isFocused) {
+                                    Log.d("Old Tag Row", "calling model update")
                                     // save the input to the model
                                     viewModel.updateOldTag(seal, lastValue.uppercase().trim())
-
-//                                    // update the speNo if the Old Tag ID changes
-//                                    if (lastValue != "") {
-//                                        if (!wedCheckViewModel.uiState.value.isSearching) {
-//                                            viewModel.clearSpeNo(seal)
-//                                            wedCheckViewModel.findSealbyTagID(lastValue)
-//                                        }
-//
-//                                        viewModel.updateSpeNoForTagID(
-//                                            seal,
-//                                            wedCheckViewModel,
-//                                            lastValue
-//                                        )
-//                                    }
                                 }
                             }
                         )
@@ -637,7 +644,12 @@ fun SealCard(
 
             Row(
                 modifier = Modifier
-                    .padding(10.dp),
+                    .padding(10.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            focusManager.clearFocus()
+                        })
+                    },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -674,7 +686,12 @@ fun SealCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(10.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -720,6 +737,7 @@ fun SealCard(
                         },
                         onFocusChange = { isFocused, lastValue ->
                             if (!isFocused) {
+                                Log.d("TagID Row", "executing on Focus")
                                 // save the input to the model
                                 viewModel.updateTagNumber(seal, lastValue)
                             }
@@ -755,7 +773,12 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

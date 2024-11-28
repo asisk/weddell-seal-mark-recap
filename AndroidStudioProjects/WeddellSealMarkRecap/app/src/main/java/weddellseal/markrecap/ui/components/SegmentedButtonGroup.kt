@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -29,6 +30,7 @@ fun SegmentedButtonGroup(
     onOptionSelected: (String) -> Unit
 ) {
     // State to hold the currently selected option
+    val focusManager = LocalFocusManager.current // Access the focus manager
     var currentSelection by remember { mutableStateOf(selectedOption) }
 
     LaunchedEffect(selectedOption) {
@@ -49,6 +51,8 @@ fun SegmentedButtonGroup(
             // Individual Button for each option
             Button(
                 onClick = {
+                    focusManager.clearFocus() // Clear focus when button is clicked
+
                     // Toggle selection: deselect if already selected, select otherwise
                     if (isSelected) {
                         currentSelection = ""

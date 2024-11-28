@@ -91,7 +91,6 @@ class FusedLocationSource(
 
     override fun onLocationChanged(update: Location) {
         runBlocking(Dispatchers.Unconfined) {
-            Log.d(TAG, "Location changed: $update")
             locationFlow.emit(GeoLocation.fromFusedLocation(update))
         }
     }
