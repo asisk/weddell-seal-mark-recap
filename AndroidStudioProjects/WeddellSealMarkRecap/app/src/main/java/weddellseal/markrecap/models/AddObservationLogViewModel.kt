@@ -15,9 +15,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,11 +25,14 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.data.ObservationLogEntry
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Seal
-import weddellseal.markrecap.data.SupportingDataRepository
+import weddellseal.markrecap.data.SealColony
+import weddellseal.markrecap.data.SealColonyRepository
 import weddellseal.markrecap.data.WedCheckSeal
 import weddellseal.markrecap.data.processTags
 import weddellseal.markrecap.ui.utils.buildLogEntry
@@ -46,7 +47,7 @@ import java.util.Locale
 class AddObservationLogViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
-    private val supportingDataRepository: SupportingDataRepository
+    private val sealColonyRepository: SealColonyRepository
 ) : AndroidViewModel(application) {
     private val context: Context
         get() = getApplication()
@@ -96,6 +97,25 @@ class AddObservationLogViewModel(
         )
     )
         private set
+
+    init {
+        // Automatically update colonyLocation if it's set to "Select an option"
+        // In other words, if the user has not selected a location, use the autodetected location
+        viewModelScope.launch {
+            combine(
+                sealColonyRepository.colony,
+                sealColonyRepository.overrideAutoColony
+            ) { detectedColony, overrideAutoColony ->
+                Pair(detectedColony, overrideAutoColony)
+            }.collect { (detectedColony, overrideAutoColony) ->
+                detectedColony?.let {
+                    if (!overrideAutoColony) {
+                        uiState = uiState.copy(colonyLocation = it.location)
+                    }
+                }
+            }
+        }
+    }
 
     var primarySeal by mutableStateOf(
         Seal(

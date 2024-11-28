@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.data.ObservationRepository
+import weddellseal.markrecap.data.SealColonyRepository
 import weddellseal.markrecap.data.SupportingDataRepository
 import weddellseal.markrecap.data.WedCheckRepository
 import weddellseal.markrecap.locationFramework.FusedLocationSource
@@ -38,12 +39,15 @@ class MainActivity : ComponentActivity() {
     private lateinit var wedCheckRepository: WedCheckRepository
     private lateinit var observationRepository: ObservationRepository
     private lateinit var supportingDataRepository: SupportingDataRepository
+    private lateinit var sealColonyRepository: SealColonyRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Access the ObservationLogApplication instance
         val observationLogApplication = application as ObservationLogApplication
+
+        sealColonyRepository = SealColonyRepository()
 
         // Set up the WedCheck model to be shared between views
         val wedCheckDao = observationLogApplication.getWedCheckDao()
@@ -62,14 +66,15 @@ class MainActivity : ComponentActivity() {
             SupportingDataRepository(observersDao, sealColoniesDao, fileUploadDao)
 
         val addLogViewModelFactory =
-            AddLogViewModelFactory(application, observationRepository, supportingDataRepository)
+            AddLogViewModelFactory(application, observationRepository, sealColonyRepository)
         val addObservationLogViewModel: AddObservationLogViewModel by viewModels { addLogViewModelFactory }
 
         val homeViewModelFactory =
             HomeViewModelFactory(
                 observationRepository,
                 supportingDataRepository,
-                FusedLocationSource(applicationContext)
+                FusedLocationSource(applicationContext),
+                sealColonyRepository
             )
         val homeViewModel: HomeViewModel by viewModels { homeViewModelFactory }
 

@@ -28,6 +28,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -87,8 +88,10 @@ fun HomeScaffold(
     val scrollState = rememberScrollState()
     var showCensusDialog by remember { mutableStateOf(false) }
     val coloniesList by viewModel.coloniesList.collectAsState()
-    val currentColony by viewModel.colonyIdentified.collectAsState()
+    val currentColony by viewModel.autoDetectedColony.collectAsState()
     val gpsCoordinates by viewModel.coordinates.collectAsState()
+    // Collect the overrideAutoColony state
+    val overrideAutoColony by viewModel.overrideAutoColony.collectAsState()
 
     // Used to request permissions for Location
     RequestPermissionsEffect(viewModel)
@@ -340,37 +343,17 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.5f)
                             ) {
-                                Text(text = "Auto-detected Colony", style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    text = "Colony Detected",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
                             }
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-                                Text (currentColony?.location.toString())
-                            }
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(6.dp),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .fillMaxWidth(.5f)
-                            ) {
-                                Text(text = "Auto-detected GPS Coordinates", style = MaterialTheme.typography.titleLarge)
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .fillMaxWidth(.8f)
-                            ) {
-                                Text (gpsCoordinates?.latitude.toString())
-                                Text (gpsCoordinates?.longitude.toString())
+                                Text(currentColony?.location.toString())
                             }
                         }
                         Row(
@@ -382,24 +365,33 @@ fun HomeScaffold(
                         ) {
                             val colonySelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
 
-                            Column(
+                            Text(
+                                text = "Select Colony",
+                                style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .fillMaxWidth(.5f)
-                            ) {
-                                Text(text = "Colony", style = MaterialTheme.typography.titleLarge)
-                            }
+                            )
+                            Checkbox(
+                                checked = overrideAutoColony,
+                                onCheckedChange = {
+                                    viewModel.updateOverrideAutoColony(it)
+                                },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                            )
+                            if (overrideAutoColony) {
 
-                            Column(
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .fillMaxWidth(.8f)
-                            ) {
-                                DropdownField(
-                                    coloniesList,
-                                    colonySelected
-                                ) { valueSelected ->
-                                    obsViewModel.updateColonySelection(valueSelected)
+                                Column(
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .fillMaxWidth(.8f)
+                                ) {
+                                    DropdownField(
+                                        coloniesList,
+                                        colonySelected
+                                    ) { valueSelected ->
+                                        obsViewModel.updateColonySelection(valueSelected)
+                                    }
                                 }
                             }
                         }
@@ -427,7 +419,10 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-                                Text(text = deviceName, style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    text = deviceName,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
                             }
                         }
                     }

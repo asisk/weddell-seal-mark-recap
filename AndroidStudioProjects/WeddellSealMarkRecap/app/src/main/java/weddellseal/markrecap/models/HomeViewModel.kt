@@ -23,6 +23,7 @@ import weddellseal.markrecap.data.FileUploadEntity
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Observers
 import weddellseal.markrecap.data.SealColony
+import weddellseal.markrecap.data.SealColonyRepository
 import weddellseal.markrecap.data.SupportingDataRepository
 import weddellseal.markrecap.data.location.Coordinates
 import weddellseal.markrecap.data.location.GeoLocation
@@ -43,7 +44,8 @@ class HomeViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
     private val supportingDataRepository: SupportingDataRepository,
-    private val locationSource: LocationSource
+    private val locationSource: LocationSource,
+    private val sealColonyRepository: SealColonyRepository
 ) : AndroidViewModel(application) {
     private val _permissionsGranted = MutableStateFlow(false)
     val permissionsGranted: StateFlow<Boolean> = _permissionsGranted
@@ -81,12 +83,21 @@ class HomeViewModel(
     val coloniesList: StateFlow<List<String>> = _coloniesList
 
     // Colony that is auto-detected based on the location emitted from the FusedLocationSource
-    private val _colonyQueried = MutableStateFlow<SealColony?>(null)
-    val colonyIdentified: MutableStateFlow<SealColony?> = _colonyQueried
+    val autoDetectedColony: StateFlow<SealColony?> = sealColonyRepository.colony
+
+    fun updateColony(colony: SealColony?) {
+        sealColonyRepository.setColony(colony)
+    }
+
+    // Expose the overrideAutoColony as a StateFlow
+    val overrideAutoColony: StateFlow<Boolean> = sealColonyRepository.overrideAutoColony
+
+    fun updateOverrideAutoColony(value: Boolean) {
+        sealColonyRepository.setOverrideAutoColony(value)
+    }
 
     private val _coordinates = MutableStateFlow<Coordinates?>(null)
     val coordinates: MutableStateFlow<Coordinates?> = _coordinates
-
 
     data class UiState(
         val hasFileAccess: Boolean,
@@ -109,7 +120,6 @@ class HomeViewModel(
         val date: String,
         val deviceCoordinates: Coordinates? = null,
         val location: GeoLocation? = null,
-        val colonyQueried: SealColony? = null
     )
 
     override fun onCleared() {
@@ -205,7 +215,7 @@ class HomeViewModel(
                 )
                 // Find and update the colony based on the location
                 val colony = findColony(geoLocation.coordinates) ?: sealColonyDefault
-                _colonyQueried.value = colony
+                updateColony(colony)
             }
         }.storeIn(jobs)
     }
