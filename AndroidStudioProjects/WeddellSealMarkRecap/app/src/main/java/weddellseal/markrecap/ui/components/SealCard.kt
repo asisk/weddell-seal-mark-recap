@@ -49,8 +49,9 @@ fun SealCard(
     var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
     var isNoTagsChecked by remember { mutableStateOf(seal.numTags.toIntOrNull() == 0) }
     var isTissueChecked by remember { mutableStateOf(seal.tissueTaken) }
-    val showDeleteRelativesDialog = remember { mutableStateOf(false) }
     var isOldTagMarksChecked by remember { mutableStateOf(seal.oldTagMarks) }
+    val showDeleteRelativesDialog = remember { mutableStateOf(false) }
+    val showWedCheckCommentsDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(seal.numRelatives) {
         numRelatives = if (seal.sex == "Male" && seal.name == "primary") {
@@ -127,8 +128,8 @@ fun SealCard(
         }
     }
 
-// there's a lag when finding the seal in the wedcheck model
-// this LaunchedEffect allows us to be aware the presence of a new wedCheckSeal
+    // there's a lag when finding the seal in the wedcheck model
+    // this LaunchedEffect allows us to be aware the presence of a new wedCheckSeal
     LaunchedEffect(wedCheckViewModel.wedCheckSeal.speNo) {
         if (wedCheckViewModel.wedCheckSeal.speNo != 0) { // check that the wedcheck seal was found
             var tagID = seal.tagNumber + seal.tagAlpha
@@ -144,6 +145,10 @@ fun SealCard(
                     viewModel.mapSpeno(seal.name, wedCheckViewModel.wedCheckSeal)
                     viewModel.addWedCheckSeal(tagID, wedCheckViewModel.wedCheckSeal)
                 }
+
+                // make sure that the comments are displayed when a seal record is updated to
+                // allow the technician to take action if needed (TAKE PHOTOS)
+                showWedCheckCommentsDialog.value = true
             }
         }
     }
@@ -852,7 +857,16 @@ fun SealCard(
         }
     }
 
-// COMMENT && OLD TAG MARKS
+    // COMMENT && OLD TAG MARKS
+
+    // WEDCHECK COMMENTS DIALOG
+    if (showWedCheckCommentsDialog.value && wedCheckViewModel.wedCheckSeal.comment != "") {
+        WedCheckCommentDialog(
+            wedCheckRecordComments = wedCheckViewModel.wedCheckSeal.comment,
+            onDismiss = { showWedCheckCommentsDialog.value = false },
+        )
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
