@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.SupportingDataRepository
 import weddellseal.markrecap.data.WedCheckRepository
+import weddellseal.markrecap.locationFramework.FusedLocationSource
 import weddellseal.markrecap.models.AddLogViewModelFactory
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.HomeViewModel
@@ -26,6 +27,7 @@ import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.screens.AddObservationLogScreen
 import weddellseal.markrecap.ui.screens.AdminScreen
 import weddellseal.markrecap.ui.screens.HomeScreen
+import weddellseal.markrecap.ui.screens.LocationPermissionView
 import weddellseal.markrecap.ui.screens.ObservationViewer
 import weddellseal.markrecap.ui.screens.RecentObservationsScreen
 import weddellseal.markrecap.ui.screens.SealLookupScreen
@@ -56,14 +58,19 @@ class MainActivity : ComponentActivity() {
 
         val observersDao = observationLogApplication.getObserversDao()
         val sealColoniesDao = observationLogApplication.getSealColoniesDao()
-        supportingDataRepository = SupportingDataRepository(observersDao, sealColoniesDao, fileUploadDao)
+        supportingDataRepository =
+            SupportingDataRepository(observersDao, sealColoniesDao, fileUploadDao)
 
         val addLogViewModelFactory =
             AddLogViewModelFactory(application, observationRepository, supportingDataRepository)
         val addObservationLogViewModel: AddObservationLogViewModel by viewModels { addLogViewModelFactory }
 
         val homeViewModelFactory =
-            HomeViewModelFactory(application, observationRepository, supportingDataRepository)
+            HomeViewModelFactory(
+                observationRepository,
+                supportingDataRepository,
+                FusedLocationSource(applicationContext)
+            )
         val homeViewModel: HomeViewModel by viewModels { homeViewModelFactory }
 
         val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
@@ -79,6 +86,11 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val startNavigation = Screens.HomeScreen.route
                     NavHost(navController = navController, startDestination = startNavigation) {
+                        composable(Screens.LocationPermissionScreen.route) {
+                            LocationPermissionView(onNextClick = {
+                                navController.navigate(Screens.HomeScreen.route)
+                            })
+                        }
                         composable(Screens.HomeScreen.route) {
                             HomeScreen(
                                 navController,
@@ -130,6 +142,7 @@ class MainActivity : ComponentActivity() {
 }
 
 sealed class Screens(val route: String) {
+    object LocationPermissionScreen : Screens("location_permissions")
     object HomeScreen : Screens("home")
     object AdminScreen : Screens("admin")
     object AddObservationLog : Screens("add_log")

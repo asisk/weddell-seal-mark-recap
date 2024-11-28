@@ -39,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,6 +63,9 @@ import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.ui.components.CensusDialog
 import weddellseal.markrecap.ui.components.DropdownField
 import weddellseal.markrecap.ui.components.MultiSelectDropdownObservers
+import weddellseal.markrecap.ui.permissions.RequestPermissions
+import weddellseal.markrecap.ui.permissions.missingPermissions
+import weddellseal.markrecap.ui.utils.cancelAllAndClear
 
 @Composable
 fun HomeScreen(
@@ -82,11 +86,21 @@ fun HomeScaffold(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     var showCensusDialog by remember { mutableStateOf(false) }
-    val coloniesList by viewModel.colonies.collectAsState()
+    val coloniesList by viewModel.coloniesList.collectAsState()
     val currentColony by viewModel.colonyIdentified.collectAsState()
+    val gpsCoordinates by viewModel.coordinates.collectAsState()
+
+    // Used to request permissions for Location
+    RequestPermissionsEffect(viewModel)
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.jobs.cancelAllAndClear()
+        }
+    }
 
     LaunchedEffect(Unit) {
-        viewModel.fetchLocations()
+        viewModel.fetchColonyNamesList()
     }
 
     val requestFilePermissions =
@@ -321,10 +335,52 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.5f)
+                            ) {
+                                Text(text = "Auto-detected Colony", style = MaterialTheme.typography.titleLarge)
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.8f)
+                            ) {
+                                Text (currentColony?.location.toString())
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(6.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.5f)
+                            ) {
+                                Text(text = "Auto-detected GPS Coordinates", style = MaterialTheme.typography.titleLarge)
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.8f)
+                            ) {
+                                Text (gpsCoordinates?.latitude.toString())
+                                Text (gpsCoordinates?.longitude.toString())
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(6.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             val colonySelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
-
-                            // TODO, test that the colony name is findable and updated
-//                            Text (currentColony?.location.toString())
 
                             Column(
                                 modifier = Modifier
@@ -376,7 +432,7 @@ fun HomeScaffold(
                         }
                     }
 
-                    // Show the dialog if showDialog is true
+                    // Show the Census dialog if showDialog is true
                     if (showCensusDialog) {
                         CensusDialog(
                             obsViewModel,
@@ -395,6 +451,18 @@ fun HomeScaffold(
             }
         }
     }
+}
+
+@Composable
+private fun RequestPermissionsEffect(
+    vm: HomeViewModel,
+) {
+    val missing = LocalContext.current.missingPermissions()
+    if (missing.isEmpty()) {
+        vm.onPermissionsResult(true)
+        return
+    }
+    RequestPermissions(missing, vm::onPermissionsResult)
 }
 
 @Composable

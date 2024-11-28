@@ -88,7 +88,7 @@ dependencies {
     implementation("androidx.compose.runtime:runtime:1.0.0")
 
     implementation("androidx.fragment:fragment-ktx:1.7.0-alpha06")
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("androidx.test:runner:1.5.2")
     implementation("androidx.test:core:1.5.0")
     implementation("androidx.test.ext:junit:1.2.0-alpha01")

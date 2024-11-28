@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,15 +22,19 @@ import weddellseal.markrecap.data.FailedRow
 import weddellseal.markrecap.data.FileUploadEntity
 import weddellseal.markrecap.data.ObservationRepository
 import weddellseal.markrecap.data.Observers
-import weddellseal.markrecap.data.Seal
 import weddellseal.markrecap.data.SealColony
 import weddellseal.markrecap.data.SupportingDataRepository
-import weddellseal.markrecap.location.Coordinates
-import weddellseal.markrecap.location.fetchCurrentLocation
+import weddellseal.markrecap.data.location.Coordinates
+import weddellseal.markrecap.data.location.GeoLocation
+import weddellseal.markrecap.data.location.LocationSource
+import weddellseal.markrecap.ui.utils.mutableJobSet
+import weddellseal.markrecap.ui.utils.storeIn
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+private const val TAG = "HomeViewModel"
 
 /*
  * Home Screen model
@@ -37,8 +42,14 @@ import java.util.Locale
 class HomeViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
-    private val supportingDataRepository: SupportingDataRepository
+    private val supportingDataRepository: SupportingDataRepository,
+    private val locationSource: LocationSource
 ) : AndroidViewModel(application) {
+    private val _permissionsGranted = MutableStateFlow(false)
+    val permissionsGranted: StateFlow<Boolean> = _permissionsGranted
+    private var lastKnownCoordinates: Coordinates? = null
+
+    internal val jobs = mutableJobSet()
 
     private val context: Context
         get() = getApplication()
@@ -54,6 +65,7 @@ class HomeViewModel(
     )
 
     val uiState: StateFlow<UiState> = _uiState
+    var isFollowingLocation = mutableStateOf(false)
 
     // Collect file upload data from the repository
     // Collect file upload data from the repository using collectAsState
@@ -65,11 +77,16 @@ class HomeViewModel(
     val observers: StateFlow<List<String>> = _observers
 
     // MutableStateFlow to hold the list of locations
-    private val _locations = MutableStateFlow<List<String>>(emptyList())
-    val colonies: StateFlow<List<String>> = _locations
+    private val _coloniesList = MutableStateFlow<List<String>>(emptyList())
+    val coloniesList: StateFlow<List<String>> = _coloniesList
 
+    // Colony that is auto-detected based on the location emitted from the FusedLocationSource
     private val _colonyQueried = MutableStateFlow<SealColony?>(null)
     val colonyIdentified: MutableStateFlow<SealColony?> = _colonyQueried
+
+    private val _coordinates = MutableStateFlow<Coordinates?>(null)
+    val coordinates: MutableStateFlow<Coordinates?> = _coordinates
+
 
     data class UiState(
         val hasFileAccess: Boolean,
@@ -91,8 +108,17 @@ class HomeViewModel(
         val errorText: String = "",
         val date: String,
         val deviceCoordinates: Coordinates? = null,
+        val location: GeoLocation? = null,
         val colonyQueried: SealColony? = null
     )
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.launch {
+            locationSource.stopLocationUpdates()
+        }
+        jobs.clear()
+    }
 
     fun hasPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -102,46 +128,106 @@ class HomeViewModel(
     }
 
     fun onPermissionChange(permission: String, isGranted: Boolean) {
+        Log.i(TAG, "permissions changed")
         when (permission) {
             Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                Log.i(TAG, "READ_EXTERNAL_STORAGE changed to granted")
+
                 _uiState.value = uiState.value.copy(hasFileAccess = isGranted)
             }
 
             else -> {
-                Log.e("Permission change", "Unexpected permission: $permission")
+                Log.e(TAG, "Unexpected permission: $permission")
             }
         }
+    }
+
+    fun onPermissionsResult(granted: Boolean) {
+        Log.i(TAG, "onPermissionsResult: $granted")
+
+        if (!granted) {
+            Log.e(TAG, "Location permissions denied!")
+            viewModelScope.launch {
+                locationSource.stopLocationUpdates()
+                applyLocationFollowing(false)
+            }.storeIn(jobs)
+            return
+        }
+
+        Log.i(TAG, "Location permissions granted, proceed with observing location changes")
+
+        viewModelScope.launch {
+            applyLocationFollowing(true)
+            configureLocationFollow()
+            locationSource.startLocationUpdates()
+        }.storeIn(jobs)
+    }
+
+    private fun applyLocationFollowing(isEnabled: Boolean) {
+        Log.i(TAG, "follow location -> $isEnabled")
+        isFollowingLocation.value = isEnabled
+    }
+
+    private fun configureLocationFollow() {
+        viewModelScope.launch {
+            Log.i(TAG, "observing location follow mode")
+
+            locationSource.locationUpdates().collect { geoLocation ->
+                Log.i(TAG, "New location received: $geoLocation")
+
+                // Check if the coordinates have changed
+                if (geoLocation.coordinates == lastKnownCoordinates) {
+                    Log.i(TAG, "Coordinates are the same as the previous update. Skipping update.")
+                    return@collect // Skip the update
+                }
+
+                // Update the last known coordinates
+                lastKnownCoordinates = geoLocation.coordinates
+
+                _coordinates.value = geoLocation.coordinates
+
+                _uiState.value = uiState.value.copy(
+                    location = geoLocation // Update with the latest location
+                )
+
+
+                var sealColonyDefault = SealColony(
+                    colonyId = 0,
+                    inOut = "none",
+                    location = "Seal Colony not Found!",
+                    nLimit = 0.0,
+                    sLimit = 0.0,
+                    wLimit = 0.0,
+                    eLimit = 0.0,
+                    adjLong = 0.0,
+                    adjLat = 0.0,
+                    fileUploadId = 0
+                )
+                // Find and update the colony based on the location
+                val colony = findColony(geoLocation.coordinates) ?: sealColonyDefault
+                _colonyQueried.value = colony
+            }
+        }.storeIn(jobs)
     }
 
     // locate the colony name by querying the database
-    // TODO, how often should this be updated? 5 min, 10 min?
-    fun findColony(): String {
-        var colonyName = "NONE"
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val currentCoordinates = context.fetchCurrentLocation()
-                if (currentCoordinates != null) {
-                    _uiState.value = uiState.value.copy(deviceCoordinates = currentCoordinates)
-                    val colony = supportingDataRepository.findColony(currentCoordinates.latitude, currentCoordinates.longitude)
-                    if (colony != null) {
-                        _uiState.value = uiState.value.copy(colonyQueried = colony)
-                        colonyName = colony.location
-                    }
-                }
-            }
+    suspend fun findColony(coordinates: Coordinates): SealColony? {
+        return withContext(Dispatchers.IO) {
+            supportingDataRepository.findColony(
+                coordinates.latitude,
+                coordinates.longitude
+            )
         }
-
-        return colonyName
     }
 
     // Function to fetch locations from the database
-    fun fetchLocations() {
+    fun fetchColonyNamesList() {
         viewModelScope.launch {
             val fetchedLocations = withContext(Dispatchers.IO) {
-                supportingDataRepository.getLocations() // Fetch from DB
+                supportingDataRepository.getColonyNamesList()
             }
-            if (fetchedLocations.isNotEmpty() && _locations.value.isEmpty()) {
-                _locations.value = fetchedLocations
+            if (fetchedLocations.isNotEmpty() && _coloniesList.value.isEmpty()) {
+                _coloniesList.value = fetchedLocations
             }
         }
     }

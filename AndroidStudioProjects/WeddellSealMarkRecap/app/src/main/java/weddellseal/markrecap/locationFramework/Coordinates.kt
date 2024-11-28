@@ -1,4 +1,4 @@
-package weddellseal.markrecap.location
+package weddellseal.markrecap.locationFramework
 
 import android.location.Location
 

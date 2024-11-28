@@ -1,4 +1,4 @@
-package weddellseal.markrecap.location
+package weddellseal.markrecap.locationFramework
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -35,46 +35,3 @@ suspend fun Context.fetchCurrentLocation(): Coordinates? =
             continuation.resume(null)
         }
     }
-
-
-fun Context.isGooglePlayAvailable(): Boolean {
-    val resultCode =
-        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
-
-    // Use a `when` statement to determine Google Play services availability
-    return when (resultCode) {
-        ConnectionResult.SUCCESS -> {
-            Log.i("GooglePlayServices", "Google Play services are available.")
-            true
-        }
-
-        ConnectionResult.SERVICE_MISSING -> {
-            Log.e("GooglePlayServices", "Google Play services are missing.")
-            false
-        }
-
-        ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED -> {
-            Log.w("GooglePlayServices", "Google Play services need to be updated.")
-            //TODO, handling this case more explicitly, possibly prompting the user to update.
-            true
-        }
-
-        ConnectionResult.SERVICE_DISABLED -> {
-            Log.e("GooglePlayServices", "Google Play services are disabled.")
-            false
-        }
-
-        ConnectionResult.SERVICE_INVALID -> {
-            Log.e("GooglePlayServices", "Google Play services are invalid.")
-            false
-        }
-
-        else -> {
-            Log.e(
-                "GooglePlayServices",
-                "Google Play services are in an unknown state: $resultCode"
-            )
-            false
-        }
-    }
-}

@@ -36,7 +36,7 @@ class SupportingDataRepository(
     }
 
     // used to return a list of location names
-    fun getLocations(): List<String> {
+    fun getColonyNamesList(): List<String> {
         return sealColoniesDao.getSealColonyNames()
     }
 
