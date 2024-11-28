@@ -1,9 +1,9 @@
 package weddellseal.markrecap.ui.screens
 
-import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -43,7 +43,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -115,6 +114,48 @@ fun AdminScreen(
         )
     }
 
+    val getWedCheckCSV = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        // Handle the selected locations file here
+        if (uri != null) {
+            var fileName = ""
+            filenameStr = "WedCheckFull.csv or WedCheck.csv"
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (displayNameIndex != -1 && cursor.moveToFirst()) {
+                    fileName = cursor.getString(displayNameIndex)
+                }
+            }
+
+            // Support uploading the full wedcheck file
+            if (fileName == "WedCheckFull.csv" || fileName == "WedCheck.csv") {
+                //TODO, add validation to ensure that the file is right-sized
+//                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
+//
+//                private fun isFileSizeWithinLimit(file: File): Boolean {
+//                    val fileSize = file.length()
+//                    return fileSize <= MAX_FILE_SIZE_BYTES
+//                }
+                wedCheckViewModel.updateLastFileNameLoaded(fileName)
+                wedCheckViewModel.loadWedCheck(uri, fileName)
+
+                if (wedCheckViewModel.uiState.value.isWedCheckLoaded) {
+                    // Display a success message
+                    Toast.makeText(
+                        context,
+                        "$fileName loaded successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            } else {
+                // Show an error message indicating that the selected file is not the expected file
+                showExplanationDialogForFileMatchError = true
+            }
+        }
+    }
+
     // Function to handle the file selection logic
     fun handleFileSelection(uri: Uri?, expectedFileName: String) {
         if (uri != null) {
@@ -139,21 +180,14 @@ fun AdminScreen(
 //                    return fileSize <= MAX_FILE_SIZE_BYTES
 //                }
 
-            if (fileName == expectedFileName) {
+            if (fileName == "WedCheckFull.csv" || fileName == "WedCheck.csv") {
+                wedCheckViewModel.updateLastFileNameLoaded(fileName)
+                wedCheckViewModel.loadWedCheck(uri, fileName)
+            } else if (fileName == expectedFileName) {
                 when (expectedFileName) {
                     "observers.csv" -> {
                         homeViewModel.updateLastObserversFileNameLoaded(fileName)
                         homeViewModel.loadObserversFile(uri, fileName)
-                    }
-
-                    "WedCheck.csv" -> {
-                        wedCheckViewModel.updateLastFileNameLoaded(fileName)
-                        wedCheckViewModel.loadWedCheck(uri, fileName)
-                    }
-
-                    "WedCheckFull.csv" -> {
-                        wedCheckViewModel.updateLastFileNameLoaded(fileName)
-                        wedCheckViewModel.loadWedCheck(uri, fileName)
                     }
 
                     "Colony_Locations.csv" -> {
