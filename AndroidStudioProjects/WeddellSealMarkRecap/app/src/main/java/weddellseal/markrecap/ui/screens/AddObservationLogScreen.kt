@@ -777,6 +777,7 @@ data class TabItem(
     val content: @Composable () -> Unit
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabbedCards(
     viewModel: AddObservationLogViewModel,

@@ -5,12 +5,11 @@ plugins {
 }
 android {
     namespace = "weddellseal.markrecap"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "weddellseal.markrecap"
         minSdk = 29
-        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
@@ -65,45 +64,44 @@ android {
     }
 }
 dependencies {
-    implementation("androidx.activity:activity-compose:1.8.0")
-    implementation("androidx.activity:activity-ktx:1.8.0")
+    implementation("androidx.activity:activity-compose:1.10.1")
+    implementation("androidx.activity:activity-ktx:1.10.1")
+    implementation("androidx.core:core-ktx:1.15.0")
 
-    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1")
 
-    implementation("androidx.camera:camera-camera2:1.4.0-alpha01")
-    implementation("androidx.camera:camera-lifecycle:1.4.0-alpha01")
-    implementation("androidx.camera:camera-view:1.4.0-alpha01")
+    implementation(platform("androidx.compose:compose-bom:2025.03.00"))
 
-    implementation(platform("androidx.compose:compose-bom:2023.10.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material:material:1.6.0-alpha07")
-    implementation("androidx.compose.material:material-icons-extended:1.6.0-alpha07")
+
+    implementation("androidx.compose.material:material:1.7.8")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material3:material3:1.2.0-alpha09")
-    implementation("androidx.compose.runtime:runtime-livedata:1.5.3")
-    implementation("androidx.compose.runtime:runtime-rxjava2:1.5.3")
-    implementation("androidx.compose.runtime:runtime-rxjava3:1.5.3")
-    implementation("androidx.compose.runtime:runtime:1.0.0")
+    implementation("androidx.compose.material3:material3:1.3.1")
 
-    implementation("androidx.fragment:fragment-ktx:1.7.0-alpha06")
+    implementation("androidx.compose.runtime:runtime-livedata:1.7.8")
+    implementation("androidx.compose.runtime:runtime-rxjava2:1.7.8")
+    implementation("androidx.compose.runtime:runtime-rxjava3:1.7.8")
+    implementation("androidx.compose.runtime:runtime:1.7.8")
+
+    implementation("androidx.fragment:fragment-ktx:1.8.6")
     implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("androidx.test:runner:1.5.2")
-    implementation("androidx.test:core:1.5.0")
-    implementation("androidx.test.ext:junit:1.2.0-alpha01")
     implementation("com.opencsv:opencsv:5.8")
-    implementation("commons-io:commons-io:2.6")
+    implementation("commons-io:commons-io:2.16.1")
 
-    val lifecycleVersion = "2.6.2"
+    val lifecycleVersion = "2.8.7"
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion")
 
-    implementation("androidx.navigation:navigation-compose:2.7.4")
+    implementation("androidx.navigation:navigation-compose:2.8.9")
 
     val roomVersion = "2.5.2"
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -134,15 +132,20 @@ dependencies {
     testImplementation("androidx.room:room-testing:$roomVersion")
     testImplementation("androidx.arch.core:core-testing:2.2.0")
 
-    androidTestImplementation("androidx.test:runner:1.5.2")
-    androidTestImplementation("androidx.test:rules:1.5.0")
-    // Optional -- UI testing with Espresso
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation("androidx.test:runner:1.6.2")
+    implementation("androidx.test:core:1.6.1")
+    implementation("androidx.test.ext:junit:1.2.1")
+
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+
+    // UI testing with Espresso
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     // Optional -- UI testing with UI Automator
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha04")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
 
     // Optional -- UI testing with Compose
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.3")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
