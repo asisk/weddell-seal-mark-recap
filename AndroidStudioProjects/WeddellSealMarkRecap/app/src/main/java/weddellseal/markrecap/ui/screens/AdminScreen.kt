@@ -231,11 +231,11 @@ fun AdminScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary
                 ),
                 title = {
-                    Row(
-                        Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            modifier = Modifier.padding(20.dp),
                             text = "Administration",
                             style = MaterialTheme.typography.titleLarge,
                             fontSize = 36.sp // Adjust this value as needed
