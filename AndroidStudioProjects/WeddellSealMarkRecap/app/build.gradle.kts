@@ -59,7 +59,12 @@ android {
 
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/LICENSE-notice.md"
         }
     }
 }
@@ -126,24 +131,29 @@ dependencies {
     implementation("androidx.room:room-paging:$roomVersion")
     implementation("androidx.documentfile:documentfile:1.0.1")
 
-    testImplementation("junit:junit:4.13.2")
-    testImplementation(files("androidx.test.core"))
-    // optional - Test helpers
+    // Testing
     testImplementation("androidx.room:room-testing:$roomVersion")
     testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation(files("androidx.test.core"))
 
     implementation("androidx.test:runner:1.6.2")
     implementation("androidx.test:core:1.6.1")
     implementation("androidx.test.ext:junit:1.2.1")
 
+    // UI testing with Espresso
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:rules:1.6.1")
-
-    // UI testing with Espresso
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    // Optional -- UI testing with UI Automator
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-
+    androidTestImplementation ("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation ("androidx.test.espresso:espresso-contrib:3.6.1")
+    androidTestImplementation ("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation ("org.hamcrest:hamcrest:2.2")
+    // Add mockk for mocking dependencies
+    androidTestImplementation ("io.mockk:mockk:1.12.0")
+    // MockK for local unit tests (src/test/)
+    testImplementation ("io.mockk:mockk:1.13.5")
+    // MockK for Android instrumented tests (src/androidTest/)
+    androidTestImplementation ("io.mockk:mockk-android:1.13.5")
     // Optional -- UI testing with Compose
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
 
