@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -69,7 +70,6 @@ class HomeViewModel(
     val uiState: StateFlow<UiState> = _uiState
     var isFollowingLocation = mutableStateOf(false)
 
-    // Collect file upload data from the repository
     // Collect file upload data from the repository using collectAsState
     val fileUploads: StateFlow<List<FileUploadEntity>> = supportingDataRepository.fileUploads
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
@@ -121,6 +121,18 @@ class HomeViewModel(
         val deviceCoordinates: Coordinates? = null,
         val location: GeoLocation? = null,
     )
+
+    data class UploadCardState(
+        val fileType: String,
+        val status: UploadStatus,
+        val onUploadClick: () -> Unit
+    )
+
+    sealed class UploadStatus(val message: String, val color: Color) {
+        object Success : UploadStatus("Upload successful", Color(0xFF2E7D32))
+        data class Error(val error: String) : UploadStatus("Upload failed: $error", Color(0xFFC62828))
+        object Idle : UploadStatus("", Color.Unspecified)
+    }
 
     override fun onCleared() {
         super.onCleared()

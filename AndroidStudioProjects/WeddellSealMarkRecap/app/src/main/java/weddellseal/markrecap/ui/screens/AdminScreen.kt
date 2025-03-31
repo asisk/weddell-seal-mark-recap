@@ -4,6 +4,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -16,44 +17,51 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Task
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -62,8 +70,11 @@ import weddellseal.markrecap.Screens
 import weddellseal.markrecap.data.FailedRow
 import weddellseal.markrecap.data.FileUploadEntity
 import weddellseal.markrecap.models.HomeViewModel
+import weddellseal.markrecap.models.HomeViewModel.UploadCardState
+import weddellseal.markrecap.models.HomeViewModel.UploadStatus
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.components.UploadCard
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,11 +88,30 @@ fun AdminScreen(
     recentObservationsViewModel: RecentObservationsViewModel
 ) {
     val context = LocalContext.current
-
     val fileUploads by homeViewModel.fileUploads.collectAsState()
+
     // Track which file name failed
     var filenameStr by remember { mutableStateOf("") }
     var selectedFilename by remember { mutableStateOf("") }
+
+    // Navigation Rail
+    var selectedItem by remember { mutableIntStateOf(1) }
+    val items =
+        listOf("Home", "Dashboard", "Upload", "Export")
+    val selectedIcons = listOf(
+        Icons.Default.Home,
+        Icons.Default.Dashboard,
+        Icons.Default.UploadFile,
+        Icons.Default.FileDownload,
+    )
+    val unselectedIcons =
+        listOf(
+            Icons.Outlined.Home,
+            Icons.Outlined.Dashboard,
+            Icons.Outlined.FileUpload,
+            Icons.Outlined.FileDownload,
+//            Icons.Outlined.History
+        )
 
     val createCurrentObservationsDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
@@ -221,280 +251,208 @@ fun AdminScreen(
         handleFileSelection(uri, "Colony_Locations.csv")
     }
 
-    Scaffold(
-        // region UI - Top Bar & Action Buttons
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.fillMaxWidth(),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary
-                ),
-                title = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Administration",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontSize = 36.sp // Adjust this value as needed
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.navigate(Screens.HomeScreen.route)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Home,
-                            contentDescription = "Home",
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth()
+    Scaffold { innerPadding ->
+        Row(modifier = Modifier.fillMaxSize()) {
+            NavigationRail(
+                modifier = Modifier
+                    .padding(10.dp)
             ) {
+                items.forEachIndexed { index, item ->
+                    NavigationRailItem(
+                        icon = {
+                            Icon(
+                                if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
+                                contentDescription = item,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = item,
+                                fontSize = 18.sp,
+                                textAlign = TextAlign.Center,
+                                softWrap = true,
+                                maxLines = 2,
+                                modifier = Modifier.width(100.dp)
+                            )
+                        },
+                        selected = selectedItem == index,
+                        onClick = {
+                            if (index == 0) {
+                                navController.navigate(Screens.HomeScreen.route)
+                            } else {
+                                selectedItem = index
+                            }
+                        },
+                        modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
+                    )
+                }
+            }
+
+            // Main Content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+
                 // Seal Pup Image
-                Image(painter = painterResource(R.drawable.pup1_2),
+                Image(
+                    painter = painterResource(R.drawable.pup1_2),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = 0.5f // Adjust this value for desired transparency
+                            alpha = 0.5f
                         }
                 )
 
-                // File uploads
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(20.dp)
-                        .verticalScroll(rememberScrollState()), // Use verticalScroll to scroll the entire content
-
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                        .padding(innerPadding)
+                        .padding(10.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
+
+                    //Title
                     Row(
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 20.dp)
-                    ) {
-
-                        // Handle Errors in CSV Export
-                        if (recentObservationsViewModel.uiState.isError) {
-                            ErrorText("Error during CSV export!")
-                            ErrorText(recentObservationsViewModel.uiState.errorMessage)
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-//                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-
-                        ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
-                            onClick = {
-                                val dateTimeFormat =
-                                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                                val currentDateTime = dateTimeFormat.format(Date())
-                                val filename = "observations_$currentDateTime.csv"
-
-                                createCurrentObservationsDocument.launch(filename)
-                            },
-                            icon = {
-                                Image(
-                                    painter = painterResource(id = R.drawable.export_notes),
-                                    null,
-                                    modifier = Modifier.size(36.dp),
-                                    colorFilter = ColorFilter.tint(Color.DarkGray) // Change the color here
-                                )
-                            },
-                            text = {
-                                Text(
-                                    "Export Current Observations",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-//                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
-                            onClick = { recentObservationsViewModel.markObservationsAsDeleted() },
-                            icon = {
-                                Icon(
-                                    Icons.Filled.Delete,
-                                    "Mark Observation Records As Deleted",
-                                    Modifier.size(36.dp)
-                                )
-                            },
-                            text = {
-                                Text(
-                                    "Delete Current Observations",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-//                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
-                            onClick = {
-                                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                                val dateTimeFormat =
-                                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                                val currentDateTime = dateTimeFormat.format(Date())
-                                val filename = "all_observations_$currentDateTime.csv"
-
-                                createFullObservationsDocument.launch(filename)
-                            },
-                            icon = {
-                                Image(
-                                    painter = painterResource(id = R.drawable.export_notes),
-                                    null,
-                                    modifier = Modifier.size(36.dp),
-                                    colorFilter = ColorFilter.tint(Color.DarkGray) // Change the color here
-                                )
-                            },
-                            text = {
-                                Text(
-                                    "Export All Observations",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 20.dp)
-                    ) {
-                        // Card for WedCheck Upload
-                        FileUploadCard(
-                            title = "Upload WedCheck File",
-                            onUpload = {
-                                wedCheckFilePicker.launch(arrayOf("*/*"))
-                            },
-                            isLoaded = { wedCheckViewModel.uiState.value.isWedCheckLoaded },
-                            isLoading = { wedCheckViewModel.uiState.value.isWedCheckLoading },
-                            failedRows = { wedCheckViewModel.uiState.value.failedRows },
-                            totalRows = { wedCheckViewModel.uiState.value.totalRows },
-                            fileName = { "WedCheck" },
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 20.dp)
-                    ) {
-                        // Card for Observers Upload and Clear
-                        FileUploadCard(
-                            title = "Upload Observer Initials",
-                            onUpload = {
-                                observersFilePicker.launch(arrayOf("*/*"))
-                            },
-//                                onDelete = { homeViewModel.clearObservers() },
-                            isLoaded = { homeViewModel.uiState.value.isObserversLoaded },
-                            isLoading = { homeViewModel.uiState.value.isObserversLoading },
-                            failedRows = { homeViewModel.uiState.value.failedObserversRows },
-                            totalRows = { homeViewModel.uiState.value.totalObserversRows },
-                            fileName = { "Observers" },
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 20.dp)
-                    ) {
-                        // Card for Colony Locations Upload and Clear
-                        FileUploadCard(
-                            title = "Upload Seal Colony Locations",
-                            onUpload = {
-                                colonyFilePicker.launch(arrayOf("*/*"))
-                            },
-//                                onDelete = {   homeViewModel.clearColonies() },
-                            isLoaded = { homeViewModel.uiState.value.isColonyLocationsLoaded },
-                            isLoading = { homeViewModel.uiState.value.isColonyLocationsLoading },
-                            failedRows = { homeViewModel.uiState.value.failedColoniesRows },
-                            totalRows = { homeViewModel.uiState.value.totalColoniesRows },
-                            fileName = { "Colonies" },
-                        )
-                    }
-
-                    // RECENT OBSERVATIONS VIEW
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            "Recently \nUploaded",
-                            modifier = Modifier.padding(10.dp),
-                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(bottom = 20.dp),
+                            text = "Administration",
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontSize = 36.sp,
                         )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 200.dp) // Limit the height
-                                .padding(10.dp)
-                                .border(1.dp, Color.LightGray) // Add border for visual purposes
-                        ) {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                userScrollEnabled = true
-                            ) {
-                                items(fileUploads) { file ->
+                    }
 
-                                    FileUploadItem(fileUpload = file)
+                    //Screens
+                    when (selectedItem) {
+                        1 -> DashboardScreen(
+                            wedCheckFilePicker,
+                            observersFilePicker,
+                            colonyFilePicker,
+                            wedCheckViewModel,
+                            homeViewModel
+                        )
 
-                                    HorizontalDivider()
-                                }
-                            }
-                        }
+                        2 -> UploadDataFileScreen(
+                            wedCheckFilePicker,
+                            observersFilePicker,
+                            colonyFilePicker,
+                            wedCheckViewModel,
+                            fileUploads
+                        )
+
+                        3 -> ExportObservationsScreen()
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+fun ExportObservationsScreen() {
+    TODO("Not yet implemented")
+}
+
+@Composable
+fun UploadDataFileScreen(
+    wedCheckFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    observersFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    colonyFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    wedCheckViewModel: WedCheckViewModel,
+    fileUploads: List<FileUploadEntity>
+) {
+
+    Column(
+        modifier = Modifier
+            .padding(16.dp).fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        UploadCard(
+            state = UploadCardState(
+                fileType = "WedCheck File",
+                status = UploadStatus.Success,
+                onUploadClick = { wedCheckFilePicker.launch(arrayOf("*/*")) }
+            ),
+        )
+        UploadCard(
+            state = UploadCardState(
+                fileType = "Observer Initials",
+                status = UploadStatus.Error("[error]"),
+                onUploadClick = { observersFilePicker.launch(arrayOf("*/*")) }
+            )
+        )
+        UploadCard(
+            state = UploadCardState(
+                fileType = "Seal Colony Locations",
+                status = UploadStatus.Success,
+                onUploadClick = { colonyFilePicker.launch(arrayOf("*/*")) }
+            )
+        )
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = "Last Uploaded", style = MaterialTheme.typography.headlineLarge)
+            FileUploadList(fileUploads)
+        }
+    }
+}
+// Upload Cards
+//            FileUploadCard(
+//                title = "WedCheck File",
+//                onUpload = { wedCheckFilePicker.launch(arrayOf("*/*")) },
+//                isLoaded = { wedCheckViewModel.uiState.value.isWedCheckLoaded },
+//                isLoading = { wedCheckViewModel.uiState.value.isWedCheckLoading },
+//                failedRows = { wedCheckViewModel.uiState.value.failedRows },
+//                totalRows = { wedCheckViewModel.uiState.value.totalRows },
+//                fileName = {
+//                    wedCheckViewModel.uiState.value.lastWedCheckFileLoaded
+//                        ?: "WedCheck.csv"
+//                }
+//            )
+//            FileUploadCard(
+//                title = "Observer Initials",
+//                onUpload = { observersFilePicker.launch(arrayOf("*/*")) },
+//                isLoaded = { homeViewModel.uiState.value.isObserversLoaded },
+//                isLoading = { homeViewModel.uiState.value.isObserversLoading },
+//                failedRows = { homeViewModel.uiState.value.failedObserversRows },
+//                totalRows = { homeViewModel.uiState.value.totalObserversRows },
+//                fileName = {
+//                    homeViewModel.uiState.value.lastObserversFileNameLoaded
+//                        ?: "observers.csv"
+//                }
+//            )
+//            FileUploadCard(
+//                title = "Seal Colony Locations",
+//                onUpload = { colonyFilePicker.launch(arrayOf("*/*")) },
+//                isLoaded = { homeViewModel.uiState.value.isColonyLocationsLoaded },
+//                isLoading = { homeViewModel.uiState.value.isColonyLocationsLoading },
+//                failedRows = { homeViewModel.uiState.value.failedColoniesRows },
+//                totalRows = { homeViewModel.uiState.value.totalColoniesRows },
+//                fileName = {
+//                    homeViewModel.uiState.value.lastColoniesFileNameLoaded
+//                        ?: "Colony_Locations.csv"
+//                }
+//            )
 
 
 @Composable
@@ -510,7 +468,7 @@ fun FileUploadCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+//            .fillMaxWidth()
             .padding(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp) // Use CardDefaults for elevation
     ) {
@@ -572,6 +530,17 @@ fun FileUploadCard(
 }
 
 @Composable
+fun DashboardScreen(
+    wedCheckFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    observersFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    colonyFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
+    wedCheckViewModel: WedCheckViewModel,
+    homeViewModel: HomeViewModel
+) {
+    LoadedFilesCard(homeViewModel.fileUploads.collectAsState().value)
+}
+
+@Composable
 fun LoadedFilesCard(
     fileUploads: List<FileUploadEntity>,
 ) {
@@ -586,7 +555,7 @@ fun LoadedFilesCard(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Loaded Files", style = MaterialTheme.typography.headlineLarge)
+            Text(text = "Last Uploaded", style = MaterialTheme.typography.headlineLarge)
             FileUploadList(fileUploads)
         }
     }
@@ -634,7 +603,12 @@ fun FileUploadItem(fileUpload: FileUploadEntity) {
     ) {
         // Display the observation details
         Column {
-
+            Icon(
+                imageVector = Icons.Default.Task,
+                contentDescription = null,
+                tint = Color.Black,
+                modifier = Modifier.size(36.dp)
+            )
             Text(
                 "File Name: ${fileUpload.filename}",
                 style = MaterialTheme.typography.bodyLarge
