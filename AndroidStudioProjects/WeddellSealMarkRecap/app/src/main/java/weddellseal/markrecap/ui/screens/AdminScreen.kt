@@ -22,20 +22,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Task
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,7 +51,9 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -61,7 +67,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -69,11 +79,11 @@ import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.data.FailedRow
 import weddellseal.markrecap.data.FileUploadEntity
+import weddellseal.markrecap.data.enums.UploadFileType
 import weddellseal.markrecap.models.HomeViewModel
-import weddellseal.markrecap.models.HomeViewModel.UploadCardState
-import weddellseal.markrecap.models.HomeViewModel.UploadStatus
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.components.FileUploadErrorExplanationDialog
 import weddellseal.markrecap.ui.components.UploadCard
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -93,6 +103,7 @@ fun AdminScreen(
     // Track which file name failed
     var filenameStr by remember { mutableStateOf("") }
     var selectedFilename by remember { mutableStateOf("") }
+    var uploadAction by remember { mutableStateOf("") }
 
     // Navigation Rail
     var selectedItem by remember { mutableIntStateOf(1) }
@@ -134,62 +145,18 @@ fun AdminScreen(
     // Add explanation dialog for file name validation error
     var showExplanationDialogForFileMatchError by remember { mutableStateOf(false) }
     if (showExplanationDialogForFileMatchError) {
-        FileAccessExplanationDialog(
-            onConfirm = {
-//                showExplanationDialogForFileMatchError = false
-            },
+        FileUploadErrorExplanationDialog(
             onDismiss = { showExplanationDialogForFileMatchError = false },
-            title = "Error",
-            text = "File name: $selectedFilename does not match expected value: $filenameStr! Please rename your file and try again!"
+            title = "Error $uploadAction\n\n      File name doesn't match!",
+            text = "            File selected:  $selectedFilename\n            Expected file:  $filenameStr.\n\n",
         )
-    }
-
-    val getWedCheckCSV = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-    ) { uri: Uri? ->
-        // Handle the selected locations file here
-        if (uri != null) {
-            var fileName = ""
-            filenameStr = "WedCheckFull.csv or WedCheck.csv"
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (displayNameIndex != -1 && cursor.moveToFirst()) {
-                    fileName = cursor.getString(displayNameIndex)
-                }
-            }
-
-            // Support uploading the full wedcheck file
-            if (fileName == "WedCheckFull.csv" || fileName == "WedCheck.csv") {
-                //TODO, add validation to ensure that the file is right-sized
-//                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
-//
-//                private fun isFileSizeWithinLimit(file: File): Boolean {
-//                    val fileSize = file.length()
-//                    return fileSize <= MAX_FILE_SIZE_BYTES
-//                }
-                wedCheckViewModel.updateLastFileNameLoaded(fileName)
-                wedCheckViewModel.loadWedCheck(uri, fileName)
-
-                if (wedCheckViewModel.uiState.value.isWedCheckLoaded) {
-                    // Display a success message
-                    Toast.makeText(
-                        context,
-                        "$fileName loaded successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-            } else {
-                // Show an error message indicating that the selected file is not the expected file
-                showExplanationDialogForFileMatchError = true
-            }
-        }
     }
 
     // Function to handle the file selection logic
     fun handleFileSelection(uri: Uri?, expectedFileName: String) {
         if (uri != null) {
             var fileName = ""
+            filenameStr = expectedFileName
             Log.d("FileSelection", "URI: $uri")
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -204,7 +171,6 @@ fun AdminScreen(
 
             //TODO, add validation to ensure that the file is right-sized
 //                private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB (adjust as needed)
-//
 //                private fun isFileSizeWithinLimit(file: File): Boolean {
 //                    val fileSize = file.length()
 //                    return fileSize <= MAX_FILE_SIZE_BYTES
@@ -212,16 +178,19 @@ fun AdminScreen(
 
             if (fileName == "WedCheckFull.csv" || fileName == "WedCheck.csv") {
                 wedCheckViewModel.updateLastFileNameLoaded(fileName)
+                homeViewModel.setLastFilename(UploadFileType.WEDCHECK, fileName)
                 wedCheckViewModel.loadWedCheck(uri, fileName)
             } else if (fileName == expectedFileName) {
                 when (expectedFileName) {
                     "observers.csv" -> {
                         homeViewModel.updateLastObserversFileNameLoaded(fileName)
+                        homeViewModel.setLastFilename(UploadFileType.OBSERVERS, fileName)
                         homeViewModel.loadObserversFile(uri, fileName)
                     }
 
                     "Colony_Locations.csv" -> {
                         homeViewModel.updateLastColoniesFileNameLoaded(fileName)
+                        homeViewModel.setLastFilename(UploadFileType.COLONIES, fileName)
                         homeViewModel.loadSealColoniesFile(uri, fileName)
                     }
                 }
@@ -236,19 +205,35 @@ fun AdminScreen(
     val observersFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
+        uploadAction = "Uploading Observer Initials"
         handleFileSelection(uri, "observers.csv")
     }
 
     val wedCheckFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
+        uploadAction = "Uploading WedCheck"
         handleFileSelection(uri, "WedCheck.csv")
     }
 
     val colonyFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
+        uploadAction = "Uploading Colony Locations"
         handleFileSelection(uri, "Colony_Locations.csv")
+    }
+
+    // set the upload handlers for each file type when the screen is loaded
+    LaunchedEffect(Unit) {
+        homeViewModel.setUploadHandler(UploadFileType.WEDCHECK) {
+            wedCheckFilePicker.launch(arrayOf("*/*"))
+        }
+        homeViewModel.setUploadHandler(UploadFileType.OBSERVERS) {
+            observersFilePicker.launch(arrayOf("*/*"))
+        }
+        homeViewModel.setUploadHandler(UploadFileType.COLONIES) {
+            colonyFilePicker.launch(arrayOf("*/*"))
+        }
     }
 
     Scaffold { innerPadding ->
@@ -312,7 +297,6 @@ fun AdminScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                         .padding(10.dp)
-                        .verticalScroll(rememberScrollState())
                 ) {
 
                     //Title
@@ -331,18 +315,11 @@ fun AdminScreen(
                     //Screens
                     when (selectedItem) {
                         1 -> DashboardScreen(
-                            wedCheckFilePicker,
-                            observersFilePicker,
-                            colonyFilePicker,
-                            wedCheckViewModel,
                             homeViewModel
                         )
 
                         2 -> UploadDataFileScreen(
-                            wedCheckFilePicker,
-                            observersFilePicker,
-                            colonyFilePicker,
-                            wedCheckViewModel,
+                            homeViewModel,
                             fileUploads
                         )
 
@@ -361,40 +338,21 @@ fun ExportObservationsScreen() {
 
 @Composable
 fun UploadDataFileScreen(
-    wedCheckFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
-    observersFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
-    colonyFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
-    wedCheckViewModel: WedCheckViewModel,
+    homeViewModel: HomeViewModel,
     fileUploads: List<FileUploadEntity>
 ) {
 
+    val uploadStates by homeViewModel.uploadStates.collectAsState()
+
     Column(
         modifier = Modifier
-            .padding(16.dp).fillMaxWidth(),
+            .padding(16.dp)
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        UploadCard(
-            state = UploadCardState(
-                fileType = "WedCheck File",
-                status = UploadStatus.Success,
-                onUploadClick = { wedCheckFilePicker.launch(arrayOf("*/*")) }
-            ),
-        )
-        UploadCard(
-            state = UploadCardState(
-                fileType = "Observer Initials",
-                status = UploadStatus.Error("[error]"),
-                onUploadClick = { observersFilePicker.launch(arrayOf("*/*")) }
-            )
-        )
-        UploadCard(
-            state = UploadCardState(
-                fileType = "Seal Colony Locations",
-                status = UploadStatus.Success,
-                onUploadClick = { colonyFilePicker.launch(arrayOf("*/*")) }
-            )
-        )
+        UploadCard(state = uploadStates[UploadFileType.WEDCHECK]!!)
+        UploadCard(state = uploadStates[UploadFileType.OBSERVERS]!!)
+        UploadCard(state = uploadStates[UploadFileType.COLONIES]!!)
     }
 
     Card(
@@ -409,9 +367,9 @@ fun UploadDataFileScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = "Last Uploaded", style = MaterialTheme.typography.headlineLarge)
+            Spacer(modifier = Modifier.height(20.dp))
             FileUploadList(fileUploads)
         }
     }
@@ -531,10 +489,6 @@ fun FileUploadCard(
 
 @Composable
 fun DashboardScreen(
-    wedCheckFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
-    observersFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
-    colonyFilePicker: ManagedActivityResultLauncher<Array<String>, Uri?>,
-    wedCheckViewModel: WedCheckViewModel,
     homeViewModel: HomeViewModel
 ) {
     LoadedFilesCard(homeViewModel.fileUploads.collectAsState().value)
@@ -556,6 +510,7 @@ fun LoadedFilesCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "Last Uploaded", style = MaterialTheme.typography.headlineLarge)
+            Spacer(modifier = Modifier.height(20.dp))
             FileUploadList(fileUploads)
         }
     }
@@ -598,32 +553,65 @@ fun FileUploadItem(fileUpload: FileUploadEntity) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
-        // Display the observation details
-        Column {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
-                imageVector = Icons.Default.Task,
+                imageVector = Icons.Default.UploadFile,
                 contentDescription = null,
                 tint = Color.Black,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(end = 8.dp)
             )
+            // filename
             Text(
-                "File Name: ${fileUpload.filename}",
-                style = MaterialTheme.typography.bodyLarge
+                fileUpload.filename,
+                style = MaterialTheme.typography.titleLarge,
             )
+
+            // datetime of upload
             Text(
-                " : ${
+                "${
                     SimpleDateFormat(
                         "yyyy-MM-dd HH:mm:ss",
                         Locale.US
                     ).format(Date(fileUpload.createdAt))
                 }",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(start = 16.dp, top = 2.dp)
             )
-            Text(" : ${fileUpload.status}", style = MaterialTheme.typography.bodyMedium)
         }
+
+        // Upload status
+        val statusColor = when (fileUpload.status.lowercase()) {
+            "successful" -> Color(0xFF0dbe0d)
+            "error" -> Color(0xFFd90101)
+            else -> Color(0xFF5884fa)
+        }
+        val statusIcon = when (fileUpload.status.lowercase()) {
+            "successful" -> Icons.Default.CheckCircle
+            "error" -> Icons.Default.ErrorOutline
+            else -> Icons.Default.Pending
+        }
+        Text(
+            fileUpload.status.uppercase(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = statusColor,
+            modifier = Modifier.padding(top = 2.dp)
+        )
+        Icon(
+            imageVector = statusIcon,
+            contentDescription = null,
+            tint = statusColor,
+            modifier = Modifier
+                .size(48.dp)
+                .padding(start = 12.dp, end = 8.dp, top = 2.dp)
+        )
     }
 }
 

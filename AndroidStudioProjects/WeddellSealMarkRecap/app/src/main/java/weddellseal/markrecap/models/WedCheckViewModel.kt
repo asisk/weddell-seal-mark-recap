@@ -25,7 +25,9 @@ import weddellseal.markrecap.data.Result
 import weddellseal.markrecap.data.WedCheckRecord
 import weddellseal.markrecap.data.WedCheckRepository
 import weddellseal.markrecap.data.WedCheckSeal
+import weddellseal.markrecap.data.enums.UploadFileType
 import weddellseal.markrecap.data.toSeal
+import weddellseal.markrecap.models.HomeViewModel.UploadStatus
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
@@ -209,6 +211,16 @@ class WedCheckViewModel(
                 // 3. Insert CSV data into the database
                 val insertedCount = insertCsvData(fileUploadId, csvData)
 
+                //TODO, figure out whether the homeviewmodel is the right place to do this, or if it should be entirely separate
+//                if (insertedCount > 0) {
+////                    "successful"
+//                    homeViewModel.updateStatus(UploadFileType.WEDCHECK, UploadStatus.Success)
+//                } else  {
+////                    "failed"
+//                    homeViewModel.updateStatus(UploadFileType.WEDCHECK, UploadStatus.Error("Failed to insert data"))
+//                }
+
+                // TODO, remove this once the above is tested out???
                 // 4. Update file upload status based on the result
                 wedCheckRepo.updateFileUploadStatus(
                     fileUploadId,
@@ -219,6 +231,8 @@ class WedCheckViewModel(
                 updateUIState(insertedCount, failedRows)
 
             } catch (e: Exception) {
+//                homeViewModel.updateStatus(UploadFileType.WEDCHECK, UploadStatus.Error("Failed to insert data"))
+                // TODO, remove this once the above is tested out???
                 wedCheckRepo.updateFileUploadStatus(fileUploadId, "failed")
                 _uiState.value = uiState.value.copy(
                     loading = false,

@@ -106,42 +106,6 @@ fun HomeScaffold(
         viewModel.fetchColonyNamesList()
     }
 
-    val requestFilePermissions =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                viewModel.onPermissionChange(Manifest.permission.READ_EXTERNAL_STORAGE, isGranted)
-            }
-        }
-
-    // Add explanation dialog for File permissions
-    var showExplanationDialogForReadAccessPermission by remember { mutableStateOf(false) }
-    if (showExplanationDialogForReadAccessPermission) {
-        FileAccessExplanationDialog(
-            onConfirm = {
-                requestFilePermissions.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-                showExplanationDialogForReadAccessPermission = false
-            },
-            onDismiss = {
-                showExplanationDialogForReadAccessPermission = false
-            },
-            title = "File access",
-            text = "Weddell Seal Mark Recap app would like access to your stored files",
-        )
-    }
-
-    // Add explanation dialog for file name validation error
-    var showExplanationDialogForFileMatchError by remember { mutableStateOf(false) }
-    if (showExplanationDialogForFileMatchError) {
-        FileAccessExplanationDialog(
-            onConfirm = {
-                showExplanationDialogForFileMatchError = false
-            },
-            onDismiss = { showExplanationDialogForFileMatchError = false },
-            title = "Error",
-            text = "File name does not match! Please rename your file to Colony_Locations.csv and try again!"
-        )
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -454,37 +418,6 @@ private fun RequestPermissionsEffect(
         return
     }
     RequestPermissions(missing, vm::onPermissionsResult)
-}
-
-@Composable
-fun FileAccessExplanationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    title: String,
-    text: String
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = title) },
-        text = { Text(text = text) },
-        icon = {
-            Icon(
-                Icons.Filled.FileUpload,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.surfaceTint
-            )
-        },
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Continue")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Dismiss")
-            }
-        }
-    )
 }
 
 fun getDeviceName(context: Context): String {

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.data.FailedRow
@@ -26,6 +27,7 @@ import weddellseal.markrecap.data.Observers
 import weddellseal.markrecap.data.SealColony
 import weddellseal.markrecap.data.SealColonyRepository
 import weddellseal.markrecap.data.SupportingDataRepository
+import weddellseal.markrecap.data.enums.UploadFileType
 import weddellseal.markrecap.data.location.Coordinates
 import weddellseal.markrecap.data.location.GeoLocation
 import weddellseal.markrecap.data.location.LocationSource
@@ -73,6 +75,35 @@ class HomeViewModel(
     // Collect file upload data from the repository using collectAsState
     val fileUploads: StateFlow<List<FileUploadEntity>> = supportingDataRepository.fileUploads
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
+
+    private val _uploadStates = MutableStateFlow(
+        UploadFileType.values().associateWith { fileType ->
+            UploadCardState(
+                fileType = fileType.label,
+                status = UploadStatus.Idle,
+                onUploadClick = {}, // will override this when the Admin Screen view loads
+                lastFilename = null
+            )
+        }
+    )
+    val uploadStates: StateFlow<Map<UploadFileType, UploadCardState>> = _uploadStates
+    fun updateStatus(type: UploadFileType, status: UploadStatus) {
+        _uploadStates.update { currentMap ->
+            currentMap + (type to currentMap.getValue(type).copy(status = status))
+        }
+    }
+
+    fun setUploadHandler(type: UploadFileType, handler: () -> Unit) {
+        _uploadStates.update { currentMap ->
+            currentMap + (type to currentMap.getValue(type).copy(onUploadClick = handler))
+        }
+    }
+
+    fun setLastFilename(type: UploadFileType, filename: String) {
+        _uploadStates.update { map ->
+            map + (type to map.getValue(type).copy(lastFilename = filename))
+        }
+    }
 
     // MutableStateFlow to hold the list of observers
     private val _observers = MutableStateFlow<List<String>>(emptyList())
@@ -125,12 +156,15 @@ class HomeViewModel(
     data class UploadCardState(
         val fileType: String,
         val status: UploadStatus,
-        val onUploadClick: () -> Unit
+        val onUploadClick: () -> Unit,
+        val lastFilename: String? = null
     )
 
     sealed class UploadStatus(val message: String, val color: Color) {
         object Success : UploadStatus("Upload successful", Color(0xFF2E7D32))
-        data class Error(val error: String) : UploadStatus("Upload failed: $error", Color(0xFFC62828))
+        data class Error(val error: String) :
+            UploadStatus("Upload failed: $error", Color(0xFFC62828))
+
         object Idle : UploadStatus("", Color.Unspecified)
     }
 
@@ -199,7 +233,10 @@ class HomeViewModel(
 
                 // Check if the coordinates have changed
                 if (geoLocation.coordinates == lastKnownCoordinates) {
-                    Log.i(TAG, "Coordinates are the same as the previous update. Skipping update.")
+                    Log.i(
+                        TAG,
+                        "Coordinates are the same as the previous update. Skipping update."
+                    )
                     return@collect // Skip the update
                 }
 
@@ -280,6 +317,15 @@ class HomeViewModel(
                 // Insert the CSV data into the database
                 val insertedCount = insertColonyData(fileUploadId, csvData)
 
+                if (insertedCount > 0) {
+//                    "successful"
+                    updateStatus(UploadFileType.COLONIES, UploadStatus.Success)
+                } else  {
+//                    "failed"
+                    updateStatus(UploadFileType.COLONIES, UploadStatus.Error("Failed to insert data"))
+                }
+
+                //TODO, remove this once the above is tested out???
                 // Update the file status based on success or failure
                 supportingDataRepository.updateFileUploadStatus(
                     fileUploadId,
@@ -290,6 +336,8 @@ class HomeViewModel(
                 updateUiStateColonies(insertedCount, failedRows)
 
             } catch (e: Exception) {
+                updateStatus(UploadFileType.COLONIES, UploadStatus.Error(e.toString()))
+                //TODO, remove this once the above is tested out???
                 _uiState.value = uiState.value.copy(
                     loading = false,
                     isColonyLocationsLoading = false,
@@ -315,7 +363,16 @@ class HomeViewModel(
                 // Insert the CSV data into the database
                 val insertedCount = insertObserversData(fileUploadId, csvData)
 
+                if (insertedCount > 0) {
+//                    "successful"
+                    updateStatus(UploadFileType.OBSERVERS, UploadStatus.Success)
+                } else  {
+//                    "failed"
+                    updateStatus(UploadFileType.OBSERVERS, UploadStatus.Error("Failed to insert data"))
+                }
+
                 // Update the file status based on success or failure
+                //TODO, remove this once the above is tested out???
                 supportingDataRepository.updateFileUploadStatus(
                     fileUploadId,
                     if (insertedCount > 0) "successful" else "failed"
@@ -325,6 +382,9 @@ class HomeViewModel(
                 updateUiStateObservers(insertedCount, failedRows)
 
             } catch (e: Exception) {
+                updateStatus(UploadFileType.OBSERVERS, UploadStatus.Error(e.toString()))
+
+                //TODO, remove this once the above is tested out???
                 _uiState.value = uiState.value.copy(
                     loading = false,
                     isObserversLoading = false,
