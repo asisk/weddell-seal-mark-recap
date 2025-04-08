@@ -91,7 +91,6 @@ fun AdminScreen(
             Icons.Outlined.Dashboard,
             Icons.Outlined.FileUpload,
             Icons.Outlined.FileDownload,
-//            Icons.Outlined.History
         )
 
     val createCurrentObservationsDocument =
