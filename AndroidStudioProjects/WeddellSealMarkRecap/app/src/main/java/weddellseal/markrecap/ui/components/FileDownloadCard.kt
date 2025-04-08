@@ -1,16 +1,19 @@
 package weddellseal.markrecap.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.UploadFile
@@ -29,13 +32,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.R
 import weddellseal.markrecap.models.HomeViewModel.FileState
 import weddellseal.markrecap.models.HomeViewModel.FileStatus
 
 @Composable
-fun UploadCard(
+fun DownloadCard(
     state: FileState,
+    instructions: String
 ) {
 
     var text by remember { mutableStateOf("") }
@@ -57,9 +64,9 @@ fun UploadCard(
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier
-            .width(400.dp)
+            .width(300.dp)
 //            .fillMaxWidth()
-//            .height(240.dp)
+            .height(300.dp)
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(16.dp)
@@ -69,6 +76,14 @@ fun UploadCard(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+                Text(
+                    instructions,
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+
+            Spacer(modifier = Modifier.height(24.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -76,33 +91,39 @@ fun UploadCard(
             ) {
                 Row(
                     modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-
-                    Icon(
-                        imageVector = Icons.Default.UploadFile,
-                        contentDescription = null,
-                        tint = Color.Black,
-                        modifier = Modifier
-                            .size(48.dp)
+                    Image(
+                        painter = painterResource(id = R.drawable.export_notes),
+                        null,
+                        modifier = Modifier.size(48.dp),
+                        colorFilter = ColorFilter.tint(Color.DarkGray) // Change the color here
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = state.fileType,
                     )
                 }
-
-                Button(
-                    onClick = state.onUploadClick,
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = state.onDownloadClick,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = null,
+                    tint = Color.Black,
                     modifier = Modifier
-                        .padding(start = 16.dp)
-                ) {
-                    Text("Upload")
-                }
+                        .size(48.dp)
+                )
+                Text("Download")
             }
 
 
-            // Upload status
+            // Download status
             if (state.status is FileStatus.Error || state.status is FileStatus.Success) {
                 Row(
                     modifier = Modifier

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.UploadFile
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
@@ -41,6 +43,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -51,14 +55,19 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.data.enums.UploadFileType
+import weddellseal.markrecap.data.enums.FileAction
+import weddellseal.markrecap.data.enums.FileType
 import weddellseal.markrecap.models.HomeViewModel
-import weddellseal.markrecap.models.HomeViewModel.UploadStatus
+import weddellseal.markrecap.models.HomeViewModel.FileStatus
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.components.DownloadCard
 import weddellseal.markrecap.ui.components.FileUploadErrorExplanationDialog
 import weddellseal.markrecap.ui.components.LastFilesUploadedCard
 import weddellseal.markrecap.ui.components.UploadCard
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,6 +113,12 @@ fun AdminScreen(
 
     val createFullObservationsDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
+            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+            val dateTimeFormat =
+                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+            val currentDateTime = dateTimeFormat.format(Date())
+            val filename = "all_observations_$currentDateTime.csv"
+
             // Handle the created document URI
             if (uri != null) {
                 recentObservationsViewModel.updateURI(uri)
@@ -148,10 +163,10 @@ fun AdminScreen(
             when (expectedFileName) {
                 "WedCheck.csv" -> {
                     if (expectedFileName != fileName) {
-                        homeViewModel.setLastFilename(UploadFileType.WEDCHECK, fileName)
-                        homeViewModel.updateStatus(
-                            UploadFileType.WEDCHECK,
-                            UploadStatus.Error("Failed to load file, unexpected file name: $fileName")
+                        homeViewModel.setLastFilename(FileType.WEDCHECK, fileName)
+                        homeViewModel.updateFileStatus(
+                            FileType.WEDCHECK,
+                            FileStatus.Error("Failed to load file, unexpected file name: $fileName")
                         )
                         showExplanationDialogForFileMatchError = true
                         Log.e(
@@ -160,17 +175,17 @@ fun AdminScreen(
                         )
                     } else {
                         wedCheckViewModel.updateLastFileNameLoaded(fileName)
-                        homeViewModel.setLastFilename(UploadFileType.WEDCHECK, fileName)
+                        homeViewModel.setLastFilename(FileType.WEDCHECK, fileName)
                         wedCheckViewModel.loadWedCheck(uri, fileName)
                     }
                 }
 
                 "observers.csv" -> {
                     if (expectedFileName != fileName) {
-                        homeViewModel.setLastFilename(UploadFileType.OBSERVERS, fileName)
-                        homeViewModel.updateStatus(
-                            UploadFileType.OBSERVERS,
-                            UploadStatus.Error("Failed to load file, unexpected file name: $fileName")
+                        homeViewModel.setLastFilename(FileType.OBSERVERS, fileName)
+                        homeViewModel.updateFileStatus(
+                            FileType.OBSERVERS,
+                            FileStatus.Error("Failed to load file, unexpected file name: $fileName")
                         )
                         showExplanationDialogForFileMatchError = true
                         Log.e(
@@ -179,17 +194,17 @@ fun AdminScreen(
                         )
                     } else {
                         homeViewModel.updateLastObserversFileNameLoaded(fileName)
-                        homeViewModel.setLastFilename(UploadFileType.OBSERVERS, fileName)
+                        homeViewModel.setLastFilename(FileType.OBSERVERS, fileName)
                         homeViewModel.loadObserversFile(uri, fileName)
                     }
                 }
 
                 "Colony_Locations.csv" -> {
                     if (expectedFileName != fileName) {
-                        homeViewModel.setLastFilename(UploadFileType.COLONIES, fileName)
-                        homeViewModel.updateStatus(
-                            UploadFileType.COLONIES,
-                            UploadStatus.Error("Failed to load file, unexpected file name: $fileName")
+                        homeViewModel.setLastFilename(FileType.COLONIES, fileName)
+                        homeViewModel.updateFileStatus(
+                            FileType.COLONIES,
+                            FileStatus.Error("Failed to load file, unexpected file name: $fileName")
                         )
                         showExplanationDialogForFileMatchError = true
                         Log.e(
@@ -198,7 +213,7 @@ fun AdminScreen(
                         )
                     } else {
                         homeViewModel.updateLastColoniesFileNameLoaded(fileName)
-                        homeViewModel.setLastFilename(UploadFileType.COLONIES, fileName)
+                        homeViewModel.setLastFilename(FileType.COLONIES, fileName)
                         homeViewModel.loadSealColoniesFile(uri, fileName)
                     }
                 }
@@ -229,14 +244,24 @@ fun AdminScreen(
 
     // set the upload handlers for each file type when the screen is loaded
     LaunchedEffect(Unit) {
-        homeViewModel.setUploadHandler(UploadFileType.WEDCHECK) {
+        val dateTimeFormat =
+            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+        val currentDateTime = dateTimeFormat.format(Date())
+
+        homeViewModel.setFileHandler(FileType.WEDCHECK, FileAction.UPLOAD) {
             wedCheckFilePicker.launch(arrayOf("*/*"))
         }
-        homeViewModel.setUploadHandler(UploadFileType.OBSERVERS) {
+        homeViewModel.setFileHandler(FileType.OBSERVERS, FileAction.UPLOAD) {
             observersFilePicker.launch(arrayOf("*/*"))
         }
-        homeViewModel.setUploadHandler(UploadFileType.COLONIES) {
+        homeViewModel.setFileHandler(FileType.COLONIES, FileAction.UPLOAD) {
             colonyFilePicker.launch(arrayOf("*/*"))
+        }
+        homeViewModel.setFileHandler(FileType.WEDDATACURRENT, FileAction.DOWNLOAD) {
+            createCurrentObservationsDocument.launch("observations_$currentDateTime.csv")
+        }
+        homeViewModel.setFileHandler(FileType.WEDDATAFULL, FileAction.DOWNLOAD) {
+            createFullObservationsDocument.launch("all_observations_$currentDateTime.csv")
         }
     }
 
@@ -303,30 +328,26 @@ fun AdminScreen(
                         .padding(10.dp)
                 ) {
 
-                    //Title
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(bottom = 20.dp),
-                            text = "Administration",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontSize = 36.sp,
-                        )
-                    }
+//                    //Title
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        Text(
+//                            modifier = Modifier.padding(bottom = 20.dp),
+//                            text = "Administration",
+//                            style = MaterialTheme.typography.headlineLarge,
+//                            fontSize = 36.sp,
+//                        )
+//                    }
 
                     //Screens
                     when (selectedItem) {
-                        1 -> DashboardScreen(
-                            homeViewModel
-                        )
+                        1 -> DashboardScreen(homeViewModel)
 
-                        2 -> UploadDataFileScreen(
-                            homeViewModel
-                        )
+                        2 -> UploadDataFileScreen(homeViewModel)
 
-                        3 -> ExportObservationsScreen()
+                        3 -> ExportObservationsScreen(homeViewModel)
                     }
                 }
             }
@@ -334,10 +355,23 @@ fun AdminScreen(
     }
 }
 
+
 @Composable
 fun DashboardScreen(
     homeViewModel: HomeViewModel
 ) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            modifier = Modifier.padding(bottom = 20.dp),
+            text = "Administration",
+            style = MaterialTheme.typography.headlineMedium,
+            fontSize = 36.sp,
+        )
+    }
+
     LastFilesUploadedCard(homeViewModel.fileUploads.collectAsState().value)
 }
 
@@ -346,7 +380,7 @@ fun UploadDataFileScreen(
     homeViewModel: HomeViewModel,
 ) {
 
-    val uploadStates by homeViewModel.uploadStates.collectAsState()
+    val filesStates by homeViewModel.fileStates.collectAsState()
 
     Column(
         modifier = Modifier
@@ -354,13 +388,82 @@ fun UploadDataFileScreen(
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        UploadCard(state = uploadStates[UploadFileType.WEDCHECK]!!)
-        UploadCard(state = uploadStates[UploadFileType.OBSERVERS]!!)
-        UploadCard(state = uploadStates[UploadFileType.COLONIES]!!)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                modifier = Modifier.padding(bottom = 20.dp),
+                text = "Manage Uploads",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 36.sp,
+            )
+        }
+        UploadCard(state = filesStates[FileType.WEDCHECK]!!)
+        UploadCard(state = filesStates[FileType.OBSERVERS]!!)
+        UploadCard(state = filesStates[FileType.COLONIES]!!)
+
     }
 }
 
 @Composable
-fun ExportObservationsScreen() {
-    TODO("Not yet implemented")
+fun ExportObservationsScreen(
+    homeViewModel: HomeViewModel,
+) {
+    val filesStates by homeViewModel.fileStates.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                modifier = Modifier.padding(bottom = 20.dp),
+                text = "Manage WedData",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 36.sp,
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            DownloadCard(
+                state = filesStates[FileType.WEDDATACURRENT]!!,
+                instructions = "Export Current Observations"
+            )
+            DownloadCard(
+                state = filesStates[FileType.WEDDATAFULL]!!,
+                instructions = "Export All Observations"
+            )
+        }
+    }
+
+
+    ExtendedFloatingActionButton(
+        modifier = Modifier.padding(16.dp),
+        containerColor = Color.LightGray,
+        onClick = { //recentObservationsViewModel.markObservationsAsDeleted()
+        },
+        icon = {
+            Icon(
+                Icons.Filled.Delete,
+                "Mark Observation Records As Deleted",
+                Modifier.size(36.dp)
+            )
+        },
+        text = {
+            Text(
+                "Delete Current Observations",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+    )
 }

@@ -27,10 +27,13 @@ import weddellseal.markrecap.data.Observers
 import weddellseal.markrecap.data.SealColony
 import weddellseal.markrecap.data.SealColonyRepository
 import weddellseal.markrecap.data.SupportingDataRepository
-import weddellseal.markrecap.data.enums.UploadFileType
+import weddellseal.markrecap.data.enums.FileAction
+import weddellseal.markrecap.data.enums.FileType
 import weddellseal.markrecap.data.location.Coordinates
 import weddellseal.markrecap.data.location.GeoLocation
 import weddellseal.markrecap.data.location.LocationSource
+import weddellseal.markrecap.ui.screens.DashboardScreen
+import weddellseal.markrecap.ui.screens.UploadDataFileScreen
 import weddellseal.markrecap.ui.utils.mutableJobSet
 import weddellseal.markrecap.ui.utils.storeIn
 import java.io.IOException
@@ -76,31 +79,40 @@ class HomeViewModel(
     val fileUploads: StateFlow<List<FileUploadEntity>> = supportingDataRepository.fileUploads
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
 
-    private val _uploadStates = MutableStateFlow(
-        UploadFileType.values().associateWith { fileType ->
-            UploadCardState(
+    private val _fileStates = MutableStateFlow(
+        FileType.values().associateWith { fileType ->
+            FileState(
                 fileType = fileType.label,
-                status = UploadStatus.Idle,
+                action = FileAction.PENDING,
+                status = FileStatus.Idle,
                 onUploadClick = {}, // will override this when the Admin Screen view loads
+                onDownloadClick = {}, // will override this when the Admin Screen view loads
+                downloadFilename = null,
                 lastFilename = null
             )
         }
     )
-    val uploadStates: StateFlow<Map<UploadFileType, UploadCardState>> = _uploadStates
-    fun updateStatus(type: UploadFileType, status: UploadStatus) {
-        _uploadStates.update { currentMap ->
+    val fileStates: StateFlow<Map<FileType, FileState>> = _fileStates
+    fun updateFileStatus(type: FileType, status: FileStatus) {
+        _fileStates.update { currentMap ->
             currentMap + (type to currentMap.getValue(type).copy(status = status))
         }
     }
 
-    fun setUploadHandler(type: UploadFileType, handler: () -> Unit) {
-        _uploadStates.update { currentMap ->
-            currentMap + (type to currentMap.getValue(type).copy(onUploadClick = handler))
+    fun setFileHandler(type: FileType, action: FileAction, handler: () -> Unit) {
+        if (action == FileAction.UPLOAD) {
+            _fileStates.update { currentMap ->
+                currentMap + (type to currentMap.getValue(type).copy(onUploadClick = handler))
+            }
+        } else if (action == FileAction.DOWNLOAD) {
+            _fileStates.update { currentMap ->
+                currentMap + (type to currentMap.getValue(type).copy(onDownloadClick = handler))
+            }
         }
     }
 
-    fun setLastFilename(type: UploadFileType, filename: String) {
-        _uploadStates.update { map ->
+    fun setLastFilename(type: FileType, filename: String) {
+        _fileStates.update { map ->
             map + (type to map.getValue(type).copy(lastFilename = filename))
         }
     }
@@ -153,19 +165,22 @@ class HomeViewModel(
         val location: GeoLocation? = null,
     )
 
-    data class UploadCardState(
+    data class FileState(
         val fileType: String,
-        val status: UploadStatus,
+        val action: FileAction,
+        val status: FileStatus,
         val onUploadClick: () -> Unit,
+        val onDownloadClick: () -> Unit,
+        val downloadFilename: String? = null,
         val lastFilename: String? = null
     )
 
-    sealed class UploadStatus(val message: String, val color: Color) {
-        object Success : UploadStatus("Upload successful", Color(0xFF2E7D32))
+    sealed class FileStatus(val message: String, val color: Color) {
+        object Success : FileStatus("Successful", Color(0xFF2E7D32))
         data class Error(val error: String) :
-            UploadStatus("Upload failed: $error", Color(0xFFC62828))
+            FileStatus("Failed: $error", Color(0xFFC62828))
 
-        object Idle : UploadStatus("", Color.Unspecified)
+        object Idle : FileStatus("", Color.Unspecified)
     }
 
     override fun onCleared() {
@@ -319,10 +334,13 @@ class HomeViewModel(
 
                 if (insertedCount > 0) {
 //                    "successful"
-                    updateStatus(UploadFileType.COLONIES, UploadStatus.Success)
-                } else  {
+                    updateFileStatus(FileType.COLONIES, FileStatus.Success)
+                } else {
 //                    "failed"
-                    updateStatus(UploadFileType.COLONIES, UploadStatus.Error("Failed to insert data"))
+                    updateFileStatus(
+                        FileType.COLONIES,
+                        FileStatus.Error("Failed to insert colony location data")
+                    )
                 }
 
                 //TODO, remove this once the above is tested out???
@@ -336,7 +354,7 @@ class HomeViewModel(
                 updateUiStateColonies(insertedCount, failedRows)
 
             } catch (e: Exception) {
-                updateStatus(UploadFileType.COLONIES, UploadStatus.Error(e.toString()))
+                updateFileStatus(FileType.COLONIES, FileStatus.Error(e.toString()))
                 //TODO, remove this once the above is tested out???
                 _uiState.value = uiState.value.copy(
                     loading = false,
@@ -365,10 +383,10 @@ class HomeViewModel(
 
                 if (insertedCount > 0) {
 //                    "successful"
-                    updateStatus(UploadFileType.OBSERVERS, UploadStatus.Success)
-                } else  {
+                    updateFileStatus(FileType.OBSERVERS, FileStatus.Success)
+                } else {
 //                    "failed"
-                    updateStatus(UploadFileType.OBSERVERS, UploadStatus.Error("Failed to insert data"))
+                    updateFileStatus(FileType.OBSERVERS, FileStatus.Error("Failed to insert data"))
                 }
 
                 // Update the file status based on success or failure
@@ -382,7 +400,7 @@ class HomeViewModel(
                 updateUiStateObservers(insertedCount, failedRows)
 
             } catch (e: Exception) {
-                updateStatus(UploadFileType.OBSERVERS, UploadStatus.Error(e.toString()))
+                updateFileStatus(FileType.OBSERVERS, FileStatus.Error(e.toString()))
 
                 //TODO, remove this once the above is tested out???
                 _uiState.value = uiState.value.copy(

@@ -25,9 +25,7 @@ import weddellseal.markrecap.data.Result
 import weddellseal.markrecap.data.WedCheckRecord
 import weddellseal.markrecap.data.WedCheckRepository
 import weddellseal.markrecap.data.WedCheckSeal
-import weddellseal.markrecap.data.enums.UploadFileType
 import weddellseal.markrecap.data.toSeal
-import weddellseal.markrecap.models.HomeViewModel.UploadStatus
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
