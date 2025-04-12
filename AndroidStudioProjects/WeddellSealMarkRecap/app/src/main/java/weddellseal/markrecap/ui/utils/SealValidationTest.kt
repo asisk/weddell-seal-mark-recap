@@ -2,8 +2,8 @@ package weddellseal.markrecap.ui.utils
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import weddellseal.markrecap.data.Seal
-import weddellseal.markrecap.data.WedCheckSeal
+import weddellseal.markrecap.frameworks.room.Seal
+import weddellseal.markrecap.frameworks.room.WedCheckSeal
 import java.time.LocalDate
 
 

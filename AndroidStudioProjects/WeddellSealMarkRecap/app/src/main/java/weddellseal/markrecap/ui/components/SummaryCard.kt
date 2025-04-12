@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.data.Seal
+import weddellseal.markrecap.frameworks.room.Seal
 import weddellseal.markrecap.models.AddObservationLogViewModel
 
 @Composable

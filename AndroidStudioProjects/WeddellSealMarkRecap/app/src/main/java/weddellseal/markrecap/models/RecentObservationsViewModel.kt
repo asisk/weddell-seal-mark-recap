@@ -21,8 +21,8 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import weddellseal.markrecap.data.ObservationLogEntry
-import weddellseal.markrecap.data.ObservationRepository
+import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import java.io.File
 
 class RecentObservationsViewModel(

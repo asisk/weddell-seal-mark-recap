@@ -7,15 +7,15 @@ package weddellseal.markrecap
  */
 
 import android.app.Application
-import weddellseal.markrecap.data.AppDatabase
-import weddellseal.markrecap.data.FileUploadDao
-import weddellseal.markrecap.data.ObservationDao
-import weddellseal.markrecap.data.ObservationRepository
-import weddellseal.markrecap.data.ObserversDao
-import weddellseal.markrecap.data.SealColoniesDao
-import weddellseal.markrecap.data.SupportingDataRepository
-import weddellseal.markrecap.data.WedCheckDao
-import weddellseal.markrecap.data.WedCheckRepository
+import weddellseal.markrecap.frameworks.room.AppDatabase
+import weddellseal.markrecap.frameworks.room.SupportingDataRepository
+import weddellseal.markrecap.frameworks.room.WedCheckRepository
+import weddellseal.markrecap.frameworks.room.files.FileUploadDao
+import weddellseal.markrecap.frameworks.room.observations.ObservationDao
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.observers.ObserversDao
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColoniesDao
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckDao
 
 class ObservationLogApplication : Application() {
     private lateinit var db : AppDatabase

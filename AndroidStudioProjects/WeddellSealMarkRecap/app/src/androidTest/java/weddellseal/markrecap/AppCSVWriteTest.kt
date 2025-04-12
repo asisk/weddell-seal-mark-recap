@@ -9,9 +9,9 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
-import weddellseal.markrecap.data.AppDatabase
-import weddellseal.markrecap.data.ObservationDao
-import weddellseal.markrecap.data.ObservationRepository
+import weddellseal.markrecap.frameworks.room.AppDatabase
+import weddellseal.markrecap.frameworks.room.observations.ObservationDao
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)

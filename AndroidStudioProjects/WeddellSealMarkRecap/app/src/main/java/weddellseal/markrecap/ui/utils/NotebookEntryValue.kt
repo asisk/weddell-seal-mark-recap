@@ -1,7 +1,7 @@
 package weddellseal.markrecap.ui.utils
 
-import weddellseal.markrecap.data.ObservationLogEntry
-import weddellseal.markrecap.data.Seal
+import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.Seal
 
 // function used to display the notebook string on the seal card in the observations view
 fun notebookEntryValueSeal(seal: Seal): String {

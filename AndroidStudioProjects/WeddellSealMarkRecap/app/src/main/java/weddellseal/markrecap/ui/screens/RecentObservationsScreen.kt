@@ -43,10 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.data.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.models.AddObservationLogViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
-import weddellseal.markrecap.ui.components.CensusDialog
 import weddellseal.markrecap.ui.components.ConfirmEditDialog
 import weddellseal.markrecap.ui.components.ObservationItem
 

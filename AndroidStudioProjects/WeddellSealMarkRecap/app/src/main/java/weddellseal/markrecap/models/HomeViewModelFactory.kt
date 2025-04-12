@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import weddellseal.markrecap.ObservationLogApplication
-import weddellseal.markrecap.data.ObservationRepository
-import weddellseal.markrecap.data.SealColonyRepository
-import weddellseal.markrecap.data.SupportingDataRepository
-import weddellseal.markrecap.data.location.LocationSource
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.SealColonyRepository
+import weddellseal.markrecap.frameworks.room.SupportingDataRepository
+import weddellseal.markrecap.domain.location.LocationSource
 
 class HomeViewModelFactory(
     private val observationRepository: ObservationRepository,

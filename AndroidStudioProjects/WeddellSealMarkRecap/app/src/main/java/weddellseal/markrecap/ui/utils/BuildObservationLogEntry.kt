@@ -1,7 +1,7 @@
 package weddellseal.markrecap.ui.utils
 
-import weddellseal.markrecap.data.ObservationLogEntry
-import weddellseal.markrecap.data.Seal
+import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.Seal
 import weddellseal.markrecap.models.AddObservationLogViewModel
 
 fun buildLogEntry(

@@ -1,7 +1,7 @@
 package weddellseal.markrecap.ui.utils
 
-import weddellseal.markrecap.data.Seal
-import weddellseal.markrecap.data.WedCheckSeal
+import weddellseal.markrecap.frameworks.room.Seal
+import weddellseal.markrecap.frameworks.room.WedCheckSeal
 
 fun sealValidation(
     seal: Seal,

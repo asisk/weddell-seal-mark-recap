@@ -3,9 +3,8 @@ package weddellseal.markrecap.models
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import weddellseal.markrecap.data.ObservationRepository
-import weddellseal.markrecap.data.SealColonyRepository
-import weddellseal.markrecap.data.SupportingDataRepository
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.SealColonyRepository
 
 class AddLogViewModelFactory (
     private val application: Application,
