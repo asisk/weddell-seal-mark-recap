@@ -1,5 +1,6 @@
 package weddellseal.markrecap
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,17 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import weddellseal.markrecap.data.ObservationRepository
-import weddellseal.markrecap.data.SealColonyRepository
-import weddellseal.markrecap.data.SupportingDataRepository
-import weddellseal.markrecap.data.WedCheckRepository
-import weddellseal.markrecap.locationFramework.FusedLocationSource
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.google.fusedLocation.FusedLocationSource
+import weddellseal.markrecap.frameworks.room.SealColonyRepository
+import weddellseal.markrecap.frameworks.room.SupportingDataRepository
+import weddellseal.markrecap.frameworks.room.WedCheckRepository
 import weddellseal.markrecap.models.AddLogViewModelFactory
 import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.AdminViewModel
+import weddellseal.markrecap.models.AdminViewModelFactory
 import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.models.HomeViewModelFactory
+import weddellseal.markrecap.models.ObserversViewModel
+import weddellseal.markrecap.models.ObserversViewModelFactory
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModelFactory
+import weddellseal.markrecap.models.SealColoniesViewModel
+import weddellseal.markrecap.models.SealColoniesViewModelFactory
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.screens.AddObservationLogScreen
@@ -54,9 +61,6 @@ class MainActivity : ComponentActivity() {
         val fileUploadDao = observationLogApplication.getFileUploadDao()
         wedCheckRepository = WedCheckRepository(wedCheckDao, fileUploadDao)
 
-        val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository)
-        val wedCheckViewModel: WedCheckViewModel by viewModels { wedCheckViewModelFactory }
-
         val observationDao = observationLogApplication.getObservationDao()
         observationRepository = ObservationRepository(observationDao)
 
@@ -80,6 +84,18 @@ class MainActivity : ComponentActivity() {
 
         val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
         val recentObservationsViewModel: RecentObservationsViewModel by viewModels { recentObservationsViewModelFactory }
+
+        val adminViewModelFactory = AdminViewModelFactory(application, supportingDataRepository)
+        val adminViewModel: AdminViewModel by viewModels { adminViewModelFactory }
+
+        val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository, supportingDataRepository)
+        val wedCheckViewModel: WedCheckViewModel by viewModels { wedCheckViewModelFactory }
+
+        val sealColoniesViewModelFactory = SealColoniesViewModelFactory(application, supportingDataRepository)
+        val sealColoniesViewModel: SealColoniesViewModel by viewModels { sealColoniesViewModelFactory }
+
+        val observersViewModelFactory = ObserversViewModelFactory(application, supportingDataRepository)
+        val observersViewModel: ObserversViewModel by viewModels { observersViewModelFactory }
 
         enableEdgeToEdge()
         setContent {
@@ -135,7 +151,10 @@ class MainActivity : ComponentActivity() {
                             AdminScreen(
                                 navController,
                                 wedCheckViewModel,
+                                sealColoniesViewModel,
+                                observersViewModel,
                                 homeViewModel,
+                                adminViewModel,
                                 recentObservationsViewModel
                             )
                         }

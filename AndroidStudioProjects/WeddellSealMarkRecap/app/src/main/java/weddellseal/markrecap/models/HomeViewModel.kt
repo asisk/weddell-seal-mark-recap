@@ -2,13 +2,11 @@ package weddellseal.markrecap.models
 
 import android.Manifest
 import android.app.Application
-import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,27 +15,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.data.FailedRow
-import weddellseal.markrecap.data.FileUploadEntity
-import weddellseal.markrecap.data.ObservationRepository
-import weddellseal.markrecap.data.Observers
-import weddellseal.markrecap.data.SealColony
-import weddellseal.markrecap.data.SealColonyRepository
-import weddellseal.markrecap.data.SupportingDataRepository
-import weddellseal.markrecap.data.enums.FileAction
-import weddellseal.markrecap.data.enums.FileType
-import weddellseal.markrecap.data.location.Coordinates
-import weddellseal.markrecap.data.location.GeoLocation
-import weddellseal.markrecap.data.location.LocationSource
-import weddellseal.markrecap.ui.screens.DashboardScreen
-import weddellseal.markrecap.ui.screens.UploadDataFileScreen
+import weddellseal.markrecap.domain.location.LocationSource
+import weddellseal.markrecap.domain.location.data.Coordinates
+import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.frameworks.room.SealColonyRepository
+import weddellseal.markrecap.frameworks.room.SupportingDataRepository
+import weddellseal.markrecap.frameworks.room.files.FailedRow
+import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.ui.utils.mutableJobSet
 import weddellseal.markrecap.ui.utils.storeIn
-import java.io.IOException
-import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -79,43 +69,43 @@ class HomeViewModel(
     val fileUploads: StateFlow<List<FileUploadEntity>> = supportingDataRepository.fileUploads
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
 
-    private val _fileStates = MutableStateFlow(
-        FileType.values().associateWith { fileType ->
-            FileState(
-                fileType = fileType.label,
-                action = FileAction.PENDING,
-                status = FileStatus.Idle,
-                onUploadClick = {}, // will override this when the Admin Screen view loads
-                onDownloadClick = {}, // will override this when the Admin Screen view loads
-                downloadFilename = null,
-                lastFilename = null
-            )
-        }
-    )
-    val fileStates: StateFlow<Map<FileType, FileState>> = _fileStates
-    fun updateFileStatus(type: FileType, status: FileStatus) {
-        _fileStates.update { currentMap ->
-            currentMap + (type to currentMap.getValue(type).copy(status = status))
-        }
-    }
-
-    fun setFileHandler(type: FileType, action: FileAction, handler: () -> Unit) {
-        if (action == FileAction.UPLOAD) {
-            _fileStates.update { currentMap ->
-                currentMap + (type to currentMap.getValue(type).copy(onUploadClick = handler))
-            }
-        } else if (action == FileAction.DOWNLOAD) {
-            _fileStates.update { currentMap ->
-                currentMap + (type to currentMap.getValue(type).copy(onDownloadClick = handler))
-            }
-        }
-    }
-
-    fun setLastFilename(type: FileType, filename: String) {
-        _fileStates.update { map ->
-            map + (type to map.getValue(type).copy(lastFilename = filename))
-        }
-    }
+//    private val _fileStates = MutableStateFlow(
+//        FileType.values().associateWith { fileType ->
+//            FileState(
+//                fileType = fileType.label,
+//                action = FileAction.PENDING,
+//                status = FileStatus.Idle,
+//                onUploadClick = {}, // will override this when the Admin Screen view loads
+//                onDownloadClick = {}, // will override this when the Admin Screen view loads
+//                downloadFilename = null,
+//                lastFilename = null
+//            )
+//        }
+//    )
+//    val fileStates: StateFlow<Map<FileType, FileState>> = _fileStates
+//    fun updateFileStatus(type: FileType, status: FileStatus) {
+//        _fileStates.update { currentMap ->
+//            currentMap + (type to currentMap.getValue(type).copy(status = status))
+//        }
+//    }
+//
+//    fun setFileHandler(type: FileType, action: FileAction, handler: () -> Unit) {
+//        if (action == FileAction.UPLOAD) {
+//            _fileStates.update { currentMap ->
+//                currentMap + (type to currentMap.getValue(type).copy(onUploadClick = handler))
+//            }
+//        } else if (action == FileAction.DOWNLOAD) {
+//            _fileStates.update { currentMap ->
+//                currentMap + (type to currentMap.getValue(type).copy(onDownloadClick = handler))
+//            }
+//        }
+//    }
+//
+//    fun setLastFilename(type: FileType, filename: String) {
+//        _fileStates.update { map ->
+//            map + (type to map.getValue(type).copy(lastFilename = filename))
+//        }
+//    }
 
     // MutableStateFlow to hold the list of observers
     private val _observers = MutableStateFlow<List<String>>(emptyList())
@@ -152,12 +142,12 @@ class HomeViewModel(
         val totalColoniesRows: Int = 0,
         val failedObserversRows: List<FailedRow> = emptyList(),
         val totalObserversRows: Int = 0,
-        val isColonyLocationsLoading: Boolean = false,
-        val isColonyLocationsLoaded: Boolean = false,
-        val lastColoniesFileNameLoaded: String = "",
-        val isObserversLoading: Boolean = false,
-        val isObserversLoaded: Boolean = false,
-        val lastObserversFileNameLoaded: String = "",
+//        val isColonyLocationsLoading: Boolean = false,
+//        val isColonyLocationsLoaded: Boolean = false,
+//        val lastColoniesFileNameLoaded: String = "",
+//        val isObserversLoading: Boolean = false,
+//        val isObserversLoaded: Boolean = false,
+//        val lastObserversFileNameLoaded: String = "",
         val isError: Boolean = false,
         val errorText: String = "",
         val date: String,
@@ -165,23 +155,23 @@ class HomeViewModel(
         val location: GeoLocation? = null,
     )
 
-    data class FileState(
-        val fileType: String,
-        val action: FileAction,
-        val status: FileStatus,
-        val onUploadClick: () -> Unit,
-        val onDownloadClick: () -> Unit,
-        val downloadFilename: String? = null,
-        val lastFilename: String? = null
-    )
-
-    sealed class FileStatus(val message: String, val color: Color) {
-        object Success : FileStatus("Successful", Color(0xFF2E7D32))
-        data class Error(val error: String) :
-            FileStatus("Failed: $error", Color(0xFFC62828))
-
-        object Idle : FileStatus("", Color.Unspecified)
-    }
+//    data class FileState(
+//        val fileType: String,
+//        val action: FileAction,
+//        val status: FileStatus,
+//        val onUploadClick: () -> Unit,
+//        val onDownloadClick: () -> Unit,
+//        val downloadFilename: String? = null,
+//        val lastFilename: String? = null
+//    )
+//
+//    sealed class FileStatus(val message: String, val color: Color) {
+//        object Success : FileStatus("Successful", Color(0xFF2E7D32))
+//        data class Error(val error: String) :
+//            FileStatus("Failed: $error", Color(0xFFC62828))
+//
+//        object Idle : FileStatus("", Color.Unspecified)
+//    }
 
     override fun onCleared() {
         super.onCleared()
@@ -318,101 +308,101 @@ class HomeViewModel(
         }
     }
 
-    fun loadSealColoniesFile(uri: Uri, filename: String) {
-        viewModelScope.launch {
-            _uiState.value = uiState.value.copy(loading = true, isColonyLocationsLoading = true)
-
-            try {
-                // Insert the file and get the fileUploadId
-                val fileUploadId = insertFileUpload(filename)
-
-                // Read and process the CSV data
-                val (csvData, failedRows) = readAndProcessColonyCsv(uri, fileUploadId)
-
-                // Insert the CSV data into the database
-                val insertedCount = insertColonyData(fileUploadId, csvData)
-
-                if (insertedCount > 0) {
-//                    "successful"
-                    updateFileStatus(FileType.COLONIES, FileStatus.Success)
-                } else {
-//                    "failed"
-                    updateFileStatus(
-                        FileType.COLONIES,
-                        FileStatus.Error("Failed to insert colony location data")
-                    )
-                }
-
-                //TODO, remove this once the above is tested out???
-                // Update the file status based on success or failure
-                supportingDataRepository.updateFileUploadStatus(
-                    fileUploadId,
-                    if (insertedCount > 0) "successful" else "failed"
-                )
-
-                // Update the UI state based on the result
-                updateUiStateColonies(insertedCount, failedRows)
-
-            } catch (e: Exception) {
-                updateFileStatus(FileType.COLONIES, FileStatus.Error(e.toString()))
-                //TODO, remove this once the above is tested out???
-                _uiState.value = uiState.value.copy(
-                    loading = false,
-                    isColonyLocationsLoading = false,
-                    isColonyLocationsLoaded = false,
-                    isError = true,
-                    totalColoniesRows = 0
-                )
-            }
-        }
-    }
-
-    fun loadObserversFile(uri: Uri, filename: String) {
-        viewModelScope.launch {
-            _uiState.value = uiState.value.copy(loading = true, isObserversLoading = true)
-
-            try {
-                // Insert the file and get the fileUploadId
-                val fileUploadId = insertFileUpload(filename)
-
-                // Read and process the CSV data
-                val (csvData, failedRows) = readAndProcessObserversCsv(uri, fileUploadId)
-
-                // Insert the CSV data into the database
-                val insertedCount = insertObserversData(fileUploadId, csvData)
-
-                if (insertedCount > 0) {
-//                    "successful"
-                    updateFileStatus(FileType.OBSERVERS, FileStatus.Success)
-                } else {
-//                    "failed"
-                    updateFileStatus(FileType.OBSERVERS, FileStatus.Error("Failed to insert data"))
-                }
-
-                // Update the file status based on success or failure
-                //TODO, remove this once the above is tested out???
-                supportingDataRepository.updateFileUploadStatus(
-                    fileUploadId,
-                    if (insertedCount > 0) "successful" else "failed"
-                )
-
-                // Update the UI state based on the result
-                updateUiStateObservers(insertedCount, failedRows)
-
-            } catch (e: Exception) {
-                updateFileStatus(FileType.OBSERVERS, FileStatus.Error(e.toString()))
-
-                //TODO, remove this once the above is tested out???
-                _uiState.value = uiState.value.copy(
-                    loading = false,
-                    isObserversLoading = false,
-                    isObserversLoaded = false,
-                    isError = true,
-                    totalObserversRows = 0
-                )
-            }
-        }
-    }
+//    fun loadSealColoniesFile(uri: Uri, filename: String) {
+//        viewModelScope.launch {
+//            _uiState.value = uiState.value.copy(loading = true, isColonyLocationsLoading = true)
+//
+//            try {
+//                // Insert the file and get the fileUploadId
+//                val fileUploadId = insertFileUpload(filename)
+//
+//                // Read and process the CSV data
+//                val (csvData, failedRows) = readAndProcessColonyCsv(uri, fileUploadId)
+//
+//                // Insert the CSV data into the database
+//                val insertedCount = insertColonyData(fileUploadId, csvData)
+//
+//                if (insertedCount > 0) {
+////                    "successful"
+//                    updateFileStatus(FileType.COLONIES, FileStatus.Success)
+//                } else {
+////                    "failed"
+//                    updateFileStatus(
+//                        FileType.COLONIES,
+//                        FileStatus.Error("Failed to insert colony location data")
+//                    )
+//                }
+//
+//                //TODO, remove this once the above is tested out???
+//                // Update the file status based on success or failure
+//                supportingDataRepository.updateFileUploadStatus(
+//                    fileUploadId,
+//                    if (insertedCount > 0) "successful" else "failed"
+//                )
+//
+//                // Update the UI state based on the result
+//                updateUiStateColonies(insertedCount, failedRows)
+//
+//            } catch (e: Exception) {
+//                updateFileStatus(FileType.COLONIES, FileStatus.Error(e.toString()))
+//                //TODO, remove this once the above is tested out???
+//                _uiState.value = uiState.value.copy(
+//                    loading = false,
+//                    isColonyLocationsLoading = false,
+//                    isColonyLocationsLoaded = false,
+//                    isError = true,
+//                    totalColoniesRows = 0
+//                )
+//            }
+//        }
+//    }
+//
+//    fun loadObserversFile(uri: Uri, filename: String) {
+//        viewModelScope.launch {
+//            _uiState.value = uiState.value.copy(loading = true, isObserversLoading = true)
+//
+//            try {
+//                // Insert the file and get the fileUploadId
+//                val fileUploadId = insertFileUpload(filename)
+//
+//                // Read and process the CSV data
+//                val (csvData, failedRows) = readAndProcessObserversCsv(uri, fileUploadId)
+//
+//                // Insert the CSV data into the database
+//                val insertedCount = insertObserversData(fileUploadId, csvData)
+//
+//                if (insertedCount > 0) {
+////                    "successful"
+//                    updateFileStatus(FileType.OBSERVERS, FileStatus.Success)
+//                } else {
+////                    "failed"
+//                    updateFileStatus(FileType.OBSERVERS, FileStatus.Error("Failed to insert data"))
+//                }
+//
+//                // Update the file status based on success or failure
+//                //TODO, remove this once the above is tested out???
+//                supportingDataRepository.updateFileUploadStatus(
+//                    fileUploadId,
+//                    if (insertedCount > 0) "successful" else "failed"
+//                )
+//
+//                // Update the UI state based on the result
+//                updateUiStateObservers(insertedCount, failedRows)
+//
+//            } catch (e: Exception) {
+//                updateFileStatus(FileType.OBSERVERS, FileStatus.Error(e.toString()))
+//
+//                //TODO, remove this once the above is tested out???
+//                _uiState.value = uiState.value.copy(
+//                    loading = false,
+//                    isObserversLoading = false,
+//                    isObserversLoaded = false,
+//                    isError = true,
+//                    totalObserversRows = 0
+//                )
+//            }
+//        }
+//    }
 
     fun clearObservations() {
         viewModelScope.launch {
@@ -426,245 +416,245 @@ class HomeViewModel(
             }
         }
     }
+//
+//    fun clearObservers() {
+//        // Kick off this process on a coroutine
+//        viewModelScope.launch {
+//            try {
+//                supportingDataRepository.clearObserversData()
+//            } catch (e: Exception) {
+//                _uiState.value = uiState.value.copy(
+//                    isError = true,
+//                    errorText = "Error removing observers"
+//                )
+//            }
+//        }
+//    }
+//
+//    fun clearColonies() {
+//        // Kick off this process on a coroutine
+//        viewModelScope.launch {
+//            try {
+//                supportingDataRepository.clearColonyData()
+//            } catch (e: Exception) {
+//                _uiState.value = uiState.value.copy(
+//                    isError = true,
+//                    errorText = "Error removing colonies"
+//                )
+//            }
+//        }
+//    }
 
-    fun clearObservers() {
-        // Kick off this process on a coroutine
-        viewModelScope.launch {
-            try {
-                supportingDataRepository.clearObserversData()
-            } catch (e: Exception) {
-                _uiState.value = uiState.value.copy(
-                    isError = true,
-                    errorText = "Error removing observers"
-                )
-            }
-        }
-    }
+//    private suspend fun insertFileUpload(filename: String): Long {
+//        return supportingDataRepository.insertFileUpload(
+//            FileUploadEntity(
+//                id = 0,
+//                filename = filename,
+//                status = "pending"
+//            )
+//        )
+//    }
+//
+//    private suspend fun readAndProcessObserversCsv(
+//        uri: Uri,
+//        fileUploadId: Long
+//    ): Pair<List<Observers>, List<FailedRow>> {
+//        return withContext(Dispatchers.IO) {
+//            readObserverCsvData(context.contentResolver, uri, fileUploadId)
+//        }
+//    }
+//
+//    private suspend fun readAndProcessColonyCsv(
+//        uri: Uri,
+//        fileUploadId: Long
+//    ): Pair<List<SealColony>, List<FailedRow>> {
+//        return withContext(Dispatchers.IO) {
+//            readSealColoniesCsvData(context.contentResolver, uri, fileUploadId)
+//        }
+//    }
+//
+//    private suspend fun insertObserversData(fileUploadId: Long, csvData: List<Observers>): Int {
+//        return supportingDataRepository.insertObserversData(fileUploadId, csvData)
+//    }
+//
+//    private suspend fun insertColonyData(fileUploadId: Long, csvData: List<SealColony>): Int {
+//        return supportingDataRepository.insertColoniesData(fileUploadId, csvData)
+//    }
 
-    fun clearColonies() {
-        // Kick off this process on a coroutine
-        viewModelScope.launch {
-            try {
-                supportingDataRepository.clearColonyData()
-            } catch (e: Exception) {
-                _uiState.value = uiState.value.copy(
-                    isError = true,
-                    errorText = "Error removing colonies"
-                )
-            }
-        }
-    }
+//    private fun updateUiStateObservers(insertedCount: Int, failedRows: List<FailedRow>) {
+//        _uiState.value =
+//            uiState.value.copy(
+//                loading = false,
+//                isObserversLoading = false,
+//                isObserversLoaded = true,
+//                totalObserversRows = insertedCount,
+//                isError = failedRows.isNotEmpty(),
+//                failedObserversRows = failedRows
+//            )
+//    }
+//
+//    private fun updateUiStateColonies(insertedCount: Int, failedRows: List<FailedRow>) {
+//        _uiState.value =
+//            uiState.value.copy(
+//                loading = false,
+//                isColonyLocationsLoading = false,
+//                isColonyLocationsLoaded = true,
+//                totalColoniesRows = insertedCount,
+//                isError = failedRows.isNotEmpty(),
+//                failedColoniesRows = failedRows
+//            )
+//    }
+//
+//    fun updateLastObserversFileNameLoaded(fileName: String) {
+//        _uiState.value = uiState.value.copy(
+//            lastObserversFileNameLoaded = fileName
+//        )
+//    }
+//
+//    fun updateLastColoniesFileNameLoaded(fileName: String) {
+//        _uiState.value = uiState.value.copy(
+//            lastColoniesFileNameLoaded = fileName
+//        )
+//    }
 
-    private suspend fun insertFileUpload(filename: String): Long {
-        return supportingDataRepository.insertFileUpload(
-            FileUploadEntity(
-                id = 0,
-                filename = filename,
-                status = "pending"
-            )
-        )
-    }
-
-    private suspend fun readAndProcessObserversCsv(
-        uri: Uri,
-        fileUploadId: Long
-    ): Pair<List<Observers>, List<FailedRow>> {
-        return withContext(Dispatchers.IO) {
-            readObserverCsvData(context.contentResolver, uri, fileUploadId)
-        }
-    }
-
-    private suspend fun readAndProcessColonyCsv(
-        uri: Uri,
-        fileUploadId: Long
-    ): Pair<List<SealColony>, List<FailedRow>> {
-        return withContext(Dispatchers.IO) {
-            readSealColoniesCsvData(context.contentResolver, uri, fileUploadId)
-        }
-    }
-
-    private suspend fun insertObserversData(fileUploadId: Long, csvData: List<Observers>): Int {
-        return supportingDataRepository.insertObserversData(fileUploadId, csvData)
-    }
-
-    private suspend fun insertColonyData(fileUploadId: Long, csvData: List<SealColony>): Int {
-        return supportingDataRepository.insertColoniesData(fileUploadId, csvData)
-    }
-
-    private fun updateUiStateObservers(insertedCount: Int, failedRows: List<FailedRow>) {
-        _uiState.value =
-            uiState.value.copy(
-                loading = false,
-                isObserversLoading = false,
-                isObserversLoaded = true,
-                totalObserversRows = insertedCount,
-                isError = failedRows.isNotEmpty(),
-                failedObserversRows = failedRows
-            )
-    }
-
-    private fun updateUiStateColonies(insertedCount: Int, failedRows: List<FailedRow>) {
-        _uiState.value =
-            uiState.value.copy(
-                loading = false,
-                isColonyLocationsLoading = false,
-                isColonyLocationsLoaded = true,
-                totalColoniesRows = insertedCount,
-                isError = failedRows.isNotEmpty(),
-                failedColoniesRows = failedRows
-            )
-    }
-
-    fun updateLastObserversFileNameLoaded(fileName: String) {
-        _uiState.value = uiState.value.copy(
-            lastObserversFileNameLoaded = fileName
-        )
-    }
-
-    fun updateLastColoniesFileNameLoaded(fileName: String) {
-        _uiState.value = uiState.value.copy(
-            lastColoniesFileNameLoaded = fileName
-        )
-    }
-
-    private fun readSealColoniesCsvData(
-        contentResolver: ContentResolver,
-        uri: Uri,
-        fileUploadId: Long
-    ): Pair<List<SealColony>, List<FailedRow>> {
-        val csvData: MutableList<SealColony> = mutableListOf()
-        val failedRows = mutableListOf<FailedRow>()
-        var lineNumber = 0
-
-        contentResolver.openInputStream(uri)?.use { stream ->
-            InputStreamReader(stream).buffered().use { reader ->
-
-                val headerRow = reader.readLine()?.split(",") ?: emptyList()
-
-                // Define the required headers and their corresponding column names
-                val inOutIndex = headerRow.indexOf("In/Out")
-                val locationIndex = headerRow.indexOf("Location")
-                val nLimitIndex = headerRow.indexOf("N_Limit")
-                val sLimitIndex = headerRow.indexOf("S_Limit")
-                val wLimitIndex = headerRow.indexOf("W_Limit")
-                val eLimitIndex = headerRow.indexOf("E_Limit")
-                val adjLatIndex = headerRow.indexOf("Adj_Lat")
-                val adjLongIndex = headerRow.indexOf("Adj_Long")
-
-                val requiredHeaders = listOf(
-                    inOutIndex,
-                    locationIndex,
-                    nLimitIndex,
-                    sLimitIndex,
-                    wLimitIndex,
-                    eLimitIndex,
-                    adjLatIndex,
-                    adjLongIndex
-                )
-
-                // Check if any required headers are missing
-                if (!requiredHeaders.all { it != -1 }) {
-                    // Handle missing headers (e.g., throw an error, log, or show a message to the user)
-                    failedRows.add(
-                        FailedRow(
-                            rowNumber = 0,
-                            errorMessage = "CSV file missing required headers"
-                        )
-                    )
-                    return Pair(csvData, failedRows)
-                }
-
-                reader.forEachLine { line ->
-                    lineNumber++ // Increment line number for each iteration
-                    try {
-                        val row = line.split(",")
-
-                        val record = SealColony(
-                            colonyId = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
-                            inOut = row.getOrNull(inOutIndex) ?: "",
-                            location = row.getOrNull(locationIndex) ?: "",
-                            nLimit = row.getOrNull(nLimitIndex)?.toDoubleOrNull() ?: 0.0,
-                            sLimit = row.getOrNull(sLimitIndex)?.toDoubleOrNull() ?: 0.0,
-                            wLimit = row.getOrNull(wLimitIndex)?.toDoubleOrNull() ?: 0.0,
-                            eLimit = row.getOrNull(eLimitIndex)?.toDoubleOrNull() ?: 0.0,
-                            adjLat = row.getOrNull(adjLatIndex)?.toDoubleOrNull() ?: 0.0,
-                            adjLong = row.getOrNull(adjLongIndex)?.toDoubleOrNull() ?: 0.0,
-                            fileUploadId = fileUploadId // Foreign key reference
-                        )
-
-                        // Add the parsed entity to the list
-                        csvData.add(record)
-
-                    } catch (e: Exception) {
-                        // Handle and log any errors in parsing the row
-                        e.printStackTrace()
-                        // Capture the raw row that failed
-                        FailedRow(
-                            rowNumber = lineNumber,
-                            errorMessage = "Error in row $lineNumber: ${e.localizedMessage ?: "Unknown error"}"
-                        )
-                    }
-                }
-            }
-        } ?: throw IOException("Unable to open input stream")
-
-        return Pair(csvData, failedRows)
-    }
-
-    private fun readObserverCsvData(
-        contentResolver: ContentResolver,
-        uri: Uri,
-        fileUploadId: Long
-    ): Pair<List<Observers>, List<FailedRow>> {
-        val csvData: MutableList<Observers> = mutableListOf()
-        val failedRows = mutableListOf<FailedRow>()
-        var lineNumber = 0
-
-        contentResolver.openInputStream(uri)?.use { stream ->
-            InputStreamReader(stream).buffered().use { reader ->
-
-                val headerRow = reader.readLine()?.split(",") ?: emptyList()
-                val initialsIndex = headerRow.indexOf("Initials")
-
-                if (initialsIndex != -1) {
-                    reader.forEachLine { line ->
-                        lineNumber++ // Increment line number for each iteration
-
-                        try {
-
-                            val row = line.split(",")
-                            val record = Observers(
-                                observerId = 0,
-                                initials = row.getOrNull(initialsIndex) ?: "",
-                                fileUploadId = fileUploadId // Foreign key reference
-                            )
-                            csvData.add(record)
-
-                        } catch (e: Exception) {
-                            // Handle and log any errors in parsing the row
-                            e.printStackTrace()
-                            // Capture the raw row that failed
-                            failedRows.add(
-                                FailedRow(
-                                    rowNumber = lineNumber,
-                                    errorMessage = "Invalid number format in row $lineNumber: ${e.localizedMessage}"
-                                )
-                            )
-                        }
-                    }
-                } else {
-                    // one or more headers are missing
-                    failedRows.add(
-                        FailedRow(
-                            rowNumber = 0,
-                            errorMessage = "CSV file missing required headers"
-                        )
-                    )
-                    return Pair(csvData, failedRows)
-                }
-            }
-        } ?: throw IOException("Unable to open input stream")
-
-        return Pair(csvData, failedRows)
-    }
+//    private fun readSealColoniesCsvData(
+//        contentResolver: ContentResolver,
+//        uri: Uri,
+//        fileUploadId: Long
+//    ): Pair<List<SealColony>, List<FailedRow>> {
+//        val csvData: MutableList<SealColony> = mutableListOf()
+//        val failedRows = mutableListOf<FailedRow>()
+//        var lineNumber = 0
+//
+//        contentResolver.openInputStream(uri)?.use { stream ->
+//            InputStreamReader(stream).buffered().use { reader ->
+//
+//                val headerRow = reader.readLine()?.split(",") ?: emptyList()
+//
+//                // Define the required headers and their corresponding column names
+//                val inOutIndex = headerRow.indexOf("In/Out")
+//                val locationIndex = headerRow.indexOf("Location")
+//                val nLimitIndex = headerRow.indexOf("N_Limit")
+//                val sLimitIndex = headerRow.indexOf("S_Limit")
+//                val wLimitIndex = headerRow.indexOf("W_Limit")
+//                val eLimitIndex = headerRow.indexOf("E_Limit")
+//                val adjLatIndex = headerRow.indexOf("Adj_Lat")
+//                val adjLongIndex = headerRow.indexOf("Adj_Long")
+//
+//                val requiredHeaders = listOf(
+//                    inOutIndex,
+//                    locationIndex,
+//                    nLimitIndex,
+//                    sLimitIndex,
+//                    wLimitIndex,
+//                    eLimitIndex,
+//                    adjLatIndex,
+//                    adjLongIndex
+//                )
+//
+//                // Check if any required headers are missing
+//                if (!requiredHeaders.all { it != -1 }) {
+//                    // Handle missing headers (e.g., throw an error, log, or show a message to the user)
+//                    failedRows.add(
+//                        FailedRow(
+//                            rowNumber = 0,
+//                            errorMessage = "CSV file missing required headers"
+//                        )
+//                    )
+//                    return Pair(csvData, failedRows)
+//                }
+//
+//                reader.forEachLine { line ->
+//                    lineNumber++ // Increment line number for each iteration
+//                    try {
+//                        val row = line.split(",")
+//
+//                        val record = SealColony(
+//                            colonyId = 0, // Room will autopopulate, pass zero only to satisfy the instantiation of the WedCheckRecord
+//                            inOut = row.getOrNull(inOutIndex) ?: "",
+//                            location = row.getOrNull(locationIndex) ?: "",
+//                            nLimit = row.getOrNull(nLimitIndex)?.toDoubleOrNull() ?: 0.0,
+//                            sLimit = row.getOrNull(sLimitIndex)?.toDoubleOrNull() ?: 0.0,
+//                            wLimit = row.getOrNull(wLimitIndex)?.toDoubleOrNull() ?: 0.0,
+//                            eLimit = row.getOrNull(eLimitIndex)?.toDoubleOrNull() ?: 0.0,
+//                            adjLat = row.getOrNull(adjLatIndex)?.toDoubleOrNull() ?: 0.0,
+//                            adjLong = row.getOrNull(adjLongIndex)?.toDoubleOrNull() ?: 0.0,
+//                            fileUploadId = fileUploadId // Foreign key reference
+//                        )
+//
+//                        // Add the parsed entity to the list
+//                        csvData.add(record)
+//
+//                    } catch (e: Exception) {
+//                        // Handle and log any errors in parsing the row
+//                        e.printStackTrace()
+//                        // Capture the raw row that failed
+//                        FailedRow(
+//                            rowNumber = lineNumber,
+//                            errorMessage = "Error in row $lineNumber: ${e.localizedMessage ?: "Unknown error"}"
+//                        )
+//                    }
+//                }
+//            }
+//        } ?: throw IOException("Unable to open input stream")
+//
+//        return Pair(csvData, failedRows)
+//    }
+//
+//    private fun readObserverCsvData(
+//        contentResolver: ContentResolver,
+//        uri: Uri,
+//        fileUploadId: Long
+//    ): Pair<List<Observers>, List<FailedRow>> {
+//        val csvData: MutableList<Observers> = mutableListOf()
+//        val failedRows = mutableListOf<FailedRow>()
+//        var lineNumber = 0
+//
+//        contentResolver.openInputStream(uri)?.use { stream ->
+//            InputStreamReader(stream).buffered().use { reader ->
+//
+//                val headerRow = reader.readLine()?.split(",") ?: emptyList()
+//                val initialsIndex = headerRow.indexOf("Initials")
+//
+//                if (initialsIndex != -1) {
+//                    reader.forEachLine { line ->
+//                        lineNumber++ // Increment line number for each iteration
+//
+//                        try {
+//
+//                            val row = line.split(",")
+//                            val record = Observers(
+//                                observerId = 0,
+//                                initials = row.getOrNull(initialsIndex) ?: "",
+//                                fileUploadId = fileUploadId // Foreign key reference
+//                            )
+//                            csvData.add(record)
+//
+//                        } catch (e: Exception) {
+//                            // Handle and log any errors in parsing the row
+//                            e.printStackTrace()
+//                            // Capture the raw row that failed
+//                            failedRows.add(
+//                                FailedRow(
+//                                    rowNumber = lineNumber,
+//                                    errorMessage = "Invalid number format in row $lineNumber: ${e.localizedMessage}"
+//                                )
+//                            )
+//                        }
+//                    }
+//                } else {
+//                    // one or more headers are missing
+//                    failedRows.add(
+//                        FailedRow(
+//                            rowNumber = 0,
+//                            errorMessage = "CSV file missing required headers"
+//                        )
+//                    )
+//                    return Pair(csvData, failedRows)
+//                }
+//            }
+//        } ?: throw IOException("Unable to open input stream")
+//
+//        return Pair(csvData, failedRows)
+//    }
 }
