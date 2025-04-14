@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.ui.file.FileType
 import weddellseal.markrecap.models.ObserversViewModel
 import weddellseal.markrecap.models.SealColoniesViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
@@ -25,7 +24,7 @@ fun UploadDataFileScreen(
     sealColoniesViewModel: SealColoniesViewModel,
     observersViewModel: ObserversViewModel,
 ) {
-    val wedCheckFileState by wedCheckViewModel.fileStates.collectAsState()
+    val wedCheckUploadFileState by wedCheckViewModel.wedCheckUploadState.collectAsState()
     val sealColonyFileState by sealColoniesViewModel.fileState.collectAsState()
     val observersFileState by observersViewModel.fileState.collectAsState()
 
@@ -46,7 +45,7 @@ fun UploadDataFileScreen(
                 fontSize = 36.sp,
             )
         }
-        UploadCard(state = wedCheckFileState[FileType.WEDCHECK]!!)
+        UploadCard(state = wedCheckUploadFileState)
         UploadCard(state = observersFileState)
         UploadCard(state = sealColonyFileState)
     }

@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.frameworks.room.SupportingDataRepository
 import weddellseal.markrecap.frameworks.room.files.FailedRow
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
@@ -90,53 +89,113 @@ class WedCheckViewModel(
         }
     }
 
+    // WEDCHECK File State
+    private val _wedCheckUploadState = MutableStateFlow(
+        FileState(
+            fileType = FileType.WEDCHECK.label,
+            action = FileAction.PENDING,
+            status = FileStatus.IDLE,
+            onUploadClick = {}, // will override this when the Admin Screen view loads
+            onExportClick = {}, // will override this when the Admin Screen view loads
+            downloadFilename = null,
+            lastFilename = null
+        )
+    )
 
-    private val _fileStates = MutableStateFlow(
-        FileType.values().associateWith { fileType ->
-            FileState(
-                fileType = fileType.label,
-                action = FileAction.PENDING,
-                status = FileStatus.IDLE,
-                onUploadClick = {}, // will override this when the Admin Screen view loads
-                onDownloadClick = {}, // will override this when the Admin Screen view loads
-                downloadFilename = null,
-                lastFilename = null
+    val wedCheckUploadState: StateFlow<FileState> = _wedCheckUploadState
+
+    fun updateWedCheckFileStatus(count: Int) {
+        _wedCheckUploadState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
+    }
+
+    fun setWedCheckFileErrorStatus(errorMessage: String) {
+        _wedCheckUploadState.update {
+            it.copy(
+                status = FileStatus.ERROR,
+                errorMessage = errorMessage
             )
         }
+    }
+
+    fun setWedCheckUploadHandler(handler: () -> Unit) {
+        _wedCheckUploadState.update { it.copy(onUploadClick = handler) }
+    }
+
+    fun setWedCheckLastFilename(filename: String) {
+        _wedCheckUploadState.update { it.copy(lastFilename = filename) }
+    }
+
+    // WEDDATACURRENT File State
+    private val _wedDataCurrentExportState = MutableStateFlow(
+        FileState(
+            fileType = FileType.WEDDATACURRENT.label,
+            action = FileAction.PENDING,
+            status = FileStatus.IDLE,
+            onUploadClick = {}, // will override this when the Admin Screen view loads
+            onExportClick = {}, // will override this when the Admin Screen view loads
+            downloadFilename = null,
+            lastFilename = null
+        )
     )
-    val fileStates: StateFlow<Map<FileType, FileState>> = _fileStates
-    fun updateFileStatus(type: FileType, status: FileStatus, recordCount: Int) {
-        _fileStates.update { currentMap ->
-            currentMap + (type to currentMap.getValue(type)
-                .copy(status = status, recordCount = recordCount))
+
+    val wedDataCurrentExportState: StateFlow<FileState> = _wedDataCurrentExportState
+
+    fun updateWedDataCurrentFileStatus(count: Int) {
+        _wedDataCurrentExportState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
+    }
+
+    fun setWedDataCurrentFileErrorStatus(errorMessage: String) {
+        _wedDataCurrentExportState.update {
+            it.copy(
+                status = FileStatus.ERROR,
+                errorMessage = errorMessage
+            )
         }
     }
 
-    fun setFileErrorStatus(type: FileType, status: FileStatus, errorMessage: String) {
-        _fileStates.update { currentMap ->
-            currentMap + (type to currentMap.getValue(type)
-                .copy(status = status, errorMessage = errorMessage))
+    fun setWedDataCurrentExportHandler(handler: () -> Unit) {
+        _wedDataCurrentExportState.update { it.copy(onExportClick = handler) }
+    }
+
+    fun setWedDataCurrentLastFilename(filename: String) {
+        _wedDataCurrentExportState.update { it.copy(lastFilename = filename) }
+    }
+
+    // WEDDATAFULL File State
+    private val _wedDataFullExportState = MutableStateFlow(
+        FileState(
+            fileType = FileType.WEDDATAFULL.label,
+            action = FileAction.PENDING,
+            status = FileStatus.IDLE,
+            onUploadClick = {}, // will override this when the Admin Screen view loads
+            onExportClick = {}, // will override this when the Admin Screen view loads
+            downloadFilename = null,
+            lastFilename = null
+        )
+    )
+
+    val wedDataFullExportState: StateFlow<FileState> = _wedDataFullExportState
+
+    fun updateWedDataFullFileStatus(count: Int) {
+        _wedDataFullExportState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
+    }
+
+    fun setWedDataFullFileErrorStatus(errorMessage: String) {
+        _wedDataFullExportState.update {
+            it.copy(
+                status = FileStatus.ERROR,
+                errorMessage = errorMessage
+            )
         }
     }
 
-    fun setFileHandler(type: FileType, action: FileAction, handler: () -> Unit) {
-        if (action == FileAction.UPLOAD) {
-            _fileStates.update { currentMap ->
-                currentMap + (type to currentMap.getValue(type).copy(onUploadClick = handler))
-            }
-        } else if (action == FileAction.DOWNLOAD) {
-            _fileStates.update { currentMap ->
-                currentMap + (type to currentMap.getValue(type).copy(onDownloadClick = handler))
-            }
-        }
+    fun setWedDataFullExportHandler(handler: () -> Unit) {
+        _wedDataFullExportState.update { it.copy(onExportClick = handler) }
     }
 
-    fun setLastFilename(type: FileType, filename: String) {
-        _fileStates.update { map ->
-            map + (type to map.getValue(type).copy(lastFilename = filename))
-        }
+    fun setWedDataFullLastFilename(filename: String) {
+        _wedDataFullExportState.update { it.copy(lastFilename = filename) }
     }
-
 
     fun findSealSpeNo(sealTagID: String) {
         _uiState.value = uiState.value.copy(isSearching = true)
@@ -244,47 +303,63 @@ class WedCheckViewModel(
 
     fun loadWedCheck(uri: Uri, filename: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            var fileUploadId: Long = -1L
-            try {
+//            var fileUploadId: Long = -1L
+//            try {
 
-                // 1. Insert FileUploadEntity and get the fileUploadId
-                fileUploadId = insertFileUploadRecord(filename)
+            // 1. Insert FileUploadEntity and get the fileUploadId
+            var fileUploadId = insertFileUploadRecord(filename)
 
-                // 2. Read CSV data
-                val (csvData, failedRows) = readWedCheckData(uri, fileUploadId)
-                if (failedRows.isNotEmpty()) {
-                    throw Exception(failedRows[0].errorMessage)
-                }
-
-                // 3. Insert CSV data into the database
-                val insertedCount = insertCsvData(fileUploadId, csvData)
-
-                if (insertedCount > 0) {
-                    updateFileStatus(FileType.WEDCHECK, FileStatus.SUCCESS, insertedCount)
-                } else {
-                    throw Exception("Failed to insert data")
-                }
-
-                // 4. Update file upload status based on the result
-                wedCheckRepo.updateFileUploadStatus(fileUploadId, FileStatus.SUCCESS, insertedCount, "successful")
-
-
-                // 5. Update the UI state
-                updateUIState(insertedCount, failedRows)
-                if (failedRows.isNotEmpty()) {
-                    throw Exception(failedRows[0].errorMessage)
-                }
-
-            } catch (e: Exception) {
-                val errMessage = e.message ?: "Unknown error"
-                setFileErrorStatus(FileType.WEDCHECK, FileStatus.ERROR, errMessage)
+            // 2. Read CSV data
+            val (csvData, failedRows) = readWedCheckData(uri, fileUploadId)
+            if (failedRows.isNotEmpty()) {
+                val errMessage = failedRows[0].errorMessage
+                setWedCheckFileErrorStatus(errMessage)
                 wedCheckRepo.updateFileUploadStatus(
                     fileUploadId,
                     FileStatus.ERROR,
                     0,
-                    e.message.toString()
+                    errMessage
                 )
+                return@launch
             }
+
+            // 3. Insert CSV data into the database
+            val insertedCount = insertCsvData(fileUploadId, csvData)
+            if (insertedCount > 0) {
+                updateWedCheckFileStatus(insertedCount)
+            } else {
+                val errMessage = "No data inserted"
+                setWedCheckFileErrorStatus(errMessage)
+                wedCheckRepo.updateFileUploadStatus(
+                    fileUploadId,
+                    FileStatus.ERROR,
+                    0,
+                    errMessage
+                )
+                return@launch
+            }
+
+            // 4. Update file upload status based on the result
+            wedCheckRepo.updateFileUploadStatus(
+                fileUploadId,
+                FileStatus.SUCCESS,
+                insertedCount,
+                "successful"
+            )
+
+            // 5. Update the UI state
+            updateWedCheckFileStatus(insertedCount)
+
+//            } catch (e: Exception) {
+//                val errMessage = e.message ?: "Unknown error"
+//                setFileErrorStatus(FileType.WEDCHECK, FileStatus.ERROR, errMessage)
+//                wedCheckRepo.updateFileUploadStatus(
+//                    fileUploadId,
+//                    FileStatus.ERROR,
+//                    0,
+//                    e.message.toString()
+//                )
+//            }
         }
     }
 

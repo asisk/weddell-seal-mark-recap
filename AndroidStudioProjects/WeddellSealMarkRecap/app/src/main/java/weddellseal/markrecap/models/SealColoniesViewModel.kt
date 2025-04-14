@@ -69,7 +69,7 @@ class SealColoniesViewModel(
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
             onUploadClick = {},
-            onDownloadClick = {},
+            onExportClick = {},
             lastFilename = null
         )
     )
@@ -88,7 +88,7 @@ class SealColoniesViewModel(
     }
 
     fun setDownloadHandler(handler: () -> Unit) {
-        _fileState.update { it.copy(onDownloadClick = handler) }
+        _fileState.update { it.copy(onExportClick = handler) }
     }
 
     fun setLastFilename(filename: String) {
@@ -98,22 +98,40 @@ class SealColoniesViewModel(
     fun loadSealColoniesFile(uri: Uri, filename: String) {
         viewModelScope.launch {
 
-            var fileUploadId: Long = -1L
+//            var fileUploadId: Long = -1L
 
-            try {
+//            try {
                 // Insert the file and get the fileUploadId
                 val fileUploadId = insertFileUpload(filename)
 
                 // Read and process the CSV data
                 val (csvData, failedRows) = readAndProcessColonyCsv(uri, fileUploadId)
+                if (failedRows.isNotEmpty()) {
+                    val errMessage = failedRows[0].errorMessage
+                    setFileErrorStatus(errMessage)
+                    supportingDataRepository.updateFileUploadStatus(
+                        fileUploadId,
+                        FileStatus.ERROR,
+                        0,
+                        errMessage
+                    )
+                    return@launch
+                }
 
                 // Insert the CSV data into the database
                 val insertedCount = insertColonyData(fileUploadId, csvData)
-
                 if (insertedCount > 0) {
-                    updateFileStatus(insertedCount)
+                    updateFileStatus( insertedCount)
                 } else {
-                    throw Exception("Failed to insert data")
+                    val errMessage = "No data inserted"
+                    setFileErrorStatus(errMessage)
+                    supportingDataRepository.updateFileUploadStatus(
+                        fileUploadId,
+                        FileStatus.ERROR,
+                        0,
+                        errMessage
+                    )
+                    return@launch
                 }
 
 
@@ -126,26 +144,27 @@ class SealColoniesViewModel(
                 )
 
                 // Update the UI state based on the result
-                updateUiStateColonies(insertedCount, failedRows)
+                updateFileStatus( insertedCount)
 
-            } catch (e: Exception) {
-                setFileErrorStatus(e.toString())
-                supportingDataRepository.updateFileUploadStatus(
-                    fileUploadId,
-                    FileStatus.ERROR,
-                    0,
-                    e.message.toString()
-                )
-
-                //TODO, remove this once the above is tested out???
-                _uiState.value = uiState.value.copy(
-                    loading = false,
-//                    isColonyLocationsLoading = false,
-//                    isColonyLocationsLoaded = false,
-                    isError = true,
-//                    totalColoniesRows = 0
-                )
-            }
+//            } catch (e: Exception) {
+//                val errMessage = e.message ?: "Unknown error"
+//                setFileErrorStatus(errMessage)
+//                supportingDataRepository.updateFileUploadStatus(
+//                    fileUploadId,
+//                    FileStatus.ERROR,
+//                    0,
+//                    e.message.toString()
+//                )
+//
+//                //TODO, remove this once the above is tested out???
+//                _uiState.value = uiState.value.copy(
+//                    loading = false,
+////                    isColonyLocationsLoading = false,
+////                    isColonyLocationsLoaded = false,
+//                    isError = true,
+////                    totalColoniesRows = 0
+//                )
+//            }
         }
     }
 

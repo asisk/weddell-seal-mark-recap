@@ -26,7 +26,8 @@ import weddellseal.markrecap.models.WedCheckViewModel
 fun ExportObservations(
     wedCheckViewModel: WedCheckViewModel,
 ) {
-    val filesStates by wedCheckViewModel.fileStates.collectAsState()
+    val wedDataCurrentExportState by wedCheckViewModel.wedDataCurrentExportState.collectAsState()
+    val wedDataFullExportState by wedCheckViewModel.wedDataFullExportState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -45,11 +46,11 @@ fun ExportObservations(
         }
         Row {
             DownloadCard(
-                state = filesStates[FileType.WEDDATACURRENT]!!,
+                state = wedDataCurrentExportState,
                 instructions = "Export Current Observations"
             )
             DownloadCard(
-                state = filesStates[FileType.WEDDATAFULL]!!,
+                state = wedDataFullExportState,
                 instructions = "Export All Observations"
             )
         }

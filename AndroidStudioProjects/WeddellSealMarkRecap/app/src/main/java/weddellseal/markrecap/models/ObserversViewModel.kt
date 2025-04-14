@@ -27,7 +27,6 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Locale
-import kotlin.collections.plus
 
 class ObserversViewModel(
     application: Application,
@@ -70,7 +69,7 @@ class ObserversViewModel(
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
             onUploadClick = {},
-            onDownloadClick = {},
+            onExportClick = {},
             lastFilename = null
         )
     )
@@ -90,7 +89,7 @@ class ObserversViewModel(
     }
 
     fun setDownloadHandler(handler: () -> Unit) {
-        _fileState.update { it.copy(onDownloadClick = handler) }
+        _fileState.update { it.copy(onExportClick = handler) }
     }
 
     fun setLastFilename(filename: String) {
@@ -99,26 +98,38 @@ class ObserversViewModel(
 
     fun loadObserversFile(uri: Uri, filename: String) {
         viewModelScope.launch {
-
-            var fileUploadId: Long = -1L
-
-            try {
+//            try {
                 // Insert the file and get the fileUploadId
                 val fileUploadId = insertFileUpload(filename)
 
                 // Read and process the CSV data
                 val (csvData, failedRows) = readAndProcessObserversCsv(uri, fileUploadId)
                 if (failedRows.isNotEmpty()) {
-                    throw Exception(failedRows[0].errorMessage)
+                    val errMessage = failedRows[0].errorMessage
+                    setFileErrorStatus(errMessage)
+                    supportingDataRepository.updateFileUploadStatus(
+                        fileUploadId,
+                        FileStatus.ERROR,
+                        0,
+                        errMessage
+                    )
+                    return@launch
                 }
 
                 // Insert the CSV data into the database
                 val insertedCount = insertObserversData(fileUploadId, csvData)
-
                 if (insertedCount > 0) {
                     updateFileStatus(insertedCount)
                 } else {
-                    throw Exception("Failed to insert data")
+                    val errMessage = "No data inserted"
+                    setFileErrorStatus(errMessage)
+                    supportingDataRepository.updateFileUploadStatus(
+                        fileUploadId,
+                        FileStatus.ERROR,
+                        0,
+                        errMessage
+                    )
+                    return@launch
                 }
 
                 // Update the file status based on success or failure
@@ -130,27 +141,27 @@ class ObserversViewModel(
                 )
 
                 // Update the UI state based on the result
-                updateUiStateObservers(insertedCount, failedRows)
+                updateFileStatus(insertedCount)
 
-            } catch (e: Exception) {
-                val errMessage = e.message ?: "Unknown error"
-                setFileErrorStatus(errMessage)
-                supportingDataRepository.updateFileUploadStatus(
-                    fileUploadId,
-                    FileStatus.ERROR,
-                    0,
-                    e.message.toString()
-                )
-
-                //TODO, remove this once the above is tested out???
-                _uiState.value = uiState.value.copy(
-                    loading = false,
-//                    isObserversLoading = false,
-//                    isObserversLoaded = false,
-                    isError = true,
-//                    totalObserversRows = 0
-                )
-            }
+//            } catch (e: Exception) {
+//                val errMessage = e.message ?: "Unknown error"
+//                setFileErrorStatus(errMessage)
+//                supportingDataRepository.updateFileUploadStatus(
+//                    fileUploadId,
+//                    FileStatus.ERROR,
+//                    0,
+//                    e.message.toString()
+//                )
+//
+//                //TODO, remove this once the above is tested out???
+//                _uiState.value = uiState.value.copy(
+//                    loading = false,
+////                    isObserversLoading = false,
+////                    isObserversLoaded = false,
+//                    isError = true,
+////                    totalObserversRows = 0
+//                )
+//            }
         }
     }
 

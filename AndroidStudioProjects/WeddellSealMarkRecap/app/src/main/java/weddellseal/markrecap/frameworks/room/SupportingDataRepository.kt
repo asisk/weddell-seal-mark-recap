@@ -22,6 +22,7 @@ class SupportingDataRepository(
 
     // Return flow of file uploads from the DAO
     val fileUploads: Flow<List<FileUploadEntity>> = fileUploadDao.getAllFileUploads()
+    val successfulUploads: Flow<List<FileUploadEntity>> = fileUploadDao.getSuccessfulFileUploads()
 
     // used to refresh the database with a current list of observers
     suspend fun insertObserversData(fileUploadId: Long, csvData: List<Observers>): Int {
@@ -58,7 +59,7 @@ class SupportingDataRepository(
             onUploadClick = {
                 //this value is intentionally not populated in the database
             },
-            onDownloadClick = {
+            onExportClick = {
                 //this value is intentionally not populated in the database
             },
             lastFilename = filename

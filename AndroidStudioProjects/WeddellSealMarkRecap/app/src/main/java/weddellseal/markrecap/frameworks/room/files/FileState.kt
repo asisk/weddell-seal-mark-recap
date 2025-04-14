@@ -1,6 +1,5 @@
 package weddellseal.markrecap.frameworks.room.files
 
-import android.graphics.drawable.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ErrorOutline
@@ -16,7 +15,7 @@ data class FileState(
     val status: FileStatus,
     val errorMessage: String? = null,
     val onUploadClick: () -> Unit,
-    val onDownloadClick: () -> Unit,
+    val onExportClick: () -> Unit,
     val downloadFilename: String? = null,
     val lastFilename: String? = null,
     val recordCount: Int = 0
@@ -29,7 +28,7 @@ fun FileStatus.color(): Color = when (this) {
 }
 
 fun FileStatus.icon(): ImageVector = when (this) {
-    FileStatus.ERROR -> Icons.Default.ErrorOutline
-    FileStatus.SUCCESS -> Icons.Default.CheckCircle
     FileStatus.IDLE -> Icons.Default.Pending
+    FileStatus.SUCCESS -> Icons.Default.CheckCircle
+    FileStatus.ERROR -> Icons.Default.ErrorOutline
 }

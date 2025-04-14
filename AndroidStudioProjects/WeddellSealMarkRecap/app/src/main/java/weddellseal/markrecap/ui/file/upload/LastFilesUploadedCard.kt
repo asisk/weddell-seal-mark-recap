@@ -56,6 +56,8 @@ fun LastFilesUploadedCard(
                     Text(text = "Last Uploaded", style = MaterialTheme.typography.headlineLarge)
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "This list shows files that were successfully uploaded.", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(20.dp))
             FileUploadList(fileUploads)
         }

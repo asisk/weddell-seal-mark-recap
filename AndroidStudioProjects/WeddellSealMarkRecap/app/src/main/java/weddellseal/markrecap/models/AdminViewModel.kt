@@ -49,4 +49,7 @@ class AdminViewModel(
 
     val fileUploads: StateFlow<List<FileUploadEntity>> = supportingDataRepository.fileUploads
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
+
+    val successfulUploads: StateFlow<List<FileUploadEntity>> = supportingDataRepository.successfulUploads
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
 }

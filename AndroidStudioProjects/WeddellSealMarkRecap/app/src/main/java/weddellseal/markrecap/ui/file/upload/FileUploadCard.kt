@@ -5,13 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Button
@@ -40,12 +39,14 @@ fun UploadCard(
     state: FileState,
 ) {
 
-    var text by remember { mutableStateOf("") }
+    var errMessage by remember { mutableStateOf("") }
+    var lastFilename by remember { mutableStateOf("") }
     var statusColor by remember { mutableStateOf(Color(0xFF5884fa)) }
     var statusIcon by remember { mutableStateOf(Icons.Default.Pending) }
 
     LaunchedEffect(state.status) {
-        text = state.status.message
+        errMessage = state.errorMessage.toString()
+        lastFilename = state.lastFilename.toString()
         statusColor = state.status.color()
         statusIcon = state.status.icon()
     }
@@ -115,11 +116,25 @@ fun UploadCard(
                             .size(48.dp)
                             .padding(start = 12.dp, end = 8.dp, top = 2.dp)
                     )
-                    Text(
-                        text = text,
-                        color = statusColor,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            text = errMessage,
+                            color = statusColor,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = lastFilename,
+                            color = statusColor,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
             }
         }

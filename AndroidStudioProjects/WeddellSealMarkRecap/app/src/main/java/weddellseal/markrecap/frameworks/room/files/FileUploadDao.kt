@@ -17,6 +17,9 @@ interface FileUploadDao {
     @Query("SELECT * FROM fileUploads ORDER BY id DESC")
     fun getAllFileUploads(): Flow<List<FileUploadEntity>>
 
+    @Query("SELECT * FROM fileUploads WHERE status = 'SUCCESS' ORDER BY id DESC")
+    fun getSuccessfulFileUploads(): Flow<List<FileUploadEntity>>
+
     @Query("UPDATE fileUploads SET status = :status, recordCount = :recordCount, statusMessage = :statusMessage WHERE id = :id")
     suspend fun updateFileUploadStatus(id: Long, status: FileStatus, recordCount: Int, statusMessage: String)
 }

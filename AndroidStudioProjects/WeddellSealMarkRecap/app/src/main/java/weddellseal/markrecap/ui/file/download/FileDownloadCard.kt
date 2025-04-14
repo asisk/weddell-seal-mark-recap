@@ -94,7 +94,7 @@ fun DownloadCard(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = state.onDownloadClick,
+                onClick = state.onExportClick,
                 modifier = Modifier
                     .padding(start = 16.dp)
             ) {

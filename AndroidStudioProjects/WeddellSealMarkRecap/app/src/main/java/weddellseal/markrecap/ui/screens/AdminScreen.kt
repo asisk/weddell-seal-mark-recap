@@ -30,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,9 +48,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.ui.file.FileAction
-import weddellseal.markrecap.ui.file.FileStatus
-import weddellseal.markrecap.ui.file.FileType
 import weddellseal.markrecap.models.AdminViewModel
 import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.models.ObserversViewModel
@@ -77,10 +75,15 @@ fun AdminScreen(
 ) {
     val context = LocalContext.current
 
-    // Track which file name failed
+    val observersFileUploadState by observersViewModel.fileState.collectAsState()
+    val sealColoniesFileUploadState by sealColoniesViewModel.fileState.collectAsState()
+    val wedCheckFileUploadState by wedCheckViewModel.wedCheckUploadState.collectAsState()
+
+    // Track variables for error descriptions
     var filenameStr by remember { mutableStateOf("") }
     var selectedFilename by remember { mutableStateOf("") }
     var uploadAction by remember { mutableStateOf("") }
+    var errMessage by remember { mutableStateOf("") }
 
     // Navigation Rail
     var selectedItem by remember { mutableIntStateOf(1) }
@@ -134,6 +137,16 @@ fun AdminScreen(
         )
     }
 
+    // Add explanation dialog for file upload error
+    var showExplanationDialogForFileUploadError by remember { mutableStateOf(false) }
+    if (showExplanationDialogForFileUploadError) {
+        FileUploadErrorExplanationDialog(
+            onDismiss = { showExplanationDialogForFileUploadError = false },
+            title = "Error",
+            text = "$errMessage \n    File selected:  $selectedFilename\n"
+        )
+    }
+
     // Function to handle the file selection logic
     fun handleFileSelection(uri: Uri?, expectedFileName: String) {
         if (uri != null) {
@@ -160,12 +173,11 @@ fun AdminScreen(
 
             when (expectedFileName) {
                 "WedCheck.csv" -> {
+                    wedCheckViewModel.setWedCheckLastFilename(fileName)
+
                     if (expectedFileName != fileName) {
-                        wedCheckViewModel.setLastFilename(FileType.WEDCHECK, fileName)
-                        wedCheckViewModel.setFileErrorStatus(
-                            FileType.WEDCHECK,
-                            FileStatus.ERROR,
-                            "Failed to load file, unexpected file name: $fileName"
+                        wedCheckViewModel.setWedCheckFileErrorStatus(
+                            "Failed to load file, unexpected file name: "
                         )
 
                         showExplanationDialogForFileMatchError = true
@@ -174,15 +186,15 @@ fun AdminScreen(
                             "Failed to load file, unexpected file name: $fileName"
                         )
                     } else {
-                        wedCheckViewModel.setLastFilename(FileType.WEDCHECK, fileName)
                         wedCheckViewModel.loadWedCheck(uri, fileName)
                     }
                 }
 
                 "observers.csv" -> {
+                    observersViewModel.setLastFilename(fileName)
+
                     if (expectedFileName != fileName) {
-                        observersViewModel.setLastFilename(fileName)
-                        observersViewModel.setFileErrorStatus("Failed to load file, unexpected file name: $fileName")
+                        observersViewModel.setFileErrorStatus("Failed to load file, unexpected file name: ")
 
                         showExplanationDialogForFileMatchError = true
                         Log.e(
@@ -190,15 +202,15 @@ fun AdminScreen(
                             "Failed to load file, unexpected file name: $fileName"
                         )
                     } else {
-                        observersViewModel.setLastFilename(fileName)
                         observersViewModel.loadObserversFile(uri, fileName)
                     }
                 }
 
                 "Colony_Locations.csv" -> {
+                    sealColoniesViewModel.setLastFilename(fileName)
+
                     if (expectedFileName != fileName) {
-                        sealColoniesViewModel.setLastFilename(fileName)
-                        sealColoniesViewModel.setFileErrorStatus("Failed to load file, unexpected file name: $fileName")
+                        sealColoniesViewModel.setFileErrorStatus("Failed to load file, unexpected file name: ")
 
                         showExplanationDialogForFileMatchError = true
                         Log.e(
@@ -206,7 +218,6 @@ fun AdminScreen(
                             "Failed to load file, unexpected file name: $fileName"
                         )
                     } else {
-                        sealColoniesViewModel.setLastFilename(fileName)
                         sealColoniesViewModel.loadSealColoniesFile(uri, fileName)
                     }
                 }
@@ -241,7 +252,7 @@ fun AdminScreen(
             SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
         val currentDateTime = dateTimeFormat.format(Date())
 
-        wedCheckViewModel.setFileHandler(FileType.WEDCHECK, FileAction.UPLOAD) {
+        wedCheckViewModel.setWedCheckUploadHandler {
             wedCheckFilePicker.launch(arrayOf("*/*"))
         }
         observersViewModel.setUploadHandler {
@@ -250,11 +261,30 @@ fun AdminScreen(
         sealColoniesViewModel.setUploadHandler {
             colonyFilePicker.launch(arrayOf("*/*"))
         }
-        wedCheckViewModel.setFileHandler(FileType.WEDDATACURRENT, FileAction.DOWNLOAD) {
+        wedCheckViewModel.setWedDataCurrentExportHandler {
             createCurrentObservationsDocument.launch("observations_$currentDateTime.csv")
         }
-        wedCheckViewModel.setFileHandler(FileType.WEDDATAFULL, FileAction.DOWNLOAD) {
+        wedCheckViewModel.setWedDataFullExportHandler {
             createFullObservationsDocument.launch("all_observations_$currentDateTime.csv")
+        }
+    }
+
+    LaunchedEffect(wedCheckFileUploadState.errorMessage) {
+        if (wedCheckFileUploadState.errorMessage != null) {
+            errMessage = wedCheckFileUploadState.errorMessage.toString()
+            showExplanationDialogForFileUploadError = true
+        }
+    }
+    LaunchedEffect(observersFileUploadState.errorMessage) {
+        if (observersFileUploadState.errorMessage != null) {
+            errMessage = observersFileUploadState.errorMessage.toString()
+            showExplanationDialogForFileUploadError = true
+        }
+    }
+    LaunchedEffect(sealColoniesFileUploadState.errorMessage) {
+        if (sealColoniesFileUploadState.errorMessage != null) {
+            errMessage = sealColoniesFileUploadState.errorMessage.toString()
+            showExplanationDialogForFileUploadError = true
         }
     }
 
