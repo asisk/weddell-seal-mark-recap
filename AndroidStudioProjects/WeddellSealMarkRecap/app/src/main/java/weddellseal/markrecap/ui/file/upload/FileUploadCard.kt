@@ -46,7 +46,7 @@ fun UploadCard(
 
     LaunchedEffect(state.status) {
         errMessage = state.errorMessage.toString()
-        lastFilename = state.lastFilename.toString()
+        lastFilename = state.lastUploadFilename.toString()
         statusColor = state.status.color()
         statusIcon = state.status.icon()
     }
@@ -126,7 +126,7 @@ fun UploadCard(
 
                         if (state.status == FileStatus.SUCCESS) {
                             Text(
-                                text = lastFilename,
+                                text = lastFilename + "\nTotal Rows Uploaded: ${state.recordCount}",
                                 color = statusColor,
                                 style = MaterialTheme.typography.bodySmall,
                             )

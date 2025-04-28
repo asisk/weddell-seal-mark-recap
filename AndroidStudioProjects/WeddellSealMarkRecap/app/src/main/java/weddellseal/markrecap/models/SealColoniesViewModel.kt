@@ -52,8 +52,8 @@ class SealColoniesViewModel(
             errorMessage = "",
             onUploadClick = {},
             onExportClick = {},
-            lastFilename = null
-            //            recordCount = 0
+            lastUploadFilename = null,
+            recordCount = 0
         )
     )
     val fileState: StateFlow<FileState> = _fileState
@@ -63,7 +63,7 @@ class SealColoniesViewModel(
     }
 
     fun setFileErrorStatus(errorMessage: String) {
-        _fileState.update { it.copy(status = FileStatus.ERROR, errorMessage = errorMessage) }
+        _fileState.update { it.copy(status = FileStatus.ERROR, errorMessage = errorMessage, recordCount = 0) }
     }
 
     fun setUploadHandler(handler: () -> Unit) {
@@ -71,7 +71,7 @@ class SealColoniesViewModel(
     }
 
     fun setLastFilename(filename: String) {
-        _fileState.update { it.copy(lastFilename = filename) }
+        _fileState.update { it.copy(lastUploadFilename = filename) }
     }
 
     fun loadSealColoniesFile(uri: Uri, filename: String) {

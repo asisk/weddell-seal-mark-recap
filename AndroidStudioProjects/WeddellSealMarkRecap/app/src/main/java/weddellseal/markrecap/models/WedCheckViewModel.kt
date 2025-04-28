@@ -88,8 +88,9 @@ class WedCheckViewModel(
             errorMessage = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
-            downloadFilename = null,
-            lastFilename = null
+            exportFilename = null,
+            lastUploadFilename = null,
+            recordCount = 0
         )
     )
 
@@ -103,7 +104,8 @@ class WedCheckViewModel(
         _wedCheckUploadState.update {
             it.copy(
                 status = FileStatus.ERROR,
-                errorMessage = errorMessage
+                errorMessage = errorMessage,
+                recordCount = 0
             )
         }
     }
@@ -113,7 +115,7 @@ class WedCheckViewModel(
     }
 
     fun setWedCheckLastFilename(filename: String) {
-        _wedCheckUploadState.update { it.copy(lastFilename = filename) }
+        _wedCheckUploadState.update { it.copy(lastUploadFilename = filename) }
     }
 
     // WEDDATACURRENT File State
@@ -125,8 +127,9 @@ class WedCheckViewModel(
             errorMessage = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
-            downloadFilename = null,
-            lastFilename = null
+            exportFilename = null,
+            recordCount = 0,
+            lastUploadFilename = null
         )
     )
 
@@ -145,7 +148,8 @@ class WedCheckViewModel(
         _wedDataCurrentExportState.update {
             it.copy(
                 status = FileStatus.ERROR,
-                errorMessage = errorMessage
+                errorMessage = errorMessage,
+                recordCount = 0
             )
         }
     }
@@ -155,7 +159,7 @@ class WedCheckViewModel(
     }
 
     fun setWedDataCurrentLastFilename(filename: String) {
-        _wedDataCurrentExportState.update { it.copy(lastFilename = filename) }
+        _wedDataCurrentExportState.update { it.copy(lastUploadFilename = filename) }
     }
 
     // WEDDATAFULL File State
@@ -167,8 +171,9 @@ class WedCheckViewModel(
             errorMessage = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
-            downloadFilename = null,
-            lastFilename = null
+            exportFilename = null,
+            lastUploadFilename = null,
+            recordCount = 0
         )
     )
 
@@ -182,7 +187,8 @@ class WedCheckViewModel(
         _wedDataFullExportState.update {
             it.copy(
                 status = FileStatus.ERROR,
-                errorMessage = errorMessage
+                errorMessage = errorMessage,
+                recordCount = 0
             )
         }
     }
@@ -192,7 +198,7 @@ class WedCheckViewModel(
     }
 
     fun setWedDataFullLastFilename(filename: String) {
-        _wedDataFullExportState.update { it.copy(lastFilename = filename) }
+        _wedDataFullExportState.update { it.copy(lastUploadFilename = filename) }
     }
 
     fun findSealSpeNo(sealTagID: String) {

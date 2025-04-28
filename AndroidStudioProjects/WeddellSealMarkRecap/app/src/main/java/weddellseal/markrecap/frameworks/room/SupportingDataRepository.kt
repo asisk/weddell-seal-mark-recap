@@ -62,7 +62,7 @@ class SupportingDataRepository(
             onExportClick = {
                 //this value is intentionally not populated in the database
             },
-            lastFilename = filename
+            lastUploadFilename = filename
         )
     }
 

@@ -52,8 +52,8 @@ class ObserversViewModel(
             errorMessage = "",
             onUploadClick = {},
             onExportClick = {},
-            lastFilename = null,
-//            recordCount = 0
+            lastUploadFilename = null,
+            recordCount = 0
         )
     )
 
@@ -64,7 +64,7 @@ class ObserversViewModel(
     }
 
     fun setFileErrorStatus(errorMessage: String) {
-        _fileState.update { it.copy(status = FileStatus.ERROR, errorMessage = errorMessage) }
+        _fileState.update { it.copy(status = FileStatus.ERROR, errorMessage = errorMessage, recordCount = 0) }
     }
 
     fun setUploadHandler(handler: () -> Unit) {
@@ -72,7 +72,7 @@ class ObserversViewModel(
     }
 
     fun setLastFilename(filename: String) {
-        _fileState.update { it.copy(lastFilename = filename) }
+        _fileState.update { it.copy(lastUploadFilename = filename) }
     }
 
     fun loadObserversFile(uri: Uri, filename: String) {

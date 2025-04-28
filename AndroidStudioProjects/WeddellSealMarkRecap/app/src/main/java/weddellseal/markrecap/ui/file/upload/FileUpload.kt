@@ -240,7 +240,7 @@ fun UploadDataFileScreen(
             ) {
                 errTitle = "Error $uploadAction"
                 errMessage = wedCheckUploadFileState.errorMessage.toString()
-                selectedFilename = wedCheckUploadFileState.lastFilename.toString()
+                selectedFilename = wedCheckUploadFileState.lastUploadFilename.toString()
 
                 showDialogForWedCheckFileUploadError = true
             }
@@ -254,7 +254,7 @@ fun UploadDataFileScreen(
             ) {
                 errTitle = "Error $uploadAction"
                 errMessage = observersFileState.errorMessage.toString()
-                selectedFilename = observersFileState.lastFilename.toString()
+                selectedFilename = observersFileState.lastUploadFilename.toString()
 
                 showDialogForObserversFileUploadError = true
             }
@@ -268,7 +268,7 @@ fun UploadDataFileScreen(
             ) {
                 errTitle = "Error $uploadAction"
                 errMessage = sealColonyFileState.errorMessage.toString()
-                selectedFilename = sealColonyFileState.lastFilename.toString()
+                selectedFilename = sealColonyFileState.lastUploadFilename.toString()
 
                 showDialogForColonyFileUploadError = true
             }

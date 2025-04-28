@@ -16,8 +16,8 @@ data class FileState(
     val errorMessage: String? = null,
     val onUploadClick: () -> Unit,
     val onExportClick: () -> Unit,
-    val downloadFilename: String? = null,
-    val lastFilename: String? = null,
+    val exportFilename: String? = null,
+    val lastUploadFilename: String? = null,
     val recordCount: Int = 0
 )
 
