@@ -1,12 +1,9 @@
 package weddellseal.markrecap.models
 
-import android.Manifest
 import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -17,16 +14,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.frameworks.room.SupportingDataRepository
 import weddellseal.markrecap.frameworks.room.files.FailedRow
-import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
-import weddellseal.markrecap.ui.file.FileAction
 import weddellseal.markrecap.frameworks.room.files.FileState
+import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
+import weddellseal.markrecap.ui.file.FileAction
 import weddellseal.markrecap.ui.file.FileStatus
 import weddellseal.markrecap.ui.file.FileType
-import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import java.io.IOException
 import java.io.InputStreamReader
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class SealColoniesViewModel(
     application: Application,
@@ -36,31 +31,17 @@ class SealColoniesViewModel(
     private val context: Context
         get() = getApplication()
 
-    private val _uiState = MutableStateFlow(
-        UiState(
-            hasFileAccess = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE),
-            date = SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss aaa z",
-                Locale.US
-            ).format(System.currentTimeMillis()),
-        )
-    )
+    private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
 
     data class UiState(
-        val hasFileAccess: Boolean,
         val loading: Boolean = false,
         val uriForCSVDataLoad: Uri? = null,
-        val date: String, //TODO, think about the proper date format, should it be UTC?
-        val isError: Boolean = false,
-        val totalRows: Int = 0,
+        val errAcked: Boolean = false
     )
 
-    fun hasPermission(permission: String): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            permission
-        ) == PackageManager.PERMISSION_GRANTED
+    fun setErrAcked(acked: Boolean) {
+        _uiState.update { it.copy(errAcked = acked) }
     }
 
     private val _fileState = MutableStateFlow(
@@ -68,9 +49,11 @@ class SealColoniesViewModel(
             fileType = FileType.COLONIES.label, // or whatever your enum gives
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
+            errorMessage = "",
             onUploadClick = {},
             onExportClick = {},
             lastFilename = null
+            //            recordCount = 0
         )
     )
     val fileState: StateFlow<FileState> = _fileState
@@ -87,84 +70,56 @@ class SealColoniesViewModel(
         _fileState.update { it.copy(onUploadClick = handler) }
     }
 
-    fun setDownloadHandler(handler: () -> Unit) {
-        _fileState.update { it.copy(onExportClick = handler) }
-    }
-
     fun setLastFilename(filename: String) {
         _fileState.update { it.copy(lastFilename = filename) }
     }
 
     fun loadSealColoniesFile(uri: Uri, filename: String) {
         viewModelScope.launch {
+            // Insert the file and get the fileUploadId
+            val fileUploadId = insertFileUpload(filename)
 
-//            var fileUploadId: Long = -1L
-
-//            try {
-                // Insert the file and get the fileUploadId
-                val fileUploadId = insertFileUpload(filename)
-
-                // Read and process the CSV data
-                val (csvData, failedRows) = readAndProcessColonyCsv(uri, fileUploadId)
-                if (failedRows.isNotEmpty()) {
-                    val errMessage = failedRows[0].errorMessage
-                    setFileErrorStatus(errMessage)
-                    supportingDataRepository.updateFileUploadStatus(
-                        fileUploadId,
-                        FileStatus.ERROR,
-                        0,
-                        errMessage
-                    )
-                    return@launch
-                }
-
-                // Insert the CSV data into the database
-                val insertedCount = insertColonyData(fileUploadId, csvData)
-                if (insertedCount > 0) {
-                    updateFileStatus( insertedCount)
-                } else {
-                    val errMessage = "No data inserted"
-                    setFileErrorStatus(errMessage)
-                    supportingDataRepository.updateFileUploadStatus(
-                        fileUploadId,
-                        FileStatus.ERROR,
-                        0,
-                        errMessage
-                    )
-                    return@launch
-                }
-
-
-                // Update the file status based on success or failure
+            // Read and process the CSV data
+            val (csvData, failedRows) = readAndProcessColonyCsv(uri, fileUploadId)
+            if (failedRows.isNotEmpty()) {
+                val errMessage = failedRows[0].errorMessage
+                setFileErrorStatus(errMessage)
                 supportingDataRepository.updateFileUploadStatus(
                     fileUploadId,
-                    FileStatus.SUCCESS,
-                    insertedCount,
-                    "successful"
+                    FileStatus.ERROR,
+                    0,
+                    errMessage
                 )
+                return@launch
+            }
 
-                // Update the UI state based on the result
-                updateFileStatus( insertedCount)
+            // Insert the CSV data into the database
+            val insertedCount = insertColonyData(fileUploadId, csvData)
+            if (insertedCount > 0) {
+                updateFileStatus(insertedCount)
+            } else {
+                val errMessage = "No data inserted"
+                setFileErrorStatus(errMessage)
+                supportingDataRepository.updateFileUploadStatus(
+                    fileUploadId,
+                    FileStatus.ERROR,
+                    0,
+                    errMessage
+                )
+                return@launch
+            }
 
-//            } catch (e: Exception) {
-//                val errMessage = e.message ?: "Unknown error"
-//                setFileErrorStatus(errMessage)
-//                supportingDataRepository.updateFileUploadStatus(
-//                    fileUploadId,
-//                    FileStatus.ERROR,
-//                    0,
-//                    e.message.toString()
-//                )
-//
-//                //TODO, remove this once the above is tested out???
-//                _uiState.value = uiState.value.copy(
-//                    loading = false,
-////                    isColonyLocationsLoading = false,
-////                    isColonyLocationsLoaded = false,
-//                    isError = true,
-////                    totalColoniesRows = 0
-//                )
-//            }
+
+            // Update the file status based on success or failure
+            supportingDataRepository.updateFileUploadStatus(
+                fileUploadId,
+                FileStatus.SUCCESS,
+                insertedCount,
+                "successful"
+            )
+
+            // Update the UI state based on the result
+            updateFileStatus(insertedCount)
         }
     }
 
@@ -193,16 +148,6 @@ class SealColoniesViewModel(
 
     private suspend fun insertColonyData(fileUploadId: Long, csvData: List<SealColony>): Int {
         return supportingDataRepository.insertColoniesData(fileUploadId, csvData)
-    }
-
-    private fun updateUiStateColonies(insertedCount: Int, failedRows: List<FailedRow>) {
-        _uiState.value =
-            uiState.value.copy(
-                loading = false,
-//                totalColoniesRows = insertedCount,
-                isError = failedRows.isNotEmpty(),
-//                failedColoniesRows = failedRows
-            )
     }
 
     private fun readSealColoniesCsvData(

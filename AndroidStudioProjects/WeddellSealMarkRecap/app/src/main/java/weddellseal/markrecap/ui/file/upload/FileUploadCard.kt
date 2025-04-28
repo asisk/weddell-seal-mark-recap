@@ -121,19 +121,22 @@ fun UploadCard(
                             .weight(1f)
                             .padding(8.dp)
                     ) {
-                        Text(
-                            text = errMessage,
-                            color = statusColor,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Text(
-                            text = lastFilename,
-                            color = statusColor,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                        if (state.status == FileStatus.SUCCESS) {
+                            Text(
+                                text = lastFilename,
+                                color = statusColor,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        } else {
+                            Text(
+                                text = errMessage,
+                                color = statusColor,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                     }
                 }
             }

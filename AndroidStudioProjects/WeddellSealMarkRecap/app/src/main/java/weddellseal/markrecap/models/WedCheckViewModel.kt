@@ -1,16 +1,13 @@
 package weddellseal.markrecap.models
 
-import android.Manifest
 import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -20,16 +17,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.frameworks.room.files.FailedRow
-import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
-import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.WedCheckRepository
 import weddellseal.markrecap.frameworks.room.WedCheckSeal
-import weddellseal.markrecap.ui.file.FileAction
+import weddellseal.markrecap.frameworks.room.files.FailedRow
 import weddellseal.markrecap.frameworks.room.files.FileState
+import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
+import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
+import weddellseal.markrecap.ui.file.FileAction
 import weddellseal.markrecap.ui.file.FileStatus
 import weddellseal.markrecap.ui.file.FileType
-import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
@@ -46,18 +43,11 @@ class WedCheckViewModel(
     var wedCheckSeal by mutableStateOf(WedCheckSeal())
 
     private val _uiState = MutableStateFlow(
-        UiState(
-            hasFileAccess = hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE),
-            date = SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss aaa z",
-                Locale.US
-            ).format(System.currentTimeMillis()),
-        )
+        UiState(date = dateNowFormatted())
     )
     val uiState: StateFlow<UiState> = _uiState
 
     data class UiState(
-        val hasFileAccess: Boolean,
         val loading: Boolean = false,
         var isSearching: Boolean = false,
         val sealNotFound: Boolean = false,
@@ -65,29 +55,29 @@ class WedCheckViewModel(
         val sealRecordDB: WedCheckRecord? = null,
         val date: String, //TODO, think about the proper date format, should it be UTC?
         val isError: Boolean = false,
+        val errAcked: Boolean = false,
         val totalRows: Int = 0,
         val speNoFound: Int = 0,
         val tagIdForSpeNo: String = "",
     )
 
-    fun hasPermission(permission: String): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            permission
-        ) == PackageManager.PERMISSION_GRANTED
+    fun setErrAcked(acked: Boolean) {
+        _uiState.update { it.copy(errAcked = acked) }
     }
 
-    fun onPermissionChange(permission: String, isGranted: Boolean) {
-        when (permission) {
-            Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                _uiState.value = uiState.value.copy(hasFileAccess = isGranted)
-            }
-
-            else -> {
-                Log.e("Permission change", "Unexpected permission: $permission")
-            }
-        }
+    fun resetState() {
+        _uiState.value = uiState.value.copy(
+            sealRecordDB = null,
+            isSearching = false,
+            sealNotFound = true,
+            isError = false
+        )
+        wedCheckSeal = WedCheckSeal()
     }
+
+    fun dateNowFormatted(): String =
+        SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US)
+            .format(System.currentTimeMillis())
 
     // WEDCHECK File State
     private val _wedCheckUploadState = MutableStateFlow(
@@ -95,6 +85,7 @@ class WedCheckViewModel(
             fileType = FileType.WEDCHECK.label,
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
+            errorMessage = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
             downloadFilename = null,
@@ -131,6 +122,7 @@ class WedCheckViewModel(
             fileType = FileType.WEDDATACURRENT.label,
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
+            errorMessage = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
             downloadFilename = null,
@@ -141,7 +133,12 @@ class WedCheckViewModel(
     val wedDataCurrentExportState: StateFlow<FileState> = _wedDataCurrentExportState
 
     fun updateWedDataCurrentFileStatus(count: Int) {
-        _wedDataCurrentExportState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
+        _wedDataCurrentExportState.update {
+            it.copy(
+                status = FileStatus.SUCCESS,
+                recordCount = count
+            )
+        }
     }
 
     fun setWedDataCurrentFileErrorStatus(errorMessage: String) {
@@ -167,6 +164,7 @@ class WedCheckViewModel(
             fileType = FileType.WEDDATAFULL.label,
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
+            errorMessage = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
             downloadFilename = null,
@@ -290,27 +288,13 @@ class WedCheckViewModel(
         }
     }
 
-    fun resetState() {
-        _uiState.value = uiState.value.copy(
-            sealRecordDB = null,
-            isSearching = false,
-            sealNotFound = true,
-            isError = false
-        )
-        wedCheckSeal = WedCheckSeal()
-    }
-
-
     fun loadWedCheck(uri: Uri, filename: String) {
         viewModelScope.launch(Dispatchers.IO) {
-//            var fileUploadId: Long = -1L
-//            try {
-
             // 1. Insert FileUploadEntity and get the fileUploadId
             var fileUploadId = insertFileUploadRecord(filename)
 
             // 2. Read CSV data
-            val (csvData, failedRows) = readWedCheckData(uri, fileUploadId)
+            val (csvData, failedRows) = readWedCheckData(context.contentResolver, uri, fileUploadId)
             if (failedRows.isNotEmpty()) {
                 val errMessage = failedRows[0].errorMessage
                 setWedCheckFileErrorStatus(errMessage)
@@ -349,17 +333,6 @@ class WedCheckViewModel(
 
             // 5. Update the UI state
             updateWedCheckFileStatus(insertedCount)
-
-//            } catch (e: Exception) {
-//                val errMessage = e.message ?: "Unknown error"
-//                setFileErrorStatus(FileType.WEDCHECK, FileStatus.ERROR, errMessage)
-//                wedCheckRepo.updateFileUploadStatus(
-//                    fileUploadId,
-//                    FileStatus.ERROR,
-//                    0,
-//                    e.message.toString()
-//                )
-//            }
         }
     }
 
@@ -377,38 +350,12 @@ class WedCheckViewModel(
         )
     }
 
-    private fun readWedCheckData(
-        uri: Uri,
-        fileUploadId: Long
-    ): Pair<List<WedCheckRecord>, List<FailedRow>> {
-        return readWedCheckData(context.contentResolver, uri, fileUploadId)
-    }
-
-    private suspend fun insertCsvData(
-        fileUploadId: Long,
-        csvData: List<WedCheckRecord>,
-    ): Int {
-        return wedCheckRepo.insertCsvData(fileUploadId, csvData).fold(
-            onSuccess = { count -> count },
-            onFailure = { error ->
-                wedCheckRepo.updateFileUploadStatus(
-                    fileUploadId,
-                    FileStatus.ERROR,
-                    0,
-                    error.message.toString()
-                )
-                throw error
-            }
-        )
-    }
-
-    private fun updateUIState(insertedCount: Int, failedRows: List<FailedRow>) {
-        _uiState.value = uiState.value.copy(
-            loading = false,
-            totalRows = insertedCount,
-            isError = failedRows.isNotEmpty(),
-        )
-    }
+//    private fun readWedCheckData(
+//        uri: Uri,
+//        fileUploadId: Long
+//    ): Pair<List<WedCheckRecord>, List<FailedRow>> {
+//        return readWedCheckData(context.contentResolver, uri, fileUploadId)
+//    }
 
     private fun readWedCheckData(
         contentResolver: ContentResolver,
@@ -555,5 +502,24 @@ class WedCheckViewModel(
             )
         }
         return Pair(csvData, failedRows)
+    }
+
+    // Helper function to insert WedCheck CSV records into the database
+    private suspend fun insertCsvData(
+        fileUploadId: Long,
+        csvData: List<WedCheckRecord>,
+    ): Int {
+        return wedCheckRepo.insertCsvData(fileUploadId, csvData).fold(
+            onSuccess = { count -> count },
+            onFailure = { error ->
+                wedCheckRepo.updateFileUploadStatus(
+                    fileUploadId,
+                    FileStatus.ERROR,
+                    0,
+                    error.message.toString()
+                )
+                throw error
+            }
+        )
     }
 }
