@@ -59,6 +59,19 @@ class ObserversViewModel(
 
     val fileState: StateFlow<FileState> = _fileState
 
+    fun resetFileState() {
+        _fileState.update {
+            it.copy(
+                action = FileAction.PENDING,
+                status = FileStatus.IDLE,
+                errorMessage = "",
+                lastUploadFilename = null,
+                recordCount = 0
+            )
+        }
+    }
+
+
     fun updateFileStatus(count: Int) {
         _fileState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
     }

@@ -98,7 +98,6 @@ fun UploadCard(
                 }
             }
 
-
             // Upload status
             if (state.status == FileStatus.ERROR || state.status == FileStatus.SUCCESS) {
                 Row(

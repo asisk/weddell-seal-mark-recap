@@ -64,7 +64,6 @@ class WedCheckViewModel(
     fun setErrAcked(acked: Boolean) {
         _uiState.update { it.copy(errAcked = acked) }
     }
-
     fun resetState() {
         _uiState.value = uiState.value.copy(
             sealRecordDB = null,
@@ -95,6 +94,18 @@ class WedCheckViewModel(
     )
 
     val wedCheckUploadState: StateFlow<FileState> = _wedCheckUploadState
+
+    fun resetWedCheckUploadState() {
+        _wedCheckUploadState.update {
+            it.copy(
+                action = FileAction.PENDING,
+                status = FileStatus.IDLE,
+                errorMessage = "",
+                lastUploadFilename = null,
+                recordCount = 0
+            )
+        }
+    }
 
     fun updateWedCheckFileStatus(count: Int) {
         _wedCheckUploadState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
@@ -134,6 +145,17 @@ class WedCheckViewModel(
     )
 
     val wedDataCurrentExportState: StateFlow<FileState> = _wedDataCurrentExportState
+    fun resetWedDataCurrentFileState() {
+        _wedDataCurrentExportState.update {
+            it.copy(
+                action = FileAction.PENDING,
+                status = FileStatus.IDLE,
+                errorMessage = "",
+                lastUploadFilename = null,
+                recordCount = 0
+            )
+        }
+    }
 
     fun updateWedDataCurrentFileStatus(count: Int) {
         _wedDataCurrentExportState.update {
@@ -178,6 +200,18 @@ class WedCheckViewModel(
     )
 
     val wedDataFullExportState: StateFlow<FileState> = _wedDataFullExportState
+
+    fun resetWedDataFullFileState() {
+        _wedDataFullExportState.update {
+            it.copy(
+                action = FileAction.PENDING,
+                status = FileStatus.IDLE,
+                errorMessage = "",
+                lastUploadFilename = null,
+                recordCount = 0
+            )
+        }
+    }
 
     fun updateWedDataFullFileStatus(count: Int) {
         _wedDataFullExportState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
@@ -300,7 +334,7 @@ class WedCheckViewModel(
             var fileUploadId = insertFileUploadRecord(filename)
 
             // 2. Read CSV data
-            val (csvData, failedRows) = readWedCheckData(context.contentResolver, uri, fileUploadId)
+            val (csvData, failedRows) = readAndProcessObserversCsv(uri, fileUploadId)
             if (failedRows.isNotEmpty()) {
                 val errMessage = failedRows[0].errorMessage
                 setWedCheckFileErrorStatus(errMessage)
@@ -356,12 +390,12 @@ class WedCheckViewModel(
         )
     }
 
-//    private fun readWedCheckData(
-//        uri: Uri,
-//        fileUploadId: Long
-//    ): Pair<List<WedCheckRecord>, List<FailedRow>> {
-//        return readWedCheckData(context.contentResolver, uri, fileUploadId)
-//    }
+    private fun readAndProcessObserversCsv(
+        uri: Uri,
+        fileUploadId: Long
+    ): Pair<List<WedCheckRecord>, List<FailedRow>> {
+        return readWedCheckData(context.contentResolver, uri, fileUploadId)
+    }
 
     private fun readWedCheckData(
         contentResolver: ContentResolver,

@@ -91,9 +91,12 @@ fun UploadDataFileScreen(
     // Function to handle the file selection logic
     fun handleWedCheckFileSelection(uri: Uri?) {
         if (uri != null) {
+            uploadAction = "Uploading WedCheck"
             var fileName = ""
             expectedFilename = "WedCheck.csv or WedCheckFull.csv"
             Log.d("FileSelection", "URI: $uri")
+
+            wedCheckViewModel.resetWedCheckUploadState()
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -125,16 +128,18 @@ fun UploadDataFileScreen(
                     "FileSelection",
                     "Failed to load file, unexpected file name: $fileName"
                 )
-
             }
         }
     }
 
     fun handleObserversFileSelection(uri: Uri?) {
         if (uri != null) {
+            uploadAction = "Uploading Observer Initials"
             var fileName = ""
             expectedFilename = "observers.csv"
             Log.d("FileSelection", "URI: $uri")
+
+            observersViewModel.resetFileState()
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -166,9 +171,12 @@ fun UploadDataFileScreen(
     // Function to handle the file selection logic
     fun handleSealColonyFileSelection(uri: Uri?) {
         if (uri != null) {
+            uploadAction = "Uploading Colony Locations"
             var fileName = ""
             expectedFilename = "Colony_Locations.csv"
             Log.d("FileSelection", "URI: $uri")
+
+            sealColoniesViewModel.resetFileState()
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val displayNameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -201,21 +209,18 @@ fun UploadDataFileScreen(
     val wedCheckFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uploadAction = "Uploading WedCheck"
         handleWedCheckFileSelection(uri)
     }
 
     val observersFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uploadAction = "Uploading Observer Initials"
         handleObserversFileSelection(uri)
     }
 
     val colonyFilePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uploadAction = "Uploading Colony Locations"
         handleSealColonyFileSelection(uri)
     }
 
@@ -246,6 +251,7 @@ fun UploadDataFileScreen(
             }
         }
     }
+
     LaunchedEffect(observersFileState.status) {
         if (observersFileState.status == FileStatus.ERROR) {
             if (observersFileState.errorMessage != null
@@ -260,6 +266,7 @@ fun UploadDataFileScreen(
             }
         }
     }
+
     LaunchedEffect(sealColonyFileState.status) {
         if (sealColonyFileState.status == FileStatus.ERROR) {
             if (sealColonyFileState.errorMessage != null
