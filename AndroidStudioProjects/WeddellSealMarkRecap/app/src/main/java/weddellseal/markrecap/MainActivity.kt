@@ -32,7 +32,7 @@ import weddellseal.markrecap.models.SealColoniesViewModelFactory
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.screens.AddObservationLogScreen
-import weddellseal.markrecap.ui.screens.AdminScreen
+import weddellseal.markrecap.ui.admin.AdminScreen
 import weddellseal.markrecap.ui.screens.HomeScreen
 import weddellseal.markrecap.ui.screens.LocationPermissionView
 import weddellseal.markrecap.ui.screens.ObservationViewer

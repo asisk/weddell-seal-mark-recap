@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.file.upload
+package weddellseal.markrecap.ui.admin.upload
 
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -27,10 +27,10 @@ import androidx.compose.ui.unit.sp
 import weddellseal.markrecap.models.ObserversViewModel
 import weddellseal.markrecap.models.SealColoniesViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
-import weddellseal.markrecap.ui.file.FileStatus
+import weddellseal.markrecap.ui.admin.FileStatus
 
 @Composable
-fun UploadDataFileScreen(
+fun FileUpload(
     wedCheckViewModel: WedCheckViewModel,
     sealColoniesViewModel: SealColoniesViewModel,
     observersViewModel: ObserversViewModel,
@@ -239,12 +239,12 @@ fun UploadDataFileScreen(
 
     LaunchedEffect(wedCheckUploadFileState.status) {
         if (wedCheckUploadFileState.status == FileStatus.ERROR) {
-            if (wedCheckUploadFileState.errorMessage != null
-                && wedCheckUploadFileState.errorMessage != ""
+            if (wedCheckUploadFileState.message != null
+                && wedCheckUploadFileState.message != ""
                 && !wedCheckViewModel.uiState.value.errAcked
             ) {
                 errTitle = "Error $uploadAction"
-                errMessage = wedCheckUploadFileState.errorMessage.toString()
+                errMessage = wedCheckUploadFileState.message.toString()
                 selectedFilename = wedCheckUploadFileState.lastUploadFilename.toString()
 
                 showDialogForWedCheckFileUploadError = true
@@ -254,12 +254,12 @@ fun UploadDataFileScreen(
 
     LaunchedEffect(observersFileState.status) {
         if (observersFileState.status == FileStatus.ERROR) {
-            if (observersFileState.errorMessage != null
-                && observersFileState.errorMessage != ""
+            if (observersFileState.message != null
+                && observersFileState.message != ""
                 && !observersViewModel.uiState.value.errAcked
             ) {
                 errTitle = "Error $uploadAction"
-                errMessage = observersFileState.errorMessage.toString()
+                errMessage = observersFileState.message.toString()
                 selectedFilename = observersFileState.lastUploadFilename.toString()
 
                 showDialogForObserversFileUploadError = true
@@ -269,12 +269,12 @@ fun UploadDataFileScreen(
 
     LaunchedEffect(sealColonyFileState.status) {
         if (sealColonyFileState.status == FileStatus.ERROR) {
-            if (sealColonyFileState.errorMessage != null
-                && sealColonyFileState.errorMessage != ""
+            if (sealColonyFileState.message != null
+                && sealColonyFileState.message != ""
                 && !sealColoniesViewModel.uiState.value.errAcked
             ) {
                 errTitle = "Error $uploadAction"
-                errMessage = sealColonyFileState.errorMessage.toString()
+                errMessage = sealColonyFileState.message.toString()
                 selectedFilename = sealColonyFileState.lastUploadFilename.toString()
 
                 showDialogForColonyFileUploadError = true

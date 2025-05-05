@@ -24,9 +24,9 @@ import weddellseal.markrecap.frameworks.room.files.FileState
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
-import weddellseal.markrecap.ui.file.FileAction
-import weddellseal.markrecap.ui.file.FileStatus
-import weddellseal.markrecap.ui.file.FileType
+import weddellseal.markrecap.ui.admin.FileAction
+import weddellseal.markrecap.ui.admin.FileStatus
+import weddellseal.markrecap.ui.admin.FileType
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
@@ -84,7 +84,7 @@ class WedCheckViewModel(
             fileType = FileType.WEDCHECK.label,
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
-            errorMessage = "",
+            message = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
             exportFilename = null,
@@ -100,7 +100,7 @@ class WedCheckViewModel(
             it.copy(
                 action = FileAction.PENDING,
                 status = FileStatus.IDLE,
-                errorMessage = "",
+                message = "",
                 lastUploadFilename = null,
                 recordCount = 0
             )
@@ -115,7 +115,7 @@ class WedCheckViewModel(
         _wedCheckUploadState.update {
             it.copy(
                 status = FileStatus.ERROR,
-                errorMessage = errorMessage,
+                message = errorMessage,
                 recordCount = 0
             )
         }
@@ -127,112 +127,6 @@ class WedCheckViewModel(
 
     fun setWedCheckLastFilename(filename: String) {
         _wedCheckUploadState.update { it.copy(lastUploadFilename = filename) }
-    }
-
-    // WEDDATACURRENT File State
-    private val _wedDataCurrentExportState = MutableStateFlow(
-        FileState(
-            fileType = FileType.WEDDATACURRENT.label,
-            action = FileAction.PENDING,
-            status = FileStatus.IDLE,
-            errorMessage = "",
-            onUploadClick = {}, // will override this when the Admin Screen view loads
-            onExportClick = {}, // will override this when the Admin Screen view loads
-            exportFilename = null,
-            recordCount = 0,
-            lastUploadFilename = null
-        )
-    )
-
-    val wedDataCurrentExportState: StateFlow<FileState> = _wedDataCurrentExportState
-    fun resetWedDataCurrentFileState() {
-        _wedDataCurrentExportState.update {
-            it.copy(
-                action = FileAction.PENDING,
-                status = FileStatus.IDLE,
-                errorMessage = "",
-                lastUploadFilename = null,
-                recordCount = 0
-            )
-        }
-    }
-
-    fun updateWedDataCurrentFileStatus(count: Int) {
-        _wedDataCurrentExportState.update {
-            it.copy(
-                status = FileStatus.SUCCESS,
-                recordCount = count
-            )
-        }
-    }
-
-    fun setWedDataCurrentFileErrorStatus(errorMessage: String) {
-        _wedDataCurrentExportState.update {
-            it.copy(
-                status = FileStatus.ERROR,
-                errorMessage = errorMessage,
-                recordCount = 0
-            )
-        }
-    }
-
-    fun setWedDataCurrentExportHandler(handler: () -> Unit) {
-        _wedDataCurrentExportState.update { it.copy(onExportClick = handler) }
-    }
-
-    fun setWedDataCurrentLastFilename(filename: String) {
-        _wedDataCurrentExportState.update { it.copy(lastUploadFilename = filename) }
-    }
-
-    // WEDDATAFULL File State
-    private val _wedDataFullExportState = MutableStateFlow(
-        FileState(
-            fileType = FileType.WEDDATAFULL.label,
-            action = FileAction.PENDING,
-            status = FileStatus.IDLE,
-            errorMessage = "",
-            onUploadClick = {}, // will override this when the Admin Screen view loads
-            onExportClick = {}, // will override this when the Admin Screen view loads
-            exportFilename = null,
-            lastUploadFilename = null,
-            recordCount = 0
-        )
-    )
-
-    val wedDataFullExportState: StateFlow<FileState> = _wedDataFullExportState
-
-    fun resetWedDataFullFileState() {
-        _wedDataFullExportState.update {
-            it.copy(
-                action = FileAction.PENDING,
-                status = FileStatus.IDLE,
-                errorMessage = "",
-                lastUploadFilename = null,
-                recordCount = 0
-            )
-        }
-    }
-
-    fun updateWedDataFullFileStatus(count: Int) {
-        _wedDataFullExportState.update { it.copy(status = FileStatus.SUCCESS, recordCount = count) }
-    }
-
-    fun setWedDataFullFileErrorStatus(errorMessage: String) {
-        _wedDataFullExportState.update {
-            it.copy(
-                status = FileStatus.ERROR,
-                errorMessage = errorMessage,
-                recordCount = 0
-            )
-        }
-    }
-
-    fun setWedDataFullExportHandler(handler: () -> Unit) {
-        _wedDataFullExportState.update { it.copy(onExportClick = handler) }
-    }
-
-    fun setWedDataFullLastFilename(filename: String) {
-        _wedDataFullExportState.update { it.copy(lastUploadFilename = filename) }
     }
 
     fun findSealSpeNo(sealTagID: String) {

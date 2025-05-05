@@ -1,7 +1,7 @@
 package weddellseal.markrecap.frameworks.room.files
 
 import androidx.room.TypeConverter
-import weddellseal.markrecap.ui.file.FileType
+import weddellseal.markrecap.ui.admin.FileType
 
 class FileTypeConverter {
     @TypeConverter

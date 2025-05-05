@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.file.upload
+package weddellseal.markrecap.ui.admin.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

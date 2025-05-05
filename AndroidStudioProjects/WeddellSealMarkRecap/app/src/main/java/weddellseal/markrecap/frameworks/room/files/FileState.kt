@@ -6,14 +6,14 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import weddellseal.markrecap.ui.file.FileAction
-import weddellseal.markrecap.ui.file.FileStatus
+import weddellseal.markrecap.ui.admin.FileAction
+import weddellseal.markrecap.ui.admin.FileStatus
 
 data class FileState(
     val fileType: String,
     val action: FileAction,
     val status: FileStatus,
-    val errorMessage: String? = null,
+    val message: String? = null,
     val onUploadClick: () -> Unit,
     val onExportClick: () -> Unit,
     val exportFilename: String? = null,

@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
-import weddellseal.markrecap.ui.file.FileStatus
+import weddellseal.markrecap.ui.admin.FileStatus
 
 @Dao
 interface FileUploadDao {

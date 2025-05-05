@@ -16,31 +16,20 @@ class AdminViewModel(
 ) : AndroidViewModel(application) {
 
     data class AdminUiState(
-        val isError: Boolean = false,
-        val isErrorAckd: Boolean = false
+        val navRailSelection: Int = 1 // default to dashboard
     )
 
     private val _adminUiState = MutableStateFlow(
-        AdminUiState(
-            isError = false,
-            isErrorAckd = false
-        )
+        AdminUiState()
     )
+
     val adminUiState: StateFlow<AdminUiState> = _adminUiState
 
     val successfulUploads: StateFlow<List<FileUploadEntity>> =
         supportingDataRepository.successfulUploads
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
 
-    fun setErr(error: Boolean) {
-        _adminUiState.value = adminUiState.value.copy(
-            isError = error
-        )
-    }
-
-    fun setErrAck(errorAcknowledged: Boolean) {
-        _adminUiState.value = adminUiState.value.copy(
-            isErrorAckd = errorAcknowledged
-        )
+    fun navToArchiveView(selection : Int) {
+        _adminUiState.value = AdminUiState(navRailSelection = selection)
     }
 }

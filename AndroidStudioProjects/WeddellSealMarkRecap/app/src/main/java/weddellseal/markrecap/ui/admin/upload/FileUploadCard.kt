@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.file.upload
+package weddellseal.markrecap.ui.admin.upload
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.files.FileState
 import weddellseal.markrecap.frameworks.room.files.color
 import weddellseal.markrecap.frameworks.room.files.icon
-import weddellseal.markrecap.ui.file.FileStatus
+import weddellseal.markrecap.ui.admin.FileStatus
 
 @Composable
 fun UploadCard(
@@ -45,7 +45,7 @@ fun UploadCard(
     var statusIcon by remember { mutableStateOf(Icons.Default.Pending) }
 
     LaunchedEffect(state.status) {
-        errMessage = state.errorMessage.toString()
+        errMessage = state.message.toString()
         lastFilename = state.lastUploadFilename.toString()
         statusColor = state.status.color()
         statusIcon = state.status.icon()

@@ -3,7 +3,7 @@ package weddellseal.markrecap.frameworks.room
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.ui.file.FileAction
+import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.frameworks.room.files.FileState
 import weddellseal.markrecap.frameworks.room.files.FileUploadDao
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
@@ -11,7 +11,7 @@ import weddellseal.markrecap.frameworks.room.observers.Observers
 import weddellseal.markrecap.frameworks.room.observers.ObserversDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColoniesDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
-import weddellseal.markrecap.ui.file.FileStatus
+import weddellseal.markrecap.ui.admin.FileStatus
 
 
 class SupportingDataRepository(
@@ -55,7 +55,7 @@ class SupportingDataRepository(
             fileType = fileType.name,
             action = FileAction.valueOf(fileAction),
             status = status,
-            errorMessage = statusMessage,
+            message = statusMessage,
             onUploadClick = {
                 //this value is intentionally not populated in the database
             },

@@ -17,9 +17,9 @@ import weddellseal.markrecap.frameworks.room.files.FailedRow
 import weddellseal.markrecap.frameworks.room.files.FileState
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.observers.Observers
-import weddellseal.markrecap.ui.file.FileAction
-import weddellseal.markrecap.ui.file.FileStatus
-import weddellseal.markrecap.ui.file.FileType
+import weddellseal.markrecap.ui.admin.FileAction
+import weddellseal.markrecap.ui.admin.FileStatus
+import weddellseal.markrecap.ui.admin.FileType
 import java.io.IOException
 import java.io.InputStreamReader
 
@@ -49,7 +49,7 @@ class ObserversViewModel(
             fileType = FileType.OBSERVERS.label, // or whatever your enum gives
             action = FileAction.PENDING,
             status = FileStatus.IDLE,
-            errorMessage = "",
+            message = "",
             onUploadClick = {},
             onExportClick = {},
             lastUploadFilename = null,
@@ -64,7 +64,7 @@ class ObserversViewModel(
             it.copy(
                 action = FileAction.PENDING,
                 status = FileStatus.IDLE,
-                errorMessage = "",
+                message = "",
                 lastUploadFilename = null,
                 recordCount = 0
             )
@@ -77,7 +77,7 @@ class ObserversViewModel(
     }
 
     fun setFileErrorStatus(errorMessage: String) {
-        _fileState.update { it.copy(status = FileStatus.ERROR, errorMessage = errorMessage, recordCount = 0) }
+        _fileState.update { it.copy(status = FileStatus.ERROR, message = errorMessage, recordCount = 0) }
     }
 
     fun setUploadHandler(handler: () -> Unit) {

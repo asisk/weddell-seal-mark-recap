@@ -4,9 +4,9 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import weddellseal.markrecap.ui.file.FileAction
-import weddellseal.markrecap.ui.file.FileStatus
-import weddellseal.markrecap.ui.file.FileType
+import weddellseal.markrecap.ui.admin.FileAction
+import weddellseal.markrecap.ui.admin.FileStatus
+import weddellseal.markrecap.ui.admin.FileType
 
 @Entity(
     tableName = "fileUploads",

@@ -1,8 +1,5 @@
-package weddellseal.markrecap.ui.screens
+package weddellseal.markrecap.ui.admin
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,10 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
@@ -37,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,12 +48,10 @@ import weddellseal.markrecap.models.ObserversViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.SealColoniesViewModel
 import weddellseal.markrecap.models.WedCheckViewModel
-import weddellseal.markrecap.ui.file.DashboardScreen
-import weddellseal.markrecap.ui.file.download.ExportObservations
-import weddellseal.markrecap.ui.file.upload.UploadDataFileScreen
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import weddellseal.markrecap.ui.admin.archive.ArchiveCurrentObservations
+import weddellseal.markrecap.ui.admin.dashboard.DashboardScreen
+import weddellseal.markrecap.ui.admin.export.ExportObservations
+import weddellseal.markrecap.ui.admin.upload.FileUpload
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,19 +63,23 @@ fun AdminScreen(
     adminViewModel: AdminViewModel,
     recentObservationsViewModel: RecentObservationsViewModel
 ) {
-    val context = LocalContext.current
 
     val adminUiState by adminViewModel.adminUiState.collectAsState()
-
     // Navigation Rail
-    var selectedItem by remember { mutableIntStateOf(1) }
+    var selectedItem by remember { mutableIntStateOf(adminUiState.navRailSelection) }
+
+    LaunchedEffect(adminUiState.navRailSelection) {
+        selectedItem = adminUiState.navRailSelection
+    }
+
     val items =
-        listOf("Home", "Dashboard", "Upload", "Export")
+        listOf("Home", "Dashboard", "Upload", "Export", "Archive")
     val selectedIcons = listOf(
         Icons.Default.Home,
         Icons.Default.Dashboard,
         Icons.Default.UploadFile,
         Icons.Default.FileDownload,
+        Icons.Default.Archive
     )
     val unselectedIcons =
         listOf(
@@ -87,45 +87,8 @@ fun AdminScreen(
             Icons.Outlined.Dashboard,
             Icons.Outlined.FileUpload,
             Icons.Outlined.FileDownload,
+            Icons.Outlined.Archive
         )
-
-    val createCurrentObservationsDocument =
-        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
-            // Handle the created document URI
-            if (uri != null) {
-                recentObservationsViewModel.updateURI(uri)
-                recentObservationsViewModel.exportLogs(context)
-            }
-        }
-
-    val createFullObservationsDocument =
-        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("file/csv")) { uri: Uri? ->
-            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-            val dateTimeFormat =
-                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-            val currentDateTime = dateTimeFormat.format(Date())
-            val filename = "all_observations_$currentDateTime.csv"
-
-            // Handle the created document URI
-            if (uri != null) {
-                recentObservationsViewModel.updateURI(uri)
-                recentObservationsViewModel.exportAllLogs(context)
-            }
-        }
-
-    // set the upload handlers for each file type when the screen is loaded
-    LaunchedEffect(Unit) {
-        val dateTimeFormat =
-            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-        val currentDateTime = dateTimeFormat.format(Date())
-
-        wedCheckViewModel.setWedDataCurrentExportHandler {
-            createCurrentObservationsDocument.launch("observations_$currentDateTime.csv")
-        }
-        wedCheckViewModel.setWedDataFullExportHandler {
-            createFullObservationsDocument.launch("all_observations_$currentDateTime.csv")
-        }
-    }
 
     Scaffold { innerPadding ->
         Row(modifier = Modifier.fillMaxSize()) {
@@ -192,13 +155,15 @@ fun AdminScreen(
                     when (selectedItem) {
                         1 -> DashboardScreen(adminViewModel)
 
-                        2 -> UploadDataFileScreen(
+                        2 -> FileUpload(
                             wedCheckViewModel,
                             sealColoniesViewModel,
                             observersViewModel
                         )
 
-                        3 -> ExportObservations(wedCheckViewModel)
+                        3 -> ExportObservations(adminViewModel,recentObservationsViewModel)
+
+                        4 -> ArchiveCurrentObservations(recentObservationsViewModel)
                     }
                 }
             }

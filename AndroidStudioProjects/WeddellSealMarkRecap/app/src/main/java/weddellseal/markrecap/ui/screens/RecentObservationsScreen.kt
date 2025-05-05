@@ -116,6 +116,7 @@ fun RecentObservationsScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     userScrollEnabled = true
                 ) {
+
                     items(state.observations) { observation ->
                         ObservationItem(
                             onEditDo = {

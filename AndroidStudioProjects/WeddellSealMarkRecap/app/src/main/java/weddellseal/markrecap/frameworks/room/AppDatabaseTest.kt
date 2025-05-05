@@ -15,9 +15,9 @@ import weddellseal.markrecap.frameworks.room.observers.ObserversDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColoniesDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckDao
-import weddellseal.markrecap.ui.file.FileAction
-import weddellseal.markrecap.ui.file.FileStatus
-import weddellseal.markrecap.ui.file.FileType
+import weddellseal.markrecap.ui.admin.FileAction
+import weddellseal.markrecap.ui.admin.FileStatus
+import weddellseal.markrecap.ui.admin.FileType
 
 class AppDatabaseTest {
 

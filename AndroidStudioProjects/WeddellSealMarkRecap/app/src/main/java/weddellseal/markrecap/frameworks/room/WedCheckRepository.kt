@@ -1,6 +1,6 @@
 package weddellseal.markrecap.frameworks.room
 
-import weddellseal.markrecap.ui.file.FileStatus
+import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.frameworks.room.files.FileUploadDao
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckDao

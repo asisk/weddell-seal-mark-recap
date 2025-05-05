@@ -11,16 +11,14 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
-
 @Dao
 interface ObservationDao {
     //uses LiveData to display database entries in the UI
     @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id DESC")
-    fun loadCurrentObservations(): LiveData<List<ObservationLogEntry>>
+    fun getCurrentObservationsOrdered(): LiveData<List<ObservationLogEntry>>
 
-    //uses LiveData to display database entries in the UI
     @Query("SELECT * FROM observationLogs ORDER BY id DESC")
-    fun loadAllObservations(): LiveData<List<ObservationLogEntry>>
+    fun getAllObservationsOrdered(): LiveData<List<ObservationLogEntry>>
 
     @Query("SELECT * FROM observationLogs WHERE id = :obsId AND deletedAt IS NULL")
     fun loadObsById(obsId: Int): LiveData<ObservationLogEntry>
@@ -28,7 +26,7 @@ interface ObservationDao {
     @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL")
     suspend fun getCurrentObservations(): List<ObservationLogEntry>
 
-    @Query("SELECT * FROM observationLogs ORDER BY insertedAt DESC ")
+    @Query("SELECT * FROM observationLogs ORDER BY insertedAt DESC")
     suspend fun getObservationsForSeasonView(): List<ObservationLogEntry>
 
     @Query("SELECT COUNT(*) FROM observationLogs WHERE deletedAt IS NULL")
