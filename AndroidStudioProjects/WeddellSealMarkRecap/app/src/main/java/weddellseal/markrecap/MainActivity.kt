@@ -18,7 +18,7 @@ import weddellseal.markrecap.frameworks.room.SealColonyRepository
 import weddellseal.markrecap.frameworks.room.SupportingDataRepository
 import weddellseal.markrecap.frameworks.room.WedCheckRepository
 import weddellseal.markrecap.models.AddLogViewModelFactory
-import weddellseal.markrecap.models.AddObservationLogViewModel
+import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.models.AdminViewModel
 import weddellseal.markrecap.models.AdminViewModelFactory
 import weddellseal.markrecap.models.HomeViewModel
@@ -31,13 +31,13 @@ import weddellseal.markrecap.models.SealColoniesViewModel
 import weddellseal.markrecap.models.SealColoniesViewModelFactory
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
-import weddellseal.markrecap.ui.screens.AddObservationLogScreen
+import weddellseal.markrecap.ui.tagretag.TagRetagScreen
 import weddellseal.markrecap.ui.admin.AdminScreen
-import weddellseal.markrecap.ui.screens.HomeScreen
-import weddellseal.markrecap.ui.screens.LocationPermissionView
-import weddellseal.markrecap.ui.screens.ObservationViewer
-import weddellseal.markrecap.ui.screens.RecentObservationsScreen
-import weddellseal.markrecap.ui.screens.SealLookupScreen
+import weddellseal.markrecap.ui.home.HomeScreen
+import weddellseal.markrecap.ui.permissions.LocationPermissionView
+import weddellseal.markrecap.ui.recentobservations.ObservationViewer
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsScreen
+import weddellseal.markrecap.ui.lookup.SealLookupScreen
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
 
         val addLogViewModelFactory =
             AddLogViewModelFactory(application, observationRepository, sealColonyRepository)
-        val addObservationLogViewModel: AddObservationLogViewModel by viewModels { addLogViewModelFactory }
+        val tagRetagModel: TagRetagModel by viewModels { addLogViewModelFactory }
 
         val homeViewModelFactory =
             HomeViewModelFactory(
@@ -114,14 +114,14 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.HomeScreen.route) {
                             HomeScreen(
                                 navController,
-                                addObservationLogViewModel,
+                                tagRetagModel,
                                 homeViewModel
                             )
                         }
                         composable(Screens.AddObservationLog.route) {
-                            AddObservationLogScreen(
+                            TagRetagScreen(
                                 navController,
-                                addObservationLogViewModel,
+                                tagRetagModel,
                                 wedCheckViewModel,
                                 recentObservationsViewModel
                             )
@@ -130,20 +130,20 @@ class MainActivity : ComponentActivity() {
                             RecentObservationsScreen(
                                 navController,
                                 recentObservationsViewModel,
-                                addObservationLogViewModel
+                                tagRetagModel
                             )
                         }
                         composable(Screens.SealLookupScreen.route) {
                             SealLookupScreen(
                                 navController,
                                 wedCheckViewModel,
-                                addObservationLogViewModel
+                                tagRetagModel
                             )
                         }
                         composable(Screens.ObservationViewer.route) {
                             ObservationViewer(
                                 navController,
-                                addObservationLogViewModel
+                                tagRetagModel
                             )
                         }
                         composable(Screens.AdminScreen.route) {

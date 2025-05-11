@@ -13,8 +13,8 @@ class AddLogViewModelFactory (
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AddObservationLogViewModel::class.java)) {
-            return AddObservationLogViewModel(application, observationRepository, sealColonyRepository) as T
+        if (modelClass.isAssignableFrom(TagRetagModel::class.java)) {
+            return TagRetagModel(application, observationRepository, sealColonyRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
