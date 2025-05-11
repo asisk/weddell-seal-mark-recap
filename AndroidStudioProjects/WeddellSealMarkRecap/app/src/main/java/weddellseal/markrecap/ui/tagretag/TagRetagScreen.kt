@@ -8,7 +8,6 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,41 +21,32 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BabyChangingStation
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,8 +63,8 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
-import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
@@ -351,8 +341,6 @@ fun TagRetagScreen(
         }
     }
 
-    // COMPOSABLES
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -430,28 +418,29 @@ fun TagRetagScreen(
         ) {
 
             // METADATA SECTION
-            Box() {
-                Row(
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp)
-                ) {
-                    Text(
-                        text = "GPS Coordinates:",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-            }
+//            Box {
+//                Row(
+//                    horizontalArrangement = Arrangement.Start,
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(start = 20.dp)
+//                ) {
+//                    Text(
+//                        text = "GPS Coordinates:",
+//                        style = MaterialTheme.typography.titleMedium,
+//                    )
+//                }
+//            }
 
             // GPS Location & Updated Timestamp
             Row(
                 modifier = Modifier
+                    .padding(top = 8.dp)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.Top
             ) {
-                Box() {
+                Box {
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically,
@@ -481,10 +470,6 @@ fun TagRetagScreen(
                             text = coordinates,
                             style = MaterialTheme.typography.titleMedium,
                         )
-//                        val contentColor =
-//                            if (primarySeal.isStarted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-//                                alpha = ContentAlpha.disabled
-//                            )
 
                         ExtendedFloatingActionButton(
                             modifier = Modifier
@@ -656,7 +641,11 @@ fun TagRetagScreen(
                                             observationToEdit = observation
                                         } else {
                                             // Show a Toast message if the seal is already started
-                                            Toast.makeText(context, "Looks like you're already editing another seal! Save or clear, then edit this record.", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(
+                                                context,
+                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     },
                                     onViewDo = {
@@ -721,7 +710,11 @@ fun TagRetagScreen(
                 },
                 onConfirmation = {
                     showEditDialog = false
-                    Toast.makeText(context, "You are about to edit this seal. To edit relatives, select records for editing separately.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        "You are about to edit this seal. To edit relatives, select records for editing separately.",
+                        Toast.LENGTH_LONG
+                    ).show()
 
                     // set the seal in the observation view model & navigate to edit
                     if (observationToEdit != null) {
@@ -735,171 +728,3 @@ fun TagRetagScreen(
     }
 }
 
-@Composable
-fun LocationExplanationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Location access") },
-        text = { Text("Weddell Seal Mark Recap app would like access to your location to save it when creating a log") },
-        icon = {
-            Icon(
-                Icons.Filled.Explore,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.surfaceTint
-            )
-        },
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Continue")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Dismiss")
-            }
-        }
-    )
-}
-
-data class TabItem(
-    val title: String,
-    val sealName: String,
-    val content: @Composable () -> Unit
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TabbedCards(
-    viewModel: TagRetagModel,
-    wedCheckViewModel: WedCheckViewModel
-) {
-    val showDeleteDialog = remember { mutableStateOf(false) }
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    var tabItems by remember {
-        mutableStateOf(
-            createTabItems(viewModel, wedCheckViewModel)
-        )
-    }
-
-    // Render the tabs list based on changes with number of relatives or pups started
-    LaunchedEffect(
-        viewModel.primarySeal.numRelatives,
-        viewModel.pupOne.isStarted,
-        viewModel.pupTwo.isStarted
-    ) {
-        tabItems = createTabItems(viewModel, wedCheckViewModel)
-
-        // Ensure selectedTabIndex is within bounds after updating the list
-        if (selectedTabIndex >= tabItems.size) {
-            selectedTabIndex = tabItems.lastIndex.coerceAtLeast(0)
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
-            tabItems.forEachIndexed { index, tabItem ->
-                Tab(
-                    text = {
-                        Text(
-                            tabItem.title, style = MaterialTheme.typography.headlineLarge,
-                            modifier = Modifier.padding(horizontal = 20.dp) // Adjust padding here
-                        )
-                    },
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index }
-                )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .border(
-                    border = BorderStroke(
-                        width = 2.dp,
-                        color = Color.LightGray // Use a solid color for the border
-                    ),
-                    shape = RoundedCornerShape(8.dp) // Add rounded corners here
-                )
-        ) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = {
-                        showDeleteDialog.value = true
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Remove Tab",
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-            }
-
-            // CONTENT
-            Column(modifier = Modifier.fillMaxWidth()) {
-                if (tabItems.isNotEmpty()) {
-                    tabItems[selectedTabIndex].content()
-                }
-            }
-
-            // Show the dialog if showDialog is true
-            if (showDeleteDialog.value) {
-                RemoveDialog(
-                    onDismissRequest = { showDeleteDialog.value = false },
-                    onConfirmation = {
-                        if (tabItems.isNotEmpty()) {
-                            // remove the current seal
-                            viewModel.resetSeal(tabItems[selectedTabIndex].sealName)
-                            showDeleteDialog.value = false
-                        }
-                    },
-                )
-            }
-        }
-    }
-}
-
-fun createTabItems(
-    viewModel: TagRetagModel,
-    wedCheckViewModel: WedCheckViewModel
-): List<TabItem> {
-    val items = mutableListOf<TabItem>()
-    items.add(TabItem("Seal", viewModel.primarySeal.name) {
-        SealCard(
-            viewModel,
-            viewModel.primarySeal,
-            wedCheckViewModel
-        )
-    })
-
-    if (viewModel.pupOne.isStarted) {
-        items.add(TabItem("Pup One", viewModel.pupOne.name) {
-            SealCard(
-                viewModel,
-                viewModel.pupOne,
-                wedCheckViewModel
-            )
-        })
-    }
-
-    if (viewModel.pupTwo.isStarted) {
-        items.add(TabItem("Pup Two", viewModel.pupTwo.name) {
-            SealCard(
-                viewModel,
-                viewModel.pupTwo,
-                wedCheckViewModel
-            )
-        })
-    }
-
-    return items
-}
