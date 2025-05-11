@@ -11,8 +11,8 @@ import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Composable
-fun FileUploadList(fileUploads: List<FileUploadEntity>) {
-    if (fileUploads.isEmpty()) {
+fun FileUploadList(successfulUploads: List<FileUploadEntity>) {
+    if (successfulUploads.isEmpty()) {
         Text("No file uploads found.")
     } else {
         LazyColumn(
@@ -20,8 +20,8 @@ fun FileUploadList(fileUploads: List<FileUploadEntity>) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
             userScrollEnabled = true
         ) {
-            items(fileUploads) { file ->
-                FileUploadItem(fileUpload = file)
+            items(successfulUploads) { file ->
+                FileUploadItem(successfulUpload = file)
             }
         }
     }

@@ -11,14 +11,9 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,36 +24,44 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.frameworks.room.files.FileState
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.ui.admin.ExportType
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.ui.admin.FileType
+import java.io.IOException
 
 class RecentObservationsViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
 ) : AndroidViewModel(application) {
 
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: MutableStateFlow<UiState> = _uiState
+
     data class UiState(
-        val loading: Boolean,
-        var uriForCSVWrite: Uri = Uri.EMPTY, // used for record exports
-        var observations: List<ObservationLogEntry> = emptyList(), // used in recent observations screen
+        val loading: Boolean = false,
+        var uriForFileExport: Uri = Uri.EMPTY, // used for record exports
+        val errAcked: Boolean = false,
+        val archiveAcked: Boolean = false
     )
 
-    var uiState by mutableStateOf(
-        UiState(
-            loading = false,
-        )
-    )
-        private set
+    fun setErrAcked(acked: Boolean) {
+        _uiState.update { it.copy(errAcked = acked) }
+    }
 
-    // allows for the screen to observe LiveData as observations are saved
-    val observationsFlow: Flow<List<ObservationLogEntry>> =
-        observationRepo.currentObservations.asFlow()
+    fun setArchiveAcked(acked: Boolean) {
+        _uiState.update { it.copy(archiveAcked = acked) }
+    }
 
-    val allObservationsFlow: Flow<List<ObservationLogEntry>> =
-        observationRepo.allObservations.asFlow()
+    val currentObservations: StateFlow<List<ObservationLogEntry>> =
+        observationRepo.currentObservations
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
 
-    val currentObservationsCount: StateFlow<Int> = observationsFlow
+    val allObservations: StateFlow<List<ObservationLogEntry>> =
+        observationRepo.allObservations
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
+
+    val currentObservationsCount: StateFlow<Int> = currentObservations
         .map { observations: List<ObservationLogEntry> -> observations.size }
         .stateIn(
             scope = viewModelScope,
@@ -66,7 +69,7 @@ class RecentObservationsViewModel(
             initialValue = 0
         )
 
-    val allObservationsCount: StateFlow<Int> = allObservationsFlow
+    val allObservationsCount: StateFlow<Int> = allObservations
         .map { observations: List<ObservationLogEntry> -> observations.size }
         .stateIn(
             scope = viewModelScope,
@@ -83,7 +86,7 @@ class RecentObservationsViewModel(
             message = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
-            exportFilename = null,
+            exportFilename = "",
             recordCount = 0,
             lastUploadFilename = null
         )
@@ -97,10 +100,12 @@ class RecentObservationsViewModel(
                 action = FileAction.PENDING,
                 status = FileStatus.IDLE,
                 message = "",
-                lastUploadFilename = null,
+                exportFilename = "",
                 recordCount = 0
             )
         }
+        setErrAcked(false)
+        setArchiveAcked(false)
     }
 
     fun updateWedDataCurrentFileStatus(count: Int, displayNameFromUri: String?) {
@@ -138,7 +143,7 @@ class RecentObservationsViewModel(
             message = "",
             onUploadClick = {}, // will override this when the Admin Screen view loads
             onExportClick = {}, // will override this when the Admin Screen view loads
-            exportFilename = null,
+            exportFilename = "",
             lastUploadFilename = null,
             recordCount = 0
         )
@@ -152,10 +157,11 @@ class RecentObservationsViewModel(
                 action = FileAction.PENDING,
                 status = FileStatus.IDLE,
                 message = "",
-                lastUploadFilename = null,
+                exportFilename = "",
                 recordCount = 0
             )
         }
+        setErrAcked(false)
     }
 
     fun updateWedDataFullFileStatus(count: Int, displayNameFromUri: String?) {
@@ -165,7 +171,7 @@ class RecentObservationsViewModel(
                 status = FileStatus.SUCCESS,
                 recordCount = count,
                 message = message,
-                lastUploadFilename = displayNameFromUri
+                exportFilename = displayNameFromUri
             )
         }
     }
@@ -185,62 +191,75 @@ class RecentObservationsViewModel(
     }
 
     fun updateURI(uri: Uri) {
-        uiState = uiState.copy(
-            uriForCSVWrite = uri
-        )
+        _uiState.update { it.copy(uriForFileExport = uri) }
     }
 
     fun getDisplayNameFromUri(context: Context, uri: Uri): String? {
         return DocumentFile.fromSingleUri(context, uri)?.name
     }
 
-    fun exportCurrentRecords(context: Context) {
-        viewModelScope.launch {
-            try {
-                val currentObservations = observationRepo.getCurrentObservations()
-                if (currentObservations.isEmpty()) {
-                    setWedDataCurrentFileErrorStatus("No records available to export.")
-                    return@launch
-                }
-                val uri = uiState.uriForCSVWrite
-                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    observationRepo.writeDataToStream(outputStream, currentObservations)
-                    updateWedDataCurrentFileStatus(
-                        currentObservations.size,
-                        getDisplayNameFromUri(context, uri)
-                    )
-                } ?: run {
-                    setWedDataCurrentFileErrorStatus("Unable to open file for writing.")
-                }
-            } catch (e: Exception) {
-                Log.d("Error", e.message ?: "Unknown error")
-                setWedDataCurrentFileErrorStatus(e.message.toString())
-            }
+    fun fileNameIsValid(context: Context, uri: Uri): Boolean {
+        val contentResolver = context.contentResolver
+        val mimeType = contentResolver.getType(uri)
+        val isCSV = mimeType?.startsWith("text/comma-separated-values")
+        val fileName = getDisplayNameFromUri(context, uri)
+
+        if (isCSV == false || fileName == null || !fileName.endsWith(
+                ".csv",
+                ignoreCase = true
+            ) || fileName.contains("invalid")
+        ) {
+            throw IllegalArgumentException("Invalid file type: $mimeType. Exports should be CSV files.")
         }
+
+        return true
     }
 
-    fun exportAllRecords(context: Context) {
+    fun exportRecords(context: Context, exportType: ExportType) {
         viewModelScope.launch {
-            try {
-                val allObservations = observationRepo.getAllObservations()
-                if (allObservations.isEmpty()) {
-                    setWedDataFullFileErrorStatus("No records available to export.")
-                    return@launch
-                }
 
-                val uri = uiState.uriForCSVWrite
+            val uri = uiState.value.uriForFileExport
+            val displayName = getDisplayNameFromUri(context, uri)
+
+            val observations = if (exportType == ExportType.CURRENT) {
+                currentObservations
+            } else {
+                allObservations
+            }
+
+            if (observations.value.isEmpty()) {
+                setWedDataFullFileErrorStatus("No records available to export.")
+                return@launch
+            }
+
+            val updateStatus: (Int, String?) -> Unit = when (exportType) {
+                ExportType.CURRENT -> ::updateWedDataCurrentFileStatus
+                ExportType.ALL -> ::updateWedDataFullFileStatus
+            }
+            val setErrorStatus: (String) -> Unit = when (exportType) {
+                ExportType.CURRENT -> ::setWedDataCurrentFileErrorStatus
+                ExportType.ALL -> ::setWedDataFullFileErrorStatus
+            }
+
+            try {
+                // throw IO exceptions if file is not a writable CSV
+                fileNameIsValid(context, uri)
+
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    observationRepo.writeDataToStream(outputStream, allObservations)
-                    updateWedDataFullFileStatus(
-                        allObservations.size,
-                        getDisplayNameFromUri(context, uri)
-                    )
+                    observationRepo.writeDataToStream(outputStream, observations.value)
+                    updateStatus(observations.value.size, displayName)
                 } ?: run {
-                    setWedDataFullFileErrorStatus("Unable to open file for writing.")
+                    throw IOException("Failed to write to file: $uri")
                 }
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 Log.d("Error", e.message ?: "Unknown error")
-                setWedDataFullFileErrorStatus(e.message.toString())
+                getDisplayNameFromUri(context, uri)
+                setErrorStatus(
+                    "Failed to write to file. \nInvalid file name:  $displayName"
+                )
+            } catch (e: Exception) {
+                Log.d("Error", e.message ?: "Failed to write to file")
+                setErrorStatus(e.message ?: "Failed to write to file")
             }
         }
     }

@@ -51,12 +51,14 @@ fun ExportObservationsCard(
     val currentObservationsCount by recentObservationsViewModel.currentObservationsCount.collectAsState()
     val allObservationsCount by recentObservationsViewModel.allObservationsCount.collectAsState()
 
-    var text by remember { mutableStateOf("") }
+    var errMessage by remember { mutableStateOf("") }
+    var exportedFilename by remember { mutableStateOf("") }
     var statusColor by remember { mutableStateOf(Color(0xFF5884fa)) }
     var statusIcon by remember { mutableStateOf(Icons.Default.Pending) }
 
-    LaunchedEffect(state.status) {
-        text = state.message + "\n" + state.exportFilename
+    LaunchedEffect(state) {
+        errMessage = state.message.toString()
+        exportedFilename = state.exportFilename.toString()
         statusColor = state.status.color()
         statusIcon = state.status.icon()
     }
@@ -139,14 +141,22 @@ fun ExportObservationsCard(
                         contentDescription = null,
                         tint = statusColor,
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(36.dp)
                             .padding(end = 8.dp)
                     )
-                    Text(
-                        text = text,
-                        color = statusColor,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    if (state.status == FileStatus.SUCCESS) {
+                        Text(
+                            text = exportedFilename + "\nTotal Records Exported: ${state.recordCount}",
+                            color = statusColor,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    } else {
+                        Text(
+                            text = errMessage,
+                            color = statusColor,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
             }
         }

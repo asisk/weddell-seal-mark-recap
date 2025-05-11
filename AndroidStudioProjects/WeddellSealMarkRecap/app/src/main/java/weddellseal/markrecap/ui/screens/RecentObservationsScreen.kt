@@ -30,7 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,17 +56,11 @@ fun RecentObservationsScreen(
     viewModel: RecentObservationsViewModel,
     obsViewModel: AddObservationLogViewModel,
 ) {
-    val state = viewModel.uiState
-    var showEditDialog by remember { mutableStateOf(false) }
+    val currentObservations by viewModel.currentObservations.collectAsState()
     val context = LocalContext.current
     context.contentResolver
     var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
-
-    LaunchedEffect(Unit) {
-        viewModel.observationsFlow.collect {
-            state.observations = it
-        }
-    }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -117,7 +111,7 @@ fun RecentObservationsScreen(
                     userScrollEnabled = true
                 ) {
 
-                    items(state.observations) { observation ->
+                    items(currentObservations) { observation ->
                         ObservationItem(
                             onEditDo = {
                                 if (!obsViewModel.primarySeal.isStarted) {

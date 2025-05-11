@@ -23,7 +23,7 @@ import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Composable
 fun LastFilesUploadedCard(
-    fileUploads: List<FileUploadEntity>,
+    successfulUploads: List<FileUploadEntity>,
 ) {
     Card(
         modifier = Modifier
@@ -57,9 +57,9 @@ fun LastFilesUploadedCard(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "This list shows files that were successfully uploaded.", style = MaterialTheme.typography.bodyLarge)
+            Text(text = "This scrollable list shows files that were successfully uploaded.", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(20.dp))
-            FileUploadList(fileUploads)
+            FileUploadList(successfulUploads)
         }
     }
 }

@@ -5,29 +5,20 @@ package weddellseal.markrecap.frameworks.room.observations
  * When you use a DAO, you call the methods, and Room takes care of the rest.
  */
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ObservationDao {
-    //uses LiveData to display database entries in the UI
+
     @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id DESC")
-    fun getCurrentObservationsOrdered(): LiveData<List<ObservationLogEntry>>
+    fun getCurrentObservationsOrdered(): Flow<List<ObservationLogEntry>>
 
     @Query("SELECT * FROM observationLogs ORDER BY id DESC")
-    fun getAllObservationsOrdered(): LiveData<List<ObservationLogEntry>>
-
-    @Query("SELECT * FROM observationLogs WHERE id = :obsId AND deletedAt IS NULL")
-    fun loadObsById(obsId: Int): LiveData<ObservationLogEntry>
-
-    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL")
-    suspend fun getCurrentObservations(): List<ObservationLogEntry>
-
-    @Query("SELECT * FROM observationLogs ORDER BY insertedAt DESC")
-    suspend fun getObservationsForSeasonView(): List<ObservationLogEntry>
+    fun getAllObservationsOrdered(): Flow<List<ObservationLogEntry>>
 
     @Query("SELECT COUNT(*) FROM observationLogs WHERE deletedAt IS NULL")
     suspend fun getCount(): Int

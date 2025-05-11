@@ -24,20 +24,16 @@ import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.files.color
 import weddellseal.markrecap.frameworks.room.files.icon
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import weddellseal.markrecap.ui.utils.formatFileUploadedDateTime
 
 @Composable
-fun FileUploadItem(fileUpload: FileUploadEntity) {
-    var text by remember { mutableStateOf("") }
+fun FileUploadItem(successfulUpload: FileUploadEntity) {
     var statusColor by remember { mutableStateOf(Color(0xFF5884fa)) }
     var statusIcon by remember { mutableStateOf(Icons.Default.Pending) }
 
-    LaunchedEffect(fileUpload.status) {
-        text = fileUpload.status.message
-        statusColor = fileUpload.status.color()
-        statusIcon = fileUpload.status.icon()
+    LaunchedEffect(successfulUpload.status) {
+        statusColor = successfulUpload.status.color()
+        statusIcon = successfulUpload.status.icon()
     }
 
     Row(
@@ -47,6 +43,7 @@ fun FileUploadItem(fileUpload: FileUploadEntity) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
+
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically
@@ -61,33 +58,18 @@ fun FileUploadItem(fileUpload: FileUploadEntity) {
             )
             // filename
             Text(
-                fileUpload.filename,
+                text = successfulUpload.filename,
                 style = MaterialTheme.typography.titleLarge,
             )
-
-
         }
 
         // datetime of upload
         Text(
-            "${
-                SimpleDateFormat(
-                    "yyyy-MM-dd HH:mm:ss",
-                    Locale.US
-                ).format(Date(fileUpload.createdAt))
-            }",
-            style = MaterialTheme.typography.titleSmall,
+            text = formatFileUploadedDateTime(successfulUpload.createdAt)
+                    + "\n" + "Rows: "
+                    + successfulUpload.recordCount.toString(),
+            style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(end = 16.dp, top = 2.dp)
-        )
-
-        // status icon
-        Icon(
-            imageVector = statusIcon,
-            contentDescription = null,
-            tint = statusColor,
-            modifier = Modifier
-                .size(48.dp)
-                .padding(start = 12.dp, end = 8.dp, top = 2.dp)
         )
     }
 }

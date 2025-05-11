@@ -101,7 +101,7 @@ class WedCheckViewModel(
                 action = FileAction.PENDING,
                 status = FileStatus.IDLE,
                 message = "",
-                lastUploadFilename = null,
+                exportFilename = null,
                 recordCount = 0
             )
         }

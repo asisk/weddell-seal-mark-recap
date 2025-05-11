@@ -54,6 +54,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -90,9 +91,9 @@ fun AddObservationLogScreen(
     wedCheckViewModel: WedCheckViewModel,
     recentObsViewModel: RecentObservationsViewModel
 ) {
+    val currentObservations by recentObsViewModel.currentObservations.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    val recentObsState = recentObsViewModel.uiState
     var showEditDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     context.contentResolver
@@ -146,12 +147,6 @@ fun AddObservationLogScreen(
             viewModel.fetchCurrentLocation()
         } else {
             showExplanationDialogForLocationPermission = true
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        recentObsViewModel.observationsFlow.collect {
-            recentObsState.observations = it
         }
     }
 
@@ -658,7 +653,7 @@ fun AddObservationLogScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                             userScrollEnabled = true
                         ) {
-                            items(recentObsState.observations) { observation ->
+                            items(currentObservations) { observation ->
                                 ObservationItem(
                                     onEditDo = {
                                         if (!viewModel.primarySeal.isStarted) {

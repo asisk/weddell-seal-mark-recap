@@ -23,7 +23,7 @@ import weddellseal.markrecap.frameworks.room.files.FileState
 import kotlin.Unit
 
 @Composable
-fun ExportDialog(
+fun ExportDialogCurrentObservations(
     onDismissRequest: () -> Unit,
     fileState: FileState,
     onConfirmArchive: () -> Unit,
