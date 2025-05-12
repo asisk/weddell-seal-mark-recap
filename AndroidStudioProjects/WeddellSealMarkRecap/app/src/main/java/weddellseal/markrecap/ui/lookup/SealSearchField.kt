@@ -29,12 +29,12 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.models.SealLookupViewModel
 
 @Composable
 fun SealSearchField(
     value: String,
-    viewModel: WedCheckViewModel,
+    viewModel: SealLookupViewModel,
     onValueChanged: (String) -> Unit
 ) {
     var sealTagID by rememberSaveable { mutableStateOf(value) }
@@ -60,9 +60,10 @@ fun SealSearchField(
             .onFocusChanged { focusState ->
                 if (focusState.isFocused) {
                     // Reset the field in the model when the text field gains focus
-                    if (viewModel.wedCheckSeal.found) {
+                    if (viewModel.uiState.value.sealFound) {
                         sealTagID = ""
-                        viewModel.resetState()
+                        viewModel.resetUiState()
+                        viewModel.resetLookupSeal()
                     }
                 }
                 isFocused = focusState.isFocused // Update focus state
@@ -79,7 +80,8 @@ fun SealSearchField(
                 keyboardController?.hide()
 
                 // reset the current seal for new search
-                viewModel.resetState()
+                viewModel.resetUiState()
+                viewModel.resetLookupSeal()
 
                 // engage the search function
                 viewModel.findSealbyTagID(sealTagID)
@@ -91,7 +93,8 @@ fun SealSearchField(
                 Modifier
                     .clickable {
                         sealTagID = ""
-                        viewModel.resetState()
+                        viewModel.resetUiState()
+                        viewModel.resetLookupSeal()
                     }
                     .size(35.dp) // Adjust the size as needed
             )

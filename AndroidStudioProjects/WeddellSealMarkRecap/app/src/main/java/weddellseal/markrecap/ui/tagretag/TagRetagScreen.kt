@@ -64,8 +64,8 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
-import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
 
@@ -74,7 +74,7 @@ import weddellseal.markrecap.ui.ObservationItem
 fun TagRetagScreen(
     navController: NavHostController,
     viewModel: TagRetagModel,
-    wedCheckViewModel: WedCheckViewModel,
+    sealLookupViewModel: SealLookupViewModel,
     recentObsViewModel: RecentObservationsViewModel
 ) {
     val currentObservations by recentObsViewModel.currentObservations.collectAsState()
@@ -86,9 +86,16 @@ fun TagRetagScreen(
     var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
 
     // seals not "by remember" because the screen needs to respond to input that changes the seal's model values
-    val primarySeal = viewModel.primarySeal
-    val pupOne = viewModel.pupOne
-    val pupTwo = viewModel.pupTwo
+//    val primarySeal = viewModel.primarySeal
+//    val pupOne = viewModel.pupOne
+//    val pupTwo = viewModel.pupTwo
+
+    val primarySeal by viewModel.primarySeal.collectAsState()
+    val primaryWedCheckSeal by viewModel.primaryWedCheckSeal.collectAsState()
+    val pupOneSeal by viewModel.pupOne.collectAsState()
+    val pupOneWedCheckSeal by viewModel.pupOneWedCheckSeal.collectAsState()
+    val pupTwoSeal by viewModel.pupTwo.collectAsState()
+    val pupTwoWedCheckSeal by viewModel.pupTwoWedCheckSeal.collectAsState()
 
     var showConfirmEntryDialog by remember { mutableStateOf(false) }
     var showIneligibleDialog by remember { mutableStateOf(false) }
@@ -241,34 +248,34 @@ fun TagRetagScreen(
         }
 
         val pupOneSelectionsNeeded = StringBuilder()
-        if (pupOne.isStarted) {
-            if (pupOne.age.isEmpty()) {
+        if (pupOneSeal.isStarted) {
+            if (pupOneSeal.age.isEmpty()) {
                 pupOneSelectionsNeeded.append("\nSelect an age for Pup One.")
                 eligible = false
             }
-            if (pupOne.age == "Pup" && pupOne.condition.isEmpty()) {
+            if (pupOneSeal.age == "Pup" && pupOneSeal.condition.isEmpty()) {
                 pupOneSelectionsNeeded.append("\nSelect condition for Pup One.")
                 eligible = false
             }
-            if (pupOne.sex.isEmpty()) {
+            if (pupOneSeal.sex.isEmpty()) {
                 pupOneSelectionsNeeded.append("\nSelect a sex for Pup One.")
                 eligible = false
             }
-            if (pupOne.numRelatives.isEmpty()) {
+            if (pupOneSeal.numRelatives.isEmpty()) {
                 pupOneSelectionsNeeded.append("\nNumber of relatives is empty for Pup One.")
                 eligible = false
             }
-            if (pupOne.tagEventType.isEmpty()) {
+            if (pupOneSeal.tagEventType.isEmpty()) {
                 pupOneSelectionsNeeded.append("\nSelect a tag event for Pup One.")
                 eligible = false
             }
-            val tagNumberLenPupOne = pupOne.tagNumber.length
-            if (!pupOne.isNoTag) { // when No Tag isn't selected
+            val tagNumberLenPupOne = pupOneSeal.tagNumber.length
+            if (!pupOneSeal.isNoTag) { // when No Tag isn't selected
                 if (tagNumberLenPupOne != 3 && tagNumberLenPupOne != 4) { // check that the Tag ID field is the right length
                     pupOneSelectionsNeeded.append("\nPup One tag number needs to be 3 or 4 digits.")
                     eligible = false
                 }
-                if (pupOne.numTags == "") { // check that the technician has indicated how many tags are present
+                if (pupOneSeal.numTags == "") { // check that the technician has indicated how many tags are present
                     pupOneSelectionsNeeded.append("\nSelect the number of tags for Pup One.")
                     eligible = false
                 }
@@ -280,34 +287,34 @@ fun TagRetagScreen(
         }
 
         val pupTwoSelectionsNeeded = StringBuilder()
-        if (pupTwo.isStarted) {
-            if (pupTwo.age.isEmpty()) {
+        if (pupTwoSeal.isStarted) {
+            if (pupTwoSeal.age.isEmpty()) {
                 pupTwoSelectionsNeeded.append("\nSelect an age for Pup Two.")
                 eligible = false
             }
-            if (pupTwo.age == "Pup" && pupTwo.condition.isEmpty()) {
+            if (pupTwoSeal.age == "Pup" && pupTwoSeal.condition.isEmpty()) {
                 pupTwoSelectionsNeeded.append("\nSelect condition for Pup Two.")
                 eligible = false
             }
-            if (pupTwo.sex.isEmpty()) {
+            if (pupTwoSeal.sex.isEmpty()) {
                 pupTwoSelectionsNeeded.append("\nSelect a sex for Pup Two.")
                 eligible = false
             }
-            if (pupTwo.numRelatives.isEmpty()) {
+            if (pupTwoSeal.numRelatives.isEmpty()) {
                 pupTwoSelectionsNeeded.append("\nNumber of relatives is empty for Pup Two.")
                 eligible = false
             }
-            if (pupTwo.tagEventType.isEmpty()) {
+            if (pupTwoSeal.tagEventType.isEmpty()) {
                 pupTwoSelectionsNeeded.append("\nSelect a tag event for Pup Two.")
                 eligible = false
             }
-            val tagNumberLenPupTwo = pupTwo.tagNumber.length
-            if (!pupTwo.isNoTag) { // when No Tag isn't selected
+            val tagNumberLenPupTwo = pupTwoSeal.tagNumber.length
+            if (!pupTwoSeal.isNoTag) { // when No Tag isn't selected
                 if (tagNumberLenPupTwo != 3 && tagNumberLenPupTwo != 4) { // check that the Tag ID field is the right length
                     pupTwoSelectionsNeeded.append("\nPup Two tag number needs to be 3 or 4 digits.")
                     eligible = false
                 }
-                if (pupTwo.numTags == "") { // check that the technician has indicated how many tags are present
+                if (pupTwoSeal.numTags == "") { // check that the technician has indicated how many tags are present
                     pupTwoSelectionsNeeded.append("\nSelect the number of tags for Pup Two.")
                     eligible = false
                 }
@@ -325,15 +332,15 @@ fun TagRetagScreen(
     // validates the seal against the wedcheck seal if present
     fun saveAction() {
         if (primarySeal.isStarted) {
-            viewModel.validate(primarySeal)
+            viewModel.validate(primarySeal, primaryWedCheckSeal)
         }
 
-        if (pupOne.isStarted) {
-            viewModel.validate(pupOne)
+        if (pupOneSeal.isStarted) {
+            viewModel.validate(pupOneSeal, pupOneWedCheckSeal)
         }
 
-        if (pupTwo.isStarted) {
-            viewModel.validate(pupTwo)
+        if (pupTwoSeal.isStarted) {
+            viewModel.validate(pupTwoSeal, pupTwoWedCheckSeal)
         }
 
         if (viewModel.uiState.isValidated && viewModel.uiState.validEntry) {
@@ -601,16 +608,16 @@ fun TagRetagScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .heightIn(max = 200.dp) // Limit the height of TabbedCards
             ) {
-                TabbedCards(viewModel, wedCheckViewModel)
+
+                TabbedCards(viewModel, sealLookupViewModel, primarySeal, pupOneSeal, pupTwoSeal)
             }
+
+            // RECENT OBSERVATIONS VIEW
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .heightIn(max = 200.dp) // Limit the height of TabbedCards
             ) {
-                // RECENT OBSERVATIONS VIEW
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -636,7 +643,7 @@ fun TagRetagScreen(
                             items(currentObservations) { observation ->
                                 ObservationItem(
                                     onEditDo = {
-                                        if (!viewModel.primarySeal.isStarted) {
+                                        if (!primarySeal.isStarted) {
                                             showEditDialog = true
                                             observationToEdit = observation
                                         } else {
@@ -679,11 +686,11 @@ fun TagRetagScreen(
                     if (!primarySeal.isValid) {
                         viewModel.flagSealForReview(primarySeal.name)
                     }
-                    if (!pupOne.isValid) {
-                        viewModel.flagSealForReview(pupOne.name)
+                    if (!pupOneSeal.isValid) {
+                        viewModel.flagSealForReview(pupOneSeal.name)
                     }
-                    if (!pupTwo.isValid) {
-                        viewModel.flagSealForReview(pupTwo.name)
+                    if (!pupTwoSeal.isValid) {
+                        viewModel.flagSealForReview(pupTwoSeal.name)
                     }
 
                     showConfirmEntryDialog = false

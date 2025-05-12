@@ -1,6 +1,5 @@
 package weddellseal.markrecap.ui.lookup
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,38 +22,52 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
-import weddellseal.markrecap.models.WedCheckViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SealLookupScreen(
     navController: NavHostController,
-    wedCheckViewModel: WedCheckViewModel,
+    viewModel: SealLookupViewModel,
     obsViewModel: TagRetagModel
 ) {
-    val uiStateWedCheck by wedCheckViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(uiState.sealNotFound) {
+        if (uiState.sealNotFound) {
+            scope.launch { snackbarHostState.showSnackbar("Seal not found!") }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -102,7 +115,8 @@ fun SealLookupScreen(
                 modifier = Modifier
                     .padding(20.dp)
                     .fillMaxWidth()
-            ) { // SEAL LOOKUP
+            ) {
+                // SEAL LOOKUP
                 Column(
                     modifier = Modifier
                         .padding(30.dp)
@@ -117,40 +131,20 @@ fun SealLookupScreen(
                     ) {
                         var sealTagID by remember { mutableStateOf("") }
                         var focusManager = LocalFocusManager.current
-                        if (uiStateWedCheck.isError) {
-                            SealNotFoundToast()
-                        }
 
-                        SealSearchField(sealTagID, wedCheckViewModel) { newText ->
+                        SealSearchField(sealTagID, viewModel) { newText ->
                             sealTagID = newText
                         }
 
-                        if (!wedCheckViewModel.wedCheckSeal.found) {
-                            IconButton(
-                                onClick = {
-                                    focusManager.clearFocus()
-                                    // reset the current seal & start a new search
-                                    wedCheckViewModel.resetState()
-
-                                    wedCheckViewModel.findSealbyTagID(sealTagID)
-
-                                },
-                                modifier = Modifier.padding(bottom = 15.dp, end = 20.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search",
-                                    modifier = Modifier.size(45.dp)
-                                )
-                            }
-                        } else {
+                        if (uiState.sealFound) {
                             ExtendedFloatingActionButton(
                                 modifier = Modifier
                                     .padding(bottom = 20.dp, start = 20.dp)
                                     .fillMaxWidth(),
                                 containerColor = Color.LightGray,
                                 onClick = {
-                                    obsViewModel.populateSeal(wedCheckViewModel.wedCheckSeal)
+                                    obsViewModel.populateSeal(viewModel.lookupSeal.value)
+                                    viewModel.setTagRetagLookup(true)
                                     navController.navigate(Screens.AddObservationLog.route)
                                 },
                                 icon = { Icon(Icons.Filled.PostAdd, "Edit seal") },
@@ -163,17 +157,25 @@ fun SealLookupScreen(
                                     )
                                 }
                             )
+                        } else {
+                            IconButton(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    viewModel.findSealbyTagID(sealTagID)
+                                },
+                                modifier = Modifier.padding(bottom = 15.dp, end = 20.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.size(45.dp)
+                                )
+                            }
                         }
                     }
                 }
-                WedCheckCard(wedCheckViewModel.wedCheckSeal)
+                LookupCard(viewModel.lookupSeal.collectAsState().value)
             }
         }
     }
-}
-
-@Composable
-fun SealNotFoundToast() {
-    val context = LocalContext.current
-    Toast.makeText(context, "Seal not found", Toast.LENGTH_LONG).show()
 }

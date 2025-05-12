@@ -4,33 +4,23 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import weddellseal.markrecap.frameworks.room.WedCheckRepository
-import weddellseal.markrecap.frameworks.room.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.files.FailedRow
 import weddellseal.markrecap.frameworks.room.files.FileState
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
-import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.ui.admin.FileType
 import java.io.IOException
 import java.io.InputStreamReader
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class WedCheckViewModel(
     application: Application,
@@ -40,43 +30,20 @@ class WedCheckViewModel(
     private val context: Context
         get() = getApplication()
 
-    var wedCheckSeal by mutableStateOf(WedCheckSeal())
-
-    private val _uiState = MutableStateFlow(
-        UiState(date = dateNowFormatted())
-    )
+    private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
 
     data class UiState(
         val loading: Boolean = false,
-        var isSearching: Boolean = false,
-        val sealNotFound: Boolean = false,
         val uriForCSVDataLoad: Uri? = null,
-        val sealRecordDB: WedCheckRecord? = null,
-        val date: String, //TODO, think about the proper date format, should it be UTC?
         val isError: Boolean = false,
         val errAcked: Boolean = false,
         val totalRows: Int = 0,
-        val speNoFound: Int = 0,
-        val tagIdForSpeNo: String = "",
     )
 
     fun setErrAcked(acked: Boolean) {
         _uiState.update { it.copy(errAcked = acked) }
     }
-    fun resetState() {
-        _uiState.value = uiState.value.copy(
-            sealRecordDB = null,
-            isSearching = false,
-            sealNotFound = true,
-            isError = false
-        )
-        wedCheckSeal = WedCheckSeal()
-    }
-
-    fun dateNowFormatted(): String =
-        SimpleDateFormat("dd.MM.yyyy HH:mm:ss aaa z", Locale.US)
-            .format(System.currentTimeMillis())
 
     // WEDCHECK File State
     private val _wedCheckUploadState = MutableStateFlow(
@@ -127,99 +94,6 @@ class WedCheckViewModel(
 
     fun setWedCheckLastFilename(filename: String) {
         _wedCheckUploadState.update { it.copy(lastUploadFilename = filename) }
-    }
-
-    fun findSealSpeNo(sealTagID: String) {
-        _uiState.value = uiState.value.copy(isSearching = true)
-        viewModelScope.launch {
-            // Switch to the IO dispatcher for database operation
-            val returnVal = withContext(Dispatchers.IO) {
-                wedCheckRepo.getSealSpeNo(sealTagID)
-            }
-
-            if (returnVal != 0) {
-                _uiState.value = uiState.value.copy(
-                    isSearching = false,
-                    sealNotFound = false,
-                    speNoFound = returnVal,
-                    tagIdForSpeNo = sealTagID
-                )
-            } else {
-                _uiState.value = uiState.value.copy(isSearching = false, sealNotFound = true)
-            }
-        }
-    }
-
-    fun findSealbyTagID(sealTagID: String) {
-        // clear the last seal from the wedcheck viewmodel
-        _uiState.value = uiState.value.copy(
-            sealRecordDB = null,
-            isSearching = true,
-            sealNotFound = true,
-            isError = false
-        )
-        Log.d("findSealbyTagID in WedCheckViewModel", "Clearing wedcheck seal")
-        wedCheckSeal = WedCheckSeal()
-
-        if (sealTagID != "") {
-            val searchValue = sealTagID.trim()
-            // launch the search for a seal on a separate coroutine
-            viewModelScope.launch {
-
-                // Switch to the IO dispatcher for database operation
-                val seal: WedCheckRecord = withContext(Dispatchers.IO) {
-                    wedCheckRepo.findSealbyTagID(searchValue)
-                }
-                //ignore the linter, seal can in fact be null
-                if (seal != null && seal.speno != 0) {
-                    _uiState.value = uiState.value.copy(
-                        sealRecordDB = seal,
-                        isSearching = false,
-                        sealNotFound = false,
-                        speNoFound = seal.speno,
-                        tagIdForSpeNo = sealTagID
-                    )
-                    wedCheckSeal = seal.toSeal()
-                    delay(1500) // Wait for 1500 milliseconds
-                } else {
-                    _uiState.value = uiState.value.copy(
-                        sealRecordDB = null,
-                        isSearching = false,
-                        sealNotFound = true,
-                        isError = true
-                    )
-                }
-            }
-        }
-    }
-
-    fun findSealbySpeNo(speno: Int) {
-        _uiState.value = uiState.value.copy(isSearching = true)
-
-        // launch the search for a seal on a separate coroutine
-        viewModelScope.launch {
-
-            // Switch to the IO dispatcher for database operation
-            val seal: WedCheckRecord = withContext(Dispatchers.IO) {
-                wedCheckRepo.findSealbySpeNo(speno)
-            }
-            //ignore the linter, seal can in fact be null
-            if (seal != null && seal.speno != 0) {
-                _uiState.value = uiState.value.copy(
-                    sealRecordDB = seal,
-                    isSearching = false,
-                    sealNotFound = false
-                )
-                wedCheckSeal = seal.toSeal()
-            } else {
-                _uiState.value = uiState.value.copy(
-                    sealRecordDB = null,
-                    isSearching = false,
-                    sealNotFound = true,
-                    isError = true
-                )
-            }
-        }
     }
 
     fun loadWedCheck(uri: Uri, filename: String) {

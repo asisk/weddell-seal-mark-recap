@@ -20,6 +20,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,36 +30,62 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.frameworks.room.Seal
+import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
-import weddellseal.markrecap.models.WedCheckViewModel
 
-data class TabItem(
-    val title: String,
-    val sealName: String,
-    val content: @Composable () -> Unit
-)
+/**
+ * TabbedCards responds to changes in the model for each seal.
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabbedCards(
     viewModel: TagRetagModel,
-    wedCheckViewModel: WedCheckViewModel
+    sealLookupViewModel: SealLookupViewModel,
+    primarySeal: Seal,
+    pupOneSeal: Seal,
+    pupTwoSeal: Seal
 ) {
+    val primaryWedCheckSeal by viewModel.primaryWedCheckSeal.collectAsState()
+    val pupOneWedCheckSeal by viewModel.pupOneWedCheckSeal.collectAsState()
+    val pupTwoWedCheckSeal by viewModel.pupTwoWedCheckSeal.collectAsState()
+
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var tabItems by remember {
         mutableStateOf(
-            createTabItems(viewModel, wedCheckViewModel)
+            createTabItems(
+                viewModel,
+                sealLookupViewModel,
+                primarySeal,
+                pupOneSeal,
+                pupTwoSeal,
+                primaryWedCheckSeal,
+                pupOneWedCheckSeal,
+                pupTwoWedCheckSeal
+            )
         )
     }
 
+    // TODO, revisit whether this is necessary
     // Render the tabs list based on changes with number of relatives or pups started
     LaunchedEffect(
-        viewModel.primarySeal.numRelatives,
-        viewModel.pupOne.isStarted,
-        viewModel.pupTwo.isStarted
+        primarySeal,
+        pupOneSeal,
+        pupTwoSeal
     ) {
-        tabItems = createTabItems(viewModel, wedCheckViewModel)
+        tabItems = createTabItems(
+            viewModel,
+            sealLookupViewModel,
+            primarySeal,
+            pupOneSeal,
+            pupTwoSeal,
+            primaryWedCheckSeal,
+            pupOneWedCheckSeal,
+            pupTwoWedCheckSeal
+        )
 
         // Ensure selectedTabIndex is within bounds after updating the list
         if (selectedTabIndex >= tabItems.size) {
@@ -130,6 +157,8 @@ fun TabbedCards(
                         if (tabItems.isNotEmpty()) {
                             // remove the current seal
                             viewModel.resetSeal(tabItems[selectedTabIndex].sealName)
+                            sealLookupViewModel.resetUiState()
+                            sealLookupViewModel.resetLookupSeal()
                             showDeleteDialog.value = false
                         }
                     },
@@ -141,33 +170,46 @@ fun TabbedCards(
 
 fun createTabItems(
     viewModel: TagRetagModel,
-    wedCheckViewModel: WedCheckViewModel
+    sealLookupViewModel: SealLookupViewModel,
+    primarySealState: Seal,
+    pupOneSealState: Seal,
+    pupTwoSealState: Seal,
+    primaryWedCheckSeal: WedCheckSeal,
+    pupOneWedCheckSeal: WedCheckSeal,
+    pupTwoWedCheckSeal: WedCheckSeal
 ): List<TabItem> {
     val items = mutableListOf<TabItem>()
-    items.add(TabItem("Seal", viewModel.primarySeal.name) {
+
+    items.add(TabItem("Seal", primarySealState.name) {
         SealCard(
             viewModel,
-            viewModel.primarySeal,
-            wedCheckViewModel
+            SealType.PRIMARY,
+            primarySealState,
+            primaryWedCheckSeal,
+            sealLookupViewModel
         )
     })
 
-    if (viewModel.pupOne.isStarted) {
-        items.add(TabItem("Pup One", viewModel.pupOne.name) {
+    if (pupOneSealState.isStarted) {
+        items.add(TabItem("Pup One", pupOneSealState.name) {
             SealCard(
                 viewModel,
-                viewModel.pupOne,
-                wedCheckViewModel
+                SealType.PUPONE,
+                pupOneSealState,
+                pupOneWedCheckSeal,
+                sealLookupViewModel
             )
         })
     }
 
-    if (viewModel.pupTwo.isStarted) {
-        items.add(TabItem("Pup Two", viewModel.pupTwo.name) {
+    if (pupTwoSealState.isStarted) {
+        items.add(TabItem("Pup Two", pupTwoSealState.name) {
             SealCard(
                 viewModel,
-                viewModel.pupTwo,
-                wedCheckViewModel
+                SealType.PUPTWO,
+                pupTwoSealState,
+                pupTwoWedCheckSeal,
+                sealLookupViewModel
             )
         })
     }

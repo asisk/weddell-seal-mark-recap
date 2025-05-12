@@ -26,7 +26,7 @@ class SealValidationTest {
     fun validateRetagEventWithoutWedCheckRecord() {
         val seal = Seal(tagEventType = "Retag", sex = "Female", age = "Pup")
 
-        val (isValid, message) = sealValidation(seal, getCurrentYear(), null)
+        val (isValid, message) = sealValidation(seal, getCurrentYear(), WedCheckSeal())
 
         Assert.assertEquals(false, isValid)
         Assert.assertEquals(
@@ -35,7 +35,7 @@ class SealValidationTest {
         )
 
         val markedSeal = Seal(tagEventType = "Marked", sex = "Female", age = "Pup")
-        val (isValidTwo, messageTwo) = sealValidation(markedSeal, getCurrentYear(), null)
+        val (isValidTwo, messageTwo) = sealValidation(markedSeal, getCurrentYear(), WedCheckSeal())
 
         Assert.assertEquals(false, isValidTwo)
         Assert.assertEquals(

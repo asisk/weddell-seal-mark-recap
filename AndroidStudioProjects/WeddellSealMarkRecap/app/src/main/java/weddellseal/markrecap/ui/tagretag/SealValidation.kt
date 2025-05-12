@@ -6,14 +6,14 @@ import weddellseal.markrecap.frameworks.room.WedCheckSeal
 fun sealValidation(
     seal: Seal,
     currentYear: Int,
-    wedCheckSeal: WedCheckSeal?
+    wedCheckSeal: WedCheckSeal
 ): Pair<Boolean, String> {
     var sealValid = true // assume the seal entry is valid until proven false
     val validationFailureReasons = StringBuilder() // validation errors will be added here
 
     if (!seal.isNoTag) { // only validate seals that are not marked as No Tag, seals with No Tag checked shouldn't have any validation
 
-        if (seal.tagEventType == "New" && wedCheckSeal != null) {
+        if (seal.tagEventType == "New" && wedCheckSeal.speNo != 0) {
             sealValid = false // new event types CANNOT have a WedCheck record
             validationFailureReasons.append(
                 "Tag already used! Recheck all fields before saving!\n" +
@@ -21,7 +21,7 @@ fun sealValidation(
             )
 
         } else if (seal.tagEventType == "Retag" || seal.tagEventType == "Marked") {
-            if (wedCheckSeal == null) {
+            if (wedCheckSeal.speNo != 0) {
                 sealValid = false // marked and retagged seals MUST have a WedCheck record
                 validationFailureReasons.append(
                     "Seal not in database!\n" +

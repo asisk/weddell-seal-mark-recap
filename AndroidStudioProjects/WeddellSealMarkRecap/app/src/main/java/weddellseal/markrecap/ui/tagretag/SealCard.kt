@@ -17,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,31 +30,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.Seal
+import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
-import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.ui.DropdownField
 
 @Composable
 fun SealCard(
     viewModel: TagRetagModel,
+    sealType: SealType,
     seal: Seal,
-    wedCheckViewModel: WedCheckViewModel,
+    wedCheckMatch: WedCheckSeal,
+    sealLookupViewModel: SealLookupViewModel
 ) {
+    val uiStateLookupSeal by sealLookupViewModel.uiState.collectAsState()
+    val lookupSeal by sealLookupViewModel.lookupSeal.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    var sealSpeNo by remember { mutableStateOf(if (seal.speNo != 0) seal.speNo.toString() else "") }
+    // local UI flags
+    val showDeleteRelativesDialog = remember { mutableStateOf(false) }
+    val showWedCheckCommentsDialog = remember { mutableStateOf(false) }
+
     var numRelatives by remember { mutableStateOf(seal.numRelatives) }
     var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
     var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
-    var tagNumber by remember { mutableStateOf(seal.tagNumber) }
-    var oldTagID by remember { mutableStateOf(seal.oldTagId) }
-    var notebookStr by remember { mutableStateOf(seal.notebookDataString) }
-    var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
+//    var tagNumber by remember { mutableStateOf(seal.tagNumber) }
+//    var oldTagID by remember { mutableStateOf(seal.oldTagId) }
+//    var notebookStr by remember { mutableStateOf(seal.notebookDataString) }
+//    var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
     var isNoTagsChecked by remember { mutableStateOf(seal.numTags.toIntOrNull() == 0) }
-    var isTissueChecked by remember { mutableStateOf(seal.tissueTaken) }
-    var isOldTagMarksChecked by remember { mutableStateOf(seal.oldTagMarks) }
-    val showDeleteRelativesDialog = remember { mutableStateOf(false) }
-    val showWedCheckCommentsDialog = remember { mutableStateOf(false) }
+//    var isTissueChecked by remember { mutableStateOf(seal.tissueTaken) }
+//    var isOldTagMarksChecked by remember { mutableStateOf(seal.oldTagMarks) }
 
     LaunchedEffect(seal.numRelatives) {
         numRelatives = if (seal.sex == "Male" && seal.name == "primary") {
@@ -63,45 +70,51 @@ fun SealCard(
         }
     }
 
-    LaunchedEffect(seal.tagNumber) {
-        tagNumber = seal.tagNumber
-    }
+//    LaunchedEffect(seal.tagNumber) {
+//        tagNumber = seal.tagNumber
+//    }
 
     LaunchedEffect(seal.isNoTag) {
         isNoTagsChecked = seal.isNoTag
     }
 
-    LaunchedEffect(seal.oldTagId) {
-        oldTagID = seal.oldTagId
-    }
+//    LaunchedEffect(seal.oldTagId) {
+//        oldTagID = seal.oldTagId
+//    }
 
-    LaunchedEffect(seal.tissueTaken) {
-        isTissueChecked = seal.tissueTaken
-    }
+//    LaunchedEffect(seal.tissueTaken) {
+//        isTissueChecked = seal.tissueTaken
+//    }
 
-    LaunchedEffect(seal.oldTagMarks) {
-        isOldTagMarksChecked = seal.oldTagMarks
-    }
+//    LaunchedEffect(seal.oldTagMarks) {
+//        isOldTagMarksChecked = seal.oldTagMarks
+//    }
 
-    LaunchedEffect(seal.weightTaken) {
-        isWeightToggled = seal.weightTaken
-    }
+//    LaunchedEffect(seal.weightTaken) {
+//        isWeightToggled = seal.weightTaken
+//    }
 
+    // check for an existing wedcheck seal record for this seal using the old tag id
     LaunchedEffect(seal.oldTagId) {
         Log.d("LaunchedEffect", "change in oldTagId detected")
-        if (seal.oldTagId != "" && isRetag) {
+        if (seal.oldTagId.isNotBlank() && seal.tagEventType == "Retag") {
+//            if (seal.oldTagId != "" && isRetag) {
             // check for an existing wedcheck seal record for this seal
             // conduct search if we haven't already located a wedcheck record
-            val wedCheckSeal = viewModel.getWedCheckSeal(seal.oldTagId)
-            if (wedCheckSeal == null) {
+//            val wedCheckSeal = viewModel.getWedCheckSeal(seal.oldTagId)
+            if (wedCheckMatch.speNo == 0 && !uiStateLookupSeal.isSearching) {
+//                if (wedCheckSeal == null) {
                 // clear the speno & hasSpeno fields from our seal
                 viewModel.clearSpeNo(seal)
+                sealLookupViewModel.setTagRetagLookup(true)
+                sealLookupViewModel.findSealbyTagID(seal.oldTagId)
 
                 // find the seal
-                if (!wedCheckViewModel.uiState.value.isSearching) {
-                    Log.d("LaunchedEffect", "looking up seal")
-                    wedCheckViewModel.findSealbyTagID(seal.oldTagId)
-                }
+//                if (!sealLookupViewModel.uiState.value.isSearching) {
+//                    Log.d("LaunchedEffect", "looking up seal")
+//                    sealLookupViewModel.setTagRetagLookup(true)
+//                    sealLookupViewModel.findSealbyTagID(seal.oldTagId)
+//                }
             }
         }
     }
@@ -109,7 +122,7 @@ fun SealCard(
     LaunchedEffect(seal.tagNumber, seal.tagAlpha) {
         Log.d("LaunchedEffect", "change in either tagNumber or tagAlpha detected")
         // update the speNo if we don't have one once we have a tag number and a tag alpha
-        if (!isRetag && seal.tagNumber != "" && seal.tagAlpha != "") {
+        if (seal.tagEventType != "Retag" && seal.tagNumber != "" && seal.tagAlpha != "") {
             if (seal.tagNumber.length == 3 || seal.tagNumber.length == 4) {
 
                 // construct a string without two alpha characters
@@ -119,57 +132,62 @@ fun SealCard(
 
                 // check for an existing wedcheck seal record for this seal
                 // conduct search if we haven't already located a wedcheck record
-                val wedCheckSeal = viewModel.getWedCheckSeal(searchStr)
-                if (wedCheckSeal == null) {
+//                val wedCheckSeal = viewModel.getWedCheckSeal(searchStr)
+//                if (wedCheckMatch.speNo == 0) {
                     // clear the speno & hasSpeno fields from our seal
                     viewModel.clearSpeNo(seal)
 
                     // find the seal
-                    if (!wedCheckViewModel.uiState.value.isSearching) {
+                    if (!uiStateLookupSeal.isSearching) {
                         Log.d("LaunchedEffect", "looking up seal")
-                        wedCheckViewModel.findSealbyTagID(searchStr)
+                        sealLookupViewModel.setTagRetagLookup(true)
+                        sealLookupViewModel.findSealbyTagID(searchStr)
                     }
-                }
+//                }
             }
         }
     }
 
     // there's a lag when finding the seal in the wedcheck model
     // this LaunchedEffect allows us to be aware the presence of a new wedCheckSeal
-    LaunchedEffect(wedCheckViewModel.wedCheckSeal.speNo) {
-        if (wedCheckViewModel.wedCheckSeal.speNo != 0) { // check that the wedcheck seal was found
-            var tagID = seal.tagNumber + seal.tagAlpha
-            if (isRetag) { // if retag set the tag id to the old tag
-                tagID = seal.oldTagId
-            }
-
-            // only assign wedcheck fields if they are for this seal
-            if (wedCheckViewModel.wedCheckSeal.tagIdOne == tagID) {
-
+    LaunchedEffect(lookupSeal) {
+        if (lookupSeal.speNo != 0) { // check that the wedcheck seal was found
+            val tagID =
+                if (seal.tagEventType == "Retag") seal.oldTagId else seal.tagNumber + seal.tagAlpha
+            if (lookupSeal.tagIdOne == tagID && seal.speNo != lookupSeal.speNo) {
                 //map the relevant wedcheck fields to our seal
-                if (seal.speNo != wedCheckViewModel.wedCheckSeal.speNo) {
-                    viewModel.mapSpeno(seal.name, wedCheckViewModel.wedCheckSeal)
-                    viewModel.addWedCheckSeal(tagID, wedCheckViewModel.wedCheckSeal)
-                }
-
+//                viewModel.updateSpeNo(seal.name, lookupSeal.speNo)
+                viewModel.mapSpeno(seal.name, lookupSeal)
+//                viewModel.addWedCheckSeal(tagID, lookupSeal)
                 // make sure that the comments are displayed when a seal record is updated to
                 // allow the technician to take action if needed (TAKE PHOTOS)
                 showWedCheckCommentsDialog.value = true
             }
+
+//            var tagID = seal.tagNumber + seal.tagAlpha
+//            if (isRetag) { // if retag set the tag id to the old tag
+//                tagID = seal.oldTagId
+//            }
+
+//            // only assign wedcheck fields if they are for this seal
+//            if (sealLookupViewModel.lookupSeal.value.tagIdOne == tagID) {
+//
+//                //map the relevant wedcheck fields to our seal
+//                if (seal.speNo != sealLookupViewModel.lookupSeal.value.speNo) {
+//                    viewModel.mapSpeno(seal.name, sealLookupViewModel.lookupSeal.value)
+//                    viewModel.addWedCheckSeal(tagID, sealLookupViewModel.lookupSeal.value)
+//                }
+//
+//                // make sure that the comments are displayed when a seal record is updated to
+//                // allow the technician to take action if needed (TAKE PHOTOS)
+//                showWedCheckCommentsDialog.value = true
+//            }
         }
     }
 
-    LaunchedEffect(seal.notebookDataString) {
-        notebookStr = seal.notebookDataString
-    }
-
-    LaunchedEffect(seal.speNo) {
-        sealSpeNo = if (seal.speNo != 0) {
-            seal.speNo.toString()
-        } else {
-            ""
-        }
-    }
+//    LaunchedEffect(seal.notebookDataString) {
+//        notebookStr = seal.notebookDataString
+//    }
 
     LaunchedEffect(seal.tagEventType) {
         isRetag = seal.tagEventType == "Retag"
@@ -190,10 +208,10 @@ fun SealCard(
         ) {
 
             // NOTEBOOK STRING
-            Box() {
-                Row() {
+            Box {
+                Row {
                     Text(
-                        notebookStr,
+                        seal.notebookDataString,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -201,21 +219,24 @@ fun SealCard(
             }
 
             //SPENO
-            Box() {
+            Box {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    if (sealSpeNo != "") {
+//                    if (uiStateLookupSeal.sealFound
+//                        && uiStateLookupSeal.isTagRetagLookup
+//                        && !seal.isNoTag
+//                    ) {
                         Text(
-                            "Speno:",
+                            text = if (seal.speNo == 0) "" else "Speno: ${seal.speNo}",
                             style = MaterialTheme.typography.titleLarge,
                         )
-                        Text(
-                            sealSpeNo,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+//                        Text(
+//                            lookupSeal.speNo.toString(),
+//                            style = MaterialTheme.typography.titleLarge,
+//                            fontWeight = FontWeight.SemiBold
+//                        )
+//                    }
                 }
             }
         }
@@ -606,7 +627,7 @@ fun SealCard(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         TagIDOutlinedTextField(
-                            value = oldTagID,
+                            value = seal.oldTagId,
                             labelText = "Old Tag ID",
                             placeholderText = "Enter Old Tag ID",
                             errorMessage = "",
@@ -716,7 +737,7 @@ fun SealCard(
 
                     // TAG ID
                     TagIDOutlinedTextField(
-                        value = tagNumber,
+                        value = seal.tagNumber,
                         labelText = "Number",
                         placeholderText = "Enter Tag Number",
                         errorMessage = errMessage,
@@ -733,7 +754,8 @@ fun SealCard(
                             // clear the seal in the WedCheck model when this field is cleared
                             if (!isRetag) {
                                 viewModel.clearSpeNo(seal)
-                                wedCheckViewModel.resetState()
+                                sealLookupViewModel.resetUiState()
+                                sealLookupViewModel.resetLookupSeal()
                             }
                         },
                         onFocusChange = { isFocused, lastValue ->
@@ -832,6 +854,8 @@ fun SealCard(
                                 seal,
                                 "Marked"
                             )
+                            sealLookupViewModel.resetUiState()
+                            sealLookupViewModel.resetLookupSeal()
                         } else { // reset the event type if the checkbox is deselected
                             viewModel.updateTagEventType(
                                 seal,
@@ -868,10 +892,10 @@ fun SealCard(
                 )
 
                 Checkbox(
-                    checked = isTissueChecked,
+                    checked = seal.tissueTaken,
                     onCheckedChange = {
                         focusManager.clearFocus()
-                        isTissueChecked = it
+//                        isTissueChecked = it
                         viewModel.updateTissueTaken(seal.name, it)
                     },
                     modifier = Modifier
@@ -884,9 +908,9 @@ fun SealCard(
     // COMMENT && OLD TAG MARKS
 
     // WEDCHECK COMMENTS DIALOG
-    if (showWedCheckCommentsDialog.value && wedCheckViewModel.wedCheckSeal.comment != "") {
+    if (showWedCheckCommentsDialog.value && lookupSeal.comment != "") {
         WedCheckCommentDialog(
-            wedCheckRecordComments = wedCheckViewModel.wedCheckSeal.comment,
+            wedCheckRecordComments = lookupSeal.comment,
             onDismiss = { showWedCheckCommentsDialog.value = false },
         )
     }
@@ -917,11 +941,11 @@ fun SealCard(
                     )
 
                     Checkbox(
-                        checked = isOldTagMarksChecked,
+                        checked = seal.oldTagMarks,
                         onCheckedChange = {
                             focusManager.clearFocus()
 
-                            isOldTagMarksChecked = it
+//                            isOldTagMarksChecked = it
                             viewModel.updateOldTagMarks(seal.name, it)
                         },
                         modifier = Modifier
@@ -976,9 +1000,9 @@ fun SealCard(
                     )
 
                     Switch(
-                        checked = isWeightToggled,
+                        checked = seal.weightTaken,
                         onCheckedChange = { isChecked ->
-                            isWeightToggled = isChecked
+//                            isWeightToggled = isChecked
                             viewModel.updateIsWeightTaken(seal.name, isChecked)
                         }
                     )
@@ -986,8 +1010,6 @@ fun SealCard(
             }
 
             // PUP WEIGHT ENTRY FIELD
-            val weightRecorded by remember { mutableStateOf(seal.weight.toString()) }
-
             Box(
                 modifier = Modifier
                     .weight(.6f)
@@ -998,11 +1020,11 @@ fun SealCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (isWeightToggled) {
+                    if (seal.weightTaken) {
                         Spacer(modifier = Modifier.width(8.dp))
 
                         PupWeightOutlinedTextField(
-                            value = weightRecorded,
+                            value = seal.weight.toString(),
                             labelText = "Weight",
                             placeholderText = "Enter in lbs",
                             onValueChangeDo = {

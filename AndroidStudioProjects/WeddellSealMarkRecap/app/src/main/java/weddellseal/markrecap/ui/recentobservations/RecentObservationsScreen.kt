@@ -114,7 +114,7 @@ fun RecentObservationsScreen(
                     items(currentObservations) { observation ->
                         ObservationItem(
                             onEditDo = {
-                                if (!obsViewModel.primarySeal.isStarted) {
+                                if (!obsViewModel.primarySeal.value.isStarted) {
                                     showEditDialog = true
                                     observationToEdit = observation
                                 } else {

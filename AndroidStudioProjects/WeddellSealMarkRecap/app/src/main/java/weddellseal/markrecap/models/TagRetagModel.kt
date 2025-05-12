@@ -25,7 +25,10 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnTokenCanceledListener
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
@@ -36,7 +39,7 @@ import weddellseal.markrecap.frameworks.room.wedCheck.processTags
 import weddellseal.markrecap.ui.tagretag.buildLogEntry
 import weddellseal.markrecap.ui.tagretag.notebookEntryValueSeal
 import weddellseal.markrecap.ui.tagretag.sealValidation
-import java.time.LocalDate
+import weddellseal.markrecap.ui.utils.getCurrentYear
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -83,6 +86,7 @@ class TagRetagModel(
         val observationLogEntry: ObservationLogEntry? = null,
         val isEditMode: Boolean = false,
         val recordID: Int = 0,
+        val isRetag : Boolean = false, //TODO, implement this or remove it!
     )
 
     var uiState by mutableStateOf(
@@ -98,7 +102,7 @@ class TagRetagModel(
 
     init {
         // Automatically update colonyLocation if it's set to "Select an option"
-        // In other words, if the user has not selected a location, use the autodetected location
+        // In other words, if the user has not selected a location, use the auto-detected location
         viewModelScope.launch {
             combine(
                 sealColonyRepository.colony,
@@ -115,42 +119,35 @@ class TagRetagModel(
         }
     }
 
-    var primarySeal by mutableStateOf(
-        Seal(
-            name = "primary", isStarted = false
-        )
-    )
-        private set
+    private val _primarySeal = MutableStateFlow(Seal(name = "primary", isStarted = false))
+    val primarySeal: StateFlow<Seal> = _primarySeal
 
-    var pupOne by mutableStateOf(
-        Seal(
-            name = "pupOne", age = "Pup", isStarted = false
-        )
-    )
-        private set
+    private val _primaryWedCheckSeal = MutableStateFlow(WedCheckSeal())
+    val primaryWedCheckSeal: StateFlow<WedCheckSeal> = _primaryWedCheckSeal
 
-    var pupTwo by mutableStateOf(
-        Seal(
-            name = "pupTwo", age = "Pup", isStarted = false
-        )
-    )
-        private set
+    private val _pupOne = MutableStateFlow(Seal(name = "pupOne", age = "Pup", isStarted = false))
+    val pupOne: StateFlow<Seal> = _pupOne
+
+    private val _pupOneWedCheckSeal = MutableStateFlow(WedCheckSeal())
+    val pupOneWedCheckSeal: StateFlow<WedCheckSeal> = _pupOneWedCheckSeal
+
+    private val _pupTwo = MutableStateFlow(Seal(name = "pupTwo", age = "Pup", isStarted = false))
+    val pupTwo: StateFlow<Seal> = _pupTwo
+
+    private val _pupTwoWedCheckSeal = MutableStateFlow(WedCheckSeal())
+    val pupTwoWedCheckSeal: StateFlow<WedCheckSeal> = _pupTwoWedCheckSeal
 
     private var wedCheckSealMap = mutableMapOf<String, WedCheckSeal>()
 
     // add a WedCheckSeal to the map
-    fun addWedCheckSeal(tag: String, seal: WedCheckSeal) {
-        wedCheckSealMap[tag] = seal
-    }
+//    fun addWedCheckSeal(tag: String, seal: WedCheckSeal) {
+//        wedCheckSealMap[tag] = seal
+//    }
 
     // retrieve a WedCheckSeal by speno
-    fun getWedCheckSeal(tagID: String): WedCheckSeal? {
-        return wedCheckSealMap[tagID]
-    }
-
-    private fun getCurrentYear(): Int {
-        return LocalDate.now().year
-    }
+//    fun getWedCheckSeal(tagID: String): WedCheckSeal? {
+//        return wedCheckSealMap[tagID]
+//    }
 
     private fun getCoordinatesLastUpdated(): String {
         val currentDateTime =
@@ -175,23 +172,29 @@ class TagRetagModel(
                 validEntry = false
             )
 
-        primarySeal = primarySeal.copy(
-            isValid = false,
-            isValidated = false,
-            reasonNotValid = ""
-        )
+        _primarySeal.update {
+            it.copy(
+                isValid = false,
+                isValidated = false,
+                reasonNotValid = ""
+            )
+        }
 
-        pupOne = pupOne.copy(
-            isValid = false,
-            isValidated = false,
-            reasonNotValid = ""
-        )
+        _pupOne.update {
+            it.copy(
+                isValid = false,
+                isValidated = false,
+                reasonNotValid = ""
+            )
+        }
 
-        pupTwo = pupTwo.copy(
-            isValid = false,
-            isValidated = false,
-            reasonNotValid = ""
-        )
+        _pupTwo.update {
+            it.copy(
+                isValid = false,
+                isValidated = false,
+                reasonNotValid = ""
+            )
+        }
     }
 
     fun updateColonySelection(observationSiteSelected: String) {
@@ -221,15 +224,17 @@ class TagRetagModel(
         }
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(condition = condSelected, isStarted = true)
+                _primarySeal.update { it.copy(condition = condSelected, isStarted = true) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(condition = condSelected, isStarted = true)
+                _pupOne.update { it.copy(condition = condSelected, isStarted = true) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(condition = condSelected, isStarted = true)
+                _pupTwo.update {
+                    it.copy(condition = condSelected, isStarted = true)
+                }
             }
         }
     }
@@ -237,15 +242,17 @@ class TagRetagModel(
     fun updateOldTagMarks(name: String, oldTagMarks: Boolean) {
         when (name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(oldTagMarks = oldTagMarks)
+                _primarySeal.update { it.copy(oldTagMarks = oldTagMarks) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(oldTagMarks = oldTagMarks)
+                _pupOne.update { it.copy(oldTagMarks = oldTagMarks) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(oldTagMarks = oldTagMarks)
+                _pupTwo.update {
+                    it.copy(oldTagMarks = oldTagMarks)
+                }
             }
         }
     }
@@ -253,15 +260,17 @@ class TagRetagModel(
     fun updateWeight(seal: Seal, number: Int) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(weight = number, isStarted = true)
+                _primarySeal.update { it.copy(weight = number, isStarted = true) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(weight = number, isStarted = true)
+                _pupOne.update { it.copy(weight = number, isStarted = true) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(weight = number, isStarted = true)
+                _pupTwo.update {
+                    it.copy(weight = number, isStarted = true)
+                }
             }
         }
     }
@@ -269,15 +278,17 @@ class TagRetagModel(
     fun clearOldTag(sealName: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(oldTagId = "")
+                _primarySeal.update { it.copy(oldTagId = "") }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(oldTagId = "")
+                _pupOne.update { it.copy(oldTagId = "") }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(oldTagId = "")
+                _pupTwo.update {
+                    it.copy(oldTagId = "")
+                }
             }
         }
     }
@@ -285,50 +296,53 @@ class TagRetagModel(
     fun clearTag(seal: Seal) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(
-                    tagAlpha = "",
-                    tagNumber = "",
-                )
-                updateNotebookEntry(primarySeal)
+                _primarySeal.update {
+                    it.copy(
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(
-                    tagAlpha = "",
-                    tagNumber = "",
-                )
-                updateNotebookEntry(pupOne)
+                _pupOne.update {
+                    it.copy(
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    tagAlpha = "",
-                    tagNumber = "",
-                )
-                updateNotebookEntry(pupTwo)
+                _pupTwo.update {
+                    it.copy(
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
-//
-//    fun updateWedCheckFields(seal: Seal, wedCheckViewModel: WedCheckViewModel, searchStr: String) {
-//        if (!wedCheckViewModel.uiState.value.isSearching) {
-//            wedCheckViewModel.findSealbyTagID(searchStr) // find the seal
-//        }
-//    }
-
 
     fun clearSpeNo(seal: Seal) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(speNo = 0, hasWedCheckSpeno = false)
+                _primarySeal.update { it.copy(speNo = 0, hasWedCheckSpeno = false) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(speNo = 0, hasWedCheckSpeno = false)
+                _pupOne.update {
+                    it.copy(speNo = 0, hasWedCheckSpeno = false)
+                }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(speNo = 0, hasWedCheckSpeno = false)
+                _pupTwo.update {
+                    it.copy(speNo = 0, hasWedCheckSpeno = false)
+                }
             }
         }
     }
@@ -336,33 +350,39 @@ class TagRetagModel(
     fun updateNoTag(sealName: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(
-                    isNoTag = true,
-                    numTags = "",
-                    tagAlpha = "",
-                    tagNumber = "",
-                )
-                updateNotebookEntry(primarySeal)
+                _primarySeal.update {
+                    it.copy(
+                        isNoTag = true,
+                        numTags = "",
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(
-                    isNoTag = true,
-                    numTags = "",
-                    tagAlpha = "",
-                    tagNumber = "",
-                )
-                updateNotebookEntry(pupOne)
+                _pupOne.update {
+                    it.copy(
+                        isNoTag = true,
+                        numTags = "",
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    isNoTag = true,
-                    numTags = "",
-                    tagAlpha = "",
-                    tagNumber = "",
-                )
-                updateNotebookEntry(pupTwo)
+                _pupTwo.update {
+                    it.copy(
+                        isNoTag = true,
+                        numTags = "",
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -370,17 +390,21 @@ class TagRetagModel(
     fun updateRetagReason(sealName: String, input: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(reasonForRetag = input)
+                _primarySeal.update { it.copy(reasonForRetag = input) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(reasonForRetag = input)
-                updateNotebookEntry(pupOne)
+                _pupOne.update {
+                    it.copy(reasonForRetag = input)
+                }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(reasonForRetag = input)
-                updateNotebookEntry(pupTwo)
+                _pupTwo.update {
+                    it.copy(reasonForRetag = input)
+                }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -388,18 +412,22 @@ class TagRetagModel(
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(age = input, isStarted = true)
-                updateNotebookEntry(primarySeal)
+                _primarySeal.update { it.copy(age = input, isStarted = true) }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(age = input, isStarted = true)
-                updateNotebookEntry(pupOne)
+                _pupOne.update {
+                    it.copy(age = input, isStarted = true)
+                }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(age = input, isStarted = true)
-                updateNotebookEntry(pupTwo)
+                _pupTwo.update {
+                    it.copy(age = input, isStarted = true)
+                }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -413,40 +441,52 @@ class TagRetagModel(
                 }
 
                 1 -> {
-                    pupOne = pupOne.copy(numRelatives = input, isStarted = true)
-                    pupTwo = pupTwo.copy(numRelatives = input, isStarted = false)
-                    updateNotebookEntry(pupOne)
-                    updateNotebookEntry(pupTwo)
+                    _pupOne.update {
+                        it.copy(numRelatives = input, isStarted = true)
+                    }
+                    _pupTwo.update {
+                        it.copy(numRelatives = input, isStarted = false)
+                    }
+                    updateNotebookEntry(pupOne.value)
+                    updateNotebookEntry(pupTwo.value)
                 }
 
                 2 -> {
-                    pupOne = pupOne.copy(numRelatives = input, isStarted = true)
-                    pupTwo = pupTwo.copy(numRelatives = input, isStarted = true)
-                    updateNotebookEntry(pupOne)
-                    updateNotebookEntry(pupTwo)
+                    _pupOne.update {
+                        it.copy(numRelatives = input, isStarted = true)
+                    }
+                    _pupTwo.update {
+                        it.copy(numRelatives = input, isStarted = true)
+                    }
+                    updateNotebookEntry(pupOne.value)
+                    updateNotebookEntry(pupTwo.value)
                 }
             }
 
-            primarySeal = primarySeal.copy(numRelatives = input, isStarted = true)
-            updateNotebookEntry(primarySeal)
+            _primarySeal.update { it.copy(numRelatives = input, isStarted = true) }
+            updateNotebookEntry(primarySeal.value)
         }
     }
 
     fun updateSex(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(sex = input, isStarted = true)
-                updateNotebookEntry(primarySeal)
+                _primarySeal.update { it.copy(sex = input, isStarted = true) }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(sex = input, isStarted = true)
-                updateNotebookEntry(pupOne)
+                _pupOne.update {
+                    it.copy(sex = input, isStarted = true)
+                }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(sex = input, isStarted = true)
-                updateNotebookEntry(pupTwo)
+                _pupTwo.update {
+                    it.copy(sex = input, isStarted = true)
+                }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -454,17 +494,21 @@ class TagRetagModel(
     fun updatePupPeed(sealName: String, input: Boolean) {
         when (sealName) {
             "primary" -> {
-                if (primarySeal.age == "Pup") {
-                    primarySeal = primarySeal.copy(pupPeed = true, isStarted = true)
+                if (primarySeal.value.age == "Pup") {
+                    _primarySeal.update { it.copy(pupPeed = true, isStarted = true) }
                 }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(pupPeed = input, isStarted = true)
+                _pupOne.update {
+                    it.copy(pupPeed = input, isStarted = true)
+                }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(pupPeed = input, isStarted = true)
+                _pupTwo.update {
+                    it.copy(pupPeed = input, isStarted = true)
+                }
             }
         }
     }
@@ -472,15 +516,19 @@ class TagRetagModel(
     fun updateTagAlpha(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tagAlpha = input, isStarted = true)
+                _primarySeal.update { it.copy(tagAlpha = input, isStarted = true) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagAlpha = input, isStarted = true)
+                _pupOne.update {
+                    it.copy(tagAlpha = input, isStarted = true)
+                }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagAlpha = input, isStarted = true)
+                _pupTwo.update {
+                    it.copy(tagAlpha = input, isStarted = true)
+                }
             }
         }
     }
@@ -494,18 +542,18 @@ class TagRetagModel(
 
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tagNumber = tagNumber, isStarted = true)
-                updateNotebookEntry(primarySeal)
+                _primarySeal.update { it.copy(tagNumber = tagNumber, isStarted = true) }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagNumber = tagNumber, isStarted = true)
-                updateNotebookEntry(pupOne)
+                _pupOne.update { it.copy(tagNumber = tagNumber, isStarted = true) }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagNumber = tagNumber, isStarted = true)
-                updateNotebookEntry(pupTwo)
+                _pupTwo.update { it.copy(tagNumber = tagNumber, isStarted = true) }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -513,17 +561,17 @@ class TagRetagModel(
     fun updateTagEventType(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tagEventType = input, isStarted = true)
-                updateNotebookEntry(primarySeal)
+                _primarySeal.update { it.copy(tagEventType = input, isStarted = true) }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tagEventType = input, isStarted = true)
-                updateNotebookEntry(pupOne)
+                _pupOne.update { it.copy(tagEventType = input, isStarted = true) }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tagEventType = input, isStarted = true)
+                _pupTwo.update { it.copy(tagEventType = input, isStarted = true) }
             }
         }
     }
@@ -531,15 +579,15 @@ class TagRetagModel(
     fun updateOldTag(seal: Seal, oldTagIdOne: String) {
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(oldTagId = oldTagIdOne, isStarted = true)
+                _primarySeal.update { it.copy(oldTagId = oldTagIdOne, isStarted = true) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(oldTagId = oldTagIdOne, isStarted = true)
+                _pupOne.update { it.copy(oldTagId = oldTagIdOne, isStarted = true) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(oldTagId = oldTagIdOne, isStarted = true)
+                _pupTwo.update { it.copy(oldTagId = oldTagIdOne, isStarted = true) }
             }
         }
     }
@@ -547,15 +595,15 @@ class TagRetagModel(
     fun updateComment(sealName: String, input: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(comment = input, isStarted = true)
+                _primarySeal.update { it.copy(comment = input, isStarted = true) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(comment = input, isStarted = true)
+                _pupOne.update { it.copy(comment = input, isStarted = true) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(comment = input, isStarted = true)
+                _pupTwo.update { it.copy(comment = input, isStarted = true) }
             }
         }
     }
@@ -563,18 +611,18 @@ class TagRetagModel(
     fun updateNumTags(sealName: String, input: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(numTags = input, isStarted = true)
-                updateNotebookEntry(primarySeal)
+                _primarySeal.update { it.copy(numTags = input, isStarted = true) }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(numTags = input, isStarted = true)
-                updateNotebookEntry(pupOne)
+                _pupOne.update { it.copy(numTags = input, isStarted = true) }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(numTags = input, isStarted = true)
-                updateNotebookEntry(pupTwo)
+                _pupTwo.update { it.copy(numTags = input, isStarted = true) }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -582,15 +630,15 @@ class TagRetagModel(
     fun updateTissueTaken(sealName: String, input: Boolean) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(tissueTaken = input, isStarted = true)
+                _primarySeal.update { it.copy(tissueTaken = input, isStarted = true) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(tissueTaken = input, isStarted = true)
+                _pupOne.update { it.copy(tissueTaken = input, isStarted = true) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(tissueTaken = input, isStarted = true)
+                _pupTwo.update { it.copy(tissueTaken = input, isStarted = true) }
             }
         }
     }
@@ -598,21 +646,27 @@ class TagRetagModel(
     fun resetPupFields(sealName: String) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(
-                    pupPeed = false, weightTaken = false, weight = 0, isStarted = true
-                )
+                _primarySeal.update {
+                    it.copy(
+                        pupPeed = false, weightTaken = false, weight = 0, isStarted = true
+                    )
+                }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(
-                    pupPeed = false, weightTaken = false, weight = 0, isStarted = true
-                )
+                _pupOne.update {
+                    it.copy(
+                        pupPeed = false, weightTaken = false, weight = 0, isStarted = true
+                    )
+                }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    pupPeed = false, weightTaken = false, weight = 0, isStarted = true
-                )
+                _pupTwo.update {
+                    it.copy(
+                        pupPeed = false, weightTaken = false, weight = 0, isStarted = true
+                    )
+                }
             }
         }
     }
@@ -620,15 +674,15 @@ class TagRetagModel(
     fun updateIsWeightTaken(sealName: String, checked: Boolean) {
         when (sealName) {
             "primary" -> {
-                primarySeal = primarySeal.copy(weightTaken = checked, isStarted = true)
+                _primarySeal.update { it.copy(weightTaken = checked, isStarted = true) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(weightTaken = checked, isStarted = true)
+                _pupOne.update { it.copy(weightTaken = checked, isStarted = true) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(weightTaken = checked, isStarted = true)
+                _pupTwo.update { it.copy(weightTaken = checked, isStarted = true) }
             }
         }
     }
@@ -638,22 +692,22 @@ class TagRetagModel(
 
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(notebookDataString = notebookEntry)
+                _primarySeal.update { it.copy(notebookDataString = notebookEntry) }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(notebookDataString = notebookEntry)
+                _pupOne.update { it.copy(notebookDataString = notebookEntry) }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(notebookDataString = notebookEntry)
+                _pupTwo.update { it.copy(notebookDataString = notebookEntry) }
             }
         }
     }
 
     fun resetSeal(sealName: String) {
-        var parentNumRels = primarySeal.numRelatives
-        if (primarySeal.numRelatives != "" && primarySeal.numRelatives.toIntOrNull() != null) {
+        var parentNumRels = primarySeal.value.numRelatives
+        if (primarySeal.value.numRelatives != "" && primarySeal.value.numRelatives.toIntOrNull() != null) {
             var number = parentNumRels.toInt()
             number -= 1
             parentNumRels = number.toString()
@@ -661,68 +715,73 @@ class TagRetagModel(
 
         when (sealName) {
             "primary" -> {
-                primarySeal = Seal(
-                    name = "primary", isStarted = false
-                )
+                _primarySeal.update {
+                    Seal(name = "primary", isStarted = false)
+                }
                 // removing the primary seal results in removing pups, if present, as well
-                pupOne = Seal(
-                    name = "pupOne",
-                    age = "Pup",
-                    isStarted = false
-                )
-                pupTwo = Seal(
-                    name = "pupTwo",
-                    age = "Pup",
-                    isStarted = false
-                )
-            }
-
-            "pupOne" -> {
-                // update parent num rels when pup one is removed
-                primarySeal = primarySeal.copy(numRelatives = parentNumRels)
-
-                // if pupOne is removed and there's a second pup
-                if (pupTwo.isStarted) {
-                    // rename the second pup and update it's number of relatives
-                    pupTwo =
-                        pupTwo.copy(name = "pupOne", numRelatives = primarySeal.numRelatives)
-                    //reassign it to pupOne
-                    pupOne = pupTwo
-                    //deactivate pupTwo
-                    pupTwo = Seal(name = "pupTwo", age = "Pup", isStarted = false)
-                } else {
-                    pupOne = Seal(
+                _pupOne.update {
+                    Seal(
                         name = "pupOne",
                         age = "Pup",
-                        numRelatives = primarySeal.numRelatives,
+                        isStarted = false
+                    )
+                }
+                _pupTwo.update {
+                    Seal(
+                        name = "pupTwo",
+                        age = "Pup",
                         isStarted = false
                     )
                 }
             }
 
-            "pupTwo" -> {
-                pupTwo = Seal(
-                    name = "pupTwo", age = "Pup", isStarted = false
-                )
+            "pupOne" -> {
+                // update parent num rels when pup one is removed
+                _primarySeal.update { it.copy(numRelatives = parentNumRels) }
 
-                if (pupOne.isStarted) {
-                    pupOne = pupOne.copy(numRelatives = parentNumRels)
+                // if pupOne is removed and there's a second pup
+                if (pupTwo.value.isStarted) {
+                    // rename the second pup and update it's number of relatives
+                    _pupTwo.update {
+                        it.copy(
+                            name = "pupOne",
+                            numRelatives = primarySeal.value.numRelatives
+                        )
+                    }
+                    //reassign it to pupOne
+                    _pupOne.update { pupTwo.value }
+                    //deactivate pupTwo
+                    _pupTwo.update { Seal(name = "pupTwo", age = "Pup", isStarted = false) }
+                } else {
+                    _pupOne.update {
+                        Seal(
+                            name = "pupOne",
+                            age = "Pup",
+                            numRelatives = primarySeal.value.numRelatives,
+                            isStarted = false
+                        )
+                    }
+                }
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update { Seal(name = "pupTwo", age = "Pup", isStarted = false) }
+
+                if (pupOne.value.isStarted) {
+                    _pupOne.update { it.copy(numRelatives = parentNumRels) }
                 }
             }
         }
-        updateNotebookEntry(primarySeal)
-        updateNotebookEntry(pupOne)
-        updateNotebookEntry(pupTwo)
+
+        updateNotebookEntry(primarySeal.value)
+        updateNotebookEntry(pupOne.value)
+        updateNotebookEntry(pupTwo.value)
     }
 
     private fun removePups() {
         //called when primary seal number of relatives is set to zero
-        pupOne = Seal(
-            name = "pupOne", age = "Pup", isStarted = false
-        )
-        pupTwo = Seal(
-            name = "pupTwo", age = "Pup", isStarted = false
-        )
+        _pupOne.update { Seal(name = "pupOne", age = "Pup", isStarted = false) }
+        _pupTwo.update { Seal(name = "pupTwo", age = "Pup", isStarted = false) }
     }
 
     fun hasPermission(permission: String): Boolean {
@@ -746,21 +805,21 @@ class TagRetagModel(
         }
     }
 
-    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
+    // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen selection of Tag/Retag
     // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
-    fun populateSeal(wedCheckSeal: WedCheckSeal) {
+    fun populateSeal(lookupSeal: WedCheckSeal) {
         // advance the age based on the last seen season
         val currentYear = getCurrentYear()
         var sealAgeAdvanced = "Adult"
-        when (wedCheckSeal.lastSeenSeason) {
+        when (lookupSeal.lastSeenSeason) {
             currentYear -> { // seal last seen this year
                 // Age class CANNOT change for seals seen twice in a season
-                sealAgeAdvanced = wedCheckSeal.age
+                sealAgeAdvanced = lookupSeal.age
             }
 
             currentYear - 1 -> { // seal last seen last year
                 // Age class must advance for seals seen last year
-                val expectedAge = when (wedCheckSeal.age) {
+                val expectedAge = when (lookupSeal.age) {
                     "Pup" -> "Yearling"
                     "Yearling" -> "Adult"
                     else -> "Adult"
@@ -776,24 +835,28 @@ class TagRetagModel(
         }
 
         // number of Relatives shouldn't be populated for Female seals because it's likely that the seal has a pup
-        val numberRels = if (wedCheckSeal.sex == "Female") "" else "0"
+        val numberRels = if (lookupSeal.sex == "Female") "" else "0"
 
-        primarySeal = primarySeal.copy(
-            speNo = wedCheckSeal.speNo,
-            age = sealAgeAdvanced, // expecting to advance the seal age based on the last season seen
-            sex = wedCheckSeal.sex,
-            numRelatives = numberRels,
-            tagNumber = wedCheckSeal.tagOneNumber,
-            tagAlpha = wedCheckSeal.tagOneAlpha,
-            oldTagId = wedCheckSeal.tagIdOne,
-            tagEventType = "Marked",
-            lastPhysio = wedCheckSeal.lastPhysio,
-            colony = wedCheckSeal.colony,
-            isWedCheck = true,
-        )
-        val tagID = wedCheckSeal.tagOneNumber + wedCheckSeal.tagOneAlpha
-        addWedCheckSeal(tagID, wedCheckSeal)
-        updateNotebookEntry(primarySeal)
+        _primarySeal.update {
+            it.copy(
+                speNo = lookupSeal.speNo,
+                age = sealAgeAdvanced, // expecting to advance the seal age based on the last season seen
+                sex = lookupSeal.sex,
+                numRelatives = numberRels,
+                tagNumber = lookupSeal.tagOneNumber,
+                tagAlpha = lookupSeal.tagOneAlpha,
+                oldTagId = lookupSeal.tagIdOne,
+                tagEventType = "Marked",
+                lastPhysio = lookupSeal.lastPhysio,
+                colony = lookupSeal.colony,
+                isWedCheck = true,
+            )
+        }
+        _primaryWedCheckSeal.update { lookupSeal }
+
+//        val tagID = lookupSeal.tagOneNumber + lookupSeal.tagOneAlpha
+//        addWedCheckSeal(tagID, lookupSeal)
+        updateNotebookEntry(primarySeal.value)
     }
 
     // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
@@ -849,30 +912,32 @@ class TagRetagModel(
                 }
             }
 
-            primarySeal = primarySeal.copy(
-                colony = log.colony,
-                speNo = log.speno.toInt(),
-                age = ageString, // expecting to advance the seal age based on the last season seen
-                sex = sealSex,
-                numRelatives = log.numRelatives,
-                condition = condition,
-                tagNumber = processedTagOneNumber,
-                tagAlpha = processedTagOneAlpha,
-                oldTagId = log.oldTagIDOne,
-                tagEventType = tagEvent,
-                reasonForRetag = log.retagReason,
-                numTags = if (numTags > 0) numTags.toString() else "",
-                isNoTag = log.tagIDOne == "NoTag" && log.tagEvent == "Marked",
-                comment = log.comments,
-                weightTaken = log.weight != "",
-                weight = if (log.weight != "") log.weight.toInt() else 0,
-                tissueTaken = log.tissueSampled != "",
-                flaggedForReview = log.flaggedEntry != "",
-                isStarted = true,
-                hasWedCheckSpeno = true,
-                observationID = log.id,
-                isObservationLogEntry = true,
-            )
+            _primarySeal.update {
+                it.copy(
+                    colony = log.colony,
+                    speNo = log.speno.toInt(),
+                    age = ageString, // expecting to advance the seal age based on the last season seen
+                    sex = sealSex,
+                    numRelatives = log.numRelatives,
+                    condition = condition,
+                    tagNumber = processedTagOneNumber,
+                    tagAlpha = processedTagOneAlpha,
+                    oldTagId = log.oldTagIDOne,
+                    tagEventType = tagEvent,
+                    reasonForRetag = log.retagReason,
+                    numTags = if (numTags > 0) numTags.toString() else "",
+                    isNoTag = log.tagIDOne == "NoTag" && log.tagEvent == "Marked",
+                    comment = log.comments,
+                    weightTaken = log.weight != "",
+                    weight = if (log.weight != "") log.weight.toInt() else 0,
+                    tissueTaken = log.tissueSampled != "",
+                    flaggedForReview = log.flaggedEntry != "",
+                    isStarted = true,
+                    hasWedCheckSpeno = true,
+                    observationID = log.id,
+                    isObservationLogEntry = true,
+                )
+            }
 
             uiState = uiState.copy(
                 deviceID = log.deviceID,
@@ -883,31 +948,40 @@ class TagRetagModel(
                 colonyLocation = log.colony
             )
         }
-        updateNotebookEntry(primarySeal)
+        updateNotebookEntry(primarySeal.value)
     }
 
 
     fun mapSpeno(name: String, wedCheckSeal: WedCheckSeal) {
         when (name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(
-                    speNo = wedCheckSeal.speNo,
-                    hasWedCheckSpeno = true,
-                )
+                _primarySeal.update {
+                    it.copy(
+                        speNo = wedCheckSeal.speNo,
+                        hasWedCheckSpeno = true,
+                    )
+                }
+                _primaryWedCheckSeal.update { wedCheckSeal }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(
-                    speNo = wedCheckSeal.speNo,
-                    hasWedCheckSpeno = true,
-                )
+                _pupOne.update {
+                    it.copy(
+                        speNo = wedCheckSeal.speNo,
+                        hasWedCheckSpeno = true,
+                    )
+                }
+                _pupOneWedCheckSeal.update { wedCheckSeal }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    speNo = wedCheckSeal.speNo,
-                    hasWedCheckSpeno = true,
-                )
+                _pupTwo.update {
+                    it.copy(
+                        speNo = wedCheckSeal.speNo,
+                        hasWedCheckSpeno = true,
+                    )
+                }
+                _pupTwoWedCheckSeal.update { wedCheckSeal }
             }
         }
     }
@@ -917,11 +991,14 @@ class TagRetagModel(
     @SuppressLint("MissingPermission")
     fun fetchCurrentLocation() {
         val isGooglePlay =
-            GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context)
+            GoogleApiAvailability.getInstance()
+                .isGooglePlayServicesAvailable(context)
         uiState.hasGooglePlay = isGooglePlay
 
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,
+        val fusedLocationClient =
+            LocationServices.getFusedLocationProviderClient(context)
+        fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
             object : CancellationToken() {
                 override fun onCanceledRequested(p0: OnTokenCanceledListener) =
                     CancellationTokenSource().token
@@ -942,7 +1019,10 @@ class TagRetagModel(
                 uiState = uiState.copy(
                     latLong = "Lat : $lat Long : $lon"
                 )
-                uiState = uiState.copy(latitude = lat.toString(), longitude = lon.toString())
+                uiState = uiState.copy(
+                    latitude = lat.toString(),
+                    longitude = lon.toString()
+                )
             }
         }
     }
@@ -952,18 +1032,20 @@ class TagRetagModel(
         var relTwoTagId = ""
         when (sealName) {
             "primary" -> {
-                relOneTagId = pupOne.tagNumber + pupOne.tagAlpha
-                relTwoTagId = pupTwo.tagNumber + pupTwo.tagAlpha
+                relOneTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
+                relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
             }
 
             "pupOne" -> {
-                relOneTagId = primarySeal.tagNumber + primarySeal.tagAlpha
-                relTwoTagId = pupTwo.tagNumber + pupTwo.tagAlpha
+                relOneTagId =
+                    primarySeal.value.tagNumber + primarySeal.value.tagAlpha
+                relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
             }
 
             "pupTwo" -> {
-                relOneTagId = primarySeal.tagNumber + primarySeal.tagAlpha
-                relTwoTagId = pupOne.tagNumber + pupOne.tagAlpha
+                relOneTagId =
+                    primarySeal.value.tagNumber + primarySeal.value.tagAlpha
+                relTwoTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
             }
         }
         return Pair(relOneTagId, relTwoTagId)
@@ -986,19 +1068,13 @@ class TagRetagModel(
             isPrefilled = false,
         )
 
-        primarySeal = Seal(
-            name = "primary", isStarted = false
-        )
-        pupOne = Seal(
-            name = "pupOne", age = "Pup", isStarted = false
-        )
-        pupTwo = Seal(
-            name = "pupTwo", age = "Pup", isStarted = false
-        )
+        _primarySeal.update { Seal(name = "primary", isStarted = false) }
+        _pupOne.update { Seal(name = "pupOne", age = "Pup", isStarted = false) }
+        _pupTwo.update { Seal(name = "pupTwo", age = "Pup", isStarted = false) }
     }
 
     fun createLog() {
-        val sealsList = listOf(primarySeal, pupOne, pupTwo)
+        val sealsList = listOf(primarySeal.value, pupOne.value, pupTwo.value)
         uiState = uiState.copy(isSaving = true, isSaved = false)
 
         for (seal in sealsList) {
@@ -1026,10 +1102,14 @@ class TagRetagModel(
     // validate is called when the observer saves an entry
     // the model state is used to prompt the user to review and confirm their entry if validation fails
     // validation errors are saved to the seal state for inclusion in the output file
-    fun validate(seal: Seal) {
+    fun validate(seal: Seal, wedChecKSealMatch: WedCheckSeal) {
         // reset the model state values that help determine whether the seal entry is valid
         uiState =
-            uiState.copy(validationFailureReason = "", isValidated = false, validEntry = false)
+            uiState.copy(
+                validationFailureReason = "",
+                isValidated = false,
+                validEntry = false
+            )
 
         // set the name used in the validation string to match the UI display
         var sealName = seal.name
@@ -1042,11 +1122,16 @@ class TagRetagModel(
         if (seal.tagEventType == "Retag") { // if retag set the tag id to the old tag
             tagID = seal.oldTagId
         }
-        val wedCheckSeal =
-            getWedCheckSeal(tagID) // attempt to locate the WedCheck seal in the map stored in the model
+
+//        val wedCheckSeal =
+//            getWedCheckSeal(tagID) // attempt to locate the WedCheck seal in the map stored in the model
 
         // use the utility method to validate the seal
-        val (sealValid, validationErrors) = sealValidation(seal, getCurrentYear(), wedCheckSeal)
+        val (sealValid, validationErrors) = sealValidation(
+            seal,
+            getCurrentYear(),
+            wedChecKSealMatch
+        )
 
         // update the model state with the validation state
         if (sealValid) {
@@ -1066,75 +1151,81 @@ class TagRetagModel(
         // update the seal with the validation state
         when (seal.name) {
             "primary" -> {
-                primarySeal = primarySeal.copy(
-                    isValid = sealValid,
-                    isValidated = true,
-                    reasonNotValid = validationErrors
-                )
+                _primarySeal.update {
+                    it.copy(
+                        isValid = sealValid,
+                        isValidated = true,
+                        reasonNotValid = validationErrors
+                    )
+                }
             }
 
             "pupOne" -> {
-                pupOne = pupOne.copy(
-                    isValid = sealValid,
-                    isValidated = true,
-                    reasonNotValid = validationErrors
-                )
+                _pupOne.update {
+                    it.copy(
+                        isValid = sealValid,
+                        isValidated = true,
+                        reasonNotValid = validationErrors
+                    )
+                }
             }
 
             "pupTwo" -> {
-                pupTwo = pupTwo.copy(
-                    isValid = sealValid,
-                    isValidated = true,
-                    reasonNotValid = validationErrors
-                )
+                _pupTwo.update {
+                    it.copy(
+                        isValid = sealValid,
+                        isValidated = true,
+                        reasonNotValid = validationErrors
+                    )
+                }
             }
         }
     }
 
     fun flagSealForReview(name: String) {
         when (name) {
-            "primary" -> {
-                primarySeal = primarySeal.copy(flaggedForReview = true)
-            }
+            "primary" -> { _primarySeal.update { it.copy(flaggedForReview = true) } }
 
-            "pupOne" -> {
-                pupOne = pupOne.copy(flaggedForReview = true)
-            }
+            "pupOne" -> { _pupOne.update { it.copy(flaggedForReview = true) } }
 
-            "pupTwo" -> {
-                pupTwo = pupTwo.copy(flaggedForReview = true)
-            }
+            "pupTwo" -> { _pupTwo.update { it.copy(flaggedForReview = true) } }
         }
     }
 
     fun prefillSingleMale() {
-        primarySeal = primarySeal.copy(
-            age = "Adult",
-            sex = "Male",
-            numRelatives = "0",
-            isStarted = true
-        )
+        _primarySeal.update {
+            it.copy(
+                age = "Adult",
+                sex = "Male",
+                numRelatives = "0",
+                isStarted = true
+            )
+        }
         uiState = uiState.copy(isPrefilled = true)
     }
 
     fun prefillSingleFemale() {
-        primarySeal = primarySeal.copy(
-            age = "Adult",
-            sex = "Female",
-            numRelatives = "0",
-            isStarted = true
-        )
+        _primarySeal.update {
+            it.copy(
+                age = "Adult",
+                sex = "Female",
+                numRelatives = "0",
+                isStarted = true
+            )
+        }
         uiState = uiState.copy(isPrefilled = true)
     }
 
     fun prefillMomAndPup() {
-        primarySeal = primarySeal.copy(
-            age = "Adult",
-            sex = "Female",
-            numRelatives = "1",
-            isStarted = true
-        )
-        pupOne = pupOne.copy(numRelatives = "1", isStarted = true)
+        _primarySeal.update {
+            it.copy(
+                age = "Adult",
+                sex = "Female",
+                numRelatives = "1",
+                isStarted = true
+            )
+        }
+        _pupOne.update { it.copy(numRelatives = "1", isStarted = true) }
         uiState = uiState.copy(isPrefilled = true)
     }
 

@@ -35,5 +35,8 @@ fun formatFileUploadedDateTime(input: Long): String {
     ).format(Date(input))
 }
 
+fun getCurrentYear(): Int {
+    return LocalDate.now().year
+}
 
 

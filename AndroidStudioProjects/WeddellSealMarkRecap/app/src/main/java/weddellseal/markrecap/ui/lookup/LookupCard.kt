@@ -12,7 +12,7 @@ import weddellseal.markrecap.frameworks.room.WedCheckSeal
 import weddellseal.markrecap.ui.DataDisplayRow
 
 @Composable
-fun WedCheckCard(
+fun LookupCard(
     seal: WedCheckSeal
 ) {
     val scrollState = rememberScrollState()

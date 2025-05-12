@@ -16,7 +16,7 @@ class WedCheckRepository(private val wedCheckDao: WedCheckDao, private val fileU
     }
 
     fun getSealSpeNo(sealTagID: String): Int {
-        return wedCheckDao.lookupSpeNoByTagID(sealTagID) ?: 0
+        return wedCheckDao.lookupSpeNoByTagID(sealTagID)
     }
 
     suspend fun insertCsvData(fileUploadId: Long, csvData: List<WedCheckRecord>): Result<Int> {

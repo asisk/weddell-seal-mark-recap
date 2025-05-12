@@ -29,6 +29,8 @@ import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModelFactory
 import weddellseal.markrecap.models.SealColoniesViewModel
 import weddellseal.markrecap.models.SealColoniesViewModelFactory
+import weddellseal.markrecap.models.SealLookupViewModel
+import weddellseal.markrecap.models.SealLookupViewModelFactory
 import weddellseal.markrecap.models.WedCheckViewModel
 import weddellseal.markrecap.models.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.tagretag.TagRetagScreen
@@ -87,8 +89,12 @@ class MainActivity : ComponentActivity() {
         val adminViewModelFactory = AdminViewModelFactory(application, supportingDataRepository)
         val adminViewModel: AdminViewModel by viewModels { adminViewModelFactory }
 
-        val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository, supportingDataRepository)
+        val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository)
         val wedCheckViewModel: WedCheckViewModel by viewModels { wedCheckViewModelFactory }
+
+        val sealLookupViewModelFactory = SealLookupViewModelFactory(application, wedCheckRepository)
+        val sealLookupViewModel: SealLookupViewModel by viewModels { sealLookupViewModelFactory }
+
 
         val sealColoniesViewModelFactory = SealColoniesViewModelFactory(application, supportingDataRepository)
         val sealColoniesViewModel: SealColoniesViewModel by viewModels { sealColoniesViewModelFactory }
@@ -122,7 +128,7 @@ class MainActivity : ComponentActivity() {
                             TagRetagScreen(
                                 navController,
                                 tagRetagModel,
-                                wedCheckViewModel,
+                                sealLookupViewModel,
                                 recentObservationsViewModel
                             )
                         }
@@ -136,7 +142,7 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.SealLookupScreen.route) {
                             SealLookupScreen(
                                 navController,
-                                wedCheckViewModel,
+                                sealLookupViewModel,
                                 tagRetagModel
                             )
                         }
