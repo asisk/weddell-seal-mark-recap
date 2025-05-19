@@ -1,4 +1,4 @@
-package weddellseal.markrecap.frameworks.room
+package weddellseal.markrecap.frameworks.room.observations
 
 data class Seal(
     val age: String = "",

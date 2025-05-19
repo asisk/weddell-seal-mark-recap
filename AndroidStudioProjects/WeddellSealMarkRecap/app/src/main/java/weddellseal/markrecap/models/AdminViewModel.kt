@@ -7,12 +7,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import weddellseal.markrecap.frameworks.room.SupportingDataRepository
+import weddellseal.markrecap.frameworks.room.files.FilesRepository
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 class AdminViewModel(
     application: Application,
-    supportingDataRepository: SupportingDataRepository,
+    supportingDataRepository: FilesRepository,
 ) : AndroidViewModel(application) {
 
     data class AdminUiState(

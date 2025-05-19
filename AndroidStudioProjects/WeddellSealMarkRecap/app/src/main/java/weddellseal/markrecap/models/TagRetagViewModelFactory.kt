@@ -4,9 +4,9 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
-import weddellseal.markrecap.frameworks.room.SealColonyRepository
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 
-class AddLogViewModelFactory (
+class TagRetagViewModelFactory (
     private val application: Application,
     private val observationRepository: ObservationRepository,
     private val sealColonyRepository: SealColonyRepository): ViewModelProvider.Factory {

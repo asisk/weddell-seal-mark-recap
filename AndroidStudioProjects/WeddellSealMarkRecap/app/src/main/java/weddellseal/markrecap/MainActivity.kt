@@ -14,10 +14,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.google.fusedLocation.FusedLocationSource
-import weddellseal.markrecap.frameworks.room.SealColonyRepository
-import weddellseal.markrecap.frameworks.room.SupportingDataRepository
-import weddellseal.markrecap.frameworks.room.WedCheckRepository
-import weddellseal.markrecap.models.AddLogViewModelFactory
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
+import weddellseal.markrecap.frameworks.room.files.FilesRepository
+import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
+import weddellseal.markrecap.models.TagRetagViewModelFactory
 import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.models.AdminViewModel
 import weddellseal.markrecap.models.AdminViewModelFactory
@@ -44,10 +45,11 @@ import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
 class MainActivity : ComponentActivity() {
+    private lateinit var filesRepository: FilesRepository
     private lateinit var wedCheckRepository: WedCheckRepository
     private lateinit var observationRepository: ObservationRepository
-    private lateinit var supportingDataRepository: SupportingDataRepository
     private lateinit var sealColonyRepository: SealColonyRepository
+    private lateinit var observersRepository: ObserversRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,38 +57,43 @@ class MainActivity : ComponentActivity() {
         // Access the ObservationLogApplication instance
         val observationLogApplication = application as ObservationLogApplication
 
-        sealColonyRepository = SealColonyRepository()
-
-        // Set up the WedCheck model to be shared between views
-        val wedCheckDao = observationLogApplication.getWedCheckDao()
+        // Initialize the repositories
         val fileUploadDao = observationLogApplication.getFileUploadDao()
+        filesRepository = FilesRepository(fileUploadDao)
+
+        val wedCheckDao = observationLogApplication.getWedCheckDao()
         wedCheckRepository = WedCheckRepository(wedCheckDao, fileUploadDao)
 
         val observationDao = observationLogApplication.getObservationDao()
         observationRepository = ObservationRepository(observationDao)
 
-        val observersDao = observationLogApplication.getObserversDao()
         val sealColoniesDao = observationLogApplication.getSealColoniesDao()
-        supportingDataRepository =
-            SupportingDataRepository(observersDao, sealColoniesDao, fileUploadDao)
+        sealColonyRepository = SealColonyRepository(sealColoniesDao)
 
-        val addLogViewModelFactory =
-            AddLogViewModelFactory(application, observationRepository, sealColonyRepository)
-        val tagRetagModel: TagRetagModel by viewModels { addLogViewModelFactory }
+        val observersDao = observationLogApplication.getObserversDao()
+        observersRepository = ObserversRepository(observersDao)
+
+        // Initialize the view models
+        val tagRetagViewModelFactory =
+            TagRetagViewModelFactory(
+                application,
+                observationRepository,
+                sealColonyRepository)
+        val tagRetagModel: TagRetagModel by viewModels { tagRetagViewModelFactory }
 
         val homeViewModelFactory =
             HomeViewModelFactory(
                 observationRepository,
-                supportingDataRepository,
                 FusedLocationSource(applicationContext),
-                sealColonyRepository
+                sealColonyRepository,
+                observersRepository
             )
         val homeViewModel: HomeViewModel by viewModels { homeViewModelFactory }
 
         val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
         val recentObservationsViewModel: RecentObservationsViewModel by viewModels { recentObservationsViewModelFactory }
 
-        val adminViewModelFactory = AdminViewModelFactory(application, supportingDataRepository)
+        val adminViewModelFactory = AdminViewModelFactory(application, filesRepository)
         val adminViewModel: AdminViewModel by viewModels { adminViewModelFactory }
 
         val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository)
@@ -95,13 +102,13 @@ class MainActivity : ComponentActivity() {
         val sealLookupViewModelFactory = SealLookupViewModelFactory(application, wedCheckRepository)
         val sealLookupViewModel: SealLookupViewModel by viewModels { sealLookupViewModelFactory }
 
-
-        val sealColoniesViewModelFactory = SealColoniesViewModelFactory(application, supportingDataRepository)
+        val sealColoniesViewModelFactory = SealColoniesViewModelFactory(application, sealColonyRepository, filesRepository)
         val sealColoniesViewModel: SealColoniesViewModel by viewModels { sealColoniesViewModelFactory }
 
-        val observersViewModelFactory = ObserversViewModelFactory(application, supportingDataRepository)
+        val observersViewModelFactory = ObserversViewModelFactory(application, observersRepository, filesRepository)
         val observersViewModel: ObserversViewModel by viewModels { observersViewModelFactory }
 
+        // Set up the UI
         enableEdgeToEdge()
         setContent {
             WeddellSealMarkRecapTheme {

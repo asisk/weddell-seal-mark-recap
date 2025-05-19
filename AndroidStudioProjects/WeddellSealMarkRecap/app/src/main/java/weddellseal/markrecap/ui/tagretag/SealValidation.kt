@@ -1,7 +1,7 @@
 package weddellseal.markrecap.ui.tagretag
 
-import weddellseal.markrecap.frameworks.room.Seal
-import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.frameworks.room.observations.Seal
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 
 fun sealValidation(
     seal: Seal,

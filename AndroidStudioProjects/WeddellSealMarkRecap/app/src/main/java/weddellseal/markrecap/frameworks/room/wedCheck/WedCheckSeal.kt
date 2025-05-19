@@ -1,4 +1,4 @@
-package weddellseal.markrecap.frameworks.room
+package weddellseal.markrecap.frameworks.room.wedCheck
 
 data class WedCheckSeal(
     val age: String = "",

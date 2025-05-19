@@ -37,7 +37,7 @@ class FusedLocationSource(
     init {
         // Check if Google Play Services are available
         if (!context.isGooglePlayAvailable()) {
-            error("Google Play Services are not available")
+            error("Google Play Services are not available. Location Accuracy is likely to be affected.")
         }
         fusedProviderClient = LocationServices.getFusedLocationProviderClient(context)
     }

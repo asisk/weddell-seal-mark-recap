@@ -1,10 +1,8 @@
-package weddellseal.markrecap.frameworks.room
+package weddellseal.markrecap.frameworks.room.wedCheck
 
-import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.frameworks.room.files.FileUploadDao
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
-import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckDao
-import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
+import weddellseal.markrecap.ui.admin.FileStatus
 
 class WedCheckRepository(private val wedCheckDao: WedCheckDao, private val fileUploadDao: FileUploadDao) {
     fun findSealbyTagID(sealTagID: String): WedCheckRecord {

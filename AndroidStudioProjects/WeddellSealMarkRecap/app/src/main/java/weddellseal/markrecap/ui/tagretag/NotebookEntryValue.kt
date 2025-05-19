@@ -1,7 +1,7 @@
 package weddellseal.markrecap.ui.tagretag
 
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
-import weddellseal.markrecap.frameworks.room.Seal
+import weddellseal.markrecap.frameworks.room.observations.Seal
 
 // function used to display the notebook string on the seal card in the observations view
 fun notebookEntryValueSeal(seal: Seal): String {

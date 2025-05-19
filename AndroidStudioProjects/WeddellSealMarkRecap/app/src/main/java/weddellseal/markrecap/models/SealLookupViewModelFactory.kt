@@ -3,7 +3,7 @@ package weddellseal.markrecap.models
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import weddellseal.markrecap.frameworks.room.WedCheckRepository
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 
 class SealLookupViewModelFactory(private val application: Application, private val wedCheckRepository: WedCheckRepository) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")

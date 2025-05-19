@@ -32,9 +32,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
-import weddellseal.markrecap.frameworks.room.Seal
-import weddellseal.markrecap.frameworks.room.SealColonyRepository
-import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.frameworks.room.observations.Seal
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.wedCheck.processTags
 import weddellseal.markrecap.ui.tagretag.buildLogEntry
 import weddellseal.markrecap.ui.tagretag.notebookEntryValueSeal

@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.frameworks.room.WedCheckRepository
-import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
 

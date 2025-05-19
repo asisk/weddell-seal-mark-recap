@@ -1,7 +1,7 @@
 package weddellseal.markrecap.ui.tagretag
 
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
-import weddellseal.markrecap.frameworks.room.Seal
+import weddellseal.markrecap.frameworks.room.observations.Seal
 import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted

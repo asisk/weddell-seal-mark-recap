@@ -2,8 +2,8 @@ package weddellseal.markrecap.ui.tagretag
 
 import org.junit.Assert
 import org.junit.Test
-import weddellseal.markrecap.frameworks.room.Seal
-import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.frameworks.room.observations.Seal
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 import java.time.LocalDate
 
 class SealValidationTest {

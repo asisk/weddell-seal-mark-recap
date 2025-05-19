@@ -29,8 +29,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.frameworks.room.Seal
-import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.frameworks.room.observations.Seal
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.ui.DropdownField

@@ -12,11 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import weddellseal.markrecap.frameworks.room.SupportingDataRepository
+import weddellseal.markrecap.frameworks.room.files.FilesRepository
 import weddellseal.markrecap.frameworks.room.files.FailedRow
 import weddellseal.markrecap.frameworks.room.files.FileState
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.ui.admin.FileType
@@ -25,7 +26,8 @@ import java.io.InputStreamReader
 
 class SealColoniesViewModel(
     application: Application,
-    private val supportingDataRepository: SupportingDataRepository,
+    private val sealColonyRepository: SealColonyRepository,
+    private val filesRepository: FilesRepository
 ) : AndroidViewModel(application) {
 
     private val context: Context
@@ -96,7 +98,7 @@ class SealColoniesViewModel(
             if (failedRows.isNotEmpty()) {
                 val errMessage = failedRows[0].errorMessage
                 setFileErrorStatus(errMessage)
-                supportingDataRepository.updateFileUploadStatus(
+                filesRepository.updateFileUploadStatus(
                     fileUploadId,
                     FileStatus.ERROR,
                     0,
@@ -112,7 +114,7 @@ class SealColoniesViewModel(
             } else {
                 val errMessage = "No data inserted"
                 setFileErrorStatus(errMessage)
-                supportingDataRepository.updateFileUploadStatus(
+                filesRepository.updateFileUploadStatus(
                     fileUploadId,
                     FileStatus.ERROR,
                     0,
@@ -123,7 +125,7 @@ class SealColoniesViewModel(
 
 
             // Update the file status based on success or failure
-            supportingDataRepository.updateFileUploadStatus(
+            filesRepository.updateFileUploadStatus(
                 fileUploadId,
                 FileStatus.SUCCESS,
                 insertedCount,
@@ -136,7 +138,7 @@ class SealColoniesViewModel(
     }
 
     private suspend fun insertFileUpload(filename: String): Long {
-        return supportingDataRepository.insertFileUpload(
+        return filesRepository.insertFileUpload(
             FileUploadEntity(
                 id = 0,
                 fileType = FileType.OBSERVERS,
@@ -159,7 +161,7 @@ class SealColoniesViewModel(
     }
 
     private suspend fun insertColonyData(fileUploadId: Long, csvData: List<SealColony>): Int {
-        return supportingDataRepository.insertColoniesData(fileUploadId, csvData)
+        return sealColonyRepository.insertColoniesData(fileUploadId, csvData)
     }
 
     private fun readSealColoniesCsvData(
@@ -250,7 +252,7 @@ class SealColoniesViewModel(
         // Kick off this process on a coroutine
         viewModelScope.launch {
             try {
-                supportingDataRepository.clearColonyData()
+                sealColonyRepository.clearColonyData()
             } catch (e: Exception) {
 //                _uiState.value = uiState.value.copy(
 //                    isError = true,

@@ -14,12 +14,12 @@ import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
-import weddellseal.markrecap.frameworks.room.SealColonyRepository
-import weddellseal.markrecap.frameworks.room.SupportingDataRepository
 import weddellseal.markrecap.frameworks.room.files.FailedRow
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.ui.utils.mutableJobSet
 import weddellseal.markrecap.ui.utils.storeIn
 import java.text.SimpleDateFormat
@@ -33,9 +33,9 @@ private const val TAG = "HomeViewModel"
 class HomeViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
-    private val supportingDataRepository: SupportingDataRepository,
     private val locationSource: LocationSource,
-    private val sealColonyRepository: SealColonyRepository
+    private val sealColonyRepository: SealColonyRepository,
+    private val observersRepository: ObserversRepository,
 ) : AndroidViewModel(application) {
     private var lastKnownCoordinates: Coordinates? = null
 
@@ -177,7 +177,7 @@ class HomeViewModel(
     // locate the colony name by querying the database
     suspend fun findColony(coordinates: Coordinates): SealColony? {
         return withContext(Dispatchers.IO) {
-            supportingDataRepository.findColony(
+            sealColonyRepository.findColony(
                 coordinates.latitude,
                 coordinates.longitude
             )
@@ -188,7 +188,7 @@ class HomeViewModel(
     fun fetchColonyNamesList() {
         viewModelScope.launch {
             val fetchedLocations = withContext(Dispatchers.IO) {
-                supportingDataRepository.getColonyNamesList()
+                sealColonyRepository.getColonyNamesList()
             }
             if (fetchedLocations.isNotEmpty() && _coloniesList.value.isEmpty()) {
                 _coloniesList.value = fetchedLocations
@@ -200,7 +200,7 @@ class HomeViewModel(
     fun fetchObservers() {
         viewModelScope.launch {
             val fetchedObservers = withContext(Dispatchers.IO) {
-                supportingDataRepository.getObserverInitials() // Fetch from DB
+                observersRepository.getObserverInitials() // Fetch from DB
             }
             if (fetchedObservers.isNotEmpty() && _observers.value.isEmpty()) {
                 _observers.value = fetchedObservers
