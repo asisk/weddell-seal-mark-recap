@@ -1,9 +1,10 @@
-package weddellseal.markrecap.ui.tagretag
+package weddellseal.markrecap.uiTests
 
 import org.junit.Assert
 import org.junit.Test
 import weddellseal.markrecap.frameworks.room.observations.Seal
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
+import weddellseal.markrecap.ui.tagretag.sealValidation
 import java.time.LocalDate
 
 class SealValidationTest {
@@ -11,7 +12,7 @@ class SealValidationTest {
     @Test
     fun validateNewTagEventWithWedCheckRecord() {
         val seal = Seal(tagEventType = "New", sex = "Male")
-        val wedCheckSeal = WedCheckSeal(sex = "Male", lastSeenSeason = getYearWithinTenYears())
+        val wedCheckSeal = WedCheckSeal(sex = "Male", lastSeenSeason = getYearWithinTenYears(), speNo = 12345)
 
         val (isValid, message) = sealValidation(seal, getCurrentYear(), wedCheckSeal)
 
@@ -166,22 +167,22 @@ class SealValidationTest {
     }
 }
 
-private fun getCurrentYear(): Int {
+fun getCurrentYear(): Int {
     return LocalDate.now().year
 }
 
-private fun getLastYear(): Int {
+fun getLastYear(): Int {
     return LocalDate.now().year - 1
 }
 
-private fun getTwoYearsAgo(): Int {
+fun getTwoYearsAgo(): Int {
     return LocalDate.now().year - 2
 }
 
-private fun getYearWithinTenYears(): Int {
+fun getYearWithinTenYears(): Int {
     return LocalDate.now().year - 6
 }
 
-private fun getOverTenYearsAgo(): Int {
+fun getOverTenYearsAgo(): Int {
     return LocalDate.now().year - 12
 }
