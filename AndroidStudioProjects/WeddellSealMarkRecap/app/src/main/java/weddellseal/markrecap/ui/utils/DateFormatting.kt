@@ -3,6 +3,8 @@ package weddellseal.markrecap.ui.utils
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -37,6 +39,32 @@ fun formatFileUploadedDateTime(input: Long): String {
 
 fun getCurrentYear(): Int {
     return LocalDate.now().year
+}
+
+fun getLastYear(): Int {
+    return LocalDate.now().year - 1
+}
+
+fun getTwoYearsAgo(): Int {
+    return LocalDate.now().year - 2
+}
+
+fun getYearWithinTenYears(): Int {
+    return LocalDate.now().year - 6
+}
+
+fun getOverTenYearsAgo(): Int {
+    return LocalDate.now().year - 12
+}
+
+fun getCoordinatesLastUpdatedDate(): String {
+    val currentDateTime =
+        ZonedDateTime.now(ZoneId.systemDefault()) // Get the current date and time with timezone
+    val formatter = DateTimeFormatter.ofPattern(
+        "MM.dd.yyyy HH:mm:ss a z",
+        Locale.US
+    ) // Define the desired format
+    return currentDateTime.format(formatter) // Format the current date and time
 }
 
 
