@@ -27,7 +27,7 @@ class AdminViewModel(
 
     val successfulUploads: StateFlow<List<FileUploadEntity>> =
         supportingDataRepository.successfulUploads
-            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList()) // Collect as StateFlow
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun navToArchiveView(selection : Int) {
         _adminUiState.value = AdminUiState(navRailSelection = selection)
