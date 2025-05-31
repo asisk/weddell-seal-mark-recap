@@ -21,7 +21,7 @@ fun sealValidation(
             )
 
         } else if (seal.tagEventType == "Retag" || seal.tagEventType == "Marked") {
-            if (wedCheckSeal.speNo != 0) {
+            if (wedCheckSeal.speNo == 0) {
                 sealValid = false // marked and retagged seals MUST have a WedCheck record
                 validationFailureReasons.append(
                     "Seal not in database!\n" +

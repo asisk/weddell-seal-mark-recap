@@ -135,6 +135,7 @@ class MainActivity : ComponentActivity() {
                             TagRetagScreen(
                                 navController,
                                 tagRetagModel,
+                                homeViewModel,
                                 sealLookupViewModel,
                                 recentObservationsViewModel
                             )

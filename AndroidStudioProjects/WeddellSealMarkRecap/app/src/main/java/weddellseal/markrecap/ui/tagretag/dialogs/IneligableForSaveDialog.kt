@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.tagretag
+package weddellseal.markrecap.ui.tagretag.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun WedCheckCommentDialog(
-    wedCheckRecordComments: String,
-    onDismiss: () -> Unit,
+fun IneligibleForSaveDialog(
+    ineligibleReason: String,
+    onDismissRequest: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
-    Dialog(onDismissRequest = { onDismiss() }) {
+    Dialog(onDismissRequest = { onDismissRequest() }) {
         // Draw a rectangle shape with rounded corners inside the dialog
         Card(
             modifier = Modifier
@@ -44,33 +44,23 @@ fun WedCheckCommentDialog(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+
                 Text(
-                    text = "Please review comments from previous observation and take action if necessary!",
-                    modifier = Modifier.padding(16.dp),
+                    text = ineligibleReason,
+                    modifier = Modifier.padding(10.dp),
                     style = MaterialTheme.typography.titleLarge
                 )
+
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top=20.dp),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = wedCheckRecordComments,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top=20.dp),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
+
                     ExtendedFloatingActionButton(
                         modifier = Modifier.padding(16.dp),
                         containerColor = Color.LightGray,
-                        onClick = { onDismiss()},
+                        onClick = { onDismissRequest()},
                         icon = { // no icon
                         },
                         text = {

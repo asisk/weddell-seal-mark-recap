@@ -4,6 +4,7 @@ data class GeoLocation(
     val coordinates: Coordinates,
     val altitude: Double? = null,
     val bearing: Double? = null,
+    val updatedDate : String? = null
 ) {
     companion object {
     }
@@ -18,3 +19,6 @@ val GeoLocation.Companion.bozeman: GeoLocation
         bearing = 0.0,
     )
 
+fun GeoLocation.toLocationString(): String {
+    return "Lat : ${this.coordinates.latitude}    " + "Long : ${this.coordinates.longitude}\n" + "Updated: ${this.updatedDate}"
+}

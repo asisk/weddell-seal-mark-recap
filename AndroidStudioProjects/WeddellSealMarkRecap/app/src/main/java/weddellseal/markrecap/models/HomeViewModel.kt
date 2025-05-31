@@ -1,29 +1,26 @@
 package weddellseal.markrecap.models
 
 import android.app.Application
-import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
-import weddellseal.markrecap.frameworks.room.files.FailedRow
-import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.ui.utils.mutableJobSet
 import weddellseal.markrecap.ui.utils.storeIn
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 private const val TAG = "HomeViewModel"
 
@@ -37,63 +34,61 @@ class HomeViewModel(
     private val sealColonyRepository: SealColonyRepository,
     private val observersRepository: ObserversRepository,
 ) : AndroidViewModel(application) {
-    private var lastKnownCoordinates: Coordinates? = null
 
     internal val jobs = mutableJobSet()
 
-    private val _uiState = MutableStateFlow(
-        UiState(
-            date = SimpleDateFormat(
-                "dd.MM.yyyy HH:mm:ss aaa z",
-                Locale.US
-            ).format(System.currentTimeMillis()),
-        )
-    )
+//    data class UiState(
+//        val hasFileAccess: Boolean,
+//        val loading: Boolean = false,
+//        val isSaving: Boolean = false,
+//        var uriForCSVWrite: Uri? = null,
+//        var fileUploads: List<FileUploadEntity> = emptyList(),
+//        val failedColoniesRows: List<FailedRow> = emptyList(),
+//        val totalColoniesRows: Int = 0,
+//        val failedObserversRows: List<FailedRow> = emptyList(),
+//        val totalObserversRows: Int = 0,
+//        val isError: Boolean = false,
+//        val errorText: String = "",
+//        val date: String,
+//        val deviceCoordinates: Coordinates? = null,
+//        val location: GeoLocation? = null,
+//        val deviceID: String
+//    )
+//
+//    private val _uiState = MutableStateFlow(
+//        UiState(
+//            deviceID = getDeviceName(context)
+//        )
+//    )
+//
+//    val uiState: StateFlow<UiState> = _uiState
 
-    val uiState: StateFlow<UiState> = _uiState
-    var isFollowingLocation = mutableStateOf(false)
+    val observersList: StateFlow<List<String>> = observersRepository.observersList
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // MutableStateFlow to hold the list of observers
-    private val _observers = MutableStateFlow<List<String>>(emptyList())
-    val observers: StateFlow<List<String>> = _observers
+    val coloniesList: StateFlow<List<String>> = sealColonyRepository.coloniesList
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // MutableStateFlow to hold the list of locations
-    private val _coloniesList = MutableStateFlow<List<String>>(emptyList())
-    val coloniesList: StateFlow<List<String>> = _coloniesList
+    // Auto-detected colony
+    private val _autoDetectedColony = MutableStateFlow<SealColony?>(null)
+    val autoDetectedColony: StateFlow<SealColony?> = _autoDetectedColony
 
-    // Colony that is auto-detected based on the location emitted from the FusedLocationSource
-    val autoDetectedColony: StateFlow<SealColony?> = sealColonyRepository.colony
+    private val _overrideAutoColony = MutableStateFlow(false)
+    val overrideAutoColony: StateFlow<Boolean> = _overrideAutoColony
 
     fun updateColony(colony: SealColony?) {
-        sealColonyRepository.setColony(colony)
+        _autoDetectedColony.value = colony
     }
-
-    // Expose the overrideAutoColony as a StateFlow
-    val overrideAutoColony: StateFlow<Boolean> = sealColonyRepository.overrideAutoColony
 
     fun updateOverrideAutoColony(value: Boolean) {
-        sealColonyRepository.setOverrideAutoColony(value)
+        _overrideAutoColony.value = value
     }
 
-    private val _coordinates = MutableStateFlow<Coordinates?>(null)
-    val coordinates: MutableStateFlow<Coordinates?> = _coordinates
-
-    data class UiState(
-//        val hasFileAccess: Boolean,
-        val loading: Boolean = false,
-        val isSaving: Boolean = false,
-        var uriForCSVWrite: Uri? = null,
-        var fileUploads: List<FileUploadEntity> = emptyList(),
-        val failedColoniesRows: List<FailedRow> = emptyList(),
-        val totalColoniesRows: Int = 0,
-        val failedObserversRows: List<FailedRow> = emptyList(),
-        val totalObserversRows: Int = 0,
-        val isError: Boolean = false,
-        val errorText: String = "",
-        val date: String,
-        val deviceCoordinates: Coordinates? = null,
-        val location: GeoLocation? = null,
-    )
+    // Location following
+    var isFollowingLocation = mutableStateOf(false)
+    private var lastKnownCoordinates: Coordinates? = null
+    private val _currentLocation = MutableStateFlow<GeoLocation?>(null)
+    val currentLocation: MutableStateFlow<GeoLocation?> = _currentLocation
 
     override fun onCleared() {
         super.onCleared()
@@ -103,6 +98,7 @@ class HomeViewModel(
         jobs.clear()
     }
 
+    // Location permissions
     fun onPermissionsResult(granted: Boolean) {
         Log.i(TAG, "onPermissionsResult: $granted")
 
@@ -148,12 +144,11 @@ class HomeViewModel(
                 // Update the last known coordinates
                 lastKnownCoordinates = geoLocation.coordinates
 
-                _coordinates.value = geoLocation.coordinates
+                _currentLocation.value = geoLocation
 
-                _uiState.value = uiState.value.copy(
-                    location = geoLocation // Update with the latest location
-                )
-
+//                _uiState.value = uiState.value.copy(
+//                    location = geoLocation // Update with the latest location
+//                )
 
                 var sealColonyDefault = SealColony(
                     colonyId = 0,
@@ -184,41 +179,9 @@ class HomeViewModel(
         }
     }
 
-    // Function to fetch locations from the database
-    fun fetchColonyNamesList() {
-        viewModelScope.launch {
-            val fetchedLocations = withContext(Dispatchers.IO) {
-                sealColonyRepository.getColonyNamesList()
-            }
-            if (fetchedLocations.isNotEmpty() && _coloniesList.value.isEmpty()) {
-                _coloniesList.value = fetchedLocations
-            }
-        }
-    }
+//    private fun getDeviceName(context: Context): String {
+//        return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
+//            ?: "Unknown Device"
+//    }
 
-    // Function to fetch locations from the database
-    fun fetchObservers() {
-        viewModelScope.launch {
-            val fetchedObservers = withContext(Dispatchers.IO) {
-                observersRepository.getObserverInitials() // Fetch from DB
-            }
-            if (fetchedObservers.isNotEmpty() && _observers.value.isEmpty()) {
-                _observers.value = fetchedObservers
-            }
-        }
-    }
-
-    //TODO, relocate this function
-    fun clearObservations() {
-        viewModelScope.launch {
-            try {
-                observationRepo.softDeleteAllObservations()
-            } catch (e: Exception) {
-                _uiState.value = uiState.value.copy(
-                    isError = true,
-                    errorText = "Error removing observations"
-                )
-            }
-        }
-    }
 }

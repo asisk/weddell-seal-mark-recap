@@ -1,26 +1,13 @@
 package weddellseal.markrecap.frameworks.room.sealColonies
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 class SealColonyRepository(
     private val sealColoniesDao: SealColoniesDao,
 ) {
-    private val _colony = MutableStateFlow<SealColony?>(null)
-    val colony: StateFlow<SealColony?> = _colony
-
-    fun setColony(colony: SealColony?) {
-        _colony.value = colony
-    }
-
-    private val _overrideAutoColony = MutableStateFlow(false)
-    val overrideAutoColony: StateFlow<Boolean> = _overrideAutoColony
-
-    fun setOverrideAutoColony(value: Boolean) {
-        _overrideAutoColony.value = value
-    }
+    val coloniesList: Flow<List<String>> = sealColoniesDao.getSealColonyNames()
 
     // used to refresh the database with a current list of locations
     suspend fun insertColoniesData(fileUploadId: Long, csvData: List<SealColony>): Int {
@@ -30,11 +17,6 @@ class SealColonyRepository(
                 csvData
             )
         }
-    }
-
-    // used to return a list of location names
-    fun getColonyNamesList(): List<String> {
-        return sealColoniesDao.getSealColonyNames()
     }
 
     // used to search for a seal colony by passing in the device latitude and longitude

@@ -34,6 +34,7 @@ import weddellseal.markrecap.frameworks.room.observations.Seal
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
+import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 /**
  * TabbedCards responds to changes in the model for each seal.

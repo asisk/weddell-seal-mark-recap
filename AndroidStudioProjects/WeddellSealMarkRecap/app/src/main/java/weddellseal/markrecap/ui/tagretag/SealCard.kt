@@ -34,6 +34,8 @@ import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.ui.DropdownField
+import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
+import weddellseal.markrecap.ui.tagretag.dialogs.WedCheckCommentDialog
 
 @Composable
 fun SealCard(
@@ -134,15 +136,15 @@ fun SealCard(
                 // conduct search if we haven't already located a wedcheck record
 //                val wedCheckSeal = viewModel.getWedCheckSeal(searchStr)
 //                if (wedCheckMatch.speNo == 0) {
-                    // clear the speno & hasSpeno fields from our seal
-                    viewModel.clearSpeNo(seal)
+                // clear the speno & hasSpeno fields from our seal
+                viewModel.clearSpeNo(seal)
 
-                    // find the seal
-                    if (!uiStateLookupSeal.isSearching) {
-                        Log.d("LaunchedEffect", "looking up seal")
-                        sealLookupViewModel.setTagRetagLookup(true)
-                        sealLookupViewModel.findSealbyTagID(searchStr)
-                    }
+                // find the seal
+                if (!uiStateLookupSeal.isSearching) {
+                    Log.d("LaunchedEffect", "looking up seal")
+                    sealLookupViewModel.setTagRetagLookup(true)
+                    sealLookupViewModel.findSealbyTagID(searchStr)
+                }
 //                }
             }
         }
@@ -227,10 +229,10 @@ fun SealCard(
 //                        && uiStateLookupSeal.isTagRetagLookup
 //                        && !seal.isNoTag
 //                    ) {
-                        Text(
-                            text = if (seal.speNo == 0) "" else "Speno: ${seal.speNo}",
-                            style = MaterialTheme.typography.titleLarge,
-                        )
+                    Text(
+                        text = if (seal.speNo == 0) "" else "Speno: ${seal.speNo}",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
 //                        Text(
 //                            lookupSeal.speNo.toString(),
 //                            style = MaterialTheme.typography.titleLarge,

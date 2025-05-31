@@ -1,7 +1,5 @@
 package weddellseal.markrecap.ui.home
 
-import android.content.Context
-import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,7 +32,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,12 +49,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.models.HomeViewModel
+import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.ui.DropdownField
 import weddellseal.markrecap.ui.permissions.RequestPermissions
 import weddellseal.markrecap.ui.permissions.missingPermissions
 import weddellseal.markrecap.ui.utils.cancelAllAndClear
+import weddellseal.markrecap.ui.utils.getDeviceName
 
 @Composable
 fun HomeScreen(
@@ -79,7 +77,7 @@ fun HomeScaffold(
     val scrollState = rememberScrollState()
     var showCensusDialog by remember { mutableStateOf(false) }
     val coloniesList by viewModel.coloniesList.collectAsState()
-    val currentColony by viewModel.autoDetectedColony.collectAsState()
+    val autoDetectedColony by viewModel.autoDetectedColony.collectAsState()
     val overrideAutoColony by viewModel.overrideAutoColony.collectAsState()
 
     // Used to request permissions for Location
@@ -89,10 +87,6 @@ fun HomeScaffold(
         onDispose {
             viewModel.jobs.cancelAllAndClear()
         }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.fetchColonyNamesList()
     }
 
     Scaffold(
@@ -302,7 +296,7 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-                                Text(currentColony?.location.toString())
+                                Text(text = autoDetectedColony?.location ?: "...detecting proximity to a known colony...")
                             }
                         }
                         Row(
@@ -312,7 +306,7 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val colonySelected by remember { mutableStateOf(obsViewModel.uiState.colonyLocation) }
+                            val colonySelected by remember { mutableStateOf(obsViewModel.uiState.selectedColony) }
 
                             Text(
                                 text = "Select Colony",
@@ -408,51 +402,3 @@ private fun RequestPermissionsEffect(
     }
     RequestPermissions(missing, vm::onPermissionsResult)
 }
-
-fun getDeviceName(context: Context): String {
-    return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
-        ?: "Unknown Device"
-}
-
-//
-//@Composable
-//fun CardWithClickableImages() {
-//    var clickedImage by remember { mutableStateOf(0) }
-//
-//    Card(
-//        modifier = Modifier
-//            .padding(16.dp)
-//    ) {
-//        Column(
-//            modifier = Modifier.fillMaxSize(),
-//            verticalArrangement = Arrangement.Center
-//        ) {
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                ClickableImage(imageResId = R.drawable.pup1_2, onClick = { clickedImage = 1 })
-//                ClickableImage(imageResId = R.drawable.pup1_2, onClick = { clickedImage = 2 })
-//                ClickableImage(imageResId = R.drawable.pup1_2, onClick = { clickedImage = 3 })
-//            }
-//
-//            // Optionally, display some content based on the clickedImage value
-//            when (clickedImage) {
-//                1 -> Text("You clicked Image 1")
-//                2 -> Text("You clicked Image 2")
-//                3 -> Text("You clicked Image 3")
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun ClickableImage(imageResId: Int, onClick: () -> Unit) {
-//    Image(
-//        painter = painterResource(id = imageResId),
-//        contentDescription = null, // Provide a proper content description
-//        modifier = Modifier
-//            .clickable { onClick() }
-//            .padding(8.dp)
-//    )
-//}

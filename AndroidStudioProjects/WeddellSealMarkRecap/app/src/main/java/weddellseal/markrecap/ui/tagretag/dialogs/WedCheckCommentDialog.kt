@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.tagretag
+package weddellseal.markrecap.ui.tagretag.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun RemoveDialog(
-    onDismissRequest: () -> Unit,
-    onConfirmation: () -> Unit,
+fun WedCheckCommentDialog(
+    wedCheckRecordComments: String,
+    onDismiss: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
-    Dialog(onDismissRequest = { onDismissRequest() }) {
+    Dialog(onDismissRequest = { onDismiss() }) {
         // Draw a rectangle shape with rounded corners inside the dialog
         Card(
             modifier = Modifier
@@ -45,40 +45,37 @@ fun RemoveDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "This will remove data you've entered in this view. Are you sure?",
+                    text = "Please review comments from previous observation and take action if necessary!",
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.titleLarge
                 )
-
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(top=20.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-
-                    ExtendedFloatingActionButton(
+                    Text(
+                        text = wedCheckRecordComments,
                         modifier = Modifier.padding(16.dp),
-                        containerColor = Color.LightGray,
-                        onClick = { onDismissRequest()},
-                        icon = { // no icon
-                        },
-                        text = {
-                            Text(
-                                "Cancel",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                        }
+                        style = MaterialTheme.typography.titleLarge
                     )
-
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top=20.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
                     ExtendedFloatingActionButton(
                         modifier = Modifier.padding(16.dp),
                         containerColor = Color.LightGray,
-                        onClick = { onConfirmation()},
+                        onClick = { onDismiss()},
                         icon = { // no icon
                         },
                         text = {
                             Text(
-                                "Yes, clear data entry screen.",
+                                "Dismiss",
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }

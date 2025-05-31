@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.tagretag
+package weddellseal.markrecap.ui.tagretag.utils
 
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.Seal

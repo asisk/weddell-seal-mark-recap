@@ -4,10 +4,7 @@ package weddellseal.markrecap.ui.tagretag
  * Main screen for entering seal data
  */
 
-import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,33 +59,35 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.domain.location.data.toLocationString
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.models.RecentObservationsViewModel
 import weddellseal.markrecap.models.SealLookupViewModel
 import weddellseal.markrecap.models.TagRetagModel
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
+import weddellseal.markrecap.ui.tagretag.dialogs.IneligibleForSaveDialog
+import weddellseal.markrecap.ui.tagretag.dialogs.SealInvalidDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagRetagScreen(
     navController: NavHostController,
     viewModel: TagRetagModel,
+    homeViewModel: HomeViewModel,
     sealLookupViewModel: SealLookupViewModel,
     recentObsViewModel: RecentObservationsViewModel
 ) {
+    val location by homeViewModel.currentLocation.collectAsState()
     val currentObservations by recentObsViewModel.currentObservations.collectAsState()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     var showEditDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     context.contentResolver
     var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
-
-    // seals not "by remember" because the screen needs to respond to input that changes the seal's model values
-//    val primarySeal = viewModel.primarySeal
-//    val pupOne = viewModel.pupOne
-//    val pupTwo = viewModel.pupTwo
 
     val primarySeal by viewModel.primarySeal.collectAsState()
     val primaryWedCheckSeal by viewModel.primaryWedCheckSeal.collectAsState()
@@ -100,65 +99,65 @@ fun TagRetagScreen(
     var showConfirmEntryDialog by remember { mutableStateOf(false) }
     var showIneligibleDialog by remember { mutableStateOf(false) }
     var ineligibleReason by remember { mutableStateOf("") }
-    var coordinates by remember { mutableStateOf(viewModel.uiState.currentLocation) }
-    var colony by remember { mutableStateOf(viewModel.uiState.colonyLocation) }
+//    var coordinates by remember { mutableStateOf(viewModel.uiState.currentLocation) }
+    var colony by remember { mutableStateOf(viewModel.uiState.selectedColony) }
     var census by remember { mutableStateOf(viewModel.uiState.censusNumber) }
     var isCensusMode by remember { mutableStateOf(false) }
     var isPrefilled by remember { mutableStateOf(false) }
 
-    // Register ActivityResult to request Location permissions
-    val requestLocationPermissions =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                viewModel.onPermissionChange(ACCESS_FINE_LOCATION, isGranted)
-                viewModel.fetchCurrentLocation()
-            } else {
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar("Location currently disabled due to denied permission.")
-                }
-            }
-        }
+//    // Register ActivityResult to request Location permissions
+//    val requestLocationPermissions =
+//        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+//            if (isGranted) {
+//                viewModel.onPermissionChange(ACCESS_FINE_LOCATION, isGranted)
+//                viewModel.fetchCurrentLocation()
+//            } else {
+//                coroutineScope.launch {
+//                    snackbarHostState.showSnackbar("Location currently disabled due to denied permission.")
+//                }
+//            }
+//        }
 
     // Add explanation dialog for Location permissions
-    var showExplanationDialogForLocationPermission by remember { mutableStateOf(false) }
-    if (showExplanationDialogForLocationPermission) {
-        LocationExplanationDialog(
-            onConfirm = {
-                requestLocationPermissions.launch(ACCESS_FINE_LOCATION)
-                showExplanationDialogForLocationPermission = false
-                viewModel.fetchCurrentLocation()
-            },
-            onDismiss = { showExplanationDialogForLocationPermission = false },
-        )
-    }
-
+//    var showExplanationDialogForLocationPermission by remember { mutableStateOf(false) }
+//    if (showExplanationDialogForLocationPermission) {
+//        LocationExplanationDialog(
+//            onConfirm = {
+//                requestLocationPermissions.launch(ACCESS_FINE_LOCATION)
+//                showExplanationDialogForLocationPermission = false
+//                viewModel.fetchCurrentLocation()
+//            },
+//            onDismiss = { showExplanationDialogForLocationPermission = false },
+//        )
+//    }
+//
     // method called on the initial load of the ObservationLog Screen
     // if permissions are in place it gathers information about the
     // current and last known locations to populate location fields
-    fun canAddLocation() {
-        if (viewModel.hasPermission(ACCESS_FINE_LOCATION)) {
-            viewModel.fetchCurrentLocation()
-        } else {
-            showExplanationDialogForLocationPermission = true
-        }
-    }
+//    fun canAddLocation() {
+//        if (viewModel.hasPermission(ACCESS_FINE_LOCATION)) {
+//            viewModel.fetchCurrentLocation()
+//        } else {
+//            showExplanationDialogForLocationPermission = true
+//        }
+//    }
 
     // this should be current for every observation
     LaunchedEffect(Unit) {
         // preload the model with location data
-        canAddLocation()
+//        canAddLocation()
     }
 
     LaunchedEffect(viewModel.uiState.isPrefilled) {
         isPrefilled = viewModel.uiState.isPrefilled
     }
 
-    LaunchedEffect(viewModel.uiState.currentLocation) {
-        coordinates = viewModel.uiState.currentLocation
-    }
+//    LaunchedEffect(viewModel.uiState.currentLocation) {
+//        coordinates = viewModel.uiState.currentLocation
+//    }
 
-    LaunchedEffect(viewModel.uiState.colonyLocation) {
-        colony = viewModel.uiState.colonyLocation
+    LaunchedEffect(viewModel.uiState.selectedColony) {
+        colony = viewModel.uiState.selectedColony
     }
 
     LaunchedEffect(viewModel.uiState.censusNumber) {
@@ -192,7 +191,7 @@ fun TagRetagScreen(
         // High-level checks
         val metadataSelectionsNeeded = StringBuilder()
         var eligible = true
-        if (viewModel.uiState.colonyLocation == "Select an option") {
+        if (viewModel.uiState.selectedColony == "Select an option") {
             metadataSelectionsNeeded.append("Select a colony on the Home Screen.")
             eligible = false
         }
@@ -344,7 +343,7 @@ fun TagRetagScreen(
         }
 
         if (viewModel.uiState.isValidated && viewModel.uiState.validEntry) {
-            viewModel.createLog()
+            viewModel.createLog(location)
         }
     }
 
@@ -453,7 +452,8 @@ fun TagRetagScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (viewModel.uiState.hasGPS && coordinates != "") {
+                        //TODO, test this change!!!
+                        if (location?.toLocationString() != "") {
                             Icon(
                                 Icons.Filled.LocationOn,
                                 contentDescription = null,
@@ -474,7 +474,7 @@ fun TagRetagScreen(
                             )
                         }
                         Text(
-                            text = coordinates,
+                            text = location?.toLocationString() ?: "Cannot provide location coordinates!",
                             style = MaterialTheme.typography.titleMedium,
                         )
 
@@ -485,7 +485,7 @@ fun TagRetagScreen(
                             containerColor = Color.LightGray,
                             onClick = {
                                 if (checkSaveEnabled()) {
-                                    canAddLocation() // refresh the gps coordinates on save
+//                                    canAddLocation() // refresh the gps coordinates on save
                                     saveAction()
                                 } else {
                                     showIneligibleDialog = true
@@ -680,7 +680,7 @@ fun TagRetagScreen(
                     viewModel.clearValidationState()
                 },
                 onConfirmation = {
-                    canAddLocation() // refresh the gps coordinates
+//                    canAddLocation() // refresh the gps coordinates
 
                     // flag seals for review
                     if (!primarySeal.isValid) {
@@ -695,7 +695,7 @@ fun TagRetagScreen(
 
                     showConfirmEntryDialog = false
 
-                    viewModel.createLog()
+                    viewModel.createLog(location)
                 },
             )
         }

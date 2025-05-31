@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.ui.DataDisplayRow
-import weddellseal.markrecap.ui.tagretag.notebookEntryValueObservation
+import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
 
 @Composable
 fun ObservationEntryCard(

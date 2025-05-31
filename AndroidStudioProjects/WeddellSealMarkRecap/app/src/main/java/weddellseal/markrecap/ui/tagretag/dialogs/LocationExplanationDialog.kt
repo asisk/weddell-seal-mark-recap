@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.tagretag
+package weddellseal.markrecap.ui.tagretag.dialogs
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore

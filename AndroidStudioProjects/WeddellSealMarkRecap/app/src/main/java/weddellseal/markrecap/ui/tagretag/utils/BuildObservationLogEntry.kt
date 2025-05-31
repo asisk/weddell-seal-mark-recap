@@ -1,5 +1,6 @@
-package weddellseal.markrecap.ui.tagretag
+package weddellseal.markrecap.ui.tagretag.utils
 
+import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.Seal
 import weddellseal.markrecap.models.TagRetagModel
@@ -8,6 +9,7 @@ import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
 
 fun buildLogEntry(
     uiState: TagRetagModel.UiState,
+    currentLocation: GeoLocation?,
     seal: Seal,
     relativeOneTag: String,
     relativeTwoTag: String,
@@ -138,8 +140,8 @@ fun buildLogEntry(
         date = getCurrentDateFormatted(), // date format: yyyy-MM-dd
         time = getCurrentTimeFormatted(), // time format: hh:mm:ss
         censusID = censusNumber,
-        latitude = uiState.latitude,  // example -77.73004, could also be 4 decimal precision
-        longitude = uiState.longitude, // example 166.7941, could also be 2 decimal precision
+        latitude = currentLocation?.coordinates?.latitude.toString(),  // example -77.73004, could also be 4 decimal precision
+        longitude = currentLocation?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision
         ageClass = ageClass,
         sex = sex,
         numRelatives = numRels,
@@ -159,7 +161,7 @@ fun buildLogEntry(
         tissueSampled = tissue,
         comments = comment,
         retagReason = seal.reasonForRetag,
-        colony = uiState.colonyLocation,
+        colony = uiState.selectedColony,
     )
     return log
 }
