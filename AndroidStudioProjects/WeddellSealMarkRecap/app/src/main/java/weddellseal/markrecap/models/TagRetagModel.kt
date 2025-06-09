@@ -6,21 +6,18 @@ package weddellseal.markrecap.models
 
 import android.app.Application
 import android.content.Context
-import android.location.LocationManager
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observations.Seal
-import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.wedCheck.processTags
 import weddellseal.markrecap.ui.tagretag.sealValidation
@@ -32,60 +29,14 @@ import weddellseal.markrecap.ui.utils.getDeviceName
 class TagRetagModel(
     application: Application,
     private val observationRepo: ObservationRepository,
-    private val sealColonyRepository: SealColonyRepository
+    private val homeViewUiState: StateFlow<HomeViewModel.UiState>,
 ) : AndroidViewModel(application) {
+
     private val context: Context
         get() = getApplication()
 
-    // for determining if GPS provider is active
-    private val locationManager =
-        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-    // region UI state
-    data class UiState(
-//        val hasLocationAccess: Boolean,
-        //val hasCameraAccess: Boolean,
-        val isSaving: Boolean = false,
-        val isSaved: Boolean = false,
-        val isCensusMode: Boolean = false,
-        val isPrefilled: Boolean = false,
-//        val hasGPS: Boolean = false,
-//        var hasGooglePlay: Int,
-//        val currentLocation: String = "current location empty",
-//        val lastKnownLocation: String = "last known location empty",
-//        val latLong: String = "",
-//        val latitude: String = "",
-//        val longitude: String = "",
-        val isError: Boolean = false,
-        val errorMessage: String = "",
-        val season: String = "",
-        val yearMonthDay: String = "",
-        val deviceID: String,
-        val observerInitials: String = "Select an option",
-        val censusNumber: String = "Select an option",
-        val selectedColony: String = "Select an option",
-        val validationFailureReason: String = "",
-        val isValidated: Boolean = false,
-        val validEntry: Boolean = false,
-        val observationLogEntry: ObservationLogEntry? = null,
-        val isEditMode: Boolean = false,
-        val recordID: Int = 0,
-//        val isRetag : Boolean = false, //TODO, implement this or remove it!
-    )
-
-    var uiState by mutableStateOf(
-        UiState(
-//            hasLocationAccess = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
-//            hasGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER),
-//            hasGooglePlay = 999,
-            season = getCurrentYear().toString(),
-            deviceID = getDeviceName(context),
-        )
-    )
-        private set
-
-//    init {
-//        // Automatically update colonyLocation if it's set to "Select an option"
+    //    init {
+//        // Automatically update colonyLocation if it's set to ""
 //        // In other words, if the user has not selected a location, use the auto-detected location
 //        viewModelScope.launch {
 //            combine(
@@ -96,12 +47,71 @@ class TagRetagModel(
 //            }.collect { (detectedColony, overrideAutoColony) ->
 //                detectedColony?.let {
 //                    if (!overrideAutoColony) {
-//                        uiState = uiState.copy(selectedColony = it.location)
+//                        _uiState.update{it.copy(selectedColony = it.location)}
 //                    }
 //                }
 //            }
 //        }
 //    }
+
+    data class UiState(
+        val isSaveEnabled: Boolean = false,
+        val isSaved: Boolean = false,
+        val ineligibleForSaveReason: String = "",
+
+        val isPrefilled: Boolean = false,
+
+        val isError: Boolean = false,
+        val errorMessage: String = "",
+
+        val validationFailureReason: String = "",
+        val isValidated: Boolean = false,
+        val validEntry: Boolean = false,
+
+        val observationLogEntry: ObservationLogEntry? = null,
+        val recordID: Int = 0,
+
+        val isEditMode: Boolean = false,
+
+        val metadata: ObservationMetadata = ObservationMetadata(),
+    )
+
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    data class ObservationMetadata(
+        val selectedColony: String = "",
+        val selectedObservers: List<String> = listOf(),
+        val censusNumber: String = "",
+        val isCensusMode: Boolean = false,
+        val deviceID: String = "Unknown", // no validation as the user cannot affect change, set default value in case of error getting device
+        val currentSeason: String = "2025 Preset", // no validation as the user cannot affect change, set default value in case of error generating season
+    ) {
+        // computed property, evaluated only when explicitly accessed
+        val isValid: Boolean
+            get() = selectedColony != ""
+                    && selectedObservers != emptyList<String>()
+                    && (!isCensusMode || censusNumber != "")
+
+
+        // computed property, evaluated only when explicitly accessed
+        val invalidReason: String
+            get() {
+                val sb = StringBuilder()
+                if (selectedColony == "") sb.append("Select a colony.")
+                if (isCensusMode && censusNumber == "") sb.append("\nSelect a census number.")
+                if (selectedObservers == emptyList<String>()) sb.append("\nSelect observer(s).")
+                return sb.toString()
+            }
+
+        fun getObserversString(): String {
+            return selectedObservers.joinToString(", ")
+        }
+    }
+
+    fun setMetadata(metadata: ObservationMetadata) {
+        _uiState.update { it.copy(metadata = metadata) }
+    }
 
     private val _primarySeal = MutableStateFlow(Seal(name = "primary", isStarted = false))
     val primarySeal: StateFlow<Seal> = _primarySeal
@@ -123,22 +133,59 @@ class TagRetagModel(
 
     private var wedCheckSealMap = mutableMapOf<String, WedCheckSeal>()
 
-//    private fun getDeviceName(context: Context): String {
-//        return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
-//            ?: "Unknown Device"
-//    }
+    // Initialize the ViewModel
+    init {
+        viewModelScope.launch {
+            combine(
+                _primarySeal,
+                _pupOne,
+                _pupTwo,
+                homeViewUiState
+            ) { primary, pupOne, pupTwo, metadata ->
+
+                // Initialize the metadata object
+                val metadata = ObservationMetadata(
+                    selectedColony = homeViewUiState.value.selectedColony,
+                    selectedObservers = homeViewUiState.value.selectedObservers,
+                    censusNumber = homeViewUiState.value.selectedCensusNumber,
+                    isCensusMode = homeViewUiState.value.isCensusMode,
+                    deviceID = getDeviceName(context),
+                    currentSeason = getCurrentYear().toString(),
+                )
+
+                // Check if save is enabled
+                val reasons = buildList {
+                    if (!metadata.isValid) add(metadata.invalidReason)
+                    if (!primary.isComplete) addAll(primary.completenessReasons)
+                    if (pupOne.isStarted && !pupOne.isComplete) addAll(pupOne.completenessReasons)
+                    if (pupTwo.isStarted && !pupTwo.isComplete) addAll(pupTwo.completenessReasons)
+                }
+                // uses Kotlin’s infix function for creating a Pair<ObservationMetadata, List<String>>
+                metadata to reasons
+
+            }.collect { (metadata, reasons) ->
+                _uiState.update {
+                    it.copy(
+                        metadata = metadata,
+                        isSaveEnabled = reasons.isEmpty(),
+                        ineligibleForSaveReason = reasons.joinToString("\n")
+                    )
+                }
+            }
+        }
+    }
 
     fun clearValidationState() {
-        uiState =
-            uiState.copy(
+        _uiState.update {
+            it.copy(
                 validationFailureReason = "",
                 isValidated = false,
                 validEntry = false
             )
+        }
 
         _primarySeal.update {
             it.copy(
-                isValid = false,
                 isValidated = false,
                 reasonNotValid = ""
             )
@@ -146,7 +193,6 @@ class TagRetagModel(
 
         _pupOne.update {
             it.copy(
-                isValid = false,
                 isValidated = false,
                 reasonNotValid = ""
             )
@@ -154,50 +200,29 @@ class TagRetagModel(
 
         _pupTwo.update {
             it.copy(
-                isValid = false,
                 isValidated = false,
                 reasonNotValid = ""
             )
         }
     }
 
-    fun updateColonySelection(observationSiteSelected: String) {
-        uiState = uiState.copy(selectedColony = observationSiteSelected)
-    }
-
-    fun updateObserverInitials(initials: String) {
-        uiState = uiState.copy(observerInitials = initials)
-    }
-
-    fun updateCensusNumber(censusNumber: String) {
-        uiState = uiState.copy(censusNumber = censusNumber)
-    }
-
-    fun updateIsObservationMode(observationMode: Boolean) {
-        uiState = uiState.copy(isCensusMode = observationMode)
-    }
-
     fun updateObservationEntry(observation: ObservationLogEntry) {
-        uiState = uiState.copy(observationLogEntry = observation)
+        _uiState.update { it.copy(observationLogEntry = observation) }
     }
 
     fun updateCondition(sealName: String, input: String) {
-        var condSelected = input
-        if (input == "Select an option") {
-            condSelected = ""
-        }
         when (sealName) {
             "primary" -> {
-                _primarySeal.update { it.copy(condition = condSelected, isStarted = true) }
+                _primarySeal.update { it.copy(condition = input, isStarted = true) }
             }
 
             "pupOne" -> {
-                _pupOne.update { it.copy(condition = condSelected, isStarted = true) }
+                _pupOne.update { it.copy(condition = input, isStarted = true) }
             }
 
             "pupTwo" -> {
                 _pupTwo.update {
-                    it.copy(condition = condSelected, isStarted = true)
+                    it.copy(condition = input, isStarted = true)
                 }
             }
         }
@@ -748,27 +773,6 @@ class TagRetagModel(
         _pupTwo.update { Seal(name = "pupTwo", age = "Pup", isStarted = false) }
     }
 
-//    fun hasPermission(permission: String): Boolean {
-//        return ContextCompat.checkSelfPermission(
-//            context, permission
-//        ) == PackageManager.PERMISSION_GRANTED
-//    }
-
-//    fun onPermissionChange(permission: String, isGranted: Boolean) {
-//        when (permission) {/*            Manifest.permission.ACCESS_COARSE_LOCATION -> {
-//                            uiState = uiState.copy(hasLocationAccess = isGranted)
-//                        }*/
-//            Manifest.permission.ACCESS_FINE_LOCATION -> {
-//                uiState = uiState.copy(hasLocationAccess = isGranted)
-//            }/*            Manifest.permission.CAMERA -> {
-//                            uiState = uiState.copy(hasCameraAccess = isGranted)
-//                        }*/
-//            else -> {
-//                Log.e("Permission change", "Unexpected permission: $permission")
-//            }
-//        }
-//    }
-
     // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen selection of Tag/Retag
     // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
     fun populateSeal(lookupSeal: WedCheckSeal) {
@@ -855,7 +859,7 @@ class TagRetagModel(
                 "2" -> "Fair - 2"
                 "3" -> "Good - 3"
                 "4" -> "Newborn - 4"
-                else -> "Select an option"
+                else -> ""
             }
 
             var processedTagOneNumber = ""
@@ -902,15 +906,6 @@ class TagRetagModel(
                     isObservationLogEntry = true,
                 )
             }
-
-            uiState = uiState.copy(
-                deviceID = log.deviceID,
-                season = log.season,
-                observerInitials = log.observerInitials,
-                censusNumber = log.censusID,
-                isCensusMode = false,
-                selectedColony = log.colony
-            )
         }
         updateNotebookEntry(primarySeal.value)
     }
@@ -950,47 +945,6 @@ class TagRetagModel(
         }
     }
 
-
-    // region Location management
-//    @SuppressLint("MissingPermission")
-//    fun fetchCurrentLocation() {
-//        val isGooglePlay =
-//            GoogleApiAvailability.getInstance()
-//                .isGooglePlayServicesAvailable(context)
-//        uiState.hasGooglePlay = isGooglePlay
-//
-//        val fusedLocationClient =
-//            LocationServices.getFusedLocationProviderClient(context)
-//        fusedLocationClient.getCurrentLocation(
-//            Priority.PRIORITY_HIGH_ACCURACY,
-//            object : CancellationToken() {
-//                override fun onCanceledRequested(p0: OnTokenCanceledListener) =
-//                    CancellationTokenSource().token
-//
-//                override fun isCancellationRequested() = false
-//            }).addOnSuccessListener { currentLocation: Location? ->
-//            if (currentLocation == null) {
-//                val errorMessage = "Cannot get current location"
-//                uiState = uiState.copy(currentLocation = errorMessage)
-//            } else {
-//                val lat = currentLocation.latitude
-//                val lon = currentLocation.longitude
-//                val date = getCoordinatesLastUpdated()
-//
-//                uiState = uiState.copy(
-//                    currentLocation = "Lat : ${lat}    " + "Long : ${lon}\n" + "Updated: $date"
-//                )
-//                uiState = uiState.copy(
-//                    latLong = "Lat : $lat Long : $lon"
-//                )
-//                uiState = uiState.copy(
-//                    latitude = lat.toString(),
-//                    longitude = lon.toString()
-//                )
-//            }
-//        }
-//    }
-
     private fun getRelativesTags(sealName: String): Pair<String, String> {
         var relOneTagId = ""
         var relTwoTagId = ""
@@ -1021,31 +975,40 @@ class TagRetagModel(
         // reset the values in the model once the records are save successfully
         wedCheckSealMap = mutableMapOf()
 
-        uiState = uiState.copy(
-            validationFailureReason = "",
-            isValidated = false,
-            validEntry = false,
-            isSaved = false,
-            isSaving = false,
-            isError = false,
-            errorMessage = "",
-            isPrefilled = false,
-        )
+        _uiState.update {
+            it.copy(
+                validationFailureReason = "",
+                isValidated = false,
+                validEntry = false,
+                isSaved = false,
+                isError = false,
+                errorMessage = "",
+                isPrefilled = false,
+            )
+        }
 
         _primarySeal.update { Seal(name = "primary", isStarted = false) }
         _pupOne.update { Seal(name = "pupOne", age = "Pup", isStarted = false) }
         _pupTwo.update { Seal(name = "pupTwo", age = "Pup", isStarted = false) }
     }
 
-    fun createLog(currentLocation: GeoLocation?) {
+    fun createLog(
+        currentLocation: GeoLocation?,
+    ) {
         val sealsList = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-        uiState = uiState.copy(isSaving = true, isSaved = false)
+        _uiState.update { it.copy(isSaved = false) }
 
         for (seal in sealsList) {
             if (seal.isStarted) {
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.name)
-                val log = buildLogEntry(uiState, currentLocation, seal, relOneTag, relTwoTag)
+                val log = buildLogEntry(
+                    currentLocation,
+                    seal,
+                    relOneTag,
+                    relTwoTag,
+                    uiState.value.metadata,
+                )
 
                 //write an entry to the database for each seal that has valid input
                 viewModelScope.launch {
@@ -1057,10 +1020,9 @@ class TagRetagModel(
 //
 //                }
 
-                uiState = uiState.copy(isSaved = true)
+                _uiState.update { it.copy(isSaved = true) }
             }
         }
-        uiState = uiState.copy(isSaving = false)
     }
 
     // validate is called when the observer saves an entry
@@ -1068,12 +1030,13 @@ class TagRetagModel(
     // validation errors are saved to the seal state for inclusion in the output file
     fun validate(seal: Seal, wedChecKSealMatch: WedCheckSeal) {
         // reset the model state values that help determine whether the seal entry is valid
-        uiState =
-            uiState.copy(
+        _uiState.update {
+            it.copy(
                 validationFailureReason = "",
                 isValidated = false,
                 validEntry = false
             )
+        }
 
         // set the name used in the validation string to match the UI display
         var sealName = seal.name
@@ -1099,17 +1062,20 @@ class TagRetagModel(
 
         // update the model state with the validation state
         if (sealValid) {
-            uiState = uiState.copy(isValidated = true, validEntry = true)
+            _uiState.update { it.copy(isValidated = true, validEntry = true) }
         } else {
             val invalidEntrySB = StringBuilder()
             invalidEntrySB.append("$sealName failed validation!")
-            invalidEntrySB.append(uiState.validationFailureReason)
+            invalidEntrySB.append(_uiState.value.validationFailureReason)
             invalidEntrySB.append("\n")
             invalidEntrySB.append(validationErrors)
-            uiState = uiState.copy(
-                validationFailureReason = invalidEntrySB.toString(),
-                isValidated = true
-            )
+            _uiState.update {
+                it.copy(
+                    validationFailureReason = invalidEntrySB.toString(),
+                    isValidated = true,
+                    validEntry = false
+                )
+            }
         }
 
         // update the seal with the validation state
@@ -1117,7 +1083,6 @@ class TagRetagModel(
             "primary" -> {
                 _primarySeal.update {
                     it.copy(
-                        isValid = sealValid,
                         isValidated = true,
                         reasonNotValid = validationErrors
                     )
@@ -1127,7 +1092,6 @@ class TagRetagModel(
             "pupOne" -> {
                 _pupOne.update {
                     it.copy(
-                        isValid = sealValid,
                         isValidated = true,
                         reasonNotValid = validationErrors
                     )
@@ -1137,7 +1101,6 @@ class TagRetagModel(
             "pupTwo" -> {
                 _pupTwo.update {
                     it.copy(
-                        isValid = sealValid,
                         isValidated = true,
                         reasonNotValid = validationErrors
                     )
@@ -1148,11 +1111,17 @@ class TagRetagModel(
 
     fun flagSealForReview(name: String) {
         when (name) {
-            "primary" -> { _primarySeal.update { it.copy(flaggedForReview = true) } }
+            "primary" -> {
+                _primarySeal.update { it.copy(flaggedForReview = true) }
+            }
 
-            "pupOne" -> { _pupOne.update { it.copy(flaggedForReview = true) } }
+            "pupOne" -> {
+                _pupOne.update { it.copy(flaggedForReview = true) }
+            }
 
-            "pupTwo" -> { _pupTwo.update { it.copy(flaggedForReview = true) } }
+            "pupTwo" -> {
+                _pupTwo.update { it.copy(flaggedForReview = true) }
+            }
         }
     }
 
@@ -1165,7 +1134,7 @@ class TagRetagModel(
                 isStarted = true
             )
         }
-        uiState = uiState.copy(isPrefilled = true)
+        _uiState.update { it.copy(isPrefilled = true) }
     }
 
     fun prefillSingleFemale() {
@@ -1177,7 +1146,7 @@ class TagRetagModel(
                 isStarted = true
             )
         }
-        uiState = uiState.copy(isPrefilled = true)
+        _uiState.update { it.copy(isPrefilled = true) }
     }
 
     fun prefillMomAndPup() {
@@ -1190,10 +1159,6 @@ class TagRetagModel(
             )
         }
         _pupOne.update { it.copy(numRelatives = "1", isStarted = true) }
-        uiState = uiState.copy(isPrefilled = true)
-    }
-
-    fun clearCensus() {
-        uiState = uiState.copy(censusNumber = "Select an option")
+        _uiState.update { it.copy(isPrefilled = true) }
     }
 }

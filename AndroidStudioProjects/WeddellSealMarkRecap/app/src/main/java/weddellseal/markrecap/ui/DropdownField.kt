@@ -31,9 +31,12 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 
-
 @Composable
-fun DropdownField(options: List<String>, selectedOption: String, onValueChange: (String) -> Unit) {
+fun DropdownField(
+    options: List<String>,
+    selectedOption: String,
+    onValueChange: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     var currentSelection by remember { mutableStateOf(selectedOption) }
     val focusManager = LocalFocusManager.current
@@ -105,7 +108,8 @@ fun DropdownField(options: List<String>, selectedOption: String, onValueChange: 
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    DropdownMenuItem(text = { Text(text = "Select an option") },
+                    DropdownMenuItem(
+                        text = { Text(text = "Select an option") },
                         onClick = {
                             focusManager.clearFocus()
 
@@ -115,7 +119,8 @@ fun DropdownField(options: List<String>, selectedOption: String, onValueChange: 
                         }
                     )
                     options.forEach { option ->
-                        DropdownMenuItem(text = { Text(text = option) },
+                        DropdownMenuItem(
+                            text = { Text(text = option) },
                             onClick = {
                                 focusManager.clearFocus()
 

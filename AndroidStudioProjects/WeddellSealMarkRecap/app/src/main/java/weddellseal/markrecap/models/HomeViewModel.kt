@@ -9,13 +9,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
-import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
@@ -29,39 +30,22 @@ private const val TAG = "HomeViewModel"
  */
 class HomeViewModel(
     application: Application,
-    private val observationRepo: ObservationRepository,
     private val locationSource: LocationSource,
     private val sealColonyRepository: SealColonyRepository,
-    private val observersRepository: ObserversRepository,
+    observersRepository: ObserversRepository,
 ) : AndroidViewModel(application) {
 
     internal val jobs = mutableJobSet()
 
-//    data class UiState(
-//        val hasFileAccess: Boolean,
-//        val loading: Boolean = false,
-//        val isSaving: Boolean = false,
-//        var uriForCSVWrite: Uri? = null,
-//        var fileUploads: List<FileUploadEntity> = emptyList(),
-//        val failedColoniesRows: List<FailedRow> = emptyList(),
-//        val totalColoniesRows: Int = 0,
-//        val failedObserversRows: List<FailedRow> = emptyList(),
-//        val totalObserversRows: Int = 0,
-//        val isError: Boolean = false,
-//        val errorText: String = "",
-//        val date: String,
-//        val deviceCoordinates: Coordinates? = null,
-//        val location: GeoLocation? = null,
-//        val deviceID: String
-//    )
-//
-//    private val _uiState = MutableStateFlow(
-//        UiState(
-//            deviceID = getDeviceName(context)
-//        )
-//    )
-//
-//    val uiState: StateFlow<UiState> = _uiState
+    data class UiState(
+        val isCensusMode: Boolean = false,
+        val selectedCensusNumber: String = "",
+        val selectedObservers: List<String> = listOf(),
+        val selectedColony: String = "",
+    )
+
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     val observersList: StateFlow<List<String>> = observersRepository.observersList
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -84,15 +68,53 @@ class HomeViewModel(
         _overrideAutoColony.value = value
     }
 
+    fun updateIsCensusMode(observationMode: Boolean) {
+        _uiState.update{it.copy(isCensusMode = observationMode)}
+    }
+
+    fun clearCensus() {
+        _uiState.update{it.copy(selectedCensusNumber = "", isCensusMode = false)}
+    }
+
+//    init {
+//        simulateLocationForTesting() // <- temp test injection
+//        // OR call configureLocationFollow() for real updates
+//    }
+//
+//    private fun simulateLocationForTesting() {
+//        viewModelScope.launch {
+//            delay(3000)
+//            _currentLocation.value = GeoLocation(
+//                coordinates = Coordinates(42.0, -100.0),
+//                updatedDate = "Fake Update"
+//            )
+//            Log.d("HomeViewModel", "Simulated location update emitted.")
+//        }
+//    }
+
+    fun updateColonySelection(observationSiteSelected: String) {
+        _uiState.update{it.copy(selectedColony = observationSiteSelected)}
+    }
+
+    fun updateObserversSelection(selected: List<String>) {
+        val updated = if (selected.isEmpty()) emptyList() else selected
+        _uiState.update { it.copy(selectedObservers = updated) }
+    }
+
+    fun updateCensusNumber(censusNumber: String) {
+        _uiState.update{it.copy(selectedCensusNumber = censusNumber)}
+    }
+
     // Location following
     var isFollowingLocation = mutableStateOf(false)
     private var lastKnownCoordinates: Coordinates? = null
     private val _currentLocation = MutableStateFlow<GeoLocation?>(null)
-    val currentLocation: MutableStateFlow<GeoLocation?> = _currentLocation
+    val currentLocation: StateFlow<GeoLocation?> = _currentLocation.asStateFlow()
 
     override fun onCleared() {
         super.onCleared()
         viewModelScope.launch {
+            Log.i(TAG, "onCleared: stopping location updates")
             locationSource.stopLocationUpdates()
         }
         jobs.clear()
@@ -130,7 +152,6 @@ class HomeViewModel(
             Log.i(TAG, "observing location follow mode")
 
             locationSource.locationUpdates().collect { geoLocation ->
-                Log.i(TAG, "New location received: $geoLocation")
 
                 // Check if the coordinates have changed
                 if (geoLocation.coordinates == lastKnownCoordinates) {
@@ -141,14 +162,12 @@ class HomeViewModel(
                     return@collect // Skip the update
                 }
 
+                Log.i(TAG, "New location received: $geoLocation")
+
                 // Update the last known coordinates
                 lastKnownCoordinates = geoLocation.coordinates
-
+                Log.d("HomeViewModel", "Emitting location: $geoLocation")
                 _currentLocation.value = geoLocation
-
-//                _uiState.value = uiState.value.copy(
-//                    location = geoLocation // Update with the latest location
-//                )
 
                 var sealColonyDefault = SealColony(
                     colonyId = 0,
@@ -178,10 +197,4 @@ class HomeViewModel(
             )
         }
     }
-
-//    private fun getDeviceName(context: Context): String {
-//        return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
-//            ?: "Unknown Device"
-//    }
-
 }

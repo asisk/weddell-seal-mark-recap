@@ -74,21 +74,20 @@ class MainActivity : ComponentActivity() {
         observersRepository = ObserversRepository(observersDao)
 
         // Initialize the view models
-        val tagRetagViewModelFactory =
-            TagRetagViewModelFactory(
-                application,
-                observationRepository,
-                sealColonyRepository)
-        val tagRetagModel: TagRetagModel by viewModels { tagRetagViewModelFactory }
-
         val homeViewModelFactory =
             HomeViewModelFactory(
-                observationRepository,
                 FusedLocationSource(applicationContext),
                 sealColonyRepository,
                 observersRepository
             )
         val homeViewModel: HomeViewModel by viewModels { homeViewModelFactory }
+
+        val tagRetagViewModelFactory =
+            TagRetagViewModelFactory(
+                application,
+                observationRepository,
+                homeViewModel.uiState)
+        val tagRetagModel: TagRetagModel by viewModels { tagRetagViewModelFactory }
 
         val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
         val recentObservationsViewModel: RecentObservationsViewModel by viewModels { recentObservationsViewModelFactory }
@@ -127,7 +126,6 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.HomeScreen.route) {
                             HomeScreen(
                                 navController,
-                                tagRetagModel,
                                 homeViewModel
                             )
                         }

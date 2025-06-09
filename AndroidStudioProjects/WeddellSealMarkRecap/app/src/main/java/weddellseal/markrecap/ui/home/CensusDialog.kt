@@ -15,20 +15,24 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import weddellseal.markrecap.models.TagRetagModel
+import weddellseal.markrecap.models.HomeViewModel
 
 @Composable
 fun CensusDialog(
-    obsViewModel: TagRetagModel,
+    homeViewModel: HomeViewModel,
     onClearRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
+
+    val uiState by homeViewModel.uiState.collectAsState()
 
     Dialog(onDismissRequest = { onClearRequest() }) {
         // Draw a rectangle shape with rounded corners inside the dialog
@@ -64,8 +68,8 @@ fun CensusDialog(
 
                     CensusButtonGroupSquare(
                         txtOptions = censusOptions,
-                        valueInModel = obsViewModel.uiState.censusNumber,
-                        onValChangeDo = { obsViewModel.updateCensusNumber(it) },
+                        valueInModel = uiState.selectedCensusNumber,
+                        onValChangeDo = { homeViewModel.updateCensusNumber(it) },
                     )
                 }
 
@@ -80,8 +84,8 @@ fun CensusDialog(
 
                     CensusButtonGroupSquare(
                         txtOptions = censusOptions,
-                        valueInModel = obsViewModel.uiState.censusNumber,
-                        onValChangeDo = { obsViewModel.updateCensusNumber(it) },
+                        valueInModel = uiState.selectedCensusNumber,
+                        onValChangeDo = { homeViewModel.updateCensusNumber(it) },
                     )
                 }
 

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
@@ -50,8 +51,6 @@ import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.models.HomeViewModel
-import weddellseal.markrecap.models.TagRetagModel
-import weddellseal.markrecap.ui.DropdownField
 import weddellseal.markrecap.ui.permissions.RequestPermissions
 import weddellseal.markrecap.ui.permissions.missingPermissions
 import weddellseal.markrecap.ui.utils.cancelAllAndClear
@@ -60,25 +59,27 @@ import weddellseal.markrecap.ui.utils.getDeviceName
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    obsViewModel: TagRetagModel,
     viewModel: HomeViewModel
 ) {
-    HomeScaffold(navController, obsViewModel, viewModel)
+    HomeScaffold(navController, viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun HomeScaffold(
     navController: NavHostController,
-    obsViewModel: TagRetagModel,
     viewModel: HomeViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+
+    val uiState by viewModel.uiState.collectAsState()
+
     var showCensusDialog by remember { mutableStateOf(false) }
     val coloniesList by viewModel.coloniesList.collectAsState()
     val autoDetectedColony by viewModel.autoDetectedColony.collectAsState()
     val overrideAutoColony by viewModel.overrideAutoColony.collectAsState()
+    val options by viewModel.observersList.collectAsState() // Collecting the list of observers
 
     // Used to request permissions for Location
     RequestPermissionsEffect(viewModel)
@@ -243,7 +244,6 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val observerSelected by remember { mutableStateOf(obsViewModel.uiState.observerInitials) }
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
@@ -259,18 +259,15 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-                                MultiSelectDropdownObservers(
-                                    viewModel,
-                                    selectedOptions = observerSelected,
-                                    onValueChange = { updatedItems ->
-                                        // Convert selected items back to a concatenated string
-                                        val concatenatedSelectedItems = updatedItems
-                                            .joinToString(separator = ", ")
-
-                                        obsViewModel.updateObserverInitials(
-                                            concatenatedSelectedItems
+                                ObserversDropDown(
+                                    label = "Selected Observers",
+                                    allOptions = options,
+                                    selectedOptions = uiState.selectedObservers,
+                                    onSelectionChanged = { updatedItems ->
+                                        viewModel.updateObserversSelection(
+                                            updatedItems
                                         )
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -296,7 +293,10 @@ fun HomeScaffold(
                                     .padding(4.dp)
                                     .fillMaxWidth(.8f)
                             ) {
-                                Text(text = autoDetectedColony?.location ?: "...detecting proximity to a known colony...")
+                                Text(
+                                    text = autoDetectedColony?.location
+                                        ?: "...detecting proximity to a known colony..."
+                                )
                             }
                         }
                         Row(
@@ -306,8 +306,6 @@ fun HomeScaffold(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val colonySelected by remember { mutableStateOf(obsViewModel.uiState.selectedColony) }
-
                             Text(
                                 text = "Select Colony",
                                 style = MaterialTheme.typography.titleLarge,
@@ -323,18 +321,20 @@ fun HomeScaffold(
                                     .padding(8.dp)
                             )
                             if (overrideAutoColony) {
-
                                 Column(
                                     modifier = Modifier
                                         .padding(4.dp)
-                                        .fillMaxWidth(.8f)
+//                                        .fillMaxWidth(.8f)
+                                        .wrapContentWidth()
                                 ) {
-                                    DropdownField(
-                                        coloniesList,
-                                        colonySelected
-                                    ) { valueSelected ->
-                                        obsViewModel.updateColonySelection(valueSelected)
-                                    }
+                                    ColonyDropDown(
+                                        label = "Selected Colony",
+                                        options = coloniesList,
+                                        selectedOption = uiState.selectedColony,
+                                        onValueChange = { valueSelected ->
+                                            viewModel.updateColonySelection(valueSelected)
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -373,14 +373,14 @@ fun HomeScaffold(
                     // Show the Census dialog if showDialog is true
                     if (showCensusDialog) {
                         CensusDialog(
-                            obsViewModel,
+                            viewModel,
                             onClearRequest = {
                                 showCensusDialog = false
-                                obsViewModel.clearCensus()
+                                viewModel.clearCensus()
                             },
                             onConfirmation = {
                                 showCensusDialog = false
-                                obsViewModel.updateIsObservationMode(true)
+                                viewModel.updateIsCensusMode(true)
                                 navController.navigate(Screens.AddObservationLog.route)
                             },
                         )

@@ -3,25 +3,29 @@ package weddellseal.markrecap.ui.tagretag.utils
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.Seal
-import weddellseal.markrecap.models.TagRetagModel
+import weddellseal.markrecap.models.TagRetagModel.ObservationMetadata
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
 
 fun buildLogEntry(
-    uiState: TagRetagModel.UiState,
     currentLocation: GeoLocation?,
     seal: Seal,
     relativeOneTag: String,
     relativeTwoTag: String,
+    metadata: ObservationMetadata,
 ): ObservationLogEntry {
+    val metadataCensus = metadata.censusNumber
+    val metadataObservers = metadata.getObserversString()
+    val metadataColony = metadata.selectedColony
+
     var censusNumber = "0"
-    if (uiState.censusNumber != "Select an option") {
-        censusNumber = uiState.censusNumber
+    if (metadataCensus != "") {
+        censusNumber = metadataCensus
     }
 
     var observers = "Not Selected"
-    if (uiState.observerInitials != "Select an option") {
-        observers = uiState.observerInitials
+    if (metadataObservers != "") {
+        observers = metadataObservers
     }
 
     var ageClass = ""
@@ -98,7 +102,7 @@ fun buildLogEntry(
     }
 
     var condition = ""
-    if (seal.condition != "" && seal.condition != "None" && seal.condition != "Select an option") {
+    if (seal.condition != "" && seal.condition != "None") {
         condition = seal.condition.last().toString()
     }
 
@@ -133,9 +137,9 @@ fun buildLogEntry(
     }
 
     val log = ObservationLogEntry(
-        id = 0, // passing zero, but Room entity will autopopulate the id
-        deviceID = uiState.deviceID,
-        season = uiState.season,
+        id = 0, // passing zero, but Room entity will auto-populate the id
+        deviceID = metadata.deviceID,
+        season = metadata.currentSeason,
         speno = seal.speNo.toString(),
         date = getCurrentDateFormatted(), // date format: yyyy-MM-dd
         time = getCurrentTimeFormatted(), // time format: hh:mm:ss
@@ -161,7 +165,7 @@ fun buildLogEntry(
         tissueSampled = tissue,
         comments = comment,
         retagReason = seal.reasonForRetag,
-        colony = uiState.selectedColony,
+        colony = metadataColony,
     )
     return log
 }

@@ -43,7 +43,7 @@ fun sealValidation(
 
                 // dead seals cannot be revived to the living! ;)
                 val sealCondition =
-                    if (seal.condition != "" && seal.condition != "None" && seal.condition != "Select an option") seal.condition.last()
+                    if (seal.condition.isNotEmpty() && seal.condition != "None") seal.condition.last()
                         .toString() else "99"
                 if (sealCondition != "0" && wedCheckSeal.condition == "0") {
                     sealValid = false

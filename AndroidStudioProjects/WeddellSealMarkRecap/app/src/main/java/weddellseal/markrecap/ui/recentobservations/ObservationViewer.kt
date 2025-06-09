@@ -23,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +41,8 @@ fun ObservationViewer(
     navController: NavHostController,
     obsViewModel: TagRetagModel
 ) {
+    val uiState by obsViewModel.uiState.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -99,7 +103,7 @@ fun ObservationViewer(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
-                        obsViewModel.uiState.observationLogEntry?.let { ObservationEntryCard(it) }
+                        uiState.observationLogEntry?.let { ObservationEntryCard(it) }
                         ExtendedFloatingActionButton(
                             modifier = Modifier
                                 .padding(bottom = 20.dp, start = 20.dp)

@@ -54,7 +54,7 @@ import weddellseal.markrecap.ui.ObservationItem
 fun RecentObservationsScreen(
     navController: NavHostController,
     viewModel: RecentObservationsViewModel,
-    obsViewModel: TagRetagModel,
+    tagRetagViewModel: TagRetagModel,
 ) {
     val currentObservations by viewModel.currentObservations.collectAsState()
     val context = LocalContext.current
@@ -114,7 +114,7 @@ fun RecentObservationsScreen(
                     items(currentObservations) { observation ->
                         ObservationItem(
                             onEditDo = {
-                                if (!obsViewModel.primarySeal.value.isStarted) {
+                                if (!tagRetagViewModel.primarySeal.value.isStarted) {
                                     showEditDialog = true
                                     observationToEdit = observation
                                 } else {
@@ -123,7 +123,7 @@ fun RecentObservationsScreen(
                                 }
                             },
                             onViewDo = {
-                                obsViewModel.updateObservationEntry(observation)
+                                tagRetagViewModel.updateObservationEntry(observation)
                                 navController.navigate(Screens.ObservationViewer.route)
                             },
                             observation = observation
@@ -145,8 +145,8 @@ fun RecentObservationsScreen(
 
                         // set the seal in the observationviewmodel & navigate to edit
                         if (observationToEdit != null) {
-                            obsViewModel.resetSaved()
-                            obsViewModel.populateSealFromObservation(observationToEdit)
+                            tagRetagViewModel.resetSaved()
+                            tagRetagViewModel.populateSealFromObservation(observationToEdit)
                             navController.navigate(Screens.AddObservationLog.route)
                         }
                     },
