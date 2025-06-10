@@ -42,6 +42,7 @@ class HomeViewModel(
         val selectedCensusNumber: String = "",
         val selectedObservers: List<String> = listOf(),
         val selectedColony: String = "",
+        val manualColonyCheckbox: Boolean = false
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -56,22 +57,34 @@ class HomeViewModel(
     // Auto-detected colony
     private val _autoDetectedColony = MutableStateFlow<SealColony?>(null)
     val autoDetectedColony: StateFlow<SealColony?> = _autoDetectedColony
-
-    private val _overrideAutoColony = MutableStateFlow(false)
-    val overrideAutoColony: StateFlow<Boolean> = _overrideAutoColony
-
-    fun updateColony(colony: SealColony?) {
+    fun setAutoDetectedColony(colony: SealColony?) {
         _autoDetectedColony.value = colony
     }
 
-    fun updateOverrideAutoColony(value: Boolean) {
-        _overrideAutoColony.value = value
+    // User Selection for Colony
+    fun setManualColonyCheckbox(value: Boolean) {
+        _uiState.update{it.copy(manualColonyCheckbox = value)}
+    }
+    fun clearColony() {
+        _uiState.update{it.copy(selectedColony = "")}
+    }
+    fun updateSelectedColony(observationSiteSelected: String) {
+        _uiState.update{it.copy(selectedColony = observationSiteSelected)}
     }
 
+    // User Selection for Observers
+    fun updateObserversSelection(selected: List<String>) {
+        val updated = if (selected.isEmpty()) emptyList() else selected
+        _uiState.update { it.copy(selectedObservers = updated) }
+    }
+
+    // User Selections for Census
+    fun updateCensusNumber(censusNumber: String) {
+        _uiState.update{it.copy(selectedCensusNumber = censusNumber)}
+    }
     fun updateIsCensusMode(observationMode: Boolean) {
         _uiState.update{it.copy(isCensusMode = observationMode)}
     }
-
     fun clearCensus() {
         _uiState.update{it.copy(selectedCensusNumber = "", isCensusMode = false)}
     }
@@ -91,19 +104,6 @@ class HomeViewModel(
 //            Log.d("HomeViewModel", "Simulated location update emitted.")
 //        }
 //    }
-
-    fun updateColonySelection(observationSiteSelected: String) {
-        _uiState.update{it.copy(selectedColony = observationSiteSelected)}
-    }
-
-    fun updateObserversSelection(selected: List<String>) {
-        val updated = if (selected.isEmpty()) emptyList() else selected
-        _uiState.update { it.copy(selectedObservers = updated) }
-    }
-
-    fun updateCensusNumber(censusNumber: String) {
-        _uiState.update{it.copy(selectedCensusNumber = censusNumber)}
-    }
 
     // Location following
     var isFollowingLocation = mutableStateOf(false)
@@ -172,7 +172,7 @@ class HomeViewModel(
                 var sealColonyDefault = SealColony(
                     colonyId = 0,
                     inOut = "none",
-                    location = "Seal Colony not Found!",
+                    location = "Seal colony not detected",
                     nLimit = 0.0,
                     sLimit = 0.0,
                     wLimit = 0.0,
@@ -183,7 +183,7 @@ class HomeViewModel(
                 )
                 // Find and update the colony based on the location
                 val colony = findColony(geoLocation.coordinates) ?: sealColonyDefault
-                updateColony(colony)
+                setAutoDetectedColony(colony)
             }
         }.storeIn(jobs)
     }

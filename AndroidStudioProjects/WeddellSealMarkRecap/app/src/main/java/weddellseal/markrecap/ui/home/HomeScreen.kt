@@ -5,14 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Checklist
@@ -24,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +39,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -64,21 +62,19 @@ fun HomeScreen(
     HomeScaffold(navController, viewModel)
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScaffold(
     navController: NavHostController,
     viewModel: HomeViewModel
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
 
     val uiState by viewModel.uiState.collectAsState()
 
     var showCensusDialog by remember { mutableStateOf(false) }
     val coloniesList by viewModel.coloniesList.collectAsState()
     val autoDetectedColony by viewModel.autoDetectedColony.collectAsState()
-    val overrideAutoColony by viewModel.overrideAutoColony.collectAsState()
     val options by viewModel.observersList.collectAsState() // Collecting the list of observers
 
     // Used to request permissions for Location
@@ -126,41 +122,39 @@ fun HomeScaffold(
                         Icon(
                             imageVector = Icons.Filled.AdminPanelSettings,
                             contentDescription = "Admin",
-                            modifier = Modifier.size(48.dp), // Change the size here
+                            modifier = Modifier.size(48.dp),
                         )
                     }
                 },
             )
         },
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .verticalScroll(state = scrollState, enabled = true)
-                .fillMaxSize(),
-        ) {
-            // Seal Pup Image
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
+
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                // Background Image
                 Image(
-                    painter = painterResource(R.drawable.pup1_2),
+                    painter = painterResource(R.drawable.thirtytwoyearold),
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.FillHeight,
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = 0.5f // Adjust this value for desired transparency
+                            alpha = 0.6f // Adjust this value for desired transparency
                         }
                 )
+
+                // Main Content
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(20.dp),
+                        .padding(innerPadding),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
+
+                    // ACTION BUTTONS
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -168,8 +162,9 @@ fun HomeScaffold(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
+                            modifier = Modifier.padding(10.dp),
+                            elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                            containerColor = MaterialTheme.colorScheme.secondary,
                             onClick = { navController.navigate(Screens.SealLookupScreen.route) },
                             icon = {
                                 Icon(
@@ -186,8 +181,9 @@ fun HomeScaffold(
                             }
                         )
                         ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
+                            modifier = Modifier.padding(10.dp),
+                            elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                            containerColor = MaterialTheme.colorScheme.secondary,
                             onClick = { navController.navigate(Screens.AddObservationLog.route) },
                             icon = {
                                 Icon(
@@ -204,6 +200,7 @@ fun HomeScaffold(
                             }
                         )
                     }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -211,12 +208,19 @@ fun HomeScaffold(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         ExtendedFloatingActionButton(
-                            modifier = Modifier.padding(16.dp),
-                            containerColor = Color.LightGray,
+                            modifier = Modifier.padding(10.dp),
+                            elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                            containerColor = MaterialTheme.colorScheme.secondary,
                             onClick = {
                                 showCensusDialog = true
                             },
-                            icon = { Icon(Icons.Filled.Checklist, "Census", Modifier.size(36.dp)) },
+                            icon = {
+                                Icon(
+                                    Icons.Filled.Checklist,
+                                    "Census",
+                                    Modifier.size(36.dp)
+                                )
+                            },
                             text = {
                                 Text(
                                     text = "Census",
@@ -225,29 +229,33 @@ fun HomeScaffold(
                             }
                         )
                     }
+
+                    // Metadata values - Observers, Colony, Device Name
                     Card(
                         elevation = CardDefaults.cardElevation(
                             defaultElevation = 6.dp
                         ),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         ),
                         modifier = Modifier
                             .padding(10.dp)
-                            .fillMaxWidth(.8f)
+                            .fillMaxWidth(.75f)
                             .align(Alignment.CenterHorizontally)
+//                            .alpha(.3f)
                     ) {
+                        // OBSERVERS
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(6.dp),
+                                .padding(10.dp)
+                                .fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .fillMaxWidth(.5f)
+                                    .fillMaxWidth(.5f),
                             ) {
                                 Text(
                                     text = "Observer Initials",
@@ -257,7 +265,7 @@ fun HomeScaffold(
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .fillMaxWidth(.8f)
+                                    .fillMaxWidth(.9f),
                             ) {
                                 ObserversDropDown(
                                     label = "Selected Observers",
@@ -271,77 +279,123 @@ fun HomeScaffold(
                                 )
                             }
                         }
+
+                        // COLONY
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(6.dp),
+                                .padding(10.dp)
+                                .fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .fillMaxWidth(.5f)
+                                    .fillMaxWidth(.5f),
                             ) {
-                                Text(
-                                    text = "Colony Detected",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .fillMaxWidth(.8f)
-                            ) {
-                                Text(
-                                    text = autoDetectedColony?.location
-                                        ?: "...detecting proximity to a known colony..."
-                                )
-                            }
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(6.dp),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Select Colony",
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier
-                                    .padding(4.dp)
-                            )
-                            Checkbox(
-                                checked = overrideAutoColony,
-                                onCheckedChange = {
-                                    viewModel.updateOverrideAutoColony(it)
-                                },
-                                modifier = Modifier
-                                    .padding(8.dp)
-                            )
-                            if (overrideAutoColony) {
-                                Column(
+                                Row(
                                     modifier = Modifier
-                                        .padding(4.dp)
-//                                        .fillMaxWidth(.8f)
-                                        .wrapContentWidth()
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start,
                                 ) {
+                                    Text(
+                                        text = "Colony",
+                                        style = MaterialTheme.typography.titleLarge
+                                    )
+                                    Spacer(modifier = Modifier.width(40.dp))
+                                    Checkbox(
+                                        checked = uiState.manualColonyCheckbox,
+                                        onCheckedChange = {
+                                            viewModel.setManualColonyCheckbox(it)
+                                            if (!it) {
+                                                viewModel.clearColony()
+                                            }
+                                        },
+                                    )
+                                    Text(
+                                        text = "Select\nManually",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(.9f),
+                            ) {
+                                if (uiState.manualColonyCheckbox) {
                                     ColonyDropDown(
                                         label = "Selected Colony",
                                         options = coloniesList,
                                         selectedOption = uiState.selectedColony,
                                         onValueChange = { valueSelected ->
-                                            viewModel.updateColonySelection(valueSelected)
+                                            viewModel.updateSelectedColony(valueSelected)
                                         }
+                                    )
+                                } else {
+                                    Text(
+                                        text = autoDetectedColony?.location
+                                            ?: "...detecting proximity to a known colony..."
                                     )
                                 }
                             }
                         }
+
+                        // MANUALLY SELECT COLONY
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth(),
+//                            horizontalArrangement = Arrangement.Start,
+//                            verticalAlignment = Alignment.Top
+//                        ) {
+//                            Column(
+//                                modifier = Modifier
+//                                    .padding(4.dp)
+//                                    .fillMaxWidth(.5f),
+//                            ) {
+//                                Row(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+//                                    verticalAlignment = Alignment.CenterVertically,
+//                                    horizontalArrangement = Arrangement.End,
+//                                ) {
+//                                    Text(
+//                                        text = "Select Colony",
+//                                        style = MaterialTheme.typography.titleMedium
+//                                    )
+//                                    Checkbox(
+//                                        checked = overrideAutoColony,
+//                                        onCheckedChange = {
+//                                            viewModel.updateOverrideAutoColony(it)
+//                                        },
+//                                    )
+//                                }
+//                            }
+//                            Column(
+//                                modifier = Modifier
+//                                    .padding(4.dp)
+//                                    .fillMaxWidth(.9f),
+//                            ) {
+//                                if (overrideAutoColony) {
+//                                    ColonyDropDown(
+//                                        label = "Selected Colony",
+//                                        options = coloniesList,
+//                                        selectedOption = uiState.selectedColony,
+//                                        onValueChange = { valueSelected ->
+//                                            viewModel.updateColonySelection(valueSelected)
+//                                        }
+//                                    )
+//                                }
+//                            }
+//                        }
+
+                        // DEVICE NAME
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(6.dp),
+                                .padding(10.dp),
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -360,11 +414,10 @@ fun HomeScaffold(
                             Column(
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .fillMaxWidth(.8f)
+                                    .fillMaxWidth(.9f)
                             ) {
                                 Text(
                                     text = deviceName,
-                                    style = MaterialTheme.typography.bodyLarge
                                 )
                             }
                         }

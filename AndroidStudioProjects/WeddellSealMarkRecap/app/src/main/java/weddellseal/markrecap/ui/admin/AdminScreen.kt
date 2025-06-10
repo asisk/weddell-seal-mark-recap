@@ -142,7 +142,7 @@ fun AdminScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = 0.5f
+                            alpha = 0.6f
                         }
                 )
 
