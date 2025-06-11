@@ -18,7 +18,7 @@ import weddellseal.markrecap.frameworks.room.files.FilesRepository
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
-import weddellseal.markrecap.models.ObserversViewModelFactory
+import weddellseal.markrecap.viewmodelfactories.ObserversViewModelFactory
 import weddellseal.markrecap.viewmodelfactories.TagRetagViewModelFactory
 import weddellseal.markrecap.ui.tagretag.TagRetagModel
 import weddellseal.markrecap.ui.admin.AdminViewModel

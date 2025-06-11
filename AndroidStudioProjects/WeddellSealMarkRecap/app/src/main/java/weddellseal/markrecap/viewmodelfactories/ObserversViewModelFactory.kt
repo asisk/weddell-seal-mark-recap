@@ -1,4 +1,4 @@
-package weddellseal.markrecap.models
+package weddellseal.markrecap.viewmodelfactories
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
