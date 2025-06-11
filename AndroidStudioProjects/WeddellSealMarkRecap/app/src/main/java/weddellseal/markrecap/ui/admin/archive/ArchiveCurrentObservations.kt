@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
 @Composable
 fun ArchiveCurrentObservations(

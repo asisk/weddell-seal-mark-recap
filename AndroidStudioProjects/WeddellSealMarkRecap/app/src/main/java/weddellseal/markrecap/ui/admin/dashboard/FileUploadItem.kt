@@ -22,8 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
-import weddellseal.markrecap.frameworks.room.files.color
-import weddellseal.markrecap.frameworks.room.files.icon
+import weddellseal.markrecap.domain.files.data.color
+import weddellseal.markrecap.domain.files.data.icon
 import weddellseal.markrecap.ui.utils.formatFileUploadedDateTime
 
 @Composable

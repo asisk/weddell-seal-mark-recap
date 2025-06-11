@@ -24,10 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.models.ObserversViewModel
-import weddellseal.markrecap.models.SealColoniesViewModel
-import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.home.SealColoniesViewModel
+import weddellseal.markrecap.ui.admin.WedCheckViewModel
 import weddellseal.markrecap.ui.admin.FileStatus
+import weddellseal.markrecap.ui.tagretag.ObserversViewModel
 
 @Composable
 fun FileUpload(

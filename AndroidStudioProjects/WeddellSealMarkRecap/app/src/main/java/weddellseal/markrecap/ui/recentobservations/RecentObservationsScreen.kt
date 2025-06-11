@@ -44,8 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
-import weddellseal.markrecap.models.TagRetagModel
-import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.ui.tagretag.TagRetagModel
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
 

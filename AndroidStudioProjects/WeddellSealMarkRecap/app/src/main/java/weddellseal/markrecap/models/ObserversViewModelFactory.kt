@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import weddellseal.markrecap.frameworks.room.files.FilesRepository
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
+import weddellseal.markrecap.ui.tagretag.ObserversViewModel
 
 class ObserversViewModelFactory(
     private val application: Application,

@@ -41,8 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.data.toLocationString
-import weddellseal.markrecap.models.HomeViewModel
-import weddellseal.markrecap.models.TagRetagModel
+import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.IneligibleForSaveDialog
 import weddellseal.markrecap.ui.tagretag.dialogs.SealInvalidDialog
 

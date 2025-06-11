@@ -2,8 +2,8 @@ package weddellseal.markrecap.ui.tagretag.utils
 
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
-import weddellseal.markrecap.frameworks.room.observations.Seal
-import weddellseal.markrecap.models.TagRetagModel.ObservationMetadata
+import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.ui.tagretag.TagRetagModel.ObservationMetadata
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
 

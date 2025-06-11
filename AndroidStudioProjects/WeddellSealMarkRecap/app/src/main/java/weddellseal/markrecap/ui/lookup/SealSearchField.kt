@@ -29,7 +29,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.models.SealLookupViewModel
+import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 
 @Composable
 fun SealSearchField(

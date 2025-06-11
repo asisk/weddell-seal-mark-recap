@@ -13,8 +13,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import weddellseal.markrecap.frameworks.room.files.FileStatusConverter
-import weddellseal.markrecap.frameworks.room.files.FileTypeConverter
+import weddellseal.markrecap.domain.files.data.FileStatusConverter
+import weddellseal.markrecap.domain.files.data.FileTypeConverter
 import weddellseal.markrecap.frameworks.room.files.FileUploadDao
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.observers.Observers

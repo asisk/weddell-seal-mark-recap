@@ -43,15 +43,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.AdminViewModel
-import weddellseal.markrecap.models.ObserversViewModel
-import weddellseal.markrecap.models.RecentObservationsViewModel
-import weddellseal.markrecap.models.SealColoniesViewModel
-import weddellseal.markrecap.models.WedCheckViewModel
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
+import weddellseal.markrecap.ui.home.SealColoniesViewModel
+import weddellseal.markrecap.ui.admin.WedCheckViewModel
 import weddellseal.markrecap.ui.admin.archive.ArchiveCurrentObservations
 import weddellseal.markrecap.ui.admin.dashboard.DashboardScreen
 import weddellseal.markrecap.ui.admin.export.ExportObservations
 import weddellseal.markrecap.ui.admin.upload.FileUpload
+import weddellseal.markrecap.ui.tagretag.ObserversViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

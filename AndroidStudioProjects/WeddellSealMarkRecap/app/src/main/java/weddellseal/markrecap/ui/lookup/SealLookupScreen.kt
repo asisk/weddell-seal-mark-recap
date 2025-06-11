@@ -45,8 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.SealLookupViewModel
-import weddellseal.markrecap.models.TagRetagModel
+import weddellseal.markrecap.ui.tagretag.TagRetagModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.HomeViewModel
 import weddellseal.markrecap.ui.permissions.RequestPermissions
 import weddellseal.markrecap.ui.permissions.missingPermissions
 import weddellseal.markrecap.ui.utils.cancelAllAndClear

@@ -8,7 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
+import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.ui.DataDisplayRow
 
 @Composable

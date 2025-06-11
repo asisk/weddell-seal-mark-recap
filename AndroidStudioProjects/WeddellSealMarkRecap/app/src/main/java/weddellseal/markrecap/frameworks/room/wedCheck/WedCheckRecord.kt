@@ -9,6 +9,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Entity(

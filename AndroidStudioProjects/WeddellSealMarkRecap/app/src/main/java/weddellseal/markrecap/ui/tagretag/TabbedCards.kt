@@ -30,10 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.frameworks.room.observations.Seal
-import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
-import weddellseal.markrecap.models.SealLookupViewModel
-import weddellseal.markrecap.models.TagRetagModel
+import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
+import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 /**

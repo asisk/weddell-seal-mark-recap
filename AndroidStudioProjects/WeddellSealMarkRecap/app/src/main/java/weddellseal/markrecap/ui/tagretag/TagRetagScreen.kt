@@ -53,10 +53,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
-import weddellseal.markrecap.models.HomeViewModel
-import weddellseal.markrecap.models.RecentObservationsViewModel
-import weddellseal.markrecap.models.SealLookupViewModel
-import weddellseal.markrecap.models.TagRetagModel
+import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
+import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
 

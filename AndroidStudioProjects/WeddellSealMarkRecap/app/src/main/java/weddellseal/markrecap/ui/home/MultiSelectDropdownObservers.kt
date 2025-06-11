@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import weddellseal.markrecap.models.HomeViewModel
 
 data class SelectableItem(val title: String, var isSelected: Boolean = false)
 

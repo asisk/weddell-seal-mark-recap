@@ -5,8 +5,8 @@ import weddellseal.markrecap.ui.utils.getTwoYearsAgo
 import weddellseal.markrecap.ui.utils.getYearWithinTenYears
 import org.junit.Assert
 import org.junit.Test
-import weddellseal.markrecap.frameworks.room.observations.Seal
-import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckSeal
+import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.ui.tagretag.sealValidation
 import weddellseal.markrecap.ui.utils.getLastYear
 import weddellseal.markrecap.ui.utils.getOverTenYearsAgo

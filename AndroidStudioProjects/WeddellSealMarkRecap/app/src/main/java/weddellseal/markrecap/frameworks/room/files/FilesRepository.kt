@@ -1,6 +1,7 @@
 package weddellseal.markrecap.frameworks.room.files
 
 import kotlinx.coroutines.flow.Flow
+import weddellseal.markrecap.domain.files.data.FileState
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 

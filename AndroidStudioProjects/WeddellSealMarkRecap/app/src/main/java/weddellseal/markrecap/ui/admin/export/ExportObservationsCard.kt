@@ -34,10 +34,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
-import weddellseal.markrecap.frameworks.room.files.FileState
-import weddellseal.markrecap.frameworks.room.files.color
-import weddellseal.markrecap.frameworks.room.files.icon
-import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.domain.files.data.FileState
+import weddellseal.markrecap.domain.files.data.color
+import weddellseal.markrecap.domain.files.data.icon
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.admin.ExportType
 import weddellseal.markrecap.ui.admin.FileStatus
 
