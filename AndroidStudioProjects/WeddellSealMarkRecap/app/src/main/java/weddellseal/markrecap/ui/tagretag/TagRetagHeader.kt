@@ -60,14 +60,11 @@ fun TagRetagHeader(
     val location by homeViewModel.currentLocation.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
-    val primaryWedCheckSeal by viewModel.primaryWedCheckSeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
-    val pupOneWedCheckSeal by viewModel.pupOneWedCheckSeal.collectAsState()
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
-    val pupTwoWedCheckSeal by viewModel.pupTwoWedCheckSeal.collectAsState()
 
     var showConfirmEntryDialog by remember { mutableStateOf(false) }
-    var showIneligibleDialog by remember { mutableStateOf(false) }
+//    var showIneligibleDialog by remember { mutableStateOf(false) }
 
 
     // TODO, remove once location testing is complete
@@ -76,13 +73,13 @@ fun TagRetagHeader(
 //    }
 
     // this should be activated after the saveAction() is triggered
-    LaunchedEffect(uiState.isValidated) {
-        var showDialog = false
-        if (uiState.isValidated && !uiState.validEntry) {
-            showDialog = true
-        }
-        showConfirmEntryDialog = showDialog
-    }
+//    LaunchedEffect(uiState.isValidated) {
+//        var showDialog = false
+//        if (uiState.isValidated && !uiState.validEntry) {
+//            showDialog = true
+//        }
+//        showConfirmEntryDialog = showDialog
+//    }
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
@@ -135,7 +132,7 @@ fun TagRetagHeader(
                 )
             }
 
-            // GPS Location & Save Button
+            // GPS Location
             Row(
                 modifier = Modifier
                     .padding(top = 8.dp)
@@ -170,6 +167,8 @@ fun TagRetagHeader(
                 )
             }
         }
+
+        // SAVE BUTTON
         Column(
             modifier = Modifier
                 .weight(.8f),
@@ -209,19 +208,8 @@ fun TagRetagHeader(
                 onClick = {
                     if (!uiState.isSaveEnabled) return@ExtendedFloatingActionButton  // guard early exit
 
-                    if (primarySeal.isStarted) {
-                        viewModel.validate(primarySeal, primaryWedCheckSeal)
-                    }
-
-                    if (pupOneSeal.isStarted) {
-                        viewModel.validate(pupOneSeal, pupOneWedCheckSeal)
-                    }
-
-                    if (pupTwoSeal.isStarted) {
-                        viewModel.validate(pupTwoSeal, pupTwoWedCheckSeal)
-                    }
-
-                    if (viewModel.uiState.value.isValidated && viewModel.uiState.value.validEntry) {
+                    val validEntry = primarySeal.isValid && pupOneSeal.isValid && pupTwoSeal.isValid
+                    if (validEntry) {
                         viewModel.setMetadata(
                             TagRetagModel.ObservationMetadata(
                                 selectedColony = homeUiState.selectedColony,
@@ -232,6 +220,9 @@ fun TagRetagHeader(
                         viewModel.createLog(
                             location
                         )
+                    } else {
+                        viewModel.updateValidationErrors(primarySeal.validationErrors, pupOneSeal.validationErrors, pupTwoSeal.validationErrors)
+                        showConfirmEntryDialog = true
                     }
                 },
                 icon = { Icon(Icons.Filled.Save, "Save Seal") },
@@ -308,7 +299,6 @@ fun TagRetagHeader(
             viewModel,
             onDismissRequest = {
                 showConfirmEntryDialog = false
-                viewModel.clearValidationState()
             },
             onConfirmation = {
 
@@ -339,13 +329,13 @@ fun TagRetagHeader(
             },
         )
 
-        if (showIneligibleDialog) {
-            IneligibleForSaveDialog(
-                uiState.ineligibleForSaveReason,
-                onDismissRequest = {
-                    showIneligibleDialog = false
-                }
-            )
-        }
+//        if (showIneligibleDialog) {
+//            IneligibleForSaveDialog(
+//                uiState.ineligibleForSaveReason,
+//                onDismissRequest = {
+//                    showIneligibleDialog = false
+//                }
+//            )
+//        }
     }
 }

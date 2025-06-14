@@ -9,6 +9,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
@@ -86,8 +87,7 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         age = ageString,
         ageYears = ageNumeric,
         comment = comments,
-        condition = condition,
-        found = true,
+        condition = SealCondition.fromCode(condition),
         lastSeenSeason = season,
         massPups = pupinMassStudy,
         numTags = numTags.toString(), //not intending to map this over to the observation screen per August 1, 2024 meeting, but added to support validation

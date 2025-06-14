@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
@@ -51,21 +52,18 @@ class TagRetagModel(
 //    }
 
     data class UiState(
-        val isSaveEnabled: Boolean = false,
-        val isSaved: Boolean = false,
-        val ineligibleForSaveReason: String = "",
+        val isSaved: Boolean = false,  // indicator that record was successfully saved
 
-        val isPrefilled: Boolean = false,
+        val isSaveEnabled: Boolean = false, // indicator for save button
+        val ineligibleForSaveReason: String = "", // reasons save button is disabled
 
-        val isError: Boolean = false,
-        val errorMessage: String = "",
+        val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
 
         val validationFailureReason: String = "",
         val isValidated: Boolean = false,
         val validEntry: Boolean = false,
 
         val observationLogEntry: ObservationLogEntry? = null,
-        val recordID: Int = 0,
 
         val isEditMode: Boolean = false,
 
@@ -112,22 +110,11 @@ class TagRetagModel(
     private val _primarySeal = MutableStateFlow(Seal(name = "primary", isStarted = false))
     val primarySeal: StateFlow<Seal> = _primarySeal
 
-    private val _primaryWedCheckSeal = MutableStateFlow(WedCheckSeal())
-    val primaryWedCheckSeal: StateFlow<WedCheckSeal> = _primaryWedCheckSeal
-
     private val _pupOne = MutableStateFlow(Seal(name = "pupOne", age = "Pup", isStarted = false))
     val pupOne: StateFlow<Seal> = _pupOne
 
-    private val _pupOneWedCheckSeal = MutableStateFlow(WedCheckSeal())
-    val pupOneWedCheckSeal: StateFlow<WedCheckSeal> = _pupOneWedCheckSeal
-
     private val _pupTwo = MutableStateFlow(Seal(name = "pupTwo", age = "Pup", isStarted = false))
     val pupTwo: StateFlow<Seal> = _pupTwo
-
-    private val _pupTwoWedCheckSeal = MutableStateFlow(WedCheckSeal())
-    val pupTwoWedCheckSeal: StateFlow<WedCheckSeal> = _pupTwoWedCheckSeal
-
-    private var wedCheckSealMap = mutableMapOf<String, WedCheckSeal>()
 
     // Initialize the ViewModel
     init {
@@ -171,42 +158,20 @@ class TagRetagModel(
         }
     }
 
-    fun clearValidationState() {
-        _uiState.update {
-            it.copy(
-                validationFailureReason = "",
-                isValidated = false,
-                validEntry = false
-            )
+    fun updateValidationErrors(primarySealValidationErrors: List<String>, pupOneSealValidationErrors: List<String>, pupTwoSealValidationErrors: List<String>){
+        val validationErrorString = buildList {
+            addAll(primarySealValidationErrors)
+            addAll(pupOneSealValidationErrors)
+            addAll(pupTwoSealValidationErrors)
         }
-
-        _primarySeal.update {
-            it.copy(
-                isValidated = false,
-                reasonNotValid = ""
-            )
-        }
-
-        _pupOne.update {
-            it.copy(
-                isValidated = false,
-                reasonNotValid = ""
-            )
-        }
-
-        _pupTwo.update {
-            it.copy(
-                isValidated = false,
-                reasonNotValid = ""
-            )
-        }
+        _uiState.update { it.copy(validationFailureReason = validationErrorString.joinToString()) }
     }
 
     fun updateObservationEntry(observation: ObservationLogEntry) {
         _uiState.update { it.copy(observationLogEntry = observation) }
     }
 
-    fun updateCondition(sealName: String, input: String) {
+    fun updateCondition(sealName: String, input: SealCondition) {
         when (sealName) {
             "primary" -> {
                 _primarySeal.update { it.copy(condition = input, isStarted = true) }
@@ -312,21 +277,23 @@ class TagRetagModel(
         }
     }
 
-    fun clearSpeNo(seal: Seal) {
+    fun resetWedCheckMatch(seal: Seal) {
         when (seal.name) {
             "primary" -> {
-                _primarySeal.update { it.copy(speNo = 0, hasWedCheckSpeno = false) }
+                _primarySeal.update {
+                    it.copy(wedCheckMatch = null)
+                }
             }
 
             "pupOne" -> {
                 _pupOne.update {
-                    it.copy(speNo = 0, hasWedCheckSpeno = false)
+                    it.copy(wedCheckMatch = null)
                 }
             }
 
             "pupTwo" -> {
                 _pupTwo.update {
-                    it.copy(speNo = 0, hasWedCheckSpeno = false)
+                    it.copy(wedCheckMatch = null)
                 }
             }
         }
@@ -803,8 +770,7 @@ class TagRetagModel(
 
         _primarySeal.update {
             it.copy(
-                speNo = lookupSeal.speNo,
-                age = sealAgeAdvanced, // expecting to advance the seal age based on the last season seen
+                age = sealAgeAdvanced,
                 sex = lookupSeal.sex,
                 numRelatives = numberRels,
                 tagNumber = lookupSeal.tagOneNumber,
@@ -813,13 +779,11 @@ class TagRetagModel(
                 tagEventType = "Marked",
                 lastPhysio = lookupSeal.lastPhysio,
                 colony = lookupSeal.colony,
-                isWedCheck = true,
+                wedCheckMatch = lookupSeal
             )
         }
-        _primaryWedCheckSeal.update { lookupSeal }
 
 //        val tagID = lookupSeal.tagOneNumber + lookupSeal.tagOneAlpha
-//        addWedCheckSeal(tagID, lookupSeal)
         updateNotebookEntry(primarySeal.value)
     }
 
@@ -849,15 +813,6 @@ class TagRetagModel(
                 else -> ""
             }
 
-            val condition = when (log.sealCondition) {
-                "0" -> "Dead - 0"
-                "1" -> "Poor - 1"
-                "2" -> "Fair - 2"
-                "3" -> "Good - 3"
-                "4" -> "Newborn - 4"
-                else -> ""
-            }
-
             var processedTagOneNumber = ""
             var processedTagOneAlpha = ""
             var numTags = 0
@@ -879,11 +834,11 @@ class TagRetagModel(
             _primarySeal.update {
                 it.copy(
                     colony = log.colony,
-                    speNo = log.speno.toInt(),
+                    observationRecordSpeno = log.speno.toInt(),
                     age = ageString, // expecting to advance the seal age based on the last season seen
                     sex = sealSex,
                     numRelatives = log.numRelatives,
-                    condition = condition,
+                    condition = SealCondition.fromCode(log.sealCondition),
                     tagNumber = processedTagOneNumber,
                     tagAlpha = processedTagOneAlpha,
                     oldTagId = log.oldTagIDOne,
@@ -897,7 +852,6 @@ class TagRetagModel(
                     tissueTaken = log.tissueSampled != "",
                     flaggedForReview = log.flaggedEntry != "",
                     isStarted = true,
-                    hasWedCheckSpeno = true,
                     observationID = log.id,
                     isObservationLogEntry = true,
                 )
@@ -906,37 +860,30 @@ class TagRetagModel(
         updateNotebookEntry(primarySeal.value)
     }
 
-
-    fun mapSpeno(name: String, wedCheckSeal: WedCheckSeal) {
-        when (name) {
+    fun updateWedCheckMatch(seal: Seal, lookupSeal: WedCheckSeal) {
+        when (seal.name) {
             "primary" -> {
                 _primarySeal.update {
                     it.copy(
-                        speNo = wedCheckSeal.speNo,
-                        hasWedCheckSpeno = true,
+                        wedCheckMatch = lookupSeal,
                     )
                 }
-                _primaryWedCheckSeal.update { wedCheckSeal }
             }
 
             "pupOne" -> {
                 _pupOne.update {
                     it.copy(
-                        speNo = wedCheckSeal.speNo,
-                        hasWedCheckSpeno = true,
+                        wedCheckMatch = lookupSeal,
                     )
                 }
-                _pupOneWedCheckSeal.update { wedCheckSeal }
             }
 
             "pupTwo" -> {
                 _pupTwo.update {
                     it.copy(
-                        speNo = wedCheckSeal.speNo,
-                        hasWedCheckSpeno = true,
+                        wedCheckMatch = lookupSeal,
                     )
                 }
-                _pupTwoWedCheckSeal.update { wedCheckSeal }
             }
         }
     }
@@ -968,17 +915,12 @@ class TagRetagModel(
     // called after navigation command from the summary screen to prevent the summary screen from
     // preemptively navigating back to the observation screen
     fun resetSaved() {
-        // reset the values in the model once the records are save successfully
-        wedCheckSealMap = mutableMapOf()
-
         _uiState.update {
             it.copy(
                 validationFailureReason = "",
                 isValidated = false,
                 validEntry = false,
                 isSaved = false,
-                isError = false,
-                errorMessage = "",
                 isPrefilled = false,
             )
         }
@@ -1017,90 +959,6 @@ class TagRetagModel(
 //                }
 
                 _uiState.update { it.copy(isSaved = true) }
-            }
-        }
-    }
-
-    // validate is called when the observer saves an entry
-    // the model state is used to prompt the user to review and confirm their entry if validation fails
-    // validation errors are saved to the seal state for inclusion in the output file
-    fun validate(seal: Seal, wedChecKSealMatch: WedCheckSeal) {
-        // reset the model state values that help determine whether the seal entry is valid
-        _uiState.update {
-            it.copy(
-                validationFailureReason = "",
-                isValidated = false,
-                validEntry = false
-            )
-        }
-
-        // set the name used in the validation string to match the UI display
-        var sealName = seal.name
-        if (seal.name == "primary") {
-            sealName = "Seal"
-        }
-
-        // if the event type is marked or retag, the seal must have a speNo(matching WedCheck record)
-        var tagID = seal.tagNumber + seal.tagAlpha
-        if (seal.tagEventType == "Retag") { // if retag set the tag id to the old tag
-            tagID = seal.oldTagId
-        }
-
-//        val wedCheckSeal =
-//            getWedCheckSeal(tagID) // attempt to locate the WedCheck seal in the map stored in the model
-
-        // use the utility method to validate the seal
-        val (sealValid, validationErrors) = sealValidation(
-            seal,
-            getCurrentYear(),
-            wedChecKSealMatch
-        )
-
-        // update the model state with the validation state
-        if (sealValid) {
-            _uiState.update { it.copy(isValidated = true, validEntry = true) }
-        } else {
-            val invalidEntrySB = StringBuilder()
-            invalidEntrySB.append("$sealName failed validation!")
-            invalidEntrySB.append(_uiState.value.validationFailureReason)
-            invalidEntrySB.append("\n")
-            invalidEntrySB.append(validationErrors)
-            _uiState.update {
-                it.copy(
-                    validationFailureReason = invalidEntrySB.toString(),
-                    isValidated = true,
-                    validEntry = false
-                )
-            }
-        }
-
-        // update the seal with the validation state
-        when (seal.name) {
-            "primary" -> {
-                _primarySeal.update {
-                    it.copy(
-                        isValidated = true,
-                        reasonNotValid = validationErrors
-                    )
-                }
-            }
-
-            "pupOne" -> {
-                _pupOne.update {
-                    it.copy(
-                        isValidated = true,
-                        reasonNotValid = validationErrors
-                    )
-                }
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(
-                        isValidated = true,
-                        reasonNotValid = validationErrors
-                    )
-                }
             }
         }
     }

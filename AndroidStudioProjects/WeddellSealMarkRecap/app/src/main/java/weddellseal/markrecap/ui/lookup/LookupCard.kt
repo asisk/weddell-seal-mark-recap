@@ -49,7 +49,7 @@ fun LookupCard(
         DataDisplayRow("Tissue Taken", seal.tissueSampled)
 
         // CONDITION
-        DataDisplayRow("Condition", seal.condition)
+        DataDisplayRow("Condition", seal.condition.code)
 
         // PREVIOUS PUPS
         DataDisplayRow("Last Physio", seal.lastPhysio)

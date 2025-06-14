@@ -74,62 +74,19 @@ fun TagRetagScreen(
     val currentObservations by recentObsViewModel.currentObservations.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
-    var showEditDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     context.contentResolver
+
+    var showEditDialog by remember { mutableStateOf(false) }
     var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
 
     val primarySeal by viewModel.primarySeal.collectAsState()
-    val primaryWedCheckSeal by viewModel.primaryWedCheckSeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
-    val pupOneWedCheckSeal by viewModel.pupOneWedCheckSeal.collectAsState()
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
-    val pupTwoWedCheckSeal by viewModel.pupTwoWedCheckSeal.collectAsState()
-
-//    var showConfirmEntryDialog by remember { mutableStateOf(false) }
-//    var showIneligibleDialog by remember { mutableStateOf(false) }
-//    var ineligibleReason by remember { mutableStateOf("") }
 
     // TODO, remove once location testing is complete
 //    LaunchedEffect(location) {
 //        Log.d("UI", "Observed location: $location")
-//    }
-
-    // this should be activated after the saveAction() is triggered
-//    LaunchedEffect(viewModel.uiState.isValidated) {
-//        var showDialog = false
-//        if (viewModel.uiState.isValidated && !viewModel.uiState.validEntry) {
-//            showDialog = true
-//        }
-//        showConfirmEntryDialog = showDialog
-//    }
-//
-//    LaunchedEffect(viewModel.uiState.isSaved) {
-//        if (viewModel.uiState.isSaved) {
-//            coroutineScope.launch {
-//                snackbarHostState.showSnackbar("Entry successfully saved!")
-//            }
-//            viewModel.resetSaved()
-//        }
-//    }
-
-    // validates the seal against the wedcheck seal if present
-//    fun saveAction() {
-//        if (primarySeal.isStarted) {
-//            viewModel.validate(primarySeal, primaryWedCheckSeal)
-//        }
-//
-//        if (pupOneSeal.isStarted) {
-//            viewModel.validate(pupOneSeal, pupOneWedCheckSeal)
-//        }
-//
-//        if (pupTwoSeal.isStarted) {
-//            viewModel.validate(pupTwoSeal, pupTwoWedCheckSeal)
-//        }
-//
-//        if (viewModel.uiState.isValidated && viewModel.uiState.validEntry) {
-//            viewModel.createLog(location)
-//        }
 //    }
 
     Scaffold(
@@ -292,7 +249,6 @@ fun TagRetagScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-
                 TabbedCards(viewModel, sealLookupViewModel, primarySeal, pupOneSeal, pupTwoSeal)
             }
 

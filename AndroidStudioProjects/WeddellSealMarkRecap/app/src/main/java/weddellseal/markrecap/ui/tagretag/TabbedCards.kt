@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,10 +51,6 @@ fun TabbedCards(
     pupOneSeal: Seal,
     pupTwoSeal: Seal
 ) {
-    val primaryWedCheckSeal by viewModel.primaryWedCheckSeal.collectAsState()
-    val pupOneWedCheckSeal by viewModel.pupOneWedCheckSeal.collectAsState()
-    val pupTwoWedCheckSeal by viewModel.pupTwoWedCheckSeal.collectAsState()
-
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var tabItems by remember {
@@ -62,9 +61,6 @@ fun TabbedCards(
                 primarySeal,
                 pupOneSeal,
                 pupTwoSeal,
-                primaryWedCheckSeal,
-                pupOneWedCheckSeal,
-                pupTwoWedCheckSeal
             )
         )
     }
@@ -82,9 +78,6 @@ fun TabbedCards(
             primarySeal,
             pupOneSeal,
             pupTwoSeal,
-            primaryWedCheckSeal,
-            pupOneWedCheckSeal,
-            pupTwoWedCheckSeal
         )
 
         // Ensure selectedTabIndex is within bounds after updating the list
@@ -101,16 +94,29 @@ fun TabbedCards(
             tabItems.forEachIndexed { index, tabItem ->
                 Tab(
                     text = {
-                        Text(
-                            tabItem.title, style = MaterialTheme.typography.headlineLarge,
-                            modifier = Modifier.padding(horizontal = 20.dp) // Adjust padding here
-                        )
+
+                        val checkMarkColor = if (tabItem.seal.isValid) Color(0xFF4CAF50) else Color.LightGray
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                tabItem.title,
+                                style = MaterialTheme.typography.headlineLarge,
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Seal Ready for Save",
+                                tint = checkMarkColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     },
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index }
                 )
             }
         }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -156,7 +162,7 @@ fun TabbedCards(
                     onConfirmation = {
                         if (tabItems.isNotEmpty()) {
                             // remove the current seal
-                            viewModel.resetSeal(tabItems[selectedTabIndex].sealName)
+                            viewModel.resetSeal(tabItems[selectedTabIndex].seal.name)
                             sealLookupViewModel.resetUiState()
                             sealLookupViewModel.resetLookupSeal()
                             showDeleteDialog.value = false
@@ -174,41 +180,35 @@ fun createTabItems(
     primarySealState: Seal,
     pupOneSealState: Seal,
     pupTwoSealState: Seal,
-    primaryWedCheckSeal: WedCheckSeal,
-    pupOneWedCheckSeal: WedCheckSeal,
-    pupTwoWedCheckSeal: WedCheckSeal
 ): List<TabItem> {
     val items = mutableListOf<TabItem>()
 
-    items.add(TabItem("Seal", primarySealState.name) {
+    items.add(TabItem("Seal", primarySealState) {
         SealCard(
             viewModel,
             SealType.PRIMARY,
             primarySealState,
-            primaryWedCheckSeal,
             sealLookupViewModel
         )
     })
 
     if (pupOneSealState.isStarted) {
-        items.add(TabItem("Pup One", pupOneSealState.name) {
+        items.add(TabItem("Pup One", pupOneSealState) {
             SealCard(
                 viewModel,
                 SealType.PUPONE,
                 pupOneSealState,
-                pupOneWedCheckSeal,
                 sealLookupViewModel
             )
         })
     }
 
     if (pupTwoSealState.isStarted) {
-        items.add(TabItem("Pup Two", pupTwoSealState.name) {
+        items.add(TabItem("Pup Two", pupTwoSealState) {
             SealCard(
                 viewModel,
                 SealType.PUPTWO,
                 pupTwoSealState,
-                pupTwoWedCheckSeal,
                 sealLookupViewModel
             )
         })

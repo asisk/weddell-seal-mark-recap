@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,8 +10,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -24,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -41,11 +45,11 @@ fun SealCard(
     viewModel: TagRetagModel,
     sealType: SealType,
     seal: Seal,
-    wedCheckMatch: WedCheckSeal,
     sealLookupViewModel: SealLookupViewModel
 ) {
     val uiStateLookupSeal by sealLookupViewModel.uiState.collectAsState()
     val lookupSeal by sealLookupViewModel.lookupSeal.collectAsState()
+
     val focusManager = LocalFocusManager.current
 
     // local UI flags
@@ -98,24 +102,13 @@ fun SealCard(
     // check for an existing wedcheck seal record for this seal using the old tag id
     LaunchedEffect(seal.oldTagId) {
         Log.d("LaunchedEffect", "change in oldTagId detected")
+        // check for an existing wedcheck seal record for this seal
+        // conduct search if we haven't already located a wedcheck record
         if (seal.oldTagId.isNotBlank() && seal.tagEventType == "Retag") {
-//            if (seal.oldTagId != "" && isRetag) {
-            // check for an existing wedcheck seal record for this seal
-            // conduct search if we haven't already located a wedcheck record
-//            val wedCheckSeal = viewModel.getWedCheckSeal(seal.oldTagId)
-            if (wedCheckMatch.speNo == 0 && !uiStateLookupSeal.isSearching) {
-//                if (wedCheckSeal == null) {
-                // clear the speno & hasSpeno fields from our seal
-                viewModel.clearSpeNo(seal)
+            if (seal.wedCheckMatch != null && !uiStateLookupSeal.isSearching) {
+                viewModel.resetWedCheckMatch(seal)
                 sealLookupViewModel.setTagRetagLookup(true)
                 sealLookupViewModel.findSealbyTagID(seal.oldTagId)
-
-                // find the seal
-//                if (!sealLookupViewModel.uiState.value.isSearching) {
-//                    Log.d("LaunchedEffect", "looking up seal")
-//                    sealLookupViewModel.setTagRetagLookup(true)
-//                    sealLookupViewModel.findSealbyTagID(seal.oldTagId)
-//                }
             }
         }
     }
@@ -131,12 +124,7 @@ fun SealCard(
                 // and searching for a WedCheck record
                 val searchStr = seal.tagNumber + seal.tagAlpha
 
-                // check for an existing wedcheck seal record for this seal
-                // conduct search if we haven't already located a wedcheck record
-//                val wedCheckSeal = viewModel.getWedCheckSeal(searchStr)
-//                if (wedCheckMatch.speNo == 0) {
-                // clear the speno & hasSpeno fields from our seal
-                viewModel.clearSpeNo(seal)
+                viewModel.resetWedCheckMatch(seal)
 
                 // find the seal
                 if (!uiStateLookupSeal.isSearching) {
@@ -144,7 +132,6 @@ fun SealCard(
                     sealLookupViewModel.setTagRetagLookup(true)
                     sealLookupViewModel.findSealbyTagID(searchStr)
                 }
-//                }
             }
         }
     }
@@ -155,95 +142,93 @@ fun SealCard(
         if (lookupSeal.speNo != 0) { // check that the wedcheck seal was found
             val tagID =
                 if (seal.tagEventType == "Retag") seal.oldTagId else seal.tagNumber + seal.tagAlpha
-            if (lookupSeal.tagIdOne == tagID && seal.speNo != lookupSeal.speNo) {
-                //map the relevant wedcheck fields to our seal
-//                viewModel.updateSpeNo(seal.name, lookupSeal.speNo)
-                viewModel.mapSpeno(seal.name, lookupSeal)
-//                viewModel.addWedCheckSeal(tagID, lookupSeal)
-                // make sure that the comments are displayed when a seal record is updated to
-                // allow the technician to take action if needed (TAKE PHOTOS)
-                showWedCheckCommentsDialog.value = true
+
+            if (lookupSeal.tagIdOne == tagID && seal.wedCheckMatch?.speNo != lookupSeal.speNo) {
+                viewModel.updateWedCheckMatch(seal, lookupSeal)
             }
-
-//            var tagID = seal.tagNumber + seal.tagAlpha
-//            if (isRetag) { // if retag set the tag id to the old tag
-//                tagID = seal.oldTagId
-//            }
-
-//            // only assign wedcheck fields if they are for this seal
-//            if (sealLookupViewModel.lookupSeal.value.tagIdOne == tagID) {
-//
-//                //map the relevant wedcheck fields to our seal
-//                if (seal.speNo != sealLookupViewModel.lookupSeal.value.speNo) {
-//                    viewModel.mapSpeno(seal.name, sealLookupViewModel.lookupSeal.value)
-//                    viewModel.addWedCheckSeal(tagID, sealLookupViewModel.lookupSeal.value)
-//                }
-//
-//                // make sure that the comments are displayed when a seal record is updated to
-//                // allow the technician to take action if needed (TAKE PHOTOS)
-//                showWedCheckCommentsDialog.value = true
-//            }
         }
     }
-
-//    LaunchedEffect(seal.notebookDataString) {
-//        notebookStr = seal.notebookDataString
-//    }
 
     LaunchedEffect(seal.tagEventType) {
         isRetag = seal.tagEventType == "Retag"
     }
 
-// SEAL CARD HEADING/NOTEBOOK STRING & SPENO
+    // SEAL CARD HEADER
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp),
     ) {
+        // VALIDATION ERROR BANNER
+        if (seal.isComplete) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(.9f)
+                    .padding(6.dp)
+                    .background(
+                        color = Color(0xFFFFEBEE), // Light red background
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    .padding(8.dp)
+            ) {
+                seal.validationErrors.forEach { error ->
+                    Text(
+                        text = error,
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            // Spacer to avoid overlap with the trash can icon in the tab container
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(.1f)
+            ) {
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(10.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
 
             // NOTEBOOK STRING
-            Box {
-                Row {
-                    Text(
-                        seal.notebookDataString,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+            Text(
+                seal.notebookDataString,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
 
-            //SPENO
-            Box {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-//                    if (uiStateLookupSeal.sealFound
-//                        && uiStateLookupSeal.isTagRetagLookup
-//                        && !seal.isNoTag
-//                    ) {
+            // SPENO & WEDCHECK COMMENT
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                if (seal.wedCheckMatch != null) {
                     Text(
-                        text = if (seal.speNo == 0) "" else "Speno: ${seal.speNo}",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "Speno: ${seal.wedCheckMatch.speNo}",
+                        style = MaterialTheme.typography.titleLarge
                     )
-//                        Text(
-//                            lookupSeal.speNo.toString(),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.SemiBold
-//                        )
-//                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // WedCheck comment
+                    if (seal.wedCheckMatch.comment.isNotBlank()) {
+                        Text(
+                            text = seal.wedCheckMatch.comment,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         }
     }
 
-//AGE
+    //AGE
     val buttonListAge = listOf("Adult", "Pup", "Yearling")
     Row(
         modifier = Modifier
@@ -497,19 +482,19 @@ fun SealCard(
         }
 
         // CONDITION
-        val conditions =
-            listOf(
-                "None",
-                "Dead - 0",
-                "Poor - 1",
-                "Fair - 2",
-                "Good - 3",
-                "Newborn - 4"
-            )
+//        val conditions =
+//            listOf(
+//                "None",
+//                "Dead - 0",
+//                "Poor - 1",
+//                "Fair - 2",
+//                "Good - 3",
+//                "Newborn - 4"
+//            )
 
         Box(
             modifier = Modifier
-                .weight(.5f)
+                .weight(.6f)
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -520,13 +505,18 @@ fun SealCard(
                     "Condition",
                     style = MaterialTheme.typography.titleLarge
                 )
-
-                DropdownField(conditions, seal.condition) { newText ->
-                    viewModel.updateCondition(
-                        seal.name,
-                        newText
-                    )
-                }
+                SealConditionDropdown(
+                    selected = seal.condition,
+                    onSelected = {
+                        viewModel.updateCondition(seal.name, it)
+                    }
+                )
+//                DropdownField(conditions, seal.condition) { newText ->
+//                    viewModel.updateCondition(
+//                        seal.name,
+//                        newText
+//                    )
+//                }
             }
         }
     }
@@ -754,7 +744,7 @@ fun SealCard(
                             // clear the current Seal SpeNo
                             // clear the seal in the WedCheck model when this field is cleared
                             if (!isRetag) {
-                                viewModel.clearSpeNo(seal)
+                                viewModel.resetWedCheckMatch(seal)
                                 sealLookupViewModel.resetUiState()
                                 sealLookupViewModel.resetLookupSeal()
                             }
@@ -909,12 +899,12 @@ fun SealCard(
     // COMMENT && OLD TAG MARKS
 
     // WEDCHECK COMMENTS DIALOG
-    if (showWedCheckCommentsDialog.value && lookupSeal.comment != "") {
-        WedCheckCommentDialog(
-            wedCheckRecordComments = lookupSeal.comment,
-            onDismiss = { showWedCheckCommentsDialog.value = false },
-        )
-    }
+//    if (showWedCheckCommentsDialog.value && seal.wedCheckMatch != null && seal.wedCheckMatch.comment != "") {
+//        WedCheckCommentDialog(
+//            wedCheckRecordComments = seal.wedCheckMatch.comment,
+//            onDismiss = { showWedCheckCommentsDialog.value = false },
+//        )
+//    }
 
     Row(
         modifier = Modifier

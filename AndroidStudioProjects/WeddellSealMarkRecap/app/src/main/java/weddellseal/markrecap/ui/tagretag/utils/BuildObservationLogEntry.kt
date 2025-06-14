@@ -3,6 +3,7 @@ package weddellseal.markrecap.ui.tagretag.utils
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.ui.tagretag.TagRetagModel.ObservationMetadata
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
@@ -26,6 +27,12 @@ fun buildLogEntry(
     var observers = "Not Selected"
     if (metadataObservers != "") {
         observers = metadataObservers
+    }
+
+    var speNo = if (seal.wedCheckMatch != null) {
+        seal.wedCheckMatch.speNo.toString()
+    } else {
+        "0"
     }
 
     var ageClass = ""
@@ -101,11 +108,6 @@ fun buildLogEntry(
         }
     }
 
-    var condition = ""
-    if (seal.condition != "" && seal.condition != "None") {
-        condition = seal.condition.last().toString()
-    }
-
     var tissue = ""
     if (seal.tissueTaken) {
         tissue = "Tissue"
@@ -126,8 +128,8 @@ fun buildLogEntry(
     if (seal.tagEventType == "Retag" && seal.reasonForRetag != "") {
         sb.append("reason for retag: ${seal.reasonForRetag}; ")
     }
-    if (seal.reasonNotValid != "") {
-        sb.append(seal.reasonNotValid)
+    if (seal.validationMessage != "") {
+        sb.append(seal.validationMessage)
     }
     val comment = sb.append(seal.comment).toString()
 
@@ -140,7 +142,7 @@ fun buildLogEntry(
         id = 0, // passing zero, but Room entity will auto-populate the id
         deviceID = metadata.deviceID,
         season = metadata.currentSeason,
-        speno = seal.speNo.toString(),
+        speno = speNo, //TODO, test
         date = getCurrentDateFormatted(), // date format: yyyy-MM-dd
         time = getCurrentTimeFormatted(), // time format: hh:mm:ss
         censusID = censusNumber,
@@ -157,7 +159,7 @@ fun buildLogEntry(
         tagTwoIndicator = tagTwoIndicator,
         relativeTagIDOne = relativeOneTag,
         relativeTagIDTwo = relativeTwoTag,
-        sealCondition = condition,
+        sealCondition = seal.condition.code,
         observerInitials = observers,
         flaggedEntry = flagged,
         tagEvent = eventType,
