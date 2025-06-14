@@ -11,7 +11,7 @@ import org.junit.Before
 import org.junit.runner.RunWith
 import weddellseal.markrecap.frameworks.room.AppDatabase
 import weddellseal.markrecap.frameworks.room.observations.ObservationDao
-import weddellseal.markrecap.domain.observation.ObservationRepository
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
