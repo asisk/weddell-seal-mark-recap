@@ -83,6 +83,8 @@ data class Seal(
 
             if (isNoTag) return errors // early return, skip validation checks when no tag is entered
 
+            if (!isStarted) return errors // early return, skip validation checks when seal has not been started
+
             // -----  The Seal has a tag number -----
 
             if (tagEventType == "New") {

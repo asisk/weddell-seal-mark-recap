@@ -144,7 +144,7 @@ fun RecentObservationsScreen(
 
                         // set the seal in the observationviewmodel & navigate to edit
                         if (observationToEdit != null) {
-                            tagRetagViewModel.resetSaved()
+                            tagRetagViewModel.resetStateOnSaved()
                             tagRetagViewModel.populateSealFromObservation(observationToEdit)
                             navController.navigate(Screens.AddObservationLog.route)
                         }

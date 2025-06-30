@@ -4,19 +4,14 @@ package weddellseal.markrecap.ui.tagretag
  * Main screen for entering seal data
  */
 
-import android.widget.Toast
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,7 +21,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,26 +32,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.ui.home.HomeViewModel
-import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.lookup.SealLookupViewModel
-import weddellseal.markrecap.ui.ConfirmEditDialog
-import weddellseal.markrecap.ui.ObservationItem
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,15 +61,10 @@ fun TagRetagScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val homeUiState by homeViewModel.uiState.collectAsState()
-
-    val currentObservations by recentObsViewModel.currentObservations.collectAsState()
-
-    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     context.contentResolver
-
-    var showEditDialog by remember { mutableStateOf(false) }
-    var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
 
     val primarySeal by viewModel.primarySeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
@@ -89,8 +75,18 @@ fun TagRetagScreen(
 //        Log.d("UI", "Observed location: $location")
 //    }
 
+    // SAVE SUCCESS
+    LaunchedEffect(uiState.isSaved) {
+        if (uiState.isSaved) {
+            coroutineScope.launch {
+                snackBarHostState.showSnackbar("Entry successfully saved!")
+            }
+            viewModel.resetStateOnSaved()
+        }
+    }
+
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -252,61 +248,63 @@ fun TagRetagScreen(
                 TabbedCards(viewModel, sealLookupViewModel, primarySeal, pupOneSeal, pupTwoSeal)
             }
 
-            // RECENT OBSERVATIONS VIEW
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Recently \nEntered",
-                        modifier = Modifier.padding(10.dp),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 150.dp) // Limit the height
-                            .padding(10.dp)
-                            .border(1.dp, Color.LightGray) // Add border for visual purposes
-                    ) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            userScrollEnabled = true
-                        ) {
-                            items(currentObservations) { observation ->
-                                ObservationItem(
-                                    onEditDo = {
-                                        if (!primarySeal.isStarted) {
-                                            showEditDialog = true
-                                            observationToEdit = observation
-                                        } else {
-                                            // Show a Toast message if the seal is already started
-                                            Toast.makeText(
-                                                context,
-                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    },
-                                    onViewDo = {
-                                        viewModel.updateObservationEntry(observation)
-                                        navController.navigate(Screens.ObservationViewer.route)
-                                    },
-                                    observation = observation
-                                )
+            TagRetagFooter(viewModel, homeViewModel, recentObsViewModel, navController)
 
-                                HorizontalDivider()
-                            }
-                        }
-                    }
-                }
-            }
+//            // RECENT OBSERVATIONS VIEW
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//            ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = 10.dp),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        "Recently \nEntered",
+//                        modifier = Modifier.padding(10.dp),
+//                        style = MaterialTheme.typography.titleLarge,
+//                    )
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .heightIn(max = 150.dp) // Limit the height
+//                            .padding(10.dp)
+//                            .border(1.dp, Color.LightGray) // Add border for visual purposes
+//                    ) {
+//                        LazyColumn(
+//                            verticalArrangement = Arrangement.spacedBy(16.dp),
+//                            userScrollEnabled = true
+//                        ) {
+//                            items(currentObservations) { observation ->
+//                                ObservationItem(
+//                                    onEditDo = {
+//                                        if (!primarySeal.isStarted) {
+//                                            showEditDialog = true
+//                                            observationToEdit = observation
+//                                        } else {
+//                                            // Show a Toast message if the seal is already started
+//                                            Toast.makeText(
+//                                                context,
+//                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
+//                                                Toast.LENGTH_LONG
+//                                            ).show()
+//                                        }
+//                                    },
+//                                    onViewDo = {
+//                                        viewModel.updateObservationEntry(observation)
+//                                        navController.navigate(Screens.ObservationViewer.route)
+//                                    },
+//                                    observation = observation
+//                                )
+//
+//                                HorizontalDivider()
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
 
 //        // because this action results in removing any entered data
@@ -340,29 +338,29 @@ fun TagRetagScreen(
 //        }
 //        }
 
-        // Show the dialog if showDialog is true
-        if (showEditDialog) {
-            ConfirmEditDialog(
-                onDismissRequest = {
-                    showEditDialog = false
-                },
-                onConfirmation = {
-                    showEditDialog = false
-                    Toast.makeText(
-                        context,
-                        "You are about to edit this seal. To edit relatives, select records for editing separately.",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    // set the seal in the observation view model & navigate to edit
-                    if (observationToEdit != null) {
-                        viewModel.resetSaved()
-                        viewModel.populateSealFromObservation(observationToEdit)
-                        navController.navigate(Screens.AddObservationLog.route)
-                    }
-                },
-            )
-        }
+//        // Show the dialog if showDialog is true
+//        if (showEditDialog) {
+//            ConfirmEditDialog(
+//                onDismissRequest = {
+//                    showEditDialog = false
+//                },
+//                onConfirmation = {
+//                    showEditDialog = false
+//                    Toast.makeText(
+//                        context,
+//                        "You are about to edit this seal. To edit relatives, select records for editing separately.",
+//                        Toast.LENGTH_LONG
+//                    ).show()
+//
+//                    // set the seal in the observation view model & navigate to edit
+//                    if (observationToEdit != null) {
+//                        viewModel.resetSaved()
+//                        viewModel.populateSealFromObservation(observationToEdit)
+//                        navController.navigate(Screens.AddObservationLog.route)
+//                    }
+//                },
+//            )
+//        }
     }
 }
 

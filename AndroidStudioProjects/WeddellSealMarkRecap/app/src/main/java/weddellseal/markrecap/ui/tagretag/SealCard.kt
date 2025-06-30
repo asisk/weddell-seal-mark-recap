@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -27,18 +29,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
-import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
-import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.DropdownField
+import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
-import weddellseal.markrecap.ui.tagretag.dialogs.WedCheckCommentDialog
 
 @Composable
 fun SealCard(
@@ -48,24 +47,18 @@ fun SealCard(
     sealLookupViewModel: SealLookupViewModel
 ) {
     val uiStateLookupSeal by sealLookupViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val lookupSeal by sealLookupViewModel.lookupSeal.collectAsState()
 
     val focusManager = LocalFocusManager.current
 
     // local UI flags
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
-    val showWedCheckCommentsDialog = remember { mutableStateOf(false) }
 
     var numRelatives by remember { mutableStateOf(seal.numRelatives) }
     var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
     var isRetag by remember { mutableStateOf(seal.tagEventType == "Retag") }
-//    var tagNumber by remember { mutableStateOf(seal.tagNumber) }
-//    var oldTagID by remember { mutableStateOf(seal.oldTagId) }
-//    var notebookStr by remember { mutableStateOf(seal.notebookDataString) }
-//    var isWeightToggled by remember { mutableStateOf(seal.weightTaken) }
     var isNoTagsChecked by remember { mutableStateOf(seal.numTags.toIntOrNull() == 0) }
-//    var isTissueChecked by remember { mutableStateOf(seal.tissueTaken) }
-//    var isOldTagMarksChecked by remember { mutableStateOf(seal.oldTagMarks) }
 
     LaunchedEffect(seal.numRelatives) {
         numRelatives = if (seal.sex == "Male" && seal.name == "primary") {
@@ -75,29 +68,9 @@ fun SealCard(
         }
     }
 
-//    LaunchedEffect(seal.tagNumber) {
-//        tagNumber = seal.tagNumber
-//    }
-
     LaunchedEffect(seal.isNoTag) {
         isNoTagsChecked = seal.isNoTag
     }
-
-//    LaunchedEffect(seal.oldTagId) {
-//        oldTagID = seal.oldTagId
-//    }
-
-//    LaunchedEffect(seal.tissueTaken) {
-//        isTissueChecked = seal.tissueTaken
-//    }
-
-//    LaunchedEffect(seal.oldTagMarks) {
-//        isOldTagMarksChecked = seal.oldTagMarks
-//    }
-
-//    LaunchedEffect(seal.weightTaken) {
-//        isWeightToggled = seal.weightTaken
-//    }
 
     // check for an existing wedcheck seal record for this seal using the old tag id
     LaunchedEffect(seal.oldTagId) {
@@ -160,13 +133,13 @@ fun SealCard(
             .padding(10.dp),
     ) {
         // VALIDATION ERROR BANNER
-        if (seal.isComplete) {
+        if (uiState.isSaving && seal.validationErrors.isNotEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth(.9f)
                     .padding(6.dp)
                     .background(
-                        color = Color(0xFFFFEBEE), // Light red background
+                        color = MaterialTheme.colorScheme.errorContainer, // Light red background
                         shape = RoundedCornerShape(4.dp)
                     )
                     .padding(8.dp)
@@ -174,53 +147,131 @@ fun SealCard(
                 seal.validationErrors.forEach { error ->
                     Text(
                         text = error,
-                        color = Color.Red,
-                        style = MaterialTheme.typography.bodyMedium
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
             }
 
             // Spacer to avoid overlap with the trash can icon in the tab container
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(.1f)
+                modifier = Modifier.fillMaxWidth(.1f)
             ) {
                 Spacer(modifier = Modifier.width(20.dp))
             }
         }
+    }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.Top
+    Row(
+        modifier = Modifier.fillMaxWidth(.9f)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(.65f)
         ) {
-
             // NOTEBOOK STRING
-            Text(
-                seal.notebookDataString,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            // SPENO & WEDCHECK COMMENT
-            Column(
-                horizontalAlignment = Alignment.End
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
             ) {
-                if (seal.wedCheckMatch != null) {
-                    Text(
-                        text = "Speno: ${seal.wedCheckMatch.speNo}",
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                Text(
+                    seal.notebookDataString,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+            //AGE
+            val buttonListAge = listOf("Adult", "Pup", "Yearling")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            focusManager.clearFocus()
+                        })
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
 
-                    // WedCheck comment
-                    if (seal.wedCheckMatch.comment.isNotBlank()) {
+                        Text(
+                            "Age",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        // when the primary seal is a pup or yearling, there can be no other relatives
+                        if (seal.name != "primary") {
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                "Pup",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        } else {
+                            SegmentedButtonGroup(
+                                options = buttonListAge,
+                                selectedOption = seal.age,
+                                onOptionSelected = {
+                                    if (seal.age == "Pup" && seal.age != it) { // sex has been changed from pup to adult or yearling, clear pup fields
+                                        viewModel.resetPupFields(seal.name)
+                                    }
+
+                                    if (it == "Pup" || it == "Yearling") { // if the primary seal is a pup or a yearling, there are no relatives
+                                        if (numRelatives != "" && numRelatives != "0") {
+                                            possibleRelatives = "0"
+
+                                            // handle the case where the number of relatives is reduced
+                                            // pop a warning and ask for confirmation before moving forward
+                                            showDeleteRelativesDialog.value = true
+
+                                        } else {
+                                            viewModel.updateNumRelatives("0")
+                                        }
+                                    }
+                                    viewModel.updateAge(seal, it)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // SPENO & WEDCHECK COMMENT
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (seal.wedCheckMatch != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                // SPENO
+                Text(
+                    text = "Speno: ${seal.wedCheckMatch.speNo}",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (seal.wedCheckMatch.comment.isNotBlank()) {
+                    // WEDCHECK COMMENT
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                        modifier = Modifier.padding(8.dp)
+                    ) {
                         Text(
                             text = seal.wedCheckMatch.comment,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(8.dp),
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
                 }
@@ -228,72 +279,7 @@ fun SealCard(
         }
     }
 
-    //AGE
-    val buttonListAge = listOf("Adult", "Pup", "Yearling")
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(.9f)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(.8f)
-            ) {
-
-                Text(
-                    "Age",
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                if (seal.name != "primary") { // when the primary seal is a pup or yearling, there can be no other relatives
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        "Pup",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                } else {
-                    SegmentedButtonGroup(
-                        options = buttonListAge,
-                        selectedOption = seal.age,
-                        onOptionSelected = {
-                            if (seal.age == "Pup" && seal.age != it) { // sex has been changed from pup to adult or yearling, clear pup fields
-                                viewModel.resetPupFields(seal.name)
-                            }
-
-                            if (it == "Pup" || it == "Yearling") { // if the primary seal is a pup or a yearling, there are no relatives
-                                if (numRelatives != "" && numRelatives != "0") {
-                                    possibleRelatives = "0"
-
-                                    // handle the case where the number of relatives is reduced
-                                    // pop a warning and ask for confirmation before moving forward
-                                    showDeleteRelativesDialog.value = true
-
-                                } else {
-                                    viewModel.updateNumRelatives("0")
-                                }
-                            }
-
-                            viewModel.updateAge(seal, it)
-                        }
-                    )
-                }
-            }
-        }
-    }
-
-// SEX & PUP PEED
+    // SEX & PUP PEED
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -363,7 +349,6 @@ fun SealCard(
                     var isPupPeedChecked by remember {
                         mutableStateOf(seal.pupPeed)
                     }
-                    val focusManager = LocalFocusManager.current
 
                     Text(
                         text = "Pup" + "\n" + "Peed",
@@ -386,7 +371,7 @@ fun SealCard(
         }
     }
 
-// NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG, && CONDITION
+    // NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG, && CONDITION
     val numRelsList = listOf("0", "1", "2")
 
     Row(
@@ -482,16 +467,6 @@ fun SealCard(
         }
 
         // CONDITION
-//        val conditions =
-//            listOf(
-//                "None",
-//                "Dead - 0",
-//                "Poor - 1",
-//                "Fair - 2",
-//                "Good - 3",
-//                "Newborn - 4"
-//            )
-
         Box(
             modifier = Modifier
                 .weight(.6f)
@@ -511,12 +486,6 @@ fun SealCard(
                         viewModel.updateCondition(seal.name, it)
                     }
                 )
-//                DropdownField(conditions, seal.condition) { newText ->
-//                    viewModel.updateCondition(
-//                        seal.name,
-//                        newText
-//                    )
-//                }
             }
         }
     }
@@ -896,16 +865,7 @@ fun SealCard(
         }
     }
 
-    // COMMENT && OLD TAG MARKS
-
-    // WEDCHECK COMMENTS DIALOG
-//    if (showWedCheckCommentsDialog.value && seal.wedCheckMatch != null && seal.wedCheckMatch.comment != "") {
-//        WedCheckCommentDialog(
-//            wedCheckRecordComments = seal.wedCheckMatch.comment,
-//            onDismiss = { showWedCheckCommentsDialog.value = false },
-//        )
-//    }
-
+    // OLD TAG MARKS
     Row(
         modifier = Modifier
             .fillMaxWidth()

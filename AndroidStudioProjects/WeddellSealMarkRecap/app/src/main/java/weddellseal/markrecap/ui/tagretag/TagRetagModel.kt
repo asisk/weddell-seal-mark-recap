@@ -52,22 +52,20 @@ class TagRetagModel(
 //    }
 
     data class UiState(
-        val isSaved: Boolean = false,  // indicator that record was successfully saved
-
-        val isSaveEnabled: Boolean = false, // indicator for save button
-        val ineligibleForSaveReason: String = "", // reasons save button is disabled
+        val observationLogEntry: ObservationLogEntry? = null,
+        val metadata: ObservationMetadata = ObservationMetadata(),
 
         val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
 
-        val validationFailureReason: String = "",
-        val isValidated: Boolean = false,
-        val validEntry: Boolean = false,
+        val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
 
-        val observationLogEntry: ObservationLogEntry? = null,
+        val isSaved: Boolean = false,  // indicator that record was successfully saved
+        val isSaving: Boolean = false, // indicator that user is attempting to save the record
+        val isSaveEnabled: Boolean = false, // indicator for save button
+        val ineligibleForSaveReason: String = "", // reasons save button is disabled
 
-        val isEditMode: Boolean = false,
-
-        val metadata: ObservationMetadata = ObservationMetadata(),
+        val validationFailureReason: String = "", // reason for validation failure
+        val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -158,13 +156,21 @@ class TagRetagModel(
         }
     }
 
-    fun updateValidationErrors(primarySealValidationErrors: List<String>, pupOneSealValidationErrors: List<String>, pupTwoSealValidationErrors: List<String>){
+    fun updateValidationErrors(
+        primarySealValidationErrors: List<String>,
+        pupOneSealValidationErrors: List<String>,
+        pupTwoSealValidationErrors: List<String>
+    ) {
         val validationErrorString = buildList {
             addAll(primarySealValidationErrors)
             addAll(pupOneSealValidationErrors)
             addAll(pupTwoSealValidationErrors)
         }
         _uiState.update { it.copy(validationFailureReason = validationErrorString.joinToString()) }
+
+        if (validationErrorString.isNotEmpty()) {
+            _uiState.update { it.copy(entryNeedsConfirmation = true) } // require the technician to save the record by confirming and saving
+        }
     }
 
     fun updateObservationEntry(observation: ObservationLogEntry) {
@@ -912,16 +918,29 @@ class TagRetagModel(
         return Pair(relOneTagId, relTwoTagId)
     }
 
-    // called after navigation command from the summary screen to prevent the summary screen from
-    // preemptively navigating back to the observation screen
-    fun resetSaved() {
+    fun setIsSaving() {
+        _uiState.update { it.copy(isSaved = false, isSaving = true) }
+    }
+
+    fun setSaved() {
+        _uiState.update { it.copy(isSaved = true, isSaving = false) }
+    }
+
+    // called:
+    // 1. after navigation command from the recent observation screen when a record is to be edited
+    // 2. when a save is successful
+    // 3. when a record is selected for editing from the Tag/Retag screen
+    fun resetStateOnSaved() {
         _uiState.update {
             it.copy(
-                validationFailureReason = "",
-                isValidated = false,
-                validEntry = false,
-                isSaved = false,
                 isPrefilled = false,
+                isEditMode = false,
+                isSaved = false,
+                isSaving = false,
+                isSaveEnabled = false,
+                ineligibleForSaveReason = "",
+                validationFailureReason = "",
+                entryNeedsConfirmation = false,
             )
         }
 
@@ -934,7 +953,6 @@ class TagRetagModel(
         currentLocation: GeoLocation?,
     ) {
         val sealsList = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-        _uiState.update { it.copy(isSaved = false) }
 
         for (seal in sealsList) {
             if (seal.isStarted) {
@@ -957,9 +975,8 @@ class TagRetagModel(
 //                if (primarySeal.observationID != 0) {
 //
 //                }
-
-                _uiState.update { it.copy(isSaved = true) }
             }
+            setSaved()
         }
     }
 
