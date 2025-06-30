@@ -37,19 +37,13 @@ fun CommentField(
 ) {
     val focusManager: FocusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
-    var textEntered by remember { mutableStateOf(value) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
     OutlinedTextField(
-        value = textEntered,
-        onValueChange = {
-            textEntered = it
-        },
+        value = value,
+        onValueChange = onValueChange,
         label = { Text("Comments") },
         modifier = Modifier
-//            .background(color = Color.White)
-//            .border(1.dp, color = Color.LightGray)
-//            .padding(16.dp)
             .height(80.dp)
             .fillMaxWidth()
             .fillMaxHeight()
@@ -70,13 +64,13 @@ fun CommentField(
                 //hide the keyboard
                 keyboardController?.hide()
 
-                onValueChange(textEntered)
+                onValueChange(value)
             }
         ),
         trailingIcon = {
             Icon(
                 Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable { textEntered = "" }
+                Modifier.clickable { onValueChange("") }
             )
         },
         textStyle = TextStyle(fontSize = 16.sp),
