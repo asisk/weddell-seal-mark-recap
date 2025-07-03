@@ -1,5 +1,6 @@
 package weddellseal.markrecap.ui.lookup
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,11 +54,13 @@ import weddellseal.markrecap.ui.tagretag.TagRetagModel
 fun SealLookupScreen(
     navController: NavHostController,
     viewModel: SealLookupViewModel,
-    obsViewModel: TagRetagModel
+    tagRetagViewModel: TagRetagModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    context.contentResolver
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.sealNotFound) {
@@ -142,9 +146,14 @@ fun SealLookupScreen(
                                     .fillMaxWidth(),
                                 containerColor = Color.LightGray,
                                 onClick = {
-                                    obsViewModel.populateSeal(viewModel.lookupSeal.value)
-                                    viewModel.setTagRetagLookup(true)
-                                    navController.navigate(Screens.AddObservationLog.route)
+                                    if (!tagRetagViewModel.primarySeal.value.isStarted) {
+                                        tagRetagViewModel.populateSealFromLookup(viewModel.lookupSeal.value)
+                                        viewModel.setTagRetagLookup(true)
+                                        navController.navigate(Screens.AddObservationLog.route)
+                                    } else {
+                                        // Show a Toast message if the seal is already started
+                                        Toast.makeText(context, "Looks like you're already editing another seal! Finish or delete to edit this record.", Toast.LENGTH_LONG).show()
+                                    }
                                 },
                                 icon = { Icon(Icons.Filled.PostAdd, "Edit seal") },
                                 text = {

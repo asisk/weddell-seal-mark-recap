@@ -5,7 +5,7 @@ data class WedCheckSeal(
     val ageYears: String = "",
     val colony: String = "",
     val comment: String = "",
-    val condition: SealCondition = SealCondition.NONE,
+    val condition: SealCondition = SealCondition.UNKNOWN,
     val lastPhysio: String = "",
     val lastSeenSeason: Int = 0,
     val massPups: String = "",

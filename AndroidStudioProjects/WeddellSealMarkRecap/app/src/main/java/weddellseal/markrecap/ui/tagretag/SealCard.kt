@@ -10,12 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -31,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
@@ -136,7 +132,7 @@ fun SealCard(
         if (uiState.isSaving && seal.validationErrors.isNotEmpty()) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(.9f)
+                    .fillMaxWidth()
                     .padding(6.dp)
                     .background(
                         color = MaterialTheme.colorScheme.errorContainer, // Light red background
@@ -152,13 +148,6 @@ fun SealCard(
                     )
                 }
             }
-
-            // Spacer to avoid overlap with the trash can icon in the tab container
-            Column(
-                modifier = Modifier.fillMaxWidth(.1f)
-            ) {
-                Spacer(modifier = Modifier.width(20.dp))
-            }
         }
     }
 
@@ -168,21 +157,6 @@ fun SealCard(
         Column(
             modifier = Modifier.fillMaxWidth(.65f)
         ) {
-            // NOTEBOOK STRING
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                Text(
-                    seal.notebookDataString,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
             //AGE
             val buttonListAge = listOf("Adult", "Pup", "Yearling")
             Row(
@@ -241,38 +215,6 @@ fun SealCard(
                                 }
                             )
                         }
-                    }
-                }
-            }
-        }
-
-        // SPENO & WEDCHECK COMMENT
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (seal.wedCheckMatch != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                // SPENO
-                Text(
-                    text = "Speno: ${seal.wedCheckMatch.speNo}",
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                if (seal.wedCheckMatch.comment.isNotBlank()) {
-                    // WEDCHECK COMMENT
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                        modifier = Modifier.padding(8.dp)
-                    ) {
-                        Text(
-                            text = seal.wedCheckMatch.comment,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(8.dp),
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
                     }
                 }
             }

@@ -48,7 +48,9 @@ data class Seal(
 
             // --- Basic Required Fields ---
             if (age.isEmpty()) reasons += "Select an age for $name."
-            if (age == "Pup" && condition == SealCondition.NONE) reasons += "Select condition for Pup ($name)."
+            // pup condition will be UNKNOWN when first instantiated
+            // a condition of NONE means the value was selected as a way to set the value to blank from the TagRetag Screen
+            if (age == "Pup" && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($name)."
             if (sex.isEmpty()) reasons += "Select a sex for $name."
             if (numRelatives.isEmpty()) reasons += "Select number of relatives for $name."
             if (tagEventType.isEmpty()) reasons += "Select a tag event type for $name."
@@ -71,7 +73,7 @@ data class Seal(
         }
 
     val isValid: Boolean
-        get() = if (!isComplete) false else validationErrors.isEmpty()
+        get() = isComplete && validationErrors.isEmpty()
 
     val validationMessage: String
         get() = validationErrors.joinToString("\n")
@@ -81,7 +83,7 @@ data class Seal(
             val errors = mutableListOf<String>()
             val currentYear = getCurrentYear()
 
-            if (isNoTag) return errors // early return, skip validation checks when no tag is entered
+            if (isNoTag) return errors // early return, skip all validation checks when no tag is entered
 
             if (!isStarted) return errors // early return, skip validation checks when seal has not been started
 
@@ -106,7 +108,7 @@ data class Seal(
             }
 
             // ----- A WedCheck record is present, so validate Seal against it -----
-
+    //TODO, more testing with retag
             wedCheckMatch.let { record ->
 
                 if (sex != "Unknown" && sex != record.sex) {
@@ -164,6 +166,7 @@ data class Seal(
                     }
                 }
             }
+
             return errors
         }
 }

@@ -1,9 +1,8 @@
 package weddellseal.markrecap.ui.tagretag.utils
 
 import weddellseal.markrecap.domain.location.data.GeoLocation
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.domain.tagretag.data.Seal
-import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.ui.tagretag.TagRetagModel.ObservationMetadata
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
@@ -142,7 +141,7 @@ fun buildLogEntry(
         id = 0, // passing zero, but Room entity will auto-populate the id
         deviceID = metadata.deviceID,
         season = metadata.currentSeason,
-        speno = speNo, //TODO, test
+        speno = speNo,
         date = getCurrentDateFormatted(), // date format: yyyy-MM-dd
         time = getCurrentTimeFormatted(), // time format: hh:mm:ss
         censusID = censusNumber,

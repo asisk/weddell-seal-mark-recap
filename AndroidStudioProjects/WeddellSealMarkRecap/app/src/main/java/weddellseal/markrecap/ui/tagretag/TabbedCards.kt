@@ -3,17 +3,21 @@ package weddellseal.markrecap.ui.tagretag
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +36,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import weddellseal.markrecap.domain.tagretag.data.Seal
-import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
@@ -51,6 +57,8 @@ fun TabbedCards(
     pupOneSeal: Seal,
     pupTwoSeal: Seal
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var tabItems by remember {
@@ -77,7 +85,7 @@ fun TabbedCards(
             sealLookupViewModel,
             primarySeal,
             pupOneSeal,
-            pupTwoSeal,
+            pupTwoSeal
         )
 
         // Ensure selectedTabIndex is within bounds after updating the list
@@ -94,21 +102,24 @@ fun TabbedCards(
             tabItems.forEachIndexed { index, tabItem ->
                 Tab(
                     text = {
-
-                        val checkMarkColor = if (tabItem.seal.isValid) Color(0xFF4CAF50) else Color.LightGray
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 tabItem.title,
                                 style = MaterialTheme.typography.headlineLarge,
                                 modifier = Modifier.padding(horizontal = 20.dp)
                             )
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Seal Ready for Save",
-                                tint = checkMarkColor,
-                                modifier = Modifier.size(16.dp)
-                            )
+                            if (uiState.isSaving) {
+                                val iconColor =
+                                    if (tabItem.seal.isValid) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+                                val icon =
+                                    if (tabItem.seal.isValid) Icons.Default.Check else Icons.Default.Error
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = "Seal Valid",
+                                    tint = iconColor,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }
                     },
                     selected = selectedTabIndex == index,
@@ -129,46 +140,94 @@ fun TabbedCards(
                     shape = RoundedCornerShape(8.dp) // Add rounded corners here
                 )
         ) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = {
-                        showDeleteDialog.value = true
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Remove Tab",
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
+            if (uiState.isSaving) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                        .pointerInput(Unit) {
+                            detectTapGestures { /* consume touch events */ }
+                        }
+                        .zIndex(1f) // Force it to render above everything
+                )
             }
 
-            // CONTENT
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .zIndex(0f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // NOTEBOOK STRING
+                    Text(
+                        tabItems[selectedTabIndex].seal.notebookDataString,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(start = 20.dp, top = 10.dp),
+                    )
+
+                    if (tabItems[selectedTabIndex].seal.wedCheckMatch != null) {
+                        // SPENO
+                        Text(
+                            text = "Speno: ${tabItems[selectedTabIndex].seal.wedCheckMatch?.speNo}",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+
+                        if (tabItems[selectedTabIndex].seal.wedCheckMatch?.comment?.isNotBlank() == true) {
+                            // WEDCHECK COMMENT
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                            ) {
+                                Text(
+                                    text = tabItems[selectedTabIndex].seal.wedCheckMatch?.comment
+                                        ?: "",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(8.dp),
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                        }
+                    }
+
+                    // TRASH CAN
+                    IconButton(
+                        modifier = Modifier.padding(8.dp),
+                        onClick = { showDeleteDialog.value = true },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "Remove Tab",
+                            modifier = Modifier.size(48.dp),
+                        )
+                    }
+                }
+
+                // CONTENT
                 if (tabItems.isNotEmpty()) {
                     tabItems[selectedTabIndex].content()
                 }
-            }
 
-            // Show the dialog if showDialog is true
-            if (showDeleteDialog.value) {
-                RemoveDialog(
-                    onDismissRequest = { showDeleteDialog.value = false },
-                    onConfirmation = {
-                        if (tabItems.isNotEmpty()) {
-                            // remove the current seal
-                            viewModel.resetSeal(tabItems[selectedTabIndex].seal.name)
-                            sealLookupViewModel.resetUiState()
-                            sealLookupViewModel.resetLookupSeal()
-                            showDeleteDialog.value = false
-                        }
-                    },
-                )
+                // Show the dialog if showDialog is true
+                if (showDeleteDialog.value) {
+                    RemoveDialog(
+                        onDismissRequest = { showDeleteDialog.value = false },
+                        onConfirmation = {
+                            if (tabItems.isNotEmpty()) {
+                                // remove the current seal
+                                viewModel.resetSeal(tabItems[selectedTabIndex].seal.name)
+                                sealLookupViewModel.resetUiState()
+                                sealLookupViewModel.resetLookupSeal()
+                                showDeleteDialog.value = false
+                            }
+                        },
+                    )
+                }
             }
         }
     }

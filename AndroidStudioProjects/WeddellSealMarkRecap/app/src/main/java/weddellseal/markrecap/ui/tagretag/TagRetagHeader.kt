@@ -132,97 +132,6 @@ fun TagRetagHeader(
                     ) else Color.Black
                 )
             }
-//            // SAVE DISABLED REASON
-//            Row(
-//                verticalAlignment = Alignment.CenterVertically,
-//                horizontalArrangement = Arrangement.Center,
-//                modifier = Modifier.padding(horizontal = 16.dp)
-//            ) {
-//                if (!uiState.isSaveEnabled && uiState.ineligibleForSaveReason.isNotBlank()) {
-//                    Icon(
-//                        imageVector = Icons.Filled.Warning,
-//                        contentDescription = "Save disabled",
-//                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
-//                    )
-//                    Text(
-//                        text = "Save disabled!",
-//                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-//                        fontSize = 14.sp,
-//                        modifier = Modifier
-//                            .padding(horizontal = 8.dp)
-//                    )
-//                } else {
-//                    Spacer(modifier = Modifier.height(22.dp))
-//                }
-//            }
-
-//            // SAVE BUTTON
-//            ExtendedFloatingActionButton(
-//                modifier = Modifier
-//                    .wrapContentWidth()
-//                    .alpha(if (uiState.isSaveEnabled && !uiState.entryNeedsConfirmation) 1f else 0.4f), // visually "disabled"
-//                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-//                elevation = FloatingActionButtonDefaults.elevation(8.dp),
-//                onClick = {
-//                    if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) return@ExtendedFloatingActionButton  // guard early exit
-//
-//                    viewModel.setIsSaving()
-//
-//                    if (primarySeal.isValid && pupOneSeal.isValid && pupTwoSeal.isValid) {
-//                        viewModel.setMetadata(
-//                            TagRetagModel.ObservationMetadata(
-//                                selectedColony = homeUiState.selectedColony,
-//                                selectedObservers = homeUiState.selectedObservers,
-//                                censusNumber = homeUiState.selectedCensusNumber
-//                            )
-//                        )
-//                        viewModel.createLog(
-//                            location
-//                        )
-//                    } else {
-//                        viewModel.updateValidationErrors(
-//                            primarySeal.validationErrors,
-//                            pupOneSeal.validationErrors,
-//                            pupTwoSeal.validationErrors
-//                        )
-//                    }
-//                },
-//                icon = { Icon(Icons.Filled.Save, "Save Seal") },
-//                text = {
-//                    Text(
-//                        modifier = Modifier.padding(start = 10.dp, end = 10.dp),
-//                        text = "Save",
-//                        fontSize = 18.sp,
-//                        fontWeight = FontWeight.Bold,
-//                        color = Color.Black
-//                    )
-//                }
-//            )
-
-//            if (!uiState.isSaveEnabled && uiState.ineligibleForSaveReason.isNotBlank()) {
-//                var expanded by remember { mutableStateOf(false) }
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.Center,
-//                    modifier = Modifier
-//                        .padding(horizontal = 8.dp)
-//                        .clickable { expanded = !expanded }
-//                ) {
-//                    Text(
-//                        text = if (expanded) uiState.ineligibleForSaveReason else "These required fields are missing!",
-//                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-//                        fontSize = 14.sp,
-//                        modifier = Modifier
-//                            .padding(horizontal = 8.dp)
-//                    )
-//
-//                    Icon(
-//                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-//                        contentDescription = "Expand error details",
-//                        tint = Color.Red
-//                    )
-//                }
-//            }
         }
     }
 
@@ -231,124 +140,83 @@ fun TagRetagHeader(
     // Warning Banner displayed when data entered has validation errors
     if (uiState.isSaving && uiState.validationFailureReason.isNotBlank()) {
 
+        // WARNING BANNER
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFFFE0B2))
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(.7f)
-            ) {
-                // WARNING BANNER
-                Row(
-                    modifier = Modifier
-                        .background(Color(0xFFFFE0B2))
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        tint = Color(0xFFF57C00),
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Warning",
+                tint = Color(0xFFF57C00),
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = "Please review the data you've entered and confirm it is correct before saving.",
+                color = Color(0xFF5D4037),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+
+            // CONFIRM AND SAVE BUTTON
+            ExtendedFloatingActionButton(
+                modifier = Modifier.padding(start = 10.dp),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                onClick = {
+                    // flag seals for review
+                    if (!primarySeal.isValid) {
+                        viewModel.flagSealForReview(primarySeal.name)
+                    }
+                    if (!pupOneSeal.isValid) {
+                        viewModel.flagSealForReview(pupOneSeal.name)
+                    }
+                    if (!pupTwoSeal.isValid) {
+                        viewModel.flagSealForReview(pupTwoSeal.name)
+                    }
+
+                    viewModel.createLog(location)
+                },
+                icon = { Icon(Icons.Filled.Save, "Confirm & Save") },
+                text = {
                     Text(
-                        text = "Please review the data you've entered and confirm it is correct before saving.",
-                        color = Color(0xFF5D4037),
-                        fontWeight = FontWeight.SemiBold
+                        text = "Confirm & Save",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
                     )
                 }
-            }
+            )
 
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // CONFIRM AND SAVE BUTTON
-                ExtendedFloatingActionButton(
-                    modifier = Modifier
-//                        .wrapContentWidth()
-                        .padding(start = 10.dp),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    elevation = FloatingActionButtonDefaults.elevation(8.dp),
-                    onClick = {
-                        // flag seals for review
-                        if (!primarySeal.isValid) {
-                            viewModel.flagSealForReview(primarySeal.name)
-                        }
-                        if (!pupOneSeal.isValid) {
-                            viewModel.flagSealForReview(pupOneSeal.name)
-                        }
-                        if (!pupTwoSeal.isValid) {
-                            viewModel.flagSealForReview(pupTwoSeal.name)
-                        }
-
-                        viewModel.setMetadata(
-                            TagRetagModel.ObservationMetadata(
-                                selectedColony = homeUiState.selectedColony,
-                                selectedObservers = homeUiState.selectedObservers,
-                                censusNumber = homeUiState.selectedCensusNumber
-                            )
-                        )
-
-                        viewModel.createLog(location)
-                    },
-                    icon = { Icon(Icons.Filled.Save, "Confirm & Save") },
-                    text = {
-                        Text(
-                            text = "Confirm & Save",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-                )
-            }
+            // EDIT BUTTON ON VALIDATION ERROR
+            ExtendedFloatingActionButton(
+                modifier = Modifier.padding(start = 10.dp),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                onClick = {
+                    // enable edit
+                    viewModel.editAfterAttemptedSave()
+                },
+                icon = { Icon(Icons.Filled.Save, "Edit") },
+                text = {
+                    Text(
+                        text = "Edit",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
+            )
         }
     }
-
-// because this action results in removing any entered data
-// Show the dialog if showDialog is true
-//    if (showConfirmEntryDialog) {
-//        SealInvalidDialog(
-//            viewModel,
-//            onDismissRequest = {
-//                showConfirmEntryDialog = false
-//            },
-//            onConfirmation = {
-//
-//                // flag seals for review
-//                if (!primarySeal.isValid) {
-//                    viewModel.flagSealForReview(primarySeal.name)
-//                }
-//                if (!pupOneSeal.isValid) {
-//                    viewModel.flagSealForReview(pupOneSeal.name)
-//                }
-//                if (!pupTwoSeal.isValid) {
-//                    viewModel.flagSealForReview(pupTwoSeal.name)
-//                }
-//
-//                showConfirmEntryDialog = false
-//
-//                viewModel.setMetadata(
-//                    TagRetagModel.ObservationMetadata(
-//                        selectedColony = homeUiState.selectedColony,
-//                        selectedObservers = homeUiState.selectedObservers,
-//                        censusNumber = homeUiState.selectedCensusNumber
-//                    )
-//                )
-//
-//                viewModel.createLog(
-//                    location
-//                )
-//            },
-//        )
-//
-////        if (showIneligibleDialog) {
-////            IneligibleForSaveDialog(
-////                uiState.ineligibleForSaveReason,
-////                onDismissRequest = {
-////                    showIneligibleDialog = false
-////                }
-////            )
-////        }
-//    }
 }

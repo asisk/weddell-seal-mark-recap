@@ -64,7 +64,6 @@ fun TagRetagFooter(
     var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
 
     val uiState by viewModel.uiState.collectAsState()
-    val homeUiState by homeViewModel.uiState.collectAsState()
 
     val location by homeViewModel.currentLocation.collectAsState()
 
@@ -121,7 +120,7 @@ fun TagRetagFooter(
                                         }
                                     },
                                     onViewDo = {
-                                        viewModel.updateObservationEntry(observation)
+                                        viewModel.loadObservationEntryForView(observation)
                                         navController.navigate(Screens.ObservationViewer.route)
                                     },
                                     observation = observation
@@ -176,17 +175,8 @@ fun TagRetagFooter(
 
                     viewModel.setIsSaving()
 
-                    if (primarySeal.isValid && pupOneSeal.isValid && pupTwoSeal.isValid) {
-                        viewModel.setMetadata(
-                            TagRetagModel.ObservationMetadata(
-                                selectedColony = homeUiState.selectedColony,
-                                selectedObservers = homeUiState.selectedObservers,
-                                censusNumber = homeUiState.selectedCensusNumber
-                            )
-                        )
-                        viewModel.createLog(
-                            location
-                        )
+                    if (uiState.allSealsValid) {
+                        viewModel.createLog(location)
                     } else {
                         viewModel.updateValidationErrors(
                             primarySeal.validationErrors,
@@ -233,7 +223,7 @@ fun TagRetagFooter(
             }
         }
     }
-    // Show the dialog if showDialog is true
+// Show the dialog if showDialog is true
     if (showEditDialog) {
         ConfirmEditDialog(
             onDismissRequest = {
@@ -250,7 +240,7 @@ fun TagRetagFooter(
                 // set the seal in the observation view model & navigate to edit
                 if (observationToEdit != null) {
                     viewModel.resetStateOnSaved()
-                    viewModel.populateSealFromObservation(observationToEdit)
+                    viewModel.loadSealForEdit(observationToEdit)
                     navController.navigate(Screens.AddObservationLog.route)
                 }
             },

@@ -122,7 +122,7 @@ fun RecentObservationsScreen(
                                 }
                             },
                             onViewDo = {
-                                tagRetagViewModel.updateObservationEntry(observation)
+                                tagRetagViewModel.loadObservationEntryForView(observation)
                                 navController.navigate(Screens.ObservationViewer.route)
                             },
                             observation = observation
@@ -142,10 +142,10 @@ fun RecentObservationsScreen(
                         showEditDialog = false
                         Toast.makeText(context, "You are about to edit this seal. To edit relatives, select records for editing separately.", Toast.LENGTH_LONG).show()
 
-                        // set the seal in the observationviewmodel & navigate to edit
+                        // set the seal in the observation viewmodel & navigate to edit
                         if (observationToEdit != null) {
                             tagRetagViewModel.resetStateOnSaved()
-                            tagRetagViewModel.populateSealFromObservation(observationToEdit)
+                            tagRetagViewModel.loadSealForEdit(observationToEdit)
                             navController.navigate(Screens.AddObservationLog.route)
                         }
                     },

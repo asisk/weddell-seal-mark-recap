@@ -6,9 +6,9 @@ enum class SealCondition(val code: String, val description: String) {
     FAIR("2", "Fair"),
     GOOD("3", "Good"),
     NEWBORN("4", "Newborn"),
-    NONE("", "None"),
-    NA("NA", "NA"),
-    UNKNOWN("", "Unknown");
+    NONE("", "None"), // technician set the value and intends it to be blank
+    NA("NA", "NA"), // WedCheck records can have this value, meaning the condition is blank
+    UNKNOWN("", "Unknown"); // the condition was never set, so the database value should be blank
 
     companion object {
         // Convert code string to enum value
