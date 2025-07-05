@@ -49,6 +49,13 @@ fun notebookEntryValueSeal(seal: Seal): String {
         sb.append(seal.numTags)
     }
 
+    // display condition only for Pups
+    if (seal.age == "Pup" && seal.condition.code != "") {
+        sb.append("  ")
+        sb.append("C=")
+        sb.append(seal.condition.code)
+    }
+
     if (seal.pupPeed) {
         sb.append("  ")
         sb.append("peed")

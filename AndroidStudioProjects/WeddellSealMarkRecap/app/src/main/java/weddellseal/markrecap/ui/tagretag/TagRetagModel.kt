@@ -275,12 +275,12 @@ class TagRetagModel(
 
             "pupOne" -> {
                 _pupOne.update { it.copy(condition = input, isStarted = true) }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(condition = input, isStarted = true)
-                }
+                _pupTwo.update { it.copy(condition = input, isStarted = true) }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -546,6 +546,7 @@ class TagRetagModel(
 
             "pupTwo" -> {
                 _pupTwo.update { it.copy(tagEventType = input, isStarted = true) }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }

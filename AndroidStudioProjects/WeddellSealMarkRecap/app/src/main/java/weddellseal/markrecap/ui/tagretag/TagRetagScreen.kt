@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -49,6 +50,7 @@ import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
+import kotlin.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +81,7 @@ fun TagRetagScreen(
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
             coroutineScope.launch {
-                snackBarHostState.showSnackbar("Entry successfully saved!")
+                snackBarHostState.showSnackbar("Entry successfully saved!", duration = SnackbarDuration.Long)
             }
             viewModel.resetUiStateIndicators()
         }
@@ -250,117 +252,7 @@ fun TagRetagScreen(
 
             TagRetagFooter(viewModel, homeViewModel, recentObsViewModel, navController)
 
-//            // RECENT OBSERVATIONS VIEW
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//            ) {
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(top = 10.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Text(
-//                        "Recently \nEntered",
-//                        modifier = Modifier.padding(10.dp),
-//                        style = MaterialTheme.typography.titleLarge,
-//                    )
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .heightIn(max = 150.dp) // Limit the height
-//                            .padding(10.dp)
-//                            .border(1.dp, Color.LightGray) // Add border for visual purposes
-//                    ) {
-//                        LazyColumn(
-//                            verticalArrangement = Arrangement.spacedBy(16.dp),
-//                            userScrollEnabled = true
-//                        ) {
-//                            items(currentObservations) { observation ->
-//                                ObservationItem(
-//                                    onEditDo = {
-//                                        if (!primarySeal.isStarted) {
-//                                            showEditDialog = true
-//                                            observationToEdit = observation
-//                                        } else {
-//                                            // Show a Toast message if the seal is already started
-//                                            Toast.makeText(
-//                                                context,
-//                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
-//                                                Toast.LENGTH_LONG
-//                                            ).show()
-//                                        }
-//                                    },
-//                                    onViewDo = {
-//                                        viewModel.updateObservationEntry(observation)
-//                                        navController.navigate(Screens.ObservationViewer.route)
-//                                    },
-//                                    observation = observation
-//                                )
-//
-//                                HorizontalDivider()
-//                            }
-//                        }
-//                    }
-//                }
-//            }
         }
-
-//        // because this action results in removing any entered data
-//        // Show the dialog if showDialog is true
-//        if (showConfirmEntryDialog) {
-//            SealInvalidDialog(
-//                viewModel,
-//                onDismissRequest = {
-//                    showConfirmEntryDialog = false
-//                    viewModel.clearValidationState()
-//                },
-//                onConfirmation = {
-////                    canAddLocation() // refresh the gps coordinates
-//
-//                    // flag seals for review
-//                    if (!primarySeal.isValid) {
-//                        viewModel.flagSealForReview(primarySeal.name)
-//                    }
-//                    if (!pupOneSeal.isValid) {
-//                        viewModel.flagSealForReview(pupOneSeal.name)
-//                    }
-//                    if (!pupTwoSeal.isValid) {
-//                        viewModel.flagSealForReview(pupTwoSeal.name)
-//                    }
-//
-//                    showConfirmEntryDialog = false
-//
-//                    viewModel.createLog(location)
-//                },
-//            )
-//        }
-//        }
-
-//        // Show the dialog if showDialog is true
-//        if (showEditDialog) {
-//            ConfirmEditDialog(
-//                onDismissRequest = {
-//                    showEditDialog = false
-//                },
-//                onConfirmation = {
-//                    showEditDialog = false
-//                    Toast.makeText(
-//                        context,
-//                        "You are about to edit this seal. To edit relatives, select records for editing separately.",
-//                        Toast.LENGTH_LONG
-//                    ).show()
-//
-//                    // set the seal in the observation view model & navigate to edit
-//                    if (observationToEdit != null) {
-//                        viewModel.resetSaved()
-//                        viewModel.populateSealFromObservation(observationToEdit)
-//                        navController.navigate(Screens.AddObservationLog.route)
-//                    }
-//                },
-//            )
-//        }
     }
 }
 
