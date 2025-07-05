@@ -54,6 +54,7 @@ data class Seal(
             if (sex.isEmpty()) reasons += "Select a sex for $name."
             if (numRelatives.isEmpty()) reasons += "Select number of relatives for $name."
             if (tagEventType.isEmpty()) reasons += "Select a tag event type for $name."
+            if (tagEventType == "Retag" && reasonForRetag.isEmpty()) reasons += "Enter a reason for retag for $name."
 
             // --- Tag Number ---
             if (!isNoTag) {

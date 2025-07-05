@@ -122,10 +122,8 @@ fun SealCard(
         isRetag = seal.tagEventType == "Retag"
     }
 
-    // SEAL CARD HEADER
+    // VALIDATION ERROR BANNER
     if (uiState.isSaving && seal.validationErrors.isNotEmpty()) {
-
-        // VALIDATION ERROR BANNER
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -145,7 +143,6 @@ fun SealCard(
             }
         }
     }
-
 
     //AGE
     val buttonListAge = listOf("Adult", "Pup", "Yearling")
@@ -168,7 +165,6 @@ fun SealCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-
                 Text(
                     "Age",
                     style = MaterialTheme.typography.titleLarge
@@ -185,11 +181,13 @@ fun SealCard(
                         options = buttonListAge,
                         selectedOption = seal.age,
                         onOptionSelected = {
-                            if (seal.age == "Pup" && seal.age != it) { // sex has been changed from pup to adult or yearling, clear pup fields
+                            if (seal.age == "Pup" && seal.age != it) {
+                                // sex has been changed from pup to adult or yearling, clear pup fields
                                 viewModel.resetPupFields(seal.name)
                             }
 
-                            if (it == "Pup" || it == "Yearling") { // if the primary seal is a pup or a yearling, there are no relatives
+                            if (it == "Pup" || it == "Yearling") {
+                                // if the primary seal is a pup or a yearling, there are no relatives
                                 if (numRelatives != "" && numRelatives != "0") {
                                     possibleRelatives = "0"
 
@@ -255,7 +253,6 @@ fun SealCard(
                                 viewModel.updateNumRelatives("0")
                             }
                         }
-
                         viewModel.updateSex(seal, it)
                     }
                 )

@@ -44,10 +44,8 @@ fun TagIDOutlinedTextField(
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val focusManager =
-        LocalFocusManager.current // State to manage whether the text field should lose focus
-    val focusRequester =
-        remember { FocusRequester() } // FocusRequester to manage focus programmatically
+    val focusManager = LocalFocusManager.current // State to manage whether the text field should lose focus
+    val focusRequester = remember { FocusRequester() } // FocusRequester to manage focus programmatically
     var isFocused by remember { mutableStateOf(false) } // Track focus state
 
     LaunchedEffect(value) {
