@@ -171,7 +171,7 @@ fun TagRetagHeader(
             // CONFIRM AND SAVE BUTTON
             ExtendedFloatingActionButton(
                 modifier = Modifier.padding(start = 10.dp),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = MaterialTheme.colorScheme.secondary,
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 onClick = {
                     // flag seals for review
@@ -187,13 +187,11 @@ fun TagRetagHeader(
 
                     viewModel.createLog(location)
                 },
-                icon = { Icon(Icons.Filled.Save, "Confirm & Save") },
+                icon = { Icon(Icons.Filled.Save, "Confirm & Save", Modifier.size(36.dp)) },
                 text = {
                     Text(
                         text = "Confirm & Save",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 }
             )
@@ -201,19 +199,21 @@ fun TagRetagHeader(
             // EDIT BUTTON ON VALIDATION ERROR
             ExtendedFloatingActionButton(
                 modifier = Modifier.padding(start = 10.dp),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = MaterialTheme.colorScheme.secondary,
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 onClick = {
                     // enable edit
                     viewModel.editAfterAttemptedSave()
                 },
-                icon = { Icon(Icons.Filled.Save, "Edit") },
+                icon = {
+                    Icon(
+                        Icons.Filled.Save, "Edit", Modifier.size(36.dp)
+                    )
+                },
                 text = {
                     Text(
                         text = "Edit",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 }
             )

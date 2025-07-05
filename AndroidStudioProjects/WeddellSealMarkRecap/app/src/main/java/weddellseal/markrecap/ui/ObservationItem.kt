@@ -2,7 +2,6 @@ package weddellseal.markrecap.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,22 +35,18 @@ fun ObservationItem(
 
     // Row to display the observation and the three-dot menu
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Display the observation details
-        Column {
-            Text(
-                text =
+        Text(
+            text =
                 notebookEntryValueObservation(observation) +
                         "    " + observation.date + " " + observation.time + "    ",
-                modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.titleLarge,
-            )
-        }
+            modifier = Modifier.padding(start = 30.dp, top = 10.dp, bottom = 10.dp),
+            style = MaterialTheme.typography.titleLarge,
+        )
 
         // Three-dot menu
         Box {
@@ -68,7 +63,7 @@ fun ObservationItem(
                 onDismissRequest = { expanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Edit")},
+                    text = { Text("Edit") },
                     onClick = { onEditDo(observation) })
 
                 DropdownMenuItem(

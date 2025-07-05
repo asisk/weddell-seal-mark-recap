@@ -175,7 +175,7 @@ fun HomeScaffold(
                             text = {
                                 Text(
                                     "Seal Lookup",
-                                    style = MaterialTheme.typography.titleLarge
+                                    style = MaterialTheme.typography.displaySmall,
                                 )
                             }
                         )
@@ -194,7 +194,7 @@ fun HomeScaffold(
                             text = {
                                 Text(
                                     text = "Tag/Retag",
-                                    style = MaterialTheme.typography.titleLarge
+                                    style = MaterialTheme.typography.displaySmall,
                                 )
                             }
                         )
@@ -223,7 +223,7 @@ fun HomeScaffold(
                             text = {
                                 Text(
                                     text = "Census",
-                                    style = MaterialTheme.typography.titleLarge
+                                    style = MaterialTheme.typography.displaySmall,
                                 )
                             }
                         )

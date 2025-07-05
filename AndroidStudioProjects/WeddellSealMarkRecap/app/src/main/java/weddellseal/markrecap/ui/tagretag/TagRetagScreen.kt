@@ -81,7 +81,7 @@ fun TagRetagScreen(
             coroutineScope.launch {
                 snackBarHostState.showSnackbar("Entry successfully saved!")
             }
-            viewModel.resetStateOnSaved()
+            viewModel.resetUiStateIndicators()
         }
     }
 

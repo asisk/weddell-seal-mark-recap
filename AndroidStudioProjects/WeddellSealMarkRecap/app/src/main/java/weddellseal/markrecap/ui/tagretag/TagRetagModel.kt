@@ -108,29 +108,23 @@ class TagRetagModel(
         val isSaved: Boolean = false,  // indicator that record was successfully saved
         val isSaving: Boolean = false, // indicator that user is attempting to save the record
         val isSaveEnabled: Boolean = false, // indicator for save button
+        val disableSave: Boolean = false, // indicator that save button should be disabled
         val ineligibleForSaveReason: String = "", // reasons save button is disabled
+
+        val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
 
         val allSealsValid: Boolean = false, // indicator that all seals are valid
         val validationFailureReason: String = "", // reason for validation failure
-        val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
     )
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    fun setIsSaving() {
-        _uiState.update { it.copy(isSaved = false, isSaving = true) }
-    }
-
-    fun setSaved() {
-        _uiState.update { it.copy(isSaved = true, isSaving = false) }
-    }
-
     // called:
     // 1. after navigation command from the recent observation screen when a record is to be edited
     // 2. when a save is successful
     // 3. when a record is selected for editing from the Tag/Retag screen
-    fun resetStateOnSaved() {
+    fun resetUiStateIndicators() {
         _uiState.update {
             it.copy(
                 isPrefilled = false,
@@ -149,12 +143,16 @@ class TagRetagModel(
         _pupTwo.update { Seal(name = "pupTwo", age = "Pup", isStarted = false) }
     }
 
+    fun setIsSaving() {
+        _uiState.update { it.copy(isSaving = true, isSaveEnabled = false) }
+    }
+
     fun editAfterAttemptedSave() {
         _uiState.update {
             it.copy(
                 isSaved = false,
                 isSaving = false,
-                isSaveEnabled = false,
+                isSaveEnabled = true,
                 entryNeedsConfirmation = false,
             )
         }
@@ -249,7 +247,7 @@ class TagRetagModel(
         }
     }
 
-    fun updateValidationErrors(
+    fun checkNeedsConfirmation(
         primarySealValidationErrors: List<String>,
         pupOneSealValidationErrors: List<String>,
         pupTwoSealValidationErrors: List<String>
@@ -263,6 +261,7 @@ class TagRetagModel(
         _uiState.update { it.copy(validationFailureReason = validationErrorString.joinToString()) }
 
         if (validationErrorString.isNotEmpty()) {
+            // Needs Confirmation
             // require the technician to save the record by confirming and saving
             _uiState.update { it.copy(entryNeedsConfirmation = true) }
         }
@@ -1032,8 +1031,8 @@ class TagRetagModel(
 //
 //                }
             }
-            setSaved()
         }
+        _uiState.update { it.copy(isSaved = true, isSaving = false, isSaveEnabled = true) }
     }
 
     private fun getRelativesTags(sealName: String): Pair<String, String> {

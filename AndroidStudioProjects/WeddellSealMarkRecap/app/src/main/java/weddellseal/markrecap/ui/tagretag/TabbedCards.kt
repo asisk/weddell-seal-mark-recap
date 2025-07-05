@@ -182,14 +182,17 @@ fun TabbedCards(
                         if (tabItems[selectedTabIndex].seal.wedCheckMatch?.comment?.isNotBlank() == true) {
                             // WEDCHECK COMMENT
                             Card(
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                                modifier = Modifier.padding(top = 10.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFFFE0B2),
+                                ),
                             ) {
                                 Text(
                                     text = tabItems[selectedTabIndex].seal.wedCheckMatch?.comment
                                         ?: "",
                                     style = MaterialTheme.typography.titleLarge,
                                     modifier = Modifier.padding(8.dp),
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    color = Color(0xFFF57C00)
                                 )
                             }
                         }

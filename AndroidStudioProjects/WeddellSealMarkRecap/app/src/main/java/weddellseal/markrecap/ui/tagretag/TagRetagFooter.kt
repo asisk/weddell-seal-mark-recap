@@ -12,18 +12,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,12 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
@@ -72,158 +74,204 @@ fun TagRetagFooter(
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
 
     Row(
-        modifier = Modifier.fillMaxWidth(.9f)
+        modifier = Modifier.fillMaxWidth()
     ) {
+        // SAVE COLUMN
         Column(
-            modifier = Modifier.fillMaxWidth(.65f)
+            modifier = Modifier.fillMaxWidth(.4f),
+            horizontalAlignment = Alignment.End
         ) {
-            // RECENT OBSERVATIONS VIEW
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
+            // SAVE DISABLED WARNING
+            if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) {
+                Row(
+                    modifier = Modifier.padding(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = "Save disabled",
+                        tint = Color(0xFFFCA503)
+                    )
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = "Save disabled!",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(48.dp))
+            }
+
+            // SAVE BUTTON
+            Row(
+                modifier = Modifier.padding(10.dp)
             ) {
+                ExtendedFloatingActionButton(
+                    elevation = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) FloatingActionButtonDefaults.elevation(
+                        2.dp
+                    ) else FloatingActionButtonDefaults.elevation(8.dp),
+                    containerColor = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary,
+                    onClick = {
+                        if (!uiState.isSaveEnabled) return@ExtendedFloatingActionButton  // guard early exit
+
+                        viewModel.setIsSaving()
+
+                        if (uiState.allSealsValid) {
+                            viewModel.createLog(location)
+                        } else {
+                            // Ensure that the validation error list is current
+                            // & mark as needsConfirmation if there are validation errors
+                            viewModel.checkNeedsConfirmation(
+                                primarySeal.validationErrors,
+                                pupOneSeal.validationErrors,
+                                pupTwoSeal.validationErrors
+                            )
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Filled.Save,
+                            "Save Seal",
+                            Modifier.size(36.dp),
+                            tint = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSecondary,
+                        )
+                    },
+                    text = {
+                        Text(
+                            modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+                            text = "Save",
+                            color = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSecondary,
+                            style = MaterialTheme.typography.displaySmall,
+                        )
+                    }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(20.dp))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            // SAVE DISABLED REASON
+            if (uiState.ineligibleForSaveReason.isNotEmpty()) {
+                var expanded by remember { mutableStateOf(false) }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp),
+                        .clickable { expanded = !expanded },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                     Text(
-                        "Recently \nEntered",
-                        modifier = Modifier.padding(10.dp),
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = "Missing entries for required fields!",
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
                         style = MaterialTheme.typography.titleLarge,
                     )
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 150.dp) // Limit the height
-                            .padding(10.dp)
-                            .border(1.dp, Color.LightGray) // Add border for visual purposes
+                            .padding(end = 28.dp)
                     ) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            userScrollEnabled = true
-                        ) {
-                            items(currentObservations) { observation ->
-                                ObservationItem(
-                                    onEditDo = {
-                                        if (!primarySeal.isStarted) {
-                                            showEditDialog = true
-                                            observationToEdit = observation
-                                        } else {
-                                            // Show a Toast message if the seal is already started
-                                            Toast.makeText(
-                                                context,
-                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    },
-                                    onViewDo = {
-                                        viewModel.loadObservationEntryForView(observation)
-                                        navController.navigate(Screens.ObservationViewer.route)
-                                    },
-                                    observation = observation
-                                )
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(
+                                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = "Expand error details",
+                                tint = Color.Red,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
 
-                                HorizontalDivider()
+                        // Dropdown menu with options
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            for (error in uiState.ineligibleForSaveReason.split(",")) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            error,
+                                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
+                                            style = MaterialTheme.typography.titleLarge,
+                                        )
+                                    },
+                                    onClick = { /* do nothing */ }
+                                )
                             }
                         }
                     }
                 }
             }
-        }
 
-        // SAVE
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // SAVE DISABLED REASON
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                if (!uiState.isSaveEnabled && uiState.ineligibleForSaveReason.isNotBlank()) {
-                    Icon(
-                        imageVector = Icons.Filled.Warning,
-                        contentDescription = "Save disabled",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
-                    )
-                    Text(
-                        text = "Save disabled!",
-                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                    )
-                } else {
-                    Spacer(modifier = Modifier.height(22.dp))
-                }
+            if (uiState.entryNeedsConfirmation) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Requires confirmation or editing!",
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
+                    style = MaterialTheme.typography.titleLarge,
+                )
             }
+        }
+    }
 
-            // SAVE BUTTON
-            ExtendedFloatingActionButton(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .alpha(if (uiState.isSaveEnabled && !uiState.entryNeedsConfirmation) 1f else 0.4f), // visually "disabled"
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                elevation = FloatingActionButtonDefaults.elevation(8.dp),
-                onClick = {
-                    if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) return@ExtendedFloatingActionButton  // guard early exit
+    Spacer(modifier = Modifier.height(60.dp))
 
-                    viewModel.setIsSaving()
-
-                    if (uiState.allSealsValid) {
-                        viewModel.createLog(location)
-                    } else {
-                        viewModel.updateValidationErrors(
-                            primarySeal.validationErrors,
-                            pupOneSeal.validationErrors,
-                            pupTwoSeal.validationErrors
-                        )
-                    }
-                },
-                icon = { Icon(Icons.Filled.Save, "Save Seal") },
-                text = {
-                    Text(
-                        modifier = Modifier.padding(start = 10.dp, end = 10.dp),
-                        text = "Save",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                }
-            )
-
-            if (!uiState.isSaveEnabled && uiState.ineligibleForSaveReason.isNotBlank()) {
-                var expanded by remember { mutableStateOf(false) }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .clickable { expanded = !expanded }
-                ) {
-                    Text(
-                        text = if (expanded) uiState.ineligibleForSaveReason else "These required fields are missing!",
-                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
+    // RECENT OBSERVATIONS VIEW
+    Row(
+        modifier = Modifier.padding(start = 40.dp, end = 30.dp, bottom = 30.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "Recently \nEntered",
+            modifier = Modifier.padding(end = 30.dp),
+            style = MaterialTheme.typography.headlineMedium,
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 250.dp) // Limit the height
+                .padding(end = 28.dp)
+                .border(4.dp, Color.LightGray) // Add border for visual purposes
+        ) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                userScrollEnabled = true
+            ) {
+                items(currentObservations) { observation ->
+                    ObservationItem(
+                        onEditDo = {
+                            if (!primarySeal.isStarted) {
+                                showEditDialog = true
+                                observationToEdit = observation
+                            } else {
+                                // Show a Toast message if the seal is already started
+                                Toast.makeText(
+                                    context,
+                                    "Looks like you're already editing another seal! Save or clear, then edit this record.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        },
+                        onViewDo = {
+                            viewModel.loadObservationEntryForView(observation)
+                            navController.navigate(Screens.ObservationViewer.route)
+                        },
+                        observation = observation
                     )
 
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Expand error details",
-                        tint = Color.Red
-                    )
+                    HorizontalDivider()
                 }
             }
         }
     }
-// Show the dialog if showDialog is true
+
+    // CONFIRM EDIT DIALOG
     if (showEditDialog) {
         ConfirmEditDialog(
             onDismissRequest = {
@@ -239,7 +287,7 @@ fun TagRetagFooter(
 
                 // set the seal in the observation view model & navigate to edit
                 if (observationToEdit != null) {
-                    viewModel.resetStateOnSaved()
+                    viewModel.resetUiStateIndicators()
                     viewModel.loadSealForEdit(observationToEdit)
                     navController.navigate(Screens.AddObservationLog.route)
                 }
