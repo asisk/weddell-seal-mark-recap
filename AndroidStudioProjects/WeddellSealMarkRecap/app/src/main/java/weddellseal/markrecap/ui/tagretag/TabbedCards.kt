@@ -200,7 +200,7 @@ fun TabbedCards(
 
                     // TRASH CAN
                     IconButton(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(10.dp),
                         onClick = { showDeleteDialog.value = true },
                     ) {
                         Icon(

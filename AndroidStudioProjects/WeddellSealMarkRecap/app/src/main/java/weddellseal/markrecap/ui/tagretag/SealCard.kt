@@ -123,99 +123,87 @@ fun SealCard(
     }
 
     // SEAL CARD HEADER
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-    ) {
+    if (uiState.isSaving && seal.validationErrors.isNotEmpty()) {
+
         // VALIDATION ERROR BANNER
-        if (uiState.isSaving && seal.validationErrors.isNotEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(6.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.errorContainer, // Light red background
-                        shape = RoundedCornerShape(4.dp)
-                    )
-                    .padding(8.dp)
-            ) {
-                seal.validationErrors.forEach { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.errorContainer, // Light red background
+                    shape = RoundedCornerShape(4.dp)
+                )
+        ) {
+            seal.validationErrors.forEach { error ->
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = error,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
         }
     }
 
+
+    //AGE
+    val buttonListAge = listOf("Adult", "Pup", "Yearling")
     Row(
-        modifier = Modifier.fillMaxWidth(.9f)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(.65f)
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            //AGE
-            val buttonListAge = listOf("Adult", "Pup", "Yearling")
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            focusManager.clearFocus()
-                        })
-                    },
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
 
-                        Text(
-                            "Age",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        // when the primary seal is a pup or yearling, there can be no other relatives
-                        if (seal.name != "primary") {
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                "Pup",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                        } else {
-                            SegmentedButtonGroup(
-                                options = buttonListAge,
-                                selectedOption = seal.age,
-                                onOptionSelected = {
-                                    if (seal.age == "Pup" && seal.age != it) { // sex has been changed from pup to adult or yearling, clear pup fields
-                                        viewModel.resetPupFields(seal.name)
-                                    }
+                Text(
+                    "Age",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                // when the primary seal is a pup or yearling, there can be no other relatives
+                if (seal.name != "primary") {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        "Pup",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                } else {
+                    SegmentedButtonGroup(
+                        options = buttonListAge,
+                        selectedOption = seal.age,
+                        onOptionSelected = {
+                            if (seal.age == "Pup" && seal.age != it) { // sex has been changed from pup to adult or yearling, clear pup fields
+                                viewModel.resetPupFields(seal.name)
+                            }
 
-                                    if (it == "Pup" || it == "Yearling") { // if the primary seal is a pup or a yearling, there are no relatives
-                                        if (numRelatives != "" && numRelatives != "0") {
-                                            possibleRelatives = "0"
+                            if (it == "Pup" || it == "Yearling") { // if the primary seal is a pup or a yearling, there are no relatives
+                                if (numRelatives != "" && numRelatives != "0") {
+                                    possibleRelatives = "0"
 
-                                            // handle the case where the number of relatives is reduced
-                                            // pop a warning and ask for confirmation before moving forward
-                                            showDeleteRelativesDialog.value = true
+                                    // handle the case where the number of relatives is reduced
+                                    // pop a warning and ask for confirmation before moving forward
+                                    showDeleteRelativesDialog.value = true
 
-                                        } else {
-                                            viewModel.updateNumRelatives("0")
-                                        }
-                                    }
-                                    viewModel.updateAge(seal, it)
+                                } else {
+                                    viewModel.updateNumRelatives("0")
                                 }
-                            )
+                            }
+                            viewModel.updateAge(seal, it)
                         }
-                    }
+                    )
                 }
             }
         }

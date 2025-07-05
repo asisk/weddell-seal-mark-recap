@@ -157,7 +157,8 @@ fun TagRetagHeader(
             Text(
                 text = "Please review the data you've entered and confirm it is correct before saving.",
                 color = Color(0xFF5D4037),
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
             )
         }
         Row(

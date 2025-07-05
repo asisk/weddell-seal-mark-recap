@@ -114,25 +114,25 @@ data class Seal(
                 if (sex != "Unknown" && sex != record.sex) {
                     // ----- Validation Rule -----
                     // Sex entered must match WedCheck entry unless the entered seal sex is "Unknown"
-                    errors += "Sex doesn't match"
+                    errors += "Sex doesn't match. WedCheck record has sex recorded as ${record.sex}."
                 }
 
                 if (numTags != record.numTags) {
                     // ----- Validation Rule -----
-                    errors += "Number of tags doesn't match"
+                    errors += "Number of tags doesn't match. WedCheck record has ${record.numTags} tags."
                 }
 
                 // If the seal was last seen dead, the condition code should be 0
                 if (record.condition == SealCondition.DEAD && condition != SealCondition.DEAD) {
                     // ----- Validation Rule -----
                     // dead seals cannot be revived to the living! ;)
-                    errors += "Seal last seen dead"
+                    errors += "Seal last seen dead!"
                 }
 
                 if (record.lastSeenSeason < (currentYear - 10)) {
                     // ----- Validation Rule -----
                     // new observations for seals seen more than ten years ago are unlikely
-                    errors += "Seal last seen more than ten years ago"
+                    errors += "Seal last seen more than ten years ago. WedCheck last seen season is ${record.lastSeenSeason}."
                 }
 
                 when (record.lastSeenSeason) {
