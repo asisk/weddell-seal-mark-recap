@@ -267,122 +267,6 @@ class TagRetagModel(
         }
     }
 
-    fun updateCondition(sealName: String, input: SealCondition) {
-        when (sealName) {
-            "primary" -> {
-                _primarySeal.update { it.copy(condition = input, isStarted = true) }
-            }
-
-            "pupOne" -> {
-                _pupOne.update { it.copy(condition = input, isStarted = true) }
-                updateNotebookEntry(pupOne.value)
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update { it.copy(condition = input, isStarted = true) }
-                updateNotebookEntry(pupTwo.value)
-            }
-        }
-    }
-
-    fun updateOldTagMarks(name: String, oldTagMarks: Boolean) {
-        when (name) {
-            "primary" -> {
-                _primarySeal.update { it.copy(oldTagMarks = oldTagMarks) }
-            }
-
-            "pupOne" -> {
-                _pupOne.update { it.copy(oldTagMarks = oldTagMarks) }
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(oldTagMarks = oldTagMarks)
-                }
-            }
-        }
-    }
-
-    fun updateWeight(seal: Seal, number: Int) {
-        when (seal.name) {
-            "primary" -> {
-                _primarySeal.update { it.copy(weight = number, isStarted = true) }
-            }
-
-            "pupOne" -> {
-                _pupOne.update { it.copy(weight = number, isStarted = true) }
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(weight = number, isStarted = true)
-                }
-            }
-        }
-    }
-
-    fun updateNoTag(sealName: String) {
-        when (sealName) {
-            "primary" -> {
-                _primarySeal.update {
-                    it.copy(
-                        isNoTag = true,
-                        numTags = "",
-                        tagAlpha = "",
-                        tagNumber = "",
-                    )
-                }
-                updateNotebookEntry(primarySeal.value)
-            }
-
-            "pupOne" -> {
-                _pupOne.update {
-                    it.copy(
-                        isNoTag = true,
-                        numTags = "",
-                        tagAlpha = "",
-                        tagNumber = "",
-                    )
-                }
-                updateNotebookEntry(pupOne.value)
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(
-                        isNoTag = true,
-                        numTags = "",
-                        tagAlpha = "",
-                        tagNumber = "",
-                    )
-                }
-                updateNotebookEntry(pupTwo.value)
-            }
-        }
-    }
-
-    fun updateRetagReason(sealName: String, input: String) {
-        when (sealName) {
-            "primary" -> {
-                _primarySeal.update { it.copy(reasonForRetag = input) }
-            }
-
-            "pupOne" -> {
-                _pupOne.update {
-                    it.copy(reasonForRetag = input)
-                }
-                updateNotebookEntry(pupOne.value)
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(reasonForRetag = input)
-                }
-                updateNotebookEntry(pupTwo.value)
-            }
-        }
-    }
-
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
@@ -403,42 +287,6 @@ class TagRetagModel(
                 }
                 updateNotebookEntry(pupTwo.value)
             }
-        }
-    }
-
-    fun updateNumRelatives(input: String) {
-        val number: Int? = input.toIntOrNull()
-        if (number != null) {
-            when (number) {
-                0 -> {
-                    removePups()
-                }
-
-                1 -> {
-                    _pupOne.update {
-                        it.copy(numRelatives = input, isStarted = true)
-                    }
-                    _pupTwo.update {
-                        it.copy(numRelatives = input, isStarted = false)
-                    }
-                    updateNotebookEntry(pupOne.value)
-                    updateNotebookEntry(pupTwo.value)
-                }
-
-                2 -> {
-                    _pupOne.update {
-                        it.copy(numRelatives = input, isStarted = true)
-                    }
-                    _pupTwo.update {
-                        it.copy(numRelatives = input, isStarted = true)
-                    }
-                    updateNotebookEntry(pupOne.value)
-                    updateNotebookEntry(pupTwo.value)
-                }
-            }
-
-            _primarySeal.update { it.copy(numRelatives = input, isStarted = true) }
-            updateNotebookEntry(primarySeal.value)
         }
     }
 
@@ -483,6 +331,79 @@ class TagRetagModel(
                 _pupTwo.update {
                     it.copy(pupPeed = input, isStarted = true)
                 }
+            }
+        }
+    }
+
+    fun updateNumRelatives(input: String) {
+        val number: Int? = input.toIntOrNull()
+        if (number != null) {
+            when (number) {
+                0 -> {
+                    removePups()
+                }
+
+                1 -> {
+                    _pupOne.update {
+                        it.copy(numRelatives = input, isStarted = true)
+                    }
+                    _pupTwo.update {
+                        it.copy(numRelatives = input, isStarted = false)
+                    }
+                    updateNotebookEntry(pupOne.value)
+                    updateNotebookEntry(pupTwo.value)
+                }
+
+                2 -> {
+                    _pupOne.update {
+                        it.copy(numRelatives = input, isStarted = true)
+                    }
+                    _pupTwo.update {
+                        it.copy(numRelatives = input, isStarted = true)
+                    }
+                    updateNotebookEntry(pupOne.value)
+                    updateNotebookEntry(pupTwo.value)
+                }
+            }
+
+            _primarySeal.update { it.copy(numRelatives = input, isStarted = true) }
+            updateNotebookEntry(primarySeal.value)
+        }
+    }
+
+    fun updateCondition(sealName: String, input: SealCondition) {
+        when (sealName) {
+            "primary" -> {
+                _primarySeal.update { it.copy(condition = input, isStarted = true) }
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(condition = input, isStarted = true) }
+                updateNotebookEntry(pupOne.value)
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update { it.copy(condition = input, isStarted = true) }
+                updateNotebookEntry(pupTwo.value)
+            }
+        }
+    }
+
+    fun updateTagEventType(seal: Seal, input: String) {
+        when (seal.name) {
+            "primary" -> {
+                _primarySeal.update { it.copy(tagEventType = input, isStarted = true) }
+                updateNotebookEntry(primarySeal.value)
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(tagEventType = input, isStarted = true) }
+                updateNotebookEntry(pupOne.value)
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update { it.copy(tagEventType = input, isStarted = true) }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -532,25 +453,6 @@ class TagRetagModel(
         }
     }
 
-    fun updateTagEventType(seal: Seal, input: String) {
-        when (seal.name) {
-            "primary" -> {
-                _primarySeal.update { it.copy(tagEventType = input, isStarted = true) }
-                updateNotebookEntry(primarySeal.value)
-            }
-
-            "pupOne" -> {
-                _pupOne.update { it.copy(tagEventType = input, isStarted = true) }
-                updateNotebookEntry(pupOne.value)
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update { it.copy(tagEventType = input, isStarted = true) }
-                updateNotebookEntry(pupTwo.value)
-            }
-        }
-    }
-
     fun updateOldTag(seal: Seal, oldTagIdOne: String) {
         when (seal.name) {
             "primary" -> {
@@ -567,18 +469,42 @@ class TagRetagModel(
         }
     }
 
-    fun updateComment(sealName: String, input: String) {
+    fun updateRetagReason(sealName: String, input: String) {
         when (sealName) {
             "primary" -> {
-                _primarySeal.update { it.copy(comment = input, isStarted = true) }
+                _primarySeal.update { it.copy(reasonForRetag = input) }
             }
 
             "pupOne" -> {
-                _pupOne.update { it.copy(comment = input, isStarted = true) }
+                _pupOne.update {
+                    it.copy(reasonForRetag = input)
+                }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                _pupTwo.update { it.copy(comment = input, isStarted = true) }
+                _pupTwo.update {
+                    it.copy(reasonForRetag = input)
+                }
+                updateNotebookEntry(pupTwo.value)
+            }
+        }
+    }
+
+    fun updateOldTagMarks(name: String, oldTagMarks: Boolean) {
+        when (name) {
+            "primary" -> {
+                _primarySeal.update { it.copy(oldTagMarks = oldTagMarks) }
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(oldTagMarks = oldTagMarks) }
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update {
+                    it.copy(oldTagMarks = oldTagMarks)
+                }
             }
         }
     }
@@ -597,6 +523,46 @@ class TagRetagModel(
 
             "pupTwo" -> {
                 _pupTwo.update { it.copy(numTags = input, isStarted = true) }
+                updateNotebookEntry(pupTwo.value)
+            }
+        }
+    }
+
+    fun updateNoTag(sealName: String) {
+        when (sealName) {
+            "primary" -> {
+                _primarySeal.update {
+                    it.copy(
+                        isNoTag = true,
+                        numTags = "",
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(primarySeal.value)
+            }
+
+            "pupOne" -> {
+                _pupOne.update {
+                    it.copy(
+                        isNoTag = true,
+                        numTags = "",
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
+                updateNotebookEntry(pupOne.value)
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update {
+                    it.copy(
+                        isNoTag = true,
+                        numTags = "",
+                        tagAlpha = "",
+                        tagNumber = "",
+                    )
+                }
                 updateNotebookEntry(pupTwo.value)
             }
         }
@@ -630,6 +596,40 @@ class TagRetagModel(
 
             "pupTwo" -> {
                 _pupTwo.update { it.copy(weightTaken = checked, isStarted = true) }
+            }
+        }
+    }
+
+    fun updateComment(sealName: String, input: String) {
+        when (sealName) {
+            "primary" -> {
+                _primarySeal.update { it.copy(comment = input, isStarted = true) }
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(comment = input, isStarted = true) }
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update { it.copy(comment = input, isStarted = true) }
+            }
+        }
+    }
+
+    fun updateWeight(seal: Seal, number: Int) {
+        when (seal.name) {
+            "primary" -> {
+                _primarySeal.update { it.copy(weight = number, isStarted = true) }
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(weight = number, isStarted = true) }
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update {
+                    it.copy(weight = number, isStarted = true)
+                }
             }
         }
     }
@@ -680,24 +680,6 @@ class TagRetagModel(
         }
     }
 
-    fun clearOldTag(sealName: String) {
-        when (sealName) {
-            "primary" -> {
-                _primarySeal.update { it.copy(oldTagId = "") }
-            }
-
-            "pupOne" -> {
-                _pupOne.update { it.copy(oldTagId = "") }
-            }
-
-            "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(oldTagId = "")
-                }
-            }
-        }
-    }
-
     fun clearTag(seal: Seal) {
         when (seal.name) {
             "primary" -> {
@@ -728,6 +710,24 @@ class TagRetagModel(
                     )
                 }
                 updateNotebookEntry(pupTwo.value)
+            }
+        }
+    }
+
+    fun clearOldTag(sealName: String) {
+        when (sealName) {
+            "primary" -> {
+                _primarySeal.update { it.copy(oldTagId = "") }
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(oldTagId = "") }
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update {
+                    it.copy(oldTagId = "")
+                }
             }
         }
     }
