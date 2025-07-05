@@ -68,10 +68,12 @@ fun CommentField(
             }
         ),
         trailingIcon = {
-            Icon(
-                Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable { onValueChange("") }
-            )
+            if (value.isNotEmpty()) {
+                Icon(
+                    Icons.Filled.Clear, contentDescription = "Clear text",
+                    Modifier.clickable { onValueChange("") }
+                )
+            }
         },
         textStyle = TextStyle(fontSize = 16.sp),
         singleLine = false,

@@ -25,6 +25,8 @@ import androidx.compose.ui.window.Dialog
 fun RemoveDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
+    text: String,
+    buttonText: String
 ) {
     val scrollState = rememberScrollState()
 
@@ -45,7 +47,7 @@ fun RemoveDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "This will remove data you've entered in this view. Are you sure?",
+                    text = text,
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -77,8 +79,7 @@ fun RemoveDialog(
                         icon = { // no icon
                         },
                         text = {
-                            Text(
-                                "Yes, clear data entry screen.",
+                            Text(buttonText,
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }

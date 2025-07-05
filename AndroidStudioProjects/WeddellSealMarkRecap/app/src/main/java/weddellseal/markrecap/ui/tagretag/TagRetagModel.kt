@@ -2,21 +2,27 @@ package weddellseal.markrecap.ui.tagretag
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.processTags
+import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.utils.buildLogEntry
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueSeal
@@ -26,6 +32,7 @@ import weddellseal.markrecap.ui.utils.getDeviceName
 class TagRetagModel(
     application: Application,
     private val observationRepo: ObservationRepository,
+    private val wedCheckRepo: WedCheckRepository,
     private val homeViewUiState: StateFlow<HomeViewModel.UiState>,
 ) : AndroidViewModel(application) {
 
@@ -101,6 +108,8 @@ class TagRetagModel(
         val observationLogEntry: ObservationLogEntry? = null,
         val metadata: ObservationMetadata = ObservationMetadata(),
 
+        val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
+
         val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
 
         val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
@@ -127,6 +136,7 @@ class TagRetagModel(
     fun resetUiStateIndicators() {
         _uiState.update {
             it.copy(
+                isSearching = false,
                 isPrefilled = false,
                 isEditMode = false,
                 isSaved = false,
@@ -264,6 +274,55 @@ class TagRetagModel(
             // Needs Confirmation
             // require the technician to save the record by confirming and saving
             _uiState.update { it.copy(entryNeedsConfirmation = true) }
+        }
+    }
+
+    fun findWedCheckMatch(seal: Seal, searchTagID : String) {
+        if (searchTagID != "") {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isSearching = true) }
+
+                try {
+                    val sealFound: WedCheckRecord? = withContext(Dispatchers.IO) {
+                        wedCheckRepo.findSealbyTagID(searchTagID.trim())
+                    }
+
+                    if (sealFound != null) {
+                        when (seal.name) {
+                            "primary" -> {
+                                _primarySeal.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
+                            }
+
+                            "pupOne" -> {
+                                _pupOne.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
+                            }
+
+                            "pupTwo" -> {
+                                _pupTwo.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SealLookup", "Error fetching seal: ${e.localizedMessage}", e)
+                }
+                _uiState.update { it.copy(isSearching = false) }
+            }
+        }
+    }
+
+    fun resetWedCheckMatch(seal : Seal) {
+        when (seal.name) {
+            "primary" -> {
+                _primarySeal.update { it.copy(wedCheckMatch = WedCheckSeal()) }
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(wedCheckMatch = WedCheckSeal()) }
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update { it.copy(wedCheckMatch = WedCheckSeal()) }
+            }
         }
     }
 
@@ -412,18 +471,21 @@ class TagRetagModel(
         when (seal.name) {
             "primary" -> {
                 _primarySeal.update { it.copy(tagAlpha = input, isStarted = true) }
+                updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
                 _pupOne.update {
                     it.copy(tagAlpha = input, isStarted = true)
                 }
+                updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
                 _pupTwo.update {
                     it.copy(tagAlpha = input, isStarted = true)
                 }
+                updateNotebookEntry(pupTwo.value)
             }
         }
     }
@@ -528,41 +590,20 @@ class TagRetagModel(
         }
     }
 
-    fun updateNoTag(sealName: String) {
+    fun updateNoTag(sealName: String, input: Boolean) {
         when (sealName) {
             "primary" -> {
-                _primarySeal.update {
-                    it.copy(
-                        isNoTag = true,
-                        numTags = "",
-                        tagAlpha = "",
-                        tagNumber = "",
-                    )
-                }
+                _primarySeal.update { it.copy(isNoTag = input) }
                 updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
-                _pupOne.update {
-                    it.copy(
-                        isNoTag = true,
-                        numTags = "",
-                        tagAlpha = "",
-                        tagNumber = "",
-                    )
-                }
+                _pupOne.update { it.copy(isNoTag = input) }
                 updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
-                _pupTwo.update {
-                    it.copy(
-                        isNoTag = true,
-                        numTags = "",
-                        tagAlpha = "",
-                        tagNumber = "",
-                    )
-                }
+                _pupTwo.update { it.copy(isNoTag = input) }
                 updateNotebookEntry(pupTwo.value)
             }
         }
@@ -680,7 +721,7 @@ class TagRetagModel(
         }
     }
 
-    fun clearTag(seal: Seal) {
+    fun clearTagID(seal: Seal) {
         when (seal.name) {
             "primary" -> {
                 _primarySeal.update {
@@ -714,6 +755,22 @@ class TagRetagModel(
         }
     }
 
+    fun clearNumTags(sealName: String) {
+        when (sealName) {
+            "primary" -> {
+                _primarySeal.update { it.copy(numTags = "") }
+            }
+
+            "pupOne" -> {
+                _pupOne.update { it.copy(numTags = "") }
+            }
+
+            "pupTwo" -> {
+                _pupTwo.update { it.copy(numTags = "") }
+            }
+        }
+    }
+
     fun clearOldTag(sealName: String) {
         when (sealName) {
             "primary" -> {
@@ -732,7 +789,7 @@ class TagRetagModel(
         }
     }
 
-    fun resetWedCheckMatch(seal: Seal) {
+    fun removeWedCheckMatch(seal: Seal) {
         when (seal.name) {
             "primary" -> {
                 _primarySeal.update {

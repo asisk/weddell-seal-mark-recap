@@ -48,9 +48,7 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.home.HomeViewModel
-import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
-import kotlin.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +56,6 @@ fun TagRetagScreen(
     navController: NavHostController,
     viewModel: TagRetagModel,
     homeViewModel: HomeViewModel,
-    sealLookupViewModel: SealLookupViewModel,
     recentObsViewModel: RecentObservationsViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -247,7 +244,7 @@ fun TagRetagScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                TabbedCards(viewModel, sealLookupViewModel, primarySeal, pupOneSeal, pupTwoSeal)
+                TabbedCards(viewModel, primarySeal, pupOneSeal, pupTwoSeal)
             }
 
             TagRetagFooter(viewModel, homeViewModel, recentObsViewModel, navController)

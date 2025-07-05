@@ -28,8 +28,8 @@ fun buildLogEntry(
         observers = metadataObservers
     }
 
-    var speNo = if (seal.wedCheckMatch != null) {
-        seal.wedCheckMatch.speNo.toString()
+    var speNo = if (seal.hasWedCheckMatch) {
+        seal.wedCheckMatch?.speNo.toString()
     } else {
         "0"
     }

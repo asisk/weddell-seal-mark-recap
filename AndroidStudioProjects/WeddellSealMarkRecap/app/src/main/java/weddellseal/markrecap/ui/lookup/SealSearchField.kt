@@ -29,7 +29,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 
 @Composable
 fun SealSearchField(
@@ -62,7 +61,7 @@ fun SealSearchField(
                     // Reset the field in the model when the text field gains focus
                     if (viewModel.uiState.value.sealFound) {
                         sealTagID = ""
-                        viewModel.resetUiState()
+                        viewModel.resetLookupUiState()
                         viewModel.resetLookupSeal()
                     }
                 }
@@ -80,7 +79,7 @@ fun SealSearchField(
                 keyboardController?.hide()
 
                 // reset the current seal for new search
-                viewModel.resetUiState()
+                viewModel.resetLookupUiState()
                 viewModel.resetLookupSeal()
 
                 // engage the search function
@@ -88,16 +87,18 @@ fun SealSearchField(
             }
         ),
         trailingIcon = {
-            Icon(
-                Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier
-                    .clickable {
-                        sealTagID = ""
-                        viewModel.resetUiState()
-                        viewModel.resetLookupSeal()
-                    }
-                    .size(35.dp) // Adjust the size as needed
-            )
+            if (value.isNotEmpty()) {
+                Icon(
+                    Icons.Filled.Clear, contentDescription = "Clear text",
+                    Modifier
+                        .clickable {
+                            sealTagID = ""
+                            viewModel.resetLookupUiState()
+                            viewModel.resetLookupSeal()
+                        }
+                        .size(35.dp) // Adjust the size as needed
+                )
+            }
         },
         supportingText = {
             Text(

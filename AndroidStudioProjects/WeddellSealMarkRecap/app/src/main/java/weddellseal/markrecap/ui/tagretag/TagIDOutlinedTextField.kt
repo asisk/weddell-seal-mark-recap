@@ -36,11 +36,10 @@ fun TagIDOutlinedTextField(
     placeholderText: String,
     errorMessage: String,
     keyboardType: KeyboardType,
-    onValueChangeDo: (String) -> Unit,
     onClearValueDo: () -> Unit,
     onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
 ) {
-    var text by remember { mutableStateOf(value) }
+    var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -63,13 +62,7 @@ fun TagIDOutlinedTextField(
 
     OutlinedTextField(
         value = text,
-        onValueChange = {
-            text = it
-            if (it.isNotEmpty()) {
-                // save the input to the model
-                onValueChangeDo(it)
-            }
-        },
+        onValueChange = { text = it },
         label = { Text(labelText) },
         placeholder = { Text(placeholderText) },
         textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
@@ -91,21 +84,23 @@ fun TagIDOutlinedTextField(
             }
         ),
         trailingIcon = {
-            Icon(
-                Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable {
-                    text = ""
-                    onClearValueDo()
-                }
-            )
+            if (text.isNotEmpty()) {
+                Icon(
+                    Icons.Filled.Clear, contentDescription = "Clear text",
+                    Modifier.clickable {
+                        text = ""
+                        onClearValueDo()
+                    }
+                )
+            }
         },
-        supportingText = {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = errorMessage,
-                textAlign = TextAlign.End,
-            )
-        },
+//        supportingText = {
+//            Text(
+//                modifier = Modifier.fillMaxWidth(),
+//                text = errorMessage,
+//                textAlign = TextAlign.End,
+//            )
+//        },
         modifier = Modifier
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused // Update focus state

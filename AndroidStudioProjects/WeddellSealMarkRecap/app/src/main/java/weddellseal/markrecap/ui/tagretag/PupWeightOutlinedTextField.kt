@@ -1,10 +1,9 @@
 package weddellseal.markrecap.ui.tagretag
 
+import android.util.Log
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
@@ -19,52 +18,41 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun PupWeightOutlinedTextField(
     value: String,
-    labelText: String,
-    placeholderText: String,
-    onValueChangeDo: (String) -> Unit,
+    onFocusChange: (String) -> Unit,
+    onClearValueDo: () -> Unit,
 ) {
-    var text by remember { mutableStateOf(value) }
-
-    val focusManager = LocalFocusManager.current // State to manage whether the text field should lose focus
+    val focusManager =
+        LocalFocusManager.current // State to manage whether the text field should lose focus
+    val focusRequester = remember { FocusRequester() } // FocusRequester to manage focus programmatically
+    var isFocused by remember { mutableStateOf(false) } // Track focus state
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    var isError by remember { mutableStateOf(false) }
+    var text by remember { mutableStateOf(if (value == "0") "" else value) } //used to prevent the model update until the user is done typing
 
     LaunchedEffect(value) {
-        text = value
+        text = if (value == "0") "" else value
     }
 
     OutlinedTextField(
         value = text,
-        onValueChange = {
-            text = it
-
-            // Ensure the input is 2 or 4 digits long
-            val isValidLength = text.length in 2..4
-            isError = it.isEmpty() || !isValidLength
-            if (!isError) {
-                // save the input to the model
-                onValueChangeDo(it)
-            }
-        },
-        label = { Text(labelText) },
-        placeholder = { Text(placeholderText) },
+        onValueChange = { text = it },
+        label = { Text("Weight in lbs") },
+        placeholder = { "Enter weight in lbs" },
         textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(
-                alpha = ContentAlpha.disabled
-            ),
+            focusedBorderColor = if (text.isNotEmpty() && text.length !in 2..4) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = if (text.isNotEmpty() && text.length !in 2..4) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
         ),
         singleLine = true,
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -77,21 +65,29 @@ fun PupWeightOutlinedTextField(
             }
         ),
         trailingIcon = {
-            Icon(
-                Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable {
-                    text = ""
-                    onValueChangeDo(text)
-                }
-            )
+            if (text.isNotEmpty()) {
+                Icon(
+                    Icons.Filled.Clear, contentDescription = "Clear text",
+                    Modifier.clickable {
+                        onClearValueDo()
+                    }
+                )
+            }
         },
         suffix = { Text("lbs") },
-        supportingText = {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Tag Number is 3 or 4 digits",
-                textAlign = TextAlign.End,
-            )
-        }
+        modifier = Modifier
+            .onFocusChanged { focusState ->
+                isFocused = focusState.isFocused // Update focus state
+                Log.d("TagIDOutlinedTextField", "Focus change detected isFocused: $isFocused, calling onFocusChange lambda")
+                onFocusChange(text.trim()) // Pass the latest value when focus changes
+            }
+            .focusRequester(focusRequester)
+//        supportingText = {
+//            Text(
+//                modifier = Modifier.fillMaxWidth(),
+//                text = "Weight",
+//                textAlign = TextAlign.End,
+//            )
+//        }
     )
 }

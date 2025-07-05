@@ -31,10 +31,9 @@ class SealLookupViewModel(
         val isSearching: Boolean = false,
         val sealFound: Boolean = false,
         val sealNotFound: Boolean = false,
-        val isTagRetagLookup: Boolean = false,
     )
 
-    fun resetUiState() {
+    fun resetLookupUiState() {
         _uiState.update {
             it.copy(
                 loading = false,
@@ -51,33 +50,27 @@ class SealLookupViewModel(
         _lookupSeal.update { WedCheckSeal() }
     }
 
-    fun setTagRetagLookup(isTagRetagLookup: Boolean) {
-        _uiState.update { it.copy(isTagRetagLookup = isTagRetagLookup) }
-    }
-
     fun findSealbyTagID(sealTagID: String) {
-        resetUiState()
+        resetLookupUiState()
         resetLookupSeal()
 
         if (sealTagID != "") {
-            val searchValue = sealTagID.trim()
-            findSeal { wedCheckRepo.findSealbyTagID(searchValue) }
-            _uiState.update { it.copy(isSearching = true) }
+            findSeal { wedCheckRepo.findSealbyTagID(sealTagID.trim()) }
         }
     }
 
     fun findSealbySpeno(speno: Int) {
-        resetUiState()
+        resetLookupUiState()
         resetLookupSeal()
 
         if (speno > 0) {
             findSeal { wedCheckRepo.findSealbySpeNo(speno) }
-            _uiState.update { it.copy(isSearching = true) }
         }
     }
 
     fun findSeal(query: suspend () -> WedCheckRecord?) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isSearching = true) }
             try {
                 val seal: WedCheckRecord? = withContext(Dispatchers.IO) {
                     query()

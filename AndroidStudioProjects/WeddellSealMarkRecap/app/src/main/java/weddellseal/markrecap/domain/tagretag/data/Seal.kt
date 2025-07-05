@@ -8,7 +8,7 @@ data class Seal(
     val colony: String = "",
     val comment: String = "",
     val condition: SealCondition = SealCondition.UNKNOWN,
-    var isNoTag: Boolean = false, // when marked, this clears the tag number, if entered
+    var isNoTag: Boolean = false,
     val lastPhysio: String = "",
     val name: String = "",
     val notebookDataString: String = "",
@@ -60,7 +60,7 @@ data class Seal(
             if (!isNoTag) {
                 if (tagNumber.isEmpty()) {
                     reasons += "Enter a tag number for $name."
-                } else if (tagNumber.length !in 3..4) {
+                } else if (tagNumber.length !in 3..4) { //If tagNumber is not 3 or 4 characters long
                     reasons += "Tag number must be 3 or 4 digits for $name."
                 }
 
@@ -72,6 +72,12 @@ data class Seal(
 
             return reasons
         }
+
+    val tagIsValid: Boolean
+        get() = tagNumber.isNotEmpty() && tagNumber.length in 3..4
+
+    val hasWedCheckMatch: Boolean
+        get() = wedCheckMatch != null
 
     val isValid: Boolean
         get() = isComplete && validationErrors.isEmpty()
@@ -109,7 +115,7 @@ data class Seal(
             }
 
             // ----- A WedCheck record is present, so validate Seal against it -----
-    //TODO, more testing with retag
+            //TODO, more testing with retag
             wedCheckMatch.let { record ->
 
                 if (sex != "Unknown" && sex != record.sex) {

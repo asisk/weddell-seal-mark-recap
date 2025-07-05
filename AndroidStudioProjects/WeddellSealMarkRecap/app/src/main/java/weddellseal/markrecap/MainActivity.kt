@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
             TagRetagViewModelFactory(
                 application,
                 observationRepository,
+                wedCheckRepository,
                 homeViewModel.uiState)
         val tagRetagModel: TagRetagModel by viewModels { tagRetagViewModelFactory }
 
@@ -134,7 +135,6 @@ class MainActivity : ComponentActivity() {
                                 navController,
                                 tagRetagModel,
                                 homeViewModel,
-                                sealLookupViewModel,
                                 recentObservationsViewModel
                             )
                         }

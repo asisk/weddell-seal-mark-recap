@@ -148,7 +148,6 @@ fun SealLookupScreen(
                                 onClick = {
                                     if (!tagRetagViewModel.primarySeal.value.isStarted) {
                                         tagRetagViewModel.populateSealFromLookup(viewModel.lookupSeal.value)
-                                        viewModel.setTagRetagLookup(true)
                                         navController.navigate(Screens.AddObservationLog.route)
                                     } else {
                                         // Show a Toast message if the seal is already started

@@ -41,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import weddellseal.markrecap.domain.tagretag.data.Seal
-import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 /**
@@ -52,7 +51,6 @@ import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 @Composable
 fun TabbedCards(
     viewModel: TagRetagModel,
-    sealLookupViewModel: SealLookupViewModel,
     primarySeal: Seal,
     pupOneSeal: Seal,
     pupTwoSeal: Seal
@@ -65,7 +63,6 @@ fun TabbedCards(
         mutableStateOf(
             createTabItems(
                 viewModel,
-                sealLookupViewModel,
                 primarySeal,
                 pupOneSeal,
                 pupTwoSeal,
@@ -82,7 +79,6 @@ fun TabbedCards(
     ) {
         tabItems = createTabItems(
             viewModel,
-            sealLookupViewModel,
             primarySeal,
             pupOneSeal,
             pupTwoSeal
@@ -170,31 +166,30 @@ fun TabbedCards(
                         modifier = Modifier.padding(start = 20.dp, top = 10.dp),
                     )
 
-                    if (tabItems[selectedTabIndex].seal.wedCheckMatch != null) {
-                        // SPENO
-                        Text(
-                            text = "Speno: ${tabItems[selectedTabIndex].seal.wedCheckMatch?.speNo}",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(top = 10.dp),
-                        )
+                    // SPENO
+                    Text(
+                        text = if (!tabItems[selectedTabIndex].seal.hasWedCheckMatch) "" else
+                            "Speno: ${tabItems[selectedTabIndex].seal.wedCheckMatch?.speNo}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
 
-                        if (tabItems[selectedTabIndex].seal.wedCheckMatch?.comment?.isNotBlank() == true) {
-                            // WEDCHECK COMMENT
-                            Card(
-                                modifier = Modifier.padding(top = 10.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFFFE0B2),
-                                ),
-                            ) {
-                                Text(
-                                    text = tabItems[selectedTabIndex].seal.wedCheckMatch?.comment
-                                        ?: "",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    modifier = Modifier.padding(8.dp),
-                                    color = Color(0xFFF57C00)
-                                )
-                            }
+                    if (tabItems[selectedTabIndex].seal.wedCheckMatch?.comment?.isNotBlank() == true) {
+                        // WEDCHECK COMMENT
+                        Card(
+                            modifier = Modifier.padding(top = 10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFFFE0B2),
+                            ),
+                        ) {
+                            Text(
+                                text = tabItems[selectedTabIndex].seal.wedCheckMatch?.comment
+                                    ?: "",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(8.dp),
+                                color = Color(0xFFF57C00)
+                            )
                         }
                     }
 
@@ -206,6 +201,7 @@ fun TabbedCards(
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
                             contentDescription = "Remove Tab",
+                            tint = if (!primarySeal.isStarted) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(48.dp),
                         )
                     }
@@ -216,19 +212,26 @@ fun TabbedCards(
                     tabItems[selectedTabIndex].content()
                 }
 
-                // Show the dialog if showDialog is true
+                // DELETE DIALOG
                 if (showDeleteDialog.value) {
+                    val currentSeal = tabItems[selectedTabIndex].seal.name
+                    val deleteMessage = if (currentSeal == "primary") {
+                        "This will remove data you've entered for all seals. Are you sure?"
+                    } else {
+                        "This will remove data you've entered for $currentSeal. Are you sure?"
+                    }
+
                     RemoveDialog(
                         onDismissRequest = { showDeleteDialog.value = false },
                         onConfirmation = {
                             if (tabItems.isNotEmpty()) {
                                 // remove the current seal
                                 viewModel.resetSeal(tabItems[selectedTabIndex].seal.name)
-                                sealLookupViewModel.resetUiState()
-                                sealLookupViewModel.resetLookupSeal()
                                 showDeleteDialog.value = false
                             }
                         },
+                        text = deleteMessage,
+                        buttonText = "Yes, clear data."
                     )
                 }
             }
@@ -238,7 +241,6 @@ fun TabbedCards(
 
 fun createTabItems(
     viewModel: TagRetagModel,
-    sealLookupViewModel: SealLookupViewModel,
     primarySealState: Seal,
     pupOneSealState: Seal,
     pupTwoSealState: Seal,
@@ -249,8 +251,7 @@ fun createTabItems(
         SealCard(
             viewModel,
             SealType.PRIMARY,
-            primarySealState,
-            sealLookupViewModel
+            primarySealState
         )
     })
 
@@ -259,8 +260,7 @@ fun createTabItems(
             SealCard(
                 viewModel,
                 SealType.PUPONE,
-                pupOneSealState,
-                sealLookupViewModel
+                pupOneSealState
             )
         })
     }
@@ -270,8 +270,7 @@ fun createTabItems(
             SealCard(
                 viewModel,
                 SealType.PUPTWO,
-                pupTwoSealState,
-                sealLookupViewModel
+                pupTwoSealState
             )
         })
     }
