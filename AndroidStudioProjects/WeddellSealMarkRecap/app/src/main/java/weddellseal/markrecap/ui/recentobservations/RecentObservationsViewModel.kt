@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.files.data.FileState
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.ui.admin.ExportType
 import weddellseal.markrecap.ui.admin.FileAction
@@ -46,16 +46,16 @@ class RecentObservationsViewModel(
         _uiState.update { it.copy(archiveAcked = acked) }
     }
 
-    val currentObservations: StateFlow<List<ObservationLogEntry>> =
+    val currentObservations: StateFlow<List<ObservationRecord>> =
         observationRepo.currentObservations
             .stateIn(viewModelScope, SharingStarted.Companion.Lazily, emptyList()) // Collect as StateFlow
 
-    val allObservations: StateFlow<List<ObservationLogEntry>> =
+    val allObservations: StateFlow<List<ObservationRecord>> =
         observationRepo.allObservations
             .stateIn(viewModelScope, SharingStarted.Companion.Lazily, emptyList()) // Collect as StateFlow
 
     val currentObservationsCount: StateFlow<Int> = currentObservations
-        .map { observations: List<ObservationLogEntry> -> observations.size }
+        .map { observations: List<ObservationRecord> -> observations.size }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Companion.WhileSubscribed(5_000),
@@ -63,7 +63,7 @@ class RecentObservationsViewModel(
         )
 
     val allObservationsCount: StateFlow<Int> = allObservations
-        .map { observations: List<ObservationLogEntry> -> observations.size }
+        .map { observations: List<ObservationRecord> -> observations.size }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Companion.WhileSubscribed(5_000),

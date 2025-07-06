@@ -2,18 +2,18 @@ package weddellseal.markrecap.ui.tagretag.utils
 
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.Seal
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.tagretag.TagRetagModel.ObservationMetadata
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
 
-fun buildLogEntry(
+fun buildObservationRecord(
     currentLocation: GeoLocation?,
     seal: Seal,
     relativeOneTag: String,
     relativeTwoTag: String,
     metadata: ObservationMetadata,
-): ObservationLogEntry {
+): ObservationRecord {
     val metadataCensus = metadata.censusNumber
     val metadataObservers = metadata.getObserversString()
     val metadataColony = metadata.selectedColony
@@ -137,7 +137,7 @@ fun buildLogEntry(
         flagged = "C"
     }
 
-    val log = ObservationLogEntry(
+    val log = ObservationRecord(
         id = 0, // passing zero, but Room entity will auto-populate the id
         deviceID = metadata.deviceID,
         season = metadata.currentSeason,

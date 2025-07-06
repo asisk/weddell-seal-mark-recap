@@ -17,14 +17,14 @@ import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.processTags
 import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
 import weddellseal.markrecap.ui.home.HomeViewModel
-import weddellseal.markrecap.ui.tagretag.utils.buildLogEntry
+import weddellseal.markrecap.ui.tagretag.utils.buildObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.getCurrentYear
 import weddellseal.markrecap.ui.utils.getDeviceName
@@ -105,7 +105,7 @@ class TagRetagModel(
 //    }
 
     data class UiState(
-        val observationLogEntry: ObservationLogEntry? = null,
+        val observationRecord: ObservationRecord? = null,
         val metadata: ObservationMetadata = ObservationMetadata(),
 
         val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
@@ -969,13 +969,13 @@ class TagRetagModel(
         updateNotebookEntry(primarySeal.value)
     }
 
-    fun loadObservationEntryForView(observation: ObservationLogEntry) {
-        _uiState.update { it.copy(observationLogEntry = observation) }
+    fun loadObservationEntryForView(observation: ObservationRecord) {
+        _uiState.update { it.copy(observationRecord = observation) }
     }
 
     // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen
     // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
-    fun loadSealForEdit(log: ObservationLogEntry?) {
+    fun loadSealForEdit(log: ObservationRecord?) {
         // Create a String array for the data
         if (log != null) {
             var ageString = when (log.ageClass) {
@@ -1039,7 +1039,7 @@ class TagRetagModel(
                     flaggedForReview = log.flaggedEntry != "",
                     isStarted = true,
                     observationID = log.id,
-                    isObservationLogEntry = true,
+                    isTagRetagEntry = true,
                 )
             }
         }
@@ -1071,7 +1071,7 @@ class TagRetagModel(
             if (seal.isStarted) {
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.name)
-                val log = buildLogEntry(
+                val log = buildObservationRecord(
                     currentLocation,
                     seal,
                     relOneTag,

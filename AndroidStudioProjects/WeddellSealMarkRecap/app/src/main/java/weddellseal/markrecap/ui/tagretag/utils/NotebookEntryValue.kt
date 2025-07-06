@@ -1,6 +1,6 @@
 package weddellseal.markrecap.ui.tagretag.utils
 
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.domain.tagretag.data.Seal
 
 // function used to display the notebook string on the seal card in the observations view
@@ -65,7 +65,7 @@ fun notebookEntryValueSeal(seal: Seal): String {
 }
 
 // function used to display the notebook string in the recent observations view
-fun notebookEntryValueObservation(obs: ObservationLogEntry): String {
+fun notebookEntryValueObservation(obs: ObservationRecord): String {
     val sb = StringBuilder()
     val age = if (obs.ageClass.isNotEmpty()) {
         obs.ageClass[0].toString()

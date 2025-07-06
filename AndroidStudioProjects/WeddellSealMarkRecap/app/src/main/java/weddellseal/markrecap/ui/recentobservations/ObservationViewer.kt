@@ -103,7 +103,7 @@ fun ObservationViewer(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
-                        uiState.observationLogEntry?.let { ObservationEntryCard(it) }
+                        uiState.observationRecord?.let { ObservationEntryCard(it) }
                         ExtendedFloatingActionButton(
                             modifier = Modifier
                                 .padding(bottom = 20.dp, start = 20.dp)

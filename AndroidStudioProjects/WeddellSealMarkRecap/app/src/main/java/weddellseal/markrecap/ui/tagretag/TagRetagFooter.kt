@@ -44,7 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
 import weddellseal.markrecap.ui.home.HomeViewModel
@@ -63,7 +63,7 @@ fun TagRetagFooter(
     val currentObservations by recentObsViewModel.currentObservations.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
-    var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
+    var observationToEdit by remember { mutableStateOf<ObservationRecord?>(null) }
 
     val uiState by viewModel.uiState.collectAsState()
 

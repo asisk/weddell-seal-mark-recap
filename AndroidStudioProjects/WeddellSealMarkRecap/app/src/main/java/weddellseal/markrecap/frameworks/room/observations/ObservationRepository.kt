@@ -12,10 +12,10 @@ import java.io.OutputStreamWriter
 
 class ObservationRepository(private val observationDao: ObservationDao) {
 
-    val currentObservations: Flow<List<ObservationLogEntry>> = observationDao.getCurrentObservationsOrdered()
-    val allObservations: Flow<List<ObservationLogEntry>> = observationDao.getAllObservationsOrdered()
+    val currentObservations: Flow<List<ObservationRecord>> = observationDao.getCurrentObservationsOrdered()
+    val allObservations: Flow<List<ObservationRecord>> = observationDao.getAllObservationsOrdered()
 
-    fun writeDataToStream(outputStream: OutputStream, observations: List<ObservationLogEntry>) {
+    fun writeDataToStream(outputStream: OutputStream, observations: List<ObservationRecord>) {
         OutputStreamWriter(outputStream).use { writer ->
             val csvWriter = CSVWriter(writer)
 
@@ -57,7 +57,7 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         }
     }
 
-    suspend fun addObservation(log: ObservationLogEntry) {
+    suspend fun addObservation(log: ObservationRecord) {
         observationDao.insert(log)
     }
 
@@ -65,9 +65,9 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         observationDao.softDeleteObservations()
     }
 
-    suspend fun updateObservationEntry(log: ObservationLogEntry) {
+    suspend fun updateObservationRecord(log: ObservationRecord) {
         // Example of updating an existing entry with ID 1
-        observationDao.updateObservationLogEntry(log)
+        observationDao.updateObservationRecord(log)
     }
 
 }

@@ -19,14 +19,14 @@ import weddellseal.markrecap.frameworks.room.files.FileUploadDao
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.observers.Observers
 import weddellseal.markrecap.frameworks.room.observations.ObservationDao
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observers.ObserversDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColoniesDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckDao
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 
-@Database(entities = [ObservationLogEntry::class, WedCheckRecord::class, SealColony::class, Observers::class, FileUploadEntity::class], version = 17, exportSchema = false)
+@Database(entities = [ObservationRecord::class, WedCheckRecord::class, SealColony::class, Observers::class, FileUploadEntity::class], version = 17, exportSchema = false)
 @TypeConverters(FileStatusConverter::class, FileTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao

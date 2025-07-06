@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey
         Index(value = ["tag_id_one"])  // Index for faster lookups on tagNumberOne
     ]
 )
-data class ObservationLogEntry(
+data class ObservationRecord(
     @PrimaryKey(autoGenerate = true) val id: Int,
     @ColumnInfo(name = "device_id") val deviceID: String,
     @ColumnInfo(name = "season") val season: String,

@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.tagretag.TagRetagModel
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
@@ -58,7 +58,7 @@ fun RecentObservationsScreen(
     val currentObservations by viewModel.currentObservations.collectAsState()
     val context = LocalContext.current
     context.contentResolver
-    var observationToEdit by remember { mutableStateOf<ObservationLogEntry?>(null) }
+    var observationToEdit by remember { mutableStateOf<ObservationRecord?>(null) }
     var showEditDialog by remember { mutableStateOf(false) }
 
     Scaffold(

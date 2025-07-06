@@ -21,14 +21,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
 
 @Composable
 fun ObservationItem(
-    onEditDo: (ObservationLogEntry) -> Unit,
-    onViewDo: (ObservationLogEntry) -> Unit,
-    observation: ObservationLogEntry
+    onEditDo: (ObservationRecord) -> Unit,
+    onViewDo: (ObservationRecord) -> Unit,
+    observation: ObservationRecord
 ) {
     // State to control the visibility of the dropdown menu
     var expanded by remember { mutableStateOf(false) }

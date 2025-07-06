@@ -31,9 +31,9 @@ data class Seal(
     val tissue: String = "",
     val weight: Int = 0,
     val weightTaken: Boolean = false,
-    val observationID: Int = 0, // represents the record ID for an existing observation when mapping an ObservationLogEntry to a Seal
+    val observationID: Int = 0, // represents the record ID for an existing observation when mapping an ObservationRecord to a Seal
     var isStarted: Boolean = false,
-    val isObservationLogEntry: Boolean = false,
+    val isTagRetagEntry: Boolean = false,
     val observationRecordSpeno: Int = 0,
     val wedCheckMatch: WedCheckSeal? = null, // This could be null if there is no match in the database
     var flaggedForReview: Boolean = false,

@@ -15,22 +15,22 @@ import kotlinx.coroutines.flow.Flow
 interface ObservationDao {
 
     @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id DESC")
-    fun getCurrentObservationsOrdered(): Flow<List<ObservationLogEntry>>
+    fun getCurrentObservationsOrdered(): Flow<List<ObservationRecord>>
 
     @Query("SELECT * FROM observationLogs ORDER BY id DESC")
-    fun getAllObservationsOrdered(): Flow<List<ObservationLogEntry>>
+    fun getAllObservationsOrdered(): Flow<List<ObservationRecord>>
 
     @Query("SELECT COUNT(*) FROM observationLogs WHERE deletedAt IS NULL")
     suspend fun getCount(): Int
 
     @Insert(onConflict = OnConflictStrategy.IGNORE) //the suspend keyword means that coroutines are supported
-    suspend fun insert(log: ObservationLogEntry)
+    suspend fun insert(log: ObservationRecord)
 
     // Soft delete all records that haven't been deleted yet (where deletedAt is NULL)
     @Query("UPDATE observationLogs SET deletedAt = :deletedAt WHERE deletedAt IS NULL")
     suspend fun softDeleteObservations(deletedAt: Long = System.currentTimeMillis())
 
-    // New query & functions to support editing an existing ObservationLogEntry
+    // New query & functions to support editing an existing ObservationRecord
     @Query(
         """
         UPDATE observationLogs
@@ -61,6 +61,7 @@ interface ObservationDao {
             updatedAt = :updatedAt
         WHERE id = :id AND deletedAt IS NULL"""
     )
+
     suspend fun updateObservation(
         id: String,
         speno: String,
@@ -89,8 +90,8 @@ interface ObservationDao {
         updatedAt: Long = System.currentTimeMillis()
     )
 
-    // Wrapper function to update fields based on the ObservationLogEntry data
-    suspend fun updateObservationLogEntry(log: ObservationLogEntry) {
+    // Wrapper function to update fields based on the ObservationRecord data
+    suspend fun updateObservationRecord(log: ObservationRecord) {
         updateObservation(
             id = log.id.toString(),
             speno = log.speno,

@@ -323,7 +323,7 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                if (seal.name == "primary" && seal.isObservationLogEntry) {
+                if (seal.name == "primary" && seal.isTagRetagEntry) {
                     // when the primary seal has been populated from a observation log entry record
                     Text(
                         numRelatives,
