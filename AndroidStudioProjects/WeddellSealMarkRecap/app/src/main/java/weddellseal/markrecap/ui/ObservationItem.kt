@@ -49,10 +49,9 @@ fun ObservationItem(
             modifier = Modifier.padding(start = 30.dp, top = 10.dp, bottom = 10.dp),
             style = MaterialTheme.typography.titleLarge,
         )
-
         Icon(
-            painter = painterResource(R.drawable.mother_and_pup_seals_plain),
-                    contentDescription = "Mom and pup"
+            painter = painterResource(R.mipmap.ic_mom_pup_foreground),
+            contentDescription = "Mom and pup"
         )
 
         // Three-dot menu
