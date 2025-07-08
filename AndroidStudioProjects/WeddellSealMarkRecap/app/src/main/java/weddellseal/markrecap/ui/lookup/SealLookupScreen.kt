@@ -146,7 +146,7 @@ fun SealLookupScreen(
                                     .fillMaxWidth(),
                                 containerColor = Color.LightGray,
                                 onClick = {
-                                    if (!tagRetagViewModel.primarySeal.value.isStarted) {
+                                    if (!tagRetagViewModel.primarySeal.value.isEntryStarted) {
                                         tagRetagViewModel.populateSealFromLookup(viewModel.lookupSeal.value)
                                         navController.navigate(Screens.AddObservationLog.route)
                                     } else {

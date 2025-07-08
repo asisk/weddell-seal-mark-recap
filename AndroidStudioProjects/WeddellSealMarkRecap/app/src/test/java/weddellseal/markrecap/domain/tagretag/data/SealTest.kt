@@ -56,15 +56,6 @@ class SealTest {
 
         assertTrue(seal.validationErrors.isEmpty())
     }
-
-    @Test
-    fun `isStarted flag tracks interaction`() {
-        val untouched = Seal(name = "QuietSeal")
-        val edited = untouched.copy(age = "Pup", isStarted = true)
-
-        assertFalse(untouched.isStarted)
-        assertTrue(edited.isStarted)
-    }
 }
 
 class SealConditionTest {

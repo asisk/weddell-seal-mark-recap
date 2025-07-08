@@ -56,6 +56,8 @@ fun RecentObservationsScreen(
     tagRetagViewModel: TagRetagModel,
 ) {
     val currentObservations by viewModel.currentObservations.collectAsState()
+    val allObservations by viewModel.allObservations.collectAsState()
+
     val context = LocalContext.current
     context.contentResolver
     var observationToEdit by remember { mutableStateOf<ObservationRecord?>(null) }
@@ -113,7 +115,7 @@ fun RecentObservationsScreen(
                     items(currentObservations) { observation ->
                         ObservationItem(
                             onEditDo = {
-                                if (!tagRetagViewModel.primarySeal.value.isStarted) {
+                                if (!tagRetagViewModel.primarySeal.value.isEntryStarted) {
                                     showEditDialog = true
                                     observationToEdit = observation
                                 } else {
@@ -142,10 +144,25 @@ fun RecentObservationsScreen(
                         showEditDialog = false
                         Toast.makeText(context, "You are about to edit this seal. To edit relatives, select records for editing separately.", Toast.LENGTH_LONG).show()
 
-                        // set the seal in the observation viewmodel & navigate to edit
-                        if (observationToEdit != null) {
+                        //TODO, what if a pup is selected, that has a mom record???
+                        observationToEdit?.let { obs ->
                             tagRetagViewModel.resetUiStateIndicators()
-                            tagRetagViewModel.loadSealForEdit(observationToEdit)
+
+                            var pupOne: ObservationRecord? = null
+                            obs.relativeTagIDOne.takeIf { it.isNotEmpty() }
+                                ?.toIntOrNull()
+                                ?.let { relativeId ->
+                                    pupOne = allObservations.find { it.id == relativeId }
+                                }
+
+                            var pupTwo: ObservationRecord? = null
+                            obs.relativeTagIDTwo.takeIf { it.isNotEmpty() }
+                                ?.toIntOrNull()
+                                ?.let { relativeId ->
+                                    pupTwo = allObservations.find { it.id == relativeId }
+                                }
+
+                            tagRetagViewModel.loadSealForEdit(obs, pupOne, pupTwo)
                             navController.navigate(Screens.AddObservationLog.route)
                         }
                     },

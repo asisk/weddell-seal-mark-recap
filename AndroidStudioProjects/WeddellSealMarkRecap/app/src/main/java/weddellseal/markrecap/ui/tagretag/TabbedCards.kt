@@ -201,7 +201,7 @@ fun TabbedCards(
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
                             contentDescription = "Remove Tab",
-                            tint = if (!primarySeal.isStarted) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.onSurface,
+                            tint = if (!primarySeal.isEntryStarted) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(48.dp),
                         )
                     }
@@ -250,26 +250,23 @@ fun createTabItems(
     items.add(TabItem("Seal", primarySealState) {
         SealCard(
             viewModel,
-            SealType.PRIMARY,
             primarySealState
         )
     })
 
-    if (pupOneSealState.isStarted) {
+    if (primarySealState.hasPupOne) {
         items.add(TabItem("Pup One", pupOneSealState) {
             SealCard(
                 viewModel,
-                SealType.PUPONE,
                 pupOneSealState
             )
         })
     }
 
-    if (pupTwoSealState.isStarted) {
+    if (primarySealState.hasPupTwo) {
         items.add(TabItem("Pup Two", pupTwoSealState) {
             SealCard(
                 viewModel,
-                SealType.PUPTWO,
                 pupTwoSealState
             )
         })

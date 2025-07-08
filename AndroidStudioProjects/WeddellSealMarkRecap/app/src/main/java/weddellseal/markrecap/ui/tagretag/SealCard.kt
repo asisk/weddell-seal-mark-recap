@@ -37,14 +37,13 @@ import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 @Composable
 fun SealCard(
     viewModel: TagRetagModel,
-    sealType: SealType,
     seal: Seal
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     val focusManager = LocalFocusManager.current
 
-    // local UI flags
+    // local UI flag
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
 
     var numRelatives by remember { mutableStateOf(seal.numRelatives) }
@@ -63,10 +62,13 @@ fun SealCard(
     // and the Old Tag ID changed
     LaunchedEffect(seal.oldTagId, seal.tagEventType) {
         Log.d("LaunchedEffect", "change in oldTagId detected")
+        Log.d("LaunchedEffect", "seal.oldTagId: ${seal.oldTagId}")
+        Log.d("LaunchedEffect", "seal.tagEventType: ${seal.tagEventType}")
+
         if (seal.oldTagId.isNotBlank() && seal.tagEventType == "Retag") {
 
             if (seal.wedCheckMatch?.tagIdOne == seal.oldTagId) {
-                val wedCheckTagID = seal.wedCheckMatch?.tagIdOne
+                val wedCheckTagID = seal.wedCheckMatch.tagIdOne
                 Log.d(
                     "LaunchedEffect",
                     "wedcheck seal with tag ID: $wedCheckTagID already has the correct match"
@@ -99,7 +101,7 @@ fun SealCard(
             val searchStr = seal.tagNumber + seal.tagAlpha
 
             if (seal.hasWedCheckMatch && seal.wedCheckMatch?.tagIdOne == searchStr) {
-                val wedCheckTagID = seal.wedCheckMatch?.tagIdOne
+                val wedCheckTagID = seal.wedCheckMatch.tagIdOne
                 Log.d(
                     "LaunchedEffect",
                     "wedcheck seal with tag ID: $wedCheckTagID already has the correct match"

@@ -61,6 +61,7 @@ fun TagRetagFooter(
     context.contentResolver
 
     val currentObservations by recentObsViewModel.currentObservations.collectAsState()
+    val allObservations by recentObsViewModel.allObservations.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
     var observationToEdit by remember { mutableStateOf<ObservationRecord?>(null) }
@@ -82,7 +83,7 @@ fun TagRetagFooter(
             horizontalAlignment = Alignment.End
         ) {
             // SAVE DISABLED WARNING
-            if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) {
+            if (primarySeal.isEntryStarted && (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation)) {
                 Row(
                     modifier = Modifier.padding(10.dp)
                 ) {
@@ -153,7 +154,7 @@ fun TagRetagFooter(
             modifier = Modifier.fillMaxWidth(),
         ) {
             // SAVE DISABLED REASON
-            if (uiState.ineligibleForSaveReason.isNotEmpty()) {
+            if (primarySeal.isEntryStarted && uiState.ineligibleForSaveReason.isNotEmpty()) {
                 var expanded by remember { mutableStateOf(false) }
                 Row(
                     modifier = Modifier
@@ -246,7 +247,7 @@ fun TagRetagFooter(
                 items(currentObservations) { observation ->
                     ObservationItem(
                         onEditDo = {
-                            if (!primarySeal.isStarted) {
+                            if (!primarySeal.isEntryStarted) {
                                 showEditDialog = true
                                 observationToEdit = observation
                             } else {
@@ -272,7 +273,7 @@ fun TagRetagFooter(
     }
 
     // CONFIRM EDIT DIALOG
-    if (showEditDialog) {
+    if (showEditDialog && observationToEdit != null) {
         ConfirmEditDialog(
             onDismissRequest = {
                 showEditDialog = false
@@ -285,10 +286,23 @@ fun TagRetagFooter(
                     Toast.LENGTH_LONG
                 ).show()
 
-                // set the seal in the observation view model & navigate to edit
-                if (observationToEdit != null) {
+                // Determine which seals are present and load them in the Tag/Retag Screen for Editing
+                observationToEdit?.let { obs ->
                     viewModel.resetUiStateIndicators()
-                    viewModel.loadSealForEdit(observationToEdit)
+
+                    var pupOne: ObservationRecord? = null
+                    obs.relativeTagIDOne.takeIf { it.isNotEmpty() }
+                        ?.let { relativeId ->
+                            pupOne = allObservations.find { it.tagIDOne == relativeId }
+                        }
+
+                    var pupTwo: ObservationRecord? = null
+                    obs.relativeTagIDTwo.takeIf { it.isNotEmpty() }
+                        ?.let { relativeId ->
+                            pupTwo = allObservations.find { it.tagIDOne == relativeId }
+                        }
+
+                    viewModel.loadSealForEdit(obs, pupOne, pupTwo)
                     navController.navigate(Screens.AddObservationLog.route)
                 }
             },

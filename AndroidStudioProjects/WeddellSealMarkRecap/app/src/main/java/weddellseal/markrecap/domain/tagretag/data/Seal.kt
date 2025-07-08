@@ -3,16 +3,17 @@ package weddellseal.markrecap.domain.tagretag.data
 import weddellseal.markrecap.ui.utils.getCurrentYear
 
 data class Seal(
-    val age: String = "",
+    val sealType: SealType = SealType.UNKNOWN, // TODO, implement this in place of name
+    val age: String = "", //TODO, replace with enum
     val ageYears: String = "",
     val colony: String = "",
     val comment: String = "",
     val condition: SealCondition = SealCondition.UNKNOWN,
     var isNoTag: Boolean = false,
     val lastPhysio: String = "",
-    val name: String = "",
+    val name: String = "", //TODO, replace with enum
     val notebookDataString: String = "",
-    val numRelatives: String = "",
+    val numRelatives: String = "", //TODO, replace with enum
     val numTags: String = "",
     val numTagsMatch: Boolean = false,
     val oldTagId: String = "",
@@ -21,10 +22,10 @@ data class Seal(
     val previousPups: String = "",
     val pupPeed: Boolean = false,
     val reasonForRetag: String = "",
-    val sex: String = "",
+    val sex: String = "", //TODO, replace with enum
     val sexMatch: Boolean = false,
     val swimPups: String = "",
-    val tagEventType: String = "",
+    val tagEventType: String = "", //TODO, replace with enum
     val tagAlpha: String = "",
     val tagNumber: String = "",
     val tissueTaken: Boolean = false,
@@ -32,12 +33,29 @@ data class Seal(
     val weight: Int = 0,
     val weightTaken: Boolean = false,
     val observationID: Int = 0, // represents the record ID for an existing observation when mapping an ObservationRecord to a Seal
-    var isStarted: Boolean = false,
     val isTagRetagEntry: Boolean = false,
     val observationRecordSpeno: Int = 0,
     val wedCheckMatch: WedCheckSeal? = null, // This could be null if there is no match in the database
     var flaggedForReview: Boolean = false,
 ) {
+    // This is a check to see whether the user has begun data entry
+    // Only checking primary fields, not fields that appear as a result of a field being selected
+    val isEntryStarted: Boolean
+        get() = listOf(
+            age.isNotBlank(),
+            sex.isNotBlank(),
+            numRelatives.isNotBlank(),
+            condition != SealCondition.UNKNOWN && condition != SealCondition.NONE,
+            tagEventType.isNotBlank(),
+            tagNumber.isNotBlank(),
+            tagAlpha.isNotBlank(),
+            numTags.isNotBlank(),
+            isNoTag, // No tag is selected
+            tissueTaken,
+            comment.isNotBlank(),
+        ).any { it }
+
+
     val isComplete: Boolean
         get() = completenessReasons.isEmpty()
 
@@ -45,6 +63,8 @@ data class Seal(
     val completenessReasons: List<String>
         get() {
             val reasons = mutableListOf<String>()
+
+            if (!isEntryStarted) return reasons // early return, skip validation checks when entry hasn't begun for this seal
 
             // --- Basic Required Fields ---
             if (age.isEmpty()) reasons += "Select an age for $name."
@@ -76,6 +96,12 @@ data class Seal(
     val tagIsValid: Boolean
         get() = tagNumber.isNotEmpty() && tagNumber.length in 3..4
 
+    val hasPupOne: Boolean
+        get() = numRelatives == "1"
+
+    val hasPupTwo: Boolean
+        get() = numRelatives == "2"
+
     val hasWedCheckMatch: Boolean
         get() = wedCheckMatch != null
 
@@ -92,7 +118,7 @@ data class Seal(
 
             if (isNoTag) return errors // early return, skip all validation checks when no tag is entered
 
-            if (!isStarted) return errors // early return, skip validation checks when seal has not been started
+            if (!isComplete) return errors // early return, skip validation checks when required fields are not completed
 
             // -----  The Seal has a tag number -----
 
@@ -176,8 +202,4 @@ data class Seal(
 
             return errors
         }
-}
-
-fun Seal.startingEdit(update: Seal.() -> Seal): Seal {
-    return this.update().copy(isStarted = true)
 }

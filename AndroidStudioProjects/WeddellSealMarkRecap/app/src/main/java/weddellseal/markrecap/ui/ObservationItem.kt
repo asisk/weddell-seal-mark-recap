@@ -20,7 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.R
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
 
@@ -46,6 +48,11 @@ fun ObservationItem(
                         "    " + observation.date + " " + observation.time + "    ",
             modifier = Modifier.padding(start = 30.dp, top = 10.dp, bottom = 10.dp),
             style = MaterialTheme.typography.titleLarge,
+        )
+
+        Icon(
+            painter = painterResource(R.drawable.mother_and_pup_seals_plain),
+                    contentDescription = "Mom and pup"
         )
 
         // Three-dot menu
