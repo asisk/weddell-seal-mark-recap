@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -46,13 +47,25 @@ fun ObservationItem(
             text =
                 notebookEntryValueObservation(observation) +
                         "    " + observation.date + " " + observation.time + "    ",
-            modifier = Modifier.padding(start = 30.dp, top = 10.dp, bottom = 10.dp),
+            modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 10.dp),
             style = MaterialTheme.typography.titleLarge,
         )
-        Icon(
-            painter = painterResource(R.mipmap.ic_mom_pup_foreground),
-            contentDescription = "Mom and pup"
-        )
+        if (observation.numRelatives > "0") {
+            Icon(
+                painter = painterResource(R.mipmap.ic_mom_pup_foreground),
+                contentDescription = "Mom and pup",
+            )
+        } else if (observation.ageClass == "P") {
+            Icon(
+                painter = painterResource(R.drawable.ic_pup_foreground),
+                contentDescription = "Pup",
+            )
+        } else {
+            Icon(
+                painter = painterResource(R.drawable.ic_adult_foreground),
+                contentDescription = "Adult or Yearling",
+            )
+        }
 
         // Three-dot menu
         Box {
