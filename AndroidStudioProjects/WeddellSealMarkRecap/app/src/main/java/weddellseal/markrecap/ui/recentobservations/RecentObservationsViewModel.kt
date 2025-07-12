@@ -46,13 +46,54 @@ class RecentObservationsViewModel(
         _uiState.update { it.copy(archiveAcked = acked) }
     }
 
+    // Used to display the observation records
+    val displayObservations: StateFlow<List<DisplayObservation>> =
+        observationRepo.currentObservations
+            .map { current ->
+                current
+                    .filterNot { obs ->
+                        // display pups with a mom in a combined row
+                        val numRelatives = obs.numRelatives.toIntOrNull() ?: 0
+                        obs.ageClass == "P" && numRelatives > 0
+                    }
+                    .map { obs ->
+                        val numRelatives = obs.numRelatives.toIntOrNull() ?: 0
+                        // TODO, consider a calculated value on the record
+                        if (numRelatives > 0 && obs.ageClass == "A" && obs.sex == "F") {
+                            // only adult females can have pups
+                            val pupOne = obs.relativeTagIDOne.takeIf { it.isNotEmpty() }
+                                ?.let { relativeId -> current.find { it.tagIDOne == relativeId } }
+
+                            val pupTwo = obs.relativeTagIDTwo.takeIf { it.isNotEmpty() }
+                                ?.let { relativeId -> current.find { it.tagIDOne == relativeId } }
+
+                            DisplayObservation.WithPups(
+                                primarySeal = obs,
+                                pupOne = pupOne,
+                                pupTwo = pupTwo
+                            )
+                        } else {
+                            DisplayObservation.Standalone(obs)
+                        }
+                    }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val currentObservations: StateFlow<List<ObservationRecord>> =
         observationRepo.currentObservations
-            .stateIn(viewModelScope, SharingStarted.Companion.Lazily, emptyList()) // Collect as StateFlow
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Companion.Lazily,
+                emptyList()
+            ) // Collect as StateFlow
 
     val allObservations: StateFlow<List<ObservationRecord>> =
         observationRepo.allObservations
-            .stateIn(viewModelScope, SharingStarted.Companion.Lazily, emptyList()) // Collect as StateFlow
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Companion.Lazily,
+                emptyList()
+            ) // Collect as StateFlow
 
     val currentObservationsCount: StateFlow<Int> = currentObservations
         .map { observations: List<ObservationRecord> -> observations.size }

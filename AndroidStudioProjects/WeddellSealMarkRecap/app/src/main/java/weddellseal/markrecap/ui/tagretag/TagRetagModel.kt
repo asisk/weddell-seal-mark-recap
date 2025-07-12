@@ -937,6 +937,7 @@ class TagRetagModel(
         updateNotebookEntry(primarySeal.value)
     }
 
+    // TODO, make sure this addresses the need to view the pups for the record as well
     fun loadObservationEntryForView(observation: ObservationRecord) {
         _uiState.update { it.copy(observationRecord = observation) }
     }

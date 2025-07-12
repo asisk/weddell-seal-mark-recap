@@ -1,10 +1,11 @@
 package weddellseal.markrecap.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -30,34 +31,56 @@ import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
 fun ObservationItem(
     onEditDo: (ObservationRecord) -> Unit,
     onViewDo: (ObservationRecord) -> Unit,
-    observation: ObservationRecord
+    observation: ObservationRecord,
+    pupOne: ObservationRecord? = null,
+    pupTwo: ObservationRecord? = null
 ) {
     // State to control the visibility of the dropdown menu
     var expanded by remember { mutableStateOf(false) }
 
-    // Row to display the observation and the three-dot menu
+    // Row to display the observation notebook string, date entered, & the three-dot menu
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Display the observation details
-        Text(
-            text =
-                notebookEntryValueObservation(observation) +
-                        "    " + observation.date + " " + observation.time + "    ",
-            modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 10.dp),
-            style = MaterialTheme.typography.titleLarge,
-        )
-        if (observation.numRelatives > "0") {
-            Icon(
-                painter = painterResource(R.mipmap.ic_mom_pup_foreground),
-                contentDescription = "Mom and pup",
+        Column(
+            modifier = Modifier.padding(start = 40.dp),
+        ) {
+            Text(
+                text =
+                    notebookEntryValueObservation(observation) +
+                            "    " + observation.date + " " + observation.time + "    ",
+                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
+                style = MaterialTheme.typography.titleLarge,
             )
-        } else if (observation.ageClass == "P") {
+            pupOne?.let { record ->
+                Text(
+                    text =
+                        notebookEntryValueObservation(record),
+                    modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }
+
+            pupTwo?.let { record ->
+                Text(
+                    text =
+                        notebookEntryValueObservation(record),
+                    modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }
+        }
+
+        if (observation.ageClass == "P") {
             Icon(
                 painter = painterResource(R.drawable.ic_pup_foreground),
                 contentDescription = "Pup",
+            )
+        } else if (observation.numRelatives > "0") {
+            Icon(
+                painter = painterResource(R.mipmap.ic_mom_pup_foreground),
+                contentDescription = "Mom and pup",
             )
         } else {
             Icon(
@@ -67,11 +90,12 @@ fun ObservationItem(
         }
 
         // Three-dot menu
-        Box {
+        Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
             IconButton(onClick = { expanded = true }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert, // Three-dot icon
-                    contentDescription = "More options"
+                    contentDescription = "More options",
+                    Modifier.size(36.dp)
                 )
             }
 

@@ -48,6 +48,7 @@ import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
 @Composable
@@ -60,7 +61,7 @@ fun TagRetagFooter(
     val context = LocalContext.current
     context.contentResolver
 
-    val currentObservations by recentObsViewModel.currentObservations.collectAsState()
+    val displayObservations by recentObsViewModel.displayObservations.collectAsState()
     val allObservations by recentObsViewModel.allObservations.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
@@ -223,50 +224,85 @@ fun TagRetagFooter(
 
     Spacer(modifier = Modifier.height(60.dp))
 
-    // RECENT OBSERVATIONS VIEW
-    Row(
-        modifier = Modifier.padding(start = 40.dp, end = 30.dp, bottom = 30.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            "Recently \nEntered",
-            modifier = Modifier.padding(end = 30.dp),
-            style = MaterialTheme.typography.headlineMedium,
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 250.dp) // Limit the height
-                .padding(end = 28.dp)
-                .border(4.dp, Color.LightGray) // Add border for visual purposes
-        ) {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                userScrollEnabled = true
-            ) {
-                items(currentObservations) { observation ->
-                    ObservationItem(
-                        onEditDo = {
-                            if (!primarySeal.isEntryStarted) {
-                                showEditDialog = true
-                                observationToEdit = observation
-                            } else {
-                                // Show a Toast message if the seal is already started
-                                Toast.makeText(
-                                    context,
-                                    "Looks like you're already editing another seal! Save or clear, then edit this record.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        },
-                        onViewDo = {
-                            viewModel.loadObservationEntryForView(observation)
-                            navController.navigate(Screens.ObservationViewer.route)
-                        },
-                        observation = observation
-                    )
+    Text(
+        "Recently Entered",
+        modifier = Modifier.padding(start = 40.dp, end = 40.dp, bottom = 40.dp),
+        style = MaterialTheme.typography.headlineMedium,
+    )
 
-                    HorizontalDivider()
+    // RECENT OBSERVATIONS VIEW
+    Box(
+        modifier = Modifier
+            .padding(start = 40.dp, end = 40.dp, bottom = 40.dp)
+            .fillMaxWidth()
+            .heightIn(min = 250.dp, max = 400.dp)
+            .border(4.dp, Color.LightGray)
+    ) {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // display individual records for observations
+            // those with pups will be displayed in one row
+            // if they have no relatives they will have their own row
+            items(displayObservations) { displayObs ->
+                when (displayObs) {
+                    is DisplayObservation.WithPups -> {
+                        ObservationItem(
+                            onEditDo = {
+                                // If the technician has a partially complete observation,
+                                // prevent them from editing
+                                if (!primarySeal.isEntryStarted) {
+                                    showEditDialog = true
+                                    observationToEdit = displayObs.primarySeal
+                                } else {
+                                    // Show a Toast message if the seal is already started
+                                    Toast.makeText(
+                                        context,
+                                        "Looks like you're already editing another seal! Save or clear, then edit this record.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            },
+                            onViewDo = {
+                                viewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                navController.navigate(Screens.ObservationViewer.route)
+                            },
+                            observation = displayObs.primarySeal,
+                            pupOne = displayObs.pupOne,
+                            pupTwo = displayObs.pupTwo
+                        )
+
+                        HorizontalDivider()
+                    }
+
+                    is DisplayObservation.Standalone -> {
+                        ObservationItem(
+                            onEditDo = {
+                                // If the technician has a partially complete observation,
+                                // prevent them from editing
+                                if (!primarySeal.isEntryStarted) {
+                                    showEditDialog = true
+                                    observationToEdit = displayObs.primarySeal
+                                } else {
+                                    // Show a Toast message if the seal is already started
+                                    Toast.makeText(
+                                        context,
+                                        "Looks like you're already editing another seal! Save or clear, then edit this record.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            },
+                            onViewDo = {
+                                viewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                navController.navigate(Screens.ObservationViewer.route)
+                            },
+                            observation = displayObs.primarySeal,
+                            pupOne = null,
+                            pupTwo = null
+                        )
+
+                        HorizontalDivider()
+                    }
                 }
             }
         }
@@ -287,22 +323,22 @@ fun TagRetagFooter(
                 ).show()
 
                 // Determine which seals are present and load them in the Tag/Retag Screen for Editing
-                observationToEdit?.let { obs ->
+                observationToEdit?.let { record ->
                     viewModel.resetUiStateIndicators()
 
                     var pupOne: ObservationRecord? = null
-                    obs.relativeTagIDOne.takeIf { it.isNotEmpty() }
+                    record.relativeTagIDOne.takeIf { it.isNotEmpty() }
                         ?.let { relativeId ->
                             pupOne = allObservations.find { it.tagIDOne == relativeId }
                         }
 
                     var pupTwo: ObservationRecord? = null
-                    obs.relativeTagIDTwo.takeIf { it.isNotEmpty() }
+                    record.relativeTagIDTwo.takeIf { it.isNotEmpty() }
                         ?.let { relativeId ->
                             pupTwo = allObservations.find { it.tagIDOne == relativeId }
                         }
 
-                    viewModel.loadSealForEdit(obs, pupOne, pupTwo)
+                    viewModel.loadSealForEdit(record, pupOne, pupTwo)
                     navController.navigate(Screens.AddObservationLog.route)
                 }
             },

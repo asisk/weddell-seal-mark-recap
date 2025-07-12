@@ -10,7 +10,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,9 +43,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
-import weddellseal.markrecap.ui.tagretag.TagRetagModel
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
+import weddellseal.markrecap.ui.tagretag.TagRetagModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +54,7 @@ fun RecentObservationsScreen(
     viewModel: RecentObservationsViewModel,
     tagRetagViewModel: TagRetagModel,
 ) {
-    val currentObservations by viewModel.currentObservations.collectAsState()
+    val displayObservations by viewModel.displayObservations.collectAsState()
     val allObservations by viewModel.allObservations.collectAsState()
 
     val context = LocalContext.current
@@ -73,7 +72,7 @@ fun RecentObservationsScreen(
                 title = {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "Saved Observations",
+                            "Current Observations",
                             style = MaterialTheme.typography.titleLarge,
                             fontSize = 36.sp // Adjust this value as needed
                         )
@@ -100,36 +99,77 @@ fun RecentObservationsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            Row(
+            Box(
                 modifier = Modifier
+                    .padding(40.dp)
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .padding(20.dp)
-                    .border(1.dp, Color.Gray)
+                    .border(4.dp, Color.LightGray)
             ) {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    userScrollEnabled = true
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
 
-                    items(currentObservations) { observation ->
-                        ObservationItem(
-                            onEditDo = {
-                                if (!tagRetagViewModel.primarySeal.value.isEntryStarted) {
-                                    showEditDialog = true
-                                    observationToEdit = observation
-                                } else {
-                                    // Show a Toast message if the seal is already started
-                                    Toast.makeText(context, "Looks like you're already editing another seal! Finish or delete to edit this record.", Toast.LENGTH_LONG).show()
-                                }
-                            },
-                            onViewDo = {
-                                tagRetagViewModel.loadObservationEntryForView(observation)
-                                navController.navigate(Screens.ObservationViewer.route)
-                            },
-                            observation = observation
-                        )
-                        HorizontalDivider()
+                    items(displayObservations) { displayObs ->
+                        when (displayObs) {
+                            is DisplayObservation.WithPups -> {
+                                ObservationItem(
+                                    onEditDo = {
+                                        // If the technician has a partially complete observation,
+                                        // prevent them from editing
+                                        if (!tagRetagViewModel.primarySeal.value.isEntryStarted) {
+                                            showEditDialog = true
+                                            observationToEdit = displayObs.primarySeal
+                                        } else {
+                                            // Show a Toast message if the seal is already started
+                                            Toast.makeText(
+                                                context,
+                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    },
+                                    onViewDo = {
+                                        tagRetagViewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                        navController.navigate(Screens.ObservationViewer.route)
+                                    },
+                                    observation = displayObs.primarySeal,
+                                    pupOne = displayObs.pupOne,
+                                    pupTwo = displayObs.pupTwo
+                                )
+
+                                HorizontalDivider()
+                            }
+
+                            is DisplayObservation.Standalone -> {
+                                ObservationItem(
+                                    onEditDo = {
+                                        // If the technician has a partially complete observation,
+                                        // prevent them from editing
+                                        if (!tagRetagViewModel.primarySeal.value.isEntryStarted) {
+                                            showEditDialog = true
+                                            observationToEdit = displayObs.primarySeal
+                                        } else {
+                                            // Show a Toast message if the seal is already started
+                                            Toast.makeText(
+                                                context,
+                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    },
+                                    onViewDo = {
+                                        tagRetagViewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                        navController.navigate(Screens.ObservationViewer.route)
+                                    },
+                                    observation = displayObs.primarySeal,
+                                    pupOne = null,
+                                    pupTwo = null
+                                )
+
+                                HorizontalDivider()
+                            }
+                        }
                     }
                 }
             }
@@ -142,9 +182,12 @@ fun RecentObservationsScreen(
                     },
                     onConfirmation = {
                         showEditDialog = false
-                        Toast.makeText(context, "You are about to edit this seal. To edit relatives, select records for editing separately.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "You are about to edit this seal.",
+                            Toast.LENGTH_LONG
+                        ).show()
 
-                        //TODO, what if a pup is selected, that has a mom record???
                         observationToEdit?.let { obs ->
                             tagRetagViewModel.resetUiStateIndicators()
 
