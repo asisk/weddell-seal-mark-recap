@@ -84,8 +84,10 @@ data class Seal(
                     reasons += "Tag number must be 3 or 4 digits for $name."
                 }
 
+                // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).
+                // We'll still want validation on sex, age class, colony, etc. - just not the number of tags.
                 // Number of tags is required when a tag number is entered
-                if (numTags.isEmpty()) {
+                if (tagEventType != "Retag" && numTags.isEmpty()) {
                     reasons += "Select number of tags for $name."
                 }
             }
@@ -150,7 +152,9 @@ data class Seal(
                     errors += "Sex doesn't match. WedCheck record has sex recorded as ${record.sex}."
                 }
 
-                if (numTags != record.numTags) {
+                // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).
+                // We'll still want validation on sex, age class, colony, etc. - just not the number of tags.
+                if (tagEventType != "Retag" && numTags != record.numTags) {
                     // ----- Validation Rule -----
                     errors += "Number of tags doesn't match. WedCheck record has ${record.numTags} tags."
                 }
