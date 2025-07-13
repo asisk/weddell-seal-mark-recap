@@ -6,8 +6,10 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -25,7 +27,9 @@ import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.processTags
 import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
+import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 import weddellseal.markrecap.ui.tagretag.utils.buildObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.getCurrentYear
@@ -127,6 +131,25 @@ class TagRetagModel(
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
+    private val _observationToEdit = MutableStateFlow<DisplayObservation?>(null)
+    val observationToEdit: StateFlow<DisplayObservation?> get() = _observationToEdit
+
+    fun onEditAttempt(observation: DisplayObservation) {
+        viewModelScope.launch {
+            if (!primarySeal.value.isEntryStarted) {
+                _observationToEdit.value = observation // set the observation to edit
+                _uiEvent.emit(UiEvent.ShowEditDialog)
+            } else {
+                _uiEvent.emit(
+                    UiEvent.ShowToast("Looks like you're already editing another seal! Save or clear, then edit this record.")
+                )
+            }
+        }
+    }
 
     // called:
     // 1. after navigation command from the recent observation screen when a record is to be edited
@@ -946,13 +969,25 @@ class TagRetagModel(
     // pups recorded with the original ObservationRecord should be included
     // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
     fun loadSealForEdit(
-        primaryRecord: ObservationRecord?,
-        pupOneRecord: ObservationRecord?,
-        pupTwoRecord: ObservationRecord?
+        displayObservation: DisplayObservation
     ) {
 
+        var primaryRecord: ObservationRecord? = null
+        var pupOneRecord: ObservationRecord? = null
+        var pupTwoRecord: ObservationRecord? = null
+        when (displayObservation) {
+            is DisplayObservation.WithPups -> {
+                primaryRecord = displayObservation.primarySeal
+                pupOneRecord = displayObservation.pupOne
+                pupTwoRecord = displayObservation.pupTwo
+            }
+            is DisplayObservation.Standalone -> {
+                primaryRecord = displayObservation.primarySeal
+            }
+        }
+
         // MAP PRIMARY
-        if (primaryRecord != null) {
+        primaryRecord.let {
             var ageString = when (primaryRecord.ageClass) {
                 "A" -> "Adult"
                 "P" -> "Pup"
@@ -1021,7 +1056,7 @@ class TagRetagModel(
 
 
             // MAP PUPONE
-            if (pupOneRecord != null) {
+            pupOneRecord?.let {
 
                 val sealSex = when (pupOneRecord.sex) {
                     "F" -> "Female"
@@ -1083,7 +1118,7 @@ class TagRetagModel(
             }
 
             // MAP PUPTWO
-            if (pupTwoRecord != null) {
+           pupTwoRecord?.let {
 
                 val sealSex = when (pupTwoRecord.sex) {
                     "F" -> "Female"
@@ -1187,7 +1222,7 @@ class TagRetagModel(
             }
 
             //TODO, consider overwriting the database entry, instead of appending a new entry
-        // especially if the editmode is set
+            // especially if the editmode is set
 //                if (primarySeal.observationID != 0) {
 //
 //                }

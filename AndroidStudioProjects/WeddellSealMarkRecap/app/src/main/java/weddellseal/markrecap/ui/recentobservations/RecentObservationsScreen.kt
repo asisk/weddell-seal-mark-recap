@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,9 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.ObservationItem
+import weddellseal.markrecap.ui.UiEvent
+import weddellseal.markrecap.ui.UiEvent.ShowEditDialog
 import weddellseal.markrecap.ui.tagretag.TagRetagModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,13 +56,30 @@ fun RecentObservationsScreen(
     viewModel: RecentObservationsViewModel,
     tagRetagViewModel: TagRetagModel,
 ) {
-    val displayObservations by viewModel.displayObservations.collectAsState()
-    val allObservations by viewModel.allObservations.collectAsState()
-
     val context = LocalContext.current
     context.contentResolver
-    var observationToEdit by remember { mutableStateOf<ObservationRecord?>(null) }
+
+    val uiEventFlow = tagRetagViewModel.uiEvent
+
+    val displayObservations by viewModel.displayObservations.collectAsState()
+    val observationToEdit by tagRetagViewModel.observationToEdit.collectAsState()
+
     var showEditDialog by remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(Unit) {
+        uiEventFlow.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+                is ShowEditDialog -> {
+                    showEditDialog = true
+                }
+                // Handle other events
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -117,17 +136,7 @@ fun RecentObservationsScreen(
                                     onEditDo = {
                                         // If the technician has a partially complete observation,
                                         // prevent them from editing
-                                        if (!tagRetagViewModel.primarySeal.value.isEntryStarted) {
-                                            showEditDialog = true
-                                            observationToEdit = displayObs.primarySeal
-                                        } else {
-                                            // Show a Toast message if the seal is already started
-                                            Toast.makeText(
-                                                context,
-                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
+                                        tagRetagViewModel.onEditAttempt(displayObs)
                                     },
                                     onViewDo = {
                                         tagRetagViewModel.loadObservationEntryForView(displayObs.primarySeal)
@@ -146,17 +155,7 @@ fun RecentObservationsScreen(
                                     onEditDo = {
                                         // If the technician has a partially complete observation,
                                         // prevent them from editing
-                                        if (!tagRetagViewModel.primarySeal.value.isEntryStarted) {
-                                            showEditDialog = true
-                                            observationToEdit = displayObs.primarySeal
-                                        } else {
-                                            // Show a Toast message if the seal is already started
-                                            Toast.makeText(
-                                                context,
-                                                "Looks like you're already editing another seal! Save or clear, then edit this record.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
+                                        tagRetagViewModel.onEditAttempt(displayObs)
                                     },
                                     onViewDo = {
                                         tagRetagViewModel.loadObservationEntryForView(displayObs.primarySeal)
@@ -182,30 +181,10 @@ fun RecentObservationsScreen(
                     },
                     onConfirmation = {
                         showEditDialog = false
-                        Toast.makeText(
-                            context,
-                            "You are about to edit this seal.",
-                            Toast.LENGTH_LONG
-                        ).show()
 
-                        observationToEdit?.let { obs ->
+                        observationToEdit?.let { record ->
                             tagRetagViewModel.resetUiStateIndicators()
-
-                            var pupOne: ObservationRecord? = null
-                            obs.relativeTagIDOne.takeIf { it.isNotEmpty() }
-                                ?.toIntOrNull()
-                                ?.let { relativeId ->
-                                    pupOne = allObservations.find { it.id == relativeId }
-                                }
-
-                            var pupTwo: ObservationRecord? = null
-                            obs.relativeTagIDTwo.takeIf { it.isNotEmpty() }
-                                ?.toIntOrNull()
-                                ?.let { relativeId ->
-                                    pupTwo = allObservations.find { it.id == relativeId }
-                                }
-
-                            tagRetagViewModel.loadSealForEdit(obs, pupOne, pupTwo)
+                            tagRetagViewModel.loadSealForEdit(record)
                             navController.navigate(Screens.AddObservationLog.route)
                         }
                     },
