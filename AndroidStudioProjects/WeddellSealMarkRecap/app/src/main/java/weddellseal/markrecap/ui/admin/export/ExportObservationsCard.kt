@@ -124,7 +124,9 @@ fun ExportObservationsCard(
                 modifier = Modifier
                     .padding(start = 16.dp)
             ) {
-                Text("Export")
+                Text("Export",
+                    style = MaterialTheme.typography.titleLarge,
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))

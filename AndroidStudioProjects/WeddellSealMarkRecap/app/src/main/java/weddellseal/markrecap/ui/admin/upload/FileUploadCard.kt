@@ -94,7 +94,9 @@ fun UploadCard(
                     modifier = Modifier
                         .padding(start = 16.dp)
                 ) {
-                    Text("Upload")
+                    Text("Upload",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
                 }
             }
 
