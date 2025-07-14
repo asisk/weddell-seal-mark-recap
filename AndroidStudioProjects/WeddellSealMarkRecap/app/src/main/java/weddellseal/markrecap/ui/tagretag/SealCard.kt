@@ -122,7 +122,7 @@ fun SealCard(
     }
 
     // VALIDATION ERROR BANNER
-    if (uiState.isSaving && seal.validationErrors.isNotEmpty()) {
+    if (uiState.isSaveAttempted && seal.validationErrors.isNotEmpty()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

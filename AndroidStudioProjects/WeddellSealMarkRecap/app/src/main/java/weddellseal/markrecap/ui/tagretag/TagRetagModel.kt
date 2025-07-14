@@ -118,7 +118,7 @@ class TagRetagModel(
         val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
 
         val isSaved: Boolean = false,  // indicator that record was successfully saved
-        val isSaving: Boolean = false, // indicator that user is attempting to save the record
+        val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
         val isSaveEnabled: Boolean = false, // indicator for save button
         val disableSave: Boolean = false, // indicator that save button should be disabled
         val ineligibleForSaveReason: String = "", // reasons save button is disabled
@@ -162,7 +162,7 @@ class TagRetagModel(
                 isPrefilled = false,
                 isEditMode = false,
                 isSaved = false,
-                isSaving = false,
+                isSaveAttempted = false,
                 isSaveEnabled = false,
                 ineligibleForSaveReason = "",
                 validationFailureReason = "",
@@ -193,14 +193,14 @@ class TagRetagModel(
     }
 
     fun setIsSaving() {
-        _uiState.update { it.copy(isSaving = true, isSaveEnabled = false) }
+        _uiState.update { it.copy(isSaveAttempted = true, isSaveEnabled = false) }
     }
 
     fun editAfterAttemptedSave() {
         _uiState.update {
             it.copy(
                 isSaved = false,
-                isSaving = false,
+                isSaveAttempted = false,
                 isSaveEnabled = true,
                 entryNeedsConfirmation = false,
             )
@@ -1228,7 +1228,7 @@ class TagRetagModel(
 //                }
 
         }
-        _uiState.update { it.copy(isSaved = true, isSaving = false, isSaveEnabled = true) }
+        _uiState.update { it.copy(isSaved = true, isSaveAttempted = false, isSaveEnabled = true) }
     }
 
     private fun getRelativesTags(sealName: String): Pair<String, String> {

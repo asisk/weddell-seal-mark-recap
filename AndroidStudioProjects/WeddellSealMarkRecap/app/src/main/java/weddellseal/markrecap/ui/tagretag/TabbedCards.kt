@@ -94,6 +94,8 @@ fun TabbedCards(
         modifier = Modifier
             .fillMaxWidth()
     ) {
+        val selectedSeal = tabItems[selectedTabIndex].seal
+
         PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
             tabItems.forEachIndexed { index, tabItem ->
                 Tab(
@@ -104,7 +106,7 @@ fun TabbedCards(
                                 style = MaterialTheme.typography.headlineLarge,
                                 modifier = Modifier.padding(horizontal = 20.dp)
                             )
-                            if (uiState.isSaving) {
+                            if (uiState.isSaveAttempted) {
                                 val iconColor =
                                     if (tabItem.seal.isValid) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
                                 val icon =
@@ -136,7 +138,7 @@ fun TabbedCards(
                     shape = RoundedCornerShape(8.dp) // Add rounded corners here
                 )
         ) {
-            if (uiState.isSaving) {
+            if (uiState.isSaveAttempted) {
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -160,22 +162,31 @@ fun TabbedCards(
                 ) {
                     // NOTEBOOK STRING
                     Text(
-                        tabItems[selectedTabIndex].seal.notebookDataString,
+                        selectedSeal.notebookDataString,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(start = 20.dp, top = 10.dp),
                     )
 
                     // SPENO
-                    Text(
-                        text = if (!tabItems[selectedTabIndex].seal.hasWedCheckMatch) "" else
-                            "Speno: ${tabItems[selectedTabIndex].seal.wedCheckMatch?.speNo}",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(top = 10.dp),
-                    )
+                    // If the Tag Event Type is New, we don't display the Speno until the validation step
+                    val shouldShowSpeno = if (selectedSeal.tagEventType == "New" && !uiState.isSaveAttempted) false else true
+                    val spenoText = if (selectedSeal.hasWedCheckMatch) {
+                        "Speno: ${selectedSeal.wedCheckMatch?.speNo}"
+                    } else {
+                        ""
+                    }
 
-                    if (tabItems[selectedTabIndex].seal.wedCheckMatch?.comment?.isNotBlank() == true) {
+                    if (shouldShowSpeno) {
+                        Text(
+                            text = spenoText,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+                    }
+
+                    if (selectedSeal.wedCheckMatch?.comment?.isNotBlank() == true) {
                         // WEDCHECK COMMENT
                         Card(
                             modifier = Modifier.padding(top = 10.dp),
@@ -184,8 +195,7 @@ fun TabbedCards(
                             ),
                         ) {
                             Text(
-                                text = tabItems[selectedTabIndex].seal.wedCheckMatch?.comment
-                                    ?: "",
+                                text = selectedSeal.wedCheckMatch.comment,
                                 style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.padding(8.dp),
                                 color = Color(0xFFF57C00)
@@ -214,7 +224,7 @@ fun TabbedCards(
 
                 // DELETE DIALOG
                 if (showDeleteDialog.value) {
-                    val currentSeal = tabItems[selectedTabIndex].seal.name
+                    val currentSeal = selectedSeal.name
                     val deleteMessage = if (currentSeal == "primary") {
                         "This will remove data you've entered for all seals. Are you sure?"
                     } else {
@@ -226,7 +236,7 @@ fun TabbedCards(
                         onConfirmation = {
                             if (tabItems.isNotEmpty()) {
                                 // remove the current seal
-                                viewModel.resetSeal(tabItems[selectedTabIndex].seal.name)
+                                viewModel.resetSeal(selectedSeal.name)
                                 showDeleteDialog.value = false
                             }
                         },

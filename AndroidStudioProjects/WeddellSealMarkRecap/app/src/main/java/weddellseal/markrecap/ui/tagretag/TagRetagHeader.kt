@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import weddellseal.markrecap.domain.location.data.toLocationString
 import weddellseal.markrecap.ui.home.HomeViewModel
 
@@ -138,7 +137,7 @@ fun TagRetagHeader(
     Spacer(modifier = Modifier.height(20.dp))
 
     // Warning Banner displayed when data entered has validation errors
-    if (uiState.isSaving && uiState.validationFailureReason.isNotBlank()) {
+    if (uiState.isSaveAttempted && uiState.validationFailureReason.isNotBlank()) {
 
         // WARNING BANNER
         Row(
