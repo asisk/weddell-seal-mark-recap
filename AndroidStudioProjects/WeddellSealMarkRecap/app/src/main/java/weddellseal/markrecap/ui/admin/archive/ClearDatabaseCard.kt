@@ -25,25 +25,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.ui.UiEvent
+import weddellseal.markrecap.ui.UiEvent.ShowDeleteRecordsDialog
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
 @Composable
-fun ArchiveCurrentObservationsCard(
+fun ClearDatabaseCard(
     viewModel: RecentObservationsViewModel,
     instructions: String
 ) {
     val uiEventFlow = viewModel.uiEvent
-    var showArchiveDialog by remember { mutableStateOf(false) }
+    var showDeleteRecordsDialog by remember { mutableStateOf(false) }
 
-    val currentObservationsCount by viewModel.currentObservationsCount.collectAsState()
-    val recordCountText = "Total Current Observations: $currentObservationsCount"
+    val allObservationsCount by viewModel.allObservationsCount.collectAsState()
+    val recordCountText = "Total Observations: $allObservationsCount"
 
     LaunchedEffect(Unit) {
         uiEventFlow.collect { event ->
             when (event) {
-                is UiEvent.ShowArchiveDialog -> {
-                    showArchiveDialog = true
+                is ShowDeleteRecordsDialog -> {
+                    showDeleteRecordsDialog = true
                 }
 
                 else -> Unit // Ignore other events
@@ -87,27 +87,28 @@ fun ArchiveCurrentObservationsCard(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.onArchiveAttempt() },
-                modifier = Modifier.padding(start = 16.dp)
+                onClick = { viewModel.onDeleteAllAttempt() },
+                modifier = Modifier
+                    .padding(start = 16.dp)
             ) {
                 Text(
-                    "Archive",
+                    "Delete All",
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
         }
         // CONFIRM ARCHIVE DIALOG
         // ask the user for confirmation of archiving the current observations
-        if (showArchiveDialog) {
+        if (showDeleteRecordsDialog) {
             ManageObservationsDialog(
-                onDismissRequest = { showArchiveDialog = false },
+                onDismissRequest = { showDeleteRecordsDialog = false },
                 onConfirmation = {
-                    showArchiveDialog = false
-                    viewModel.markObservationsAsDeleted()
+                    showDeleteRecordsDialog = false
+                    viewModel.deleteAllRecords()
                 },
-                count = currentObservationsCount,
-                message = "This will archive all current observations. Are you sure?",
-                noRecordsMessage = "No current observations to archive."
+                count = allObservationsCount,
+                message = "This will delete all observations and this action cannot be undone. Are you sure?",
+                noRecordsMessage = "No observations to delete."
             )
         }
     }

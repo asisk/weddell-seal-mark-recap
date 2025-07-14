@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.sp
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
 @Composable
-fun ArchiveCurrentObservations(
-    recentObservationsViewModel: RecentObservationsViewModel,
+fun ManageObservations(
+    viewModel: RecentObservationsViewModel,
 ) {
 
     Column(
@@ -40,8 +40,12 @@ fun ArchiveCurrentObservations(
 
         Row {
             ArchiveCurrentObservationsCard(
-                recentObservationsViewModel,
+                viewModel,
                 instructions = "Archive Current Observation Records"
+            )
+            ClearDatabaseCard(
+                viewModel,
+                instructions = "Clear Database"
             )
         }
     }

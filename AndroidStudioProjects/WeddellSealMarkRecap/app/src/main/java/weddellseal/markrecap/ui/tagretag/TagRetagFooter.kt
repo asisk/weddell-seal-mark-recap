@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag
 
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -84,10 +85,12 @@ fun TagRetagFooter(
                 is UiEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
+
                 is ShowEditDialog -> {
                     showEditDialog = true
                 }
-                // Handle other events
+
+                else -> Unit // ignore all other events
             }
         }
     }
@@ -252,9 +255,22 @@ fun TagRetagFooter(
         modifier = Modifier
             .padding(start = 40.dp, end = 40.dp, bottom = 40.dp)
             .fillMaxWidth()
-            .heightIn(min = 250.dp, max = 400.dp)
+            .heightIn(max = 400.dp)
+            .animateContentSize()
             .border(4.dp, Color.LightGray)
     ) {
+
+        if (displayObservations.isEmpty()) {
+            Text(
+                text = "No records to display.",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp),
+                color = Color.Gray
+            )
+        }
+
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {

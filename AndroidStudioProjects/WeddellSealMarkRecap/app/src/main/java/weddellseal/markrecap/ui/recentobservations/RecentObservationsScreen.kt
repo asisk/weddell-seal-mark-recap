@@ -73,10 +73,12 @@ fun RecentObservationsScreen(
                 is UiEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
+
                 is ShowEditDialog -> {
                     showEditDialog = true
                 }
-                // Handle other events
+
+                else -> Unit // Ignore other events
             }
         }
     }
@@ -125,6 +127,18 @@ fun RecentObservationsScreen(
                     .fillMaxHeight()
                     .border(4.dp, Color.LightGray)
             ) {
+
+                if (displayObservations.isEmpty()) {
+                    Text(
+                        text = "No records to display.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp),
+                        color = Color.Gray
+                    )
+                }
+
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {

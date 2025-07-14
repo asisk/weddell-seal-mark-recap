@@ -7,9 +7,11 @@ import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.files.data.FileState
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.admin.ExportType
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
@@ -37,6 +40,9 @@ class RecentObservationsViewModel(
         val errAcked: Boolean = false,
         val archiveAcked: Boolean = false
     )
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     fun setErrAcked(acked: Boolean) {
         _uiState.update { it.copy(errAcked = acked) }
@@ -301,6 +307,24 @@ class RecentObservationsViewModel(
     fun markObservationsAsDeleted() {
         viewModelScope.launch {
             observationRepo.softDeleteAllObservations()
+        }
+    }
+
+    fun onArchiveAttempt() {
+        viewModelScope.launch {
+            _uiEvent.emit(UiEvent.ShowArchiveDialog)
+        }
+    }
+
+    fun onDeleteAllAttempt() {
+        viewModelScope.launch {
+            _uiEvent.emit(UiEvent.ShowDeleteRecordsDialog)
+        }
+    }
+
+    fun deleteAllRecords() {
+        viewModelScope.launch {
+            observationRepo.deleteAll()
         }
     }
 }

@@ -45,8 +45,7 @@ import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.home.SealColoniesViewModel
-import weddellseal.markrecap.ui.admin.WedCheckViewModel
-import weddellseal.markrecap.ui.admin.archive.ArchiveCurrentObservations
+import weddellseal.markrecap.ui.admin.archive.ManageObservations
 import weddellseal.markrecap.ui.admin.dashboard.DashboardScreen
 import weddellseal.markrecap.ui.admin.export.ExportObservations
 import weddellseal.markrecap.ui.admin.upload.FileUpload
@@ -162,7 +161,7 @@ fun AdminScreen(
 
                         3 -> ExportObservations(adminViewModel,recentObservationsViewModel)
 
-                        4 -> ArchiveCurrentObservations(recentObservationsViewModel)
+                        4 -> ManageObservations(recentObservationsViewModel)
                     }
                 }
             }

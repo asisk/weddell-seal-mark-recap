@@ -13,7 +13,7 @@ import java.io.OutputStreamWriter
 class ObservationRepository(private val observationDao: ObservationDao) {
 
     val currentObservations: Flow<List<ObservationRecord>> = observationDao.getCurrentObservationsOrdered()
-    val allObservations: Flow<List<ObservationRecord>> = observationDao.getAllObservationsOrdered()
+    val allObservations: Flow<List<ObservationRecord>> = observationDao.getAllObservationsForSeasonOrdered()
 
     fun writeDataToStream(outputStream: OutputStream, observations: List<ObservationRecord>) {
         OutputStreamWriter(outputStream).use { writer ->
@@ -63,6 +63,10 @@ class ObservationRepository(private val observationDao: ObservationDao) {
 
     suspend fun softDeleteAllObservations() {
         observationDao.softDeleteObservations()
+    }
+
+    suspend fun deleteAll() {
+        observationDao.deleteAll()
     }
 
     suspend fun updateObservationRecord(log: ObservationRecord) {

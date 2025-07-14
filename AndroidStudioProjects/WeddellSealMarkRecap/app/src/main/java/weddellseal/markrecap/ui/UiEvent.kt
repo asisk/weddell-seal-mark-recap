@@ -4,4 +4,6 @@ package weddellseal.markrecap.ui
 sealed class UiEvent {
     data class ShowToast(val message: String) : UiEvent()
     object ShowEditDialog : UiEvent()
+    object ShowArchiveDialog : UiEvent()
+    object ShowDeleteRecordsDialog : UiEvent()
 }

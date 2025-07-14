@@ -18,7 +18,7 @@ interface ObservationDao {
     fun getCurrentObservationsOrdered(): Flow<List<ObservationRecord>>
 
     @Query("SELECT * FROM observationLogs ORDER BY id DESC")
-    fun getAllObservationsOrdered(): Flow<List<ObservationRecord>>
+    fun getAllObservationsForSeasonOrdered(): Flow<List<ObservationRecord>>
 
     @Query("SELECT COUNT(*) FROM observationLogs WHERE deletedAt IS NULL")
     suspend fun getCount(): Int
@@ -26,9 +26,13 @@ interface ObservationDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE) //the suspend keyword means that coroutines are supported
     suspend fun insert(log: ObservationRecord)
 
-    // Soft delete all records that haven't been deleted yet (where deletedAt is NULL)
+    // Soft delete current records that haven't been deleted yet (where deletedAt is NULL)
     @Query("UPDATE observationLogs SET deletedAt = :deletedAt WHERE deletedAt IS NULL")
     suspend fun softDeleteObservations(deletedAt: Long = System.currentTimeMillis())
+
+    // Delete all records
+    @Query("DELETE FROM observationLogs")
+    suspend fun deleteAll()
 
     // New query & functions to support editing an existing ObservationRecord
     @Query(
@@ -61,7 +65,6 @@ interface ObservationDao {
             updatedAt = :updatedAt
         WHERE id = :id AND deletedAt IS NULL"""
     )
-
     suspend fun updateObservation(
         id: String,
         speno: String,

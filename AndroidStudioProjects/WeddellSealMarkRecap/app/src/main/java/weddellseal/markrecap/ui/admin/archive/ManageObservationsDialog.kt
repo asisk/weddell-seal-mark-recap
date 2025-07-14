@@ -21,10 +21,12 @@ import androidx.compose.ui.window.Dialog
 import kotlin.Unit
 
 @Composable
-fun ArchiveDialog(
+fun ManageObservationsDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
-    currentObservationsCount: Int,
+    count: Int,
+    message: String,
+    noRecordsMessage: String,
 ) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         // Draw a rectangle shape with rounded corners inside the dialog
@@ -41,9 +43,9 @@ fun ArchiveDialog(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (currentObservationsCount > 0) {
+                if (count > 0) {
                     Text(
-                        text = "This will archive all current observations. Are you sure?",
+                        text = message,
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -86,7 +88,7 @@ fun ArchiveDialog(
                 } else {
 
                     Text(
-                        text = "No current observations to archive.",
+                        text = noRecordsMessage,
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.titleLarge
                     )
