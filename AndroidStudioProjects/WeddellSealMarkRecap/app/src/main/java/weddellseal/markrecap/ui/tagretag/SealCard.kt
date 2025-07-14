@@ -31,7 +31,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
-import weddellseal.markrecap.ui.DropdownField
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 @Composable
@@ -534,17 +533,6 @@ fun SealCard(
 
         // REASON FOR RETAG
         if (seal.tagEventType == "Retag") {
-            val retagOptions =
-                listOf(
-                    "None",
-                    "1 of 4",
-                    "2 of 4",
-                    "3 of 4",
-                    "Worn",
-                    "Broken",
-                    "Other"
-                )
-
             Row(
                 modifier = Modifier
                     .padding(10.dp)
@@ -574,12 +562,13 @@ fun SealCard(
                         modifier = Modifier
                             .fillMaxWidth(.5f)
                     ) {
-                        DropdownField(retagOptions, seal.reasonForRetag) { newText ->
-                            viewModel.updateRetagReason(
-                                seal.name,
-                                newText
-                            )
-                        }
+                        RetagReasonDropDown(
+                            selected = seal.reasonForRetag,
+                            onSelected = {
+                                viewModel.updateRetagReason(seal.name, it)
+                            }
+                        )
+
                     }
                 }
             }

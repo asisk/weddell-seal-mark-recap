@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag.utils
 
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.tagretag.TagRetagModel.ObservationMetadata
@@ -93,7 +94,8 @@ fun buildObservationRecord(
                 oldTagOne = seal.oldTagId
 
                 // old tag one is only populated when certain reasons for retagging are selected
-                if (seal.reasonForRetag == "1 of 4" || seal.reasonForRetag == "2 of 4" || seal.reasonForRetag == "3 of 4") { // seal is missing a tag
+                if (seal.reasonForRetag == RetagReason.ONE_OF_FOUR || seal.reasonForRetag == RetagReason.TWO_OF_FOUR || seal.reasonForRetag == RetagReason.THREE_OF_FOUR) {
+                    // seal is missing a tag
                     oldTagTwo = "NoTag" // the animal is missing a tag, so the second old tag field is marked as "NoTag"
                 } else {
                     oldTagTwo = oldTagOne // if the seal is not missing a tag, ie another retag reason is selected, the second value for old tag should match the first value
@@ -124,8 +126,8 @@ fun buildObservationRecord(
     if (seal.oldTagMarks) {
         sb.append("old tag marks; ")
     }
-    if (seal.tagEventType == "Retag" && seal.reasonForRetag != "") {
-        sb.append("reason for retag: ${seal.reasonForRetag}; ")
+    if (seal.tagEventType == "Retag" && (seal.reasonForRetag == RetagReason.NONE || seal.reasonForRetag == RetagReason.UNKNOWN)) {
+        sb.append("reason for retag: ${seal.reasonForRetag.description}; ")
     }
     if (seal.validationMessage != "") {
         sb.append(seal.validationMessage)
@@ -165,7 +167,7 @@ fun buildObservationRecord(
         weight = pupWeight,
         tissueSampled = tissue,
         comments = comment,
-        retagReason = seal.reasonForRetag,
+        retagReason = seal.reasonForRetag.description,
         colony = metadataColony,
     )
     return log

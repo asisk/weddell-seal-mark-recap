@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAge
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
@@ -554,7 +555,7 @@ class TagRetagModel(
         }
     }
 
-    fun updateRetagReason(sealName: String, input: String) {
+    fun updateRetagReason(sealName: String, input: RetagReason) {
         when (sealName) {
             "primary" -> {
                 _primarySeal.update { it.copy(reasonForRetag = input) }
@@ -1039,7 +1040,7 @@ class TagRetagModel(
                     tagAlpha = processedTagOneAlpha,
                     oldTagId = primaryRecord.oldTagIDOne,
                     tagEventType = tagEvent,
-                    reasonForRetag = primaryRecord.retagReason,
+                    reasonForRetag = RetagReason.fromCode(primaryRecord.retagReason),
                     numTags = if (numTags > 0) numTags.toString() else "",
                     isNoTag = primaryRecord.tagIDOne == "NoTag" && primaryRecord.tagEvent == "Marked",
                     comment = primaryRecord.comments,
@@ -1101,7 +1102,7 @@ class TagRetagModel(
                         tagAlpha = processedTagOneAlpha,
                         oldTagId = pupOneRecord.oldTagIDOne,
                         tagEventType = tagEvent,
-                        reasonForRetag = pupOneRecord.retagReason,
+                        reasonForRetag = RetagReason.fromCode(pupOneRecord.retagReason),
                         numTags = if (numTags > 0) numTags.toString() else "",
                         isNoTag = pupOneRecord.tagIDOne == "NoTag" && pupOneRecord.tagEvent == "Marked",
                         comment = pupOneRecord.comments,
@@ -1163,7 +1164,7 @@ class TagRetagModel(
                         tagAlpha = processedTagOneAlpha,
                         oldTagId = pupTwoRecord.oldTagIDOne,
                         tagEventType = tagEvent,
-                        reasonForRetag = pupTwoRecord.retagReason,
+                        reasonForRetag = RetagReason.fromCode(pupTwoRecord.retagReason),
                         numTags = if (numTags > 0) numTags.toString() else "",
                         isNoTag = pupTwoRecord.tagIDOne == "NoTag" && pupTwoRecord.tagEvent == "Marked",
                         comment = pupTwoRecord.comments,
