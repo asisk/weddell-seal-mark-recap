@@ -91,7 +91,7 @@ fun buildObservationRecord(
                     tagTwoIndicator = "+"
                 }
 
-                oldTagOne = seal.oldTagId
+                oldTagOne = seal.oldTagNumber + seal.oldTagAlpha
 
                 // old tag one is only populated when certain reasons for retagging are selected
                 if (seal.reasonForRetag == RetagReason.ONE_OF_FOUR || seal.reasonForRetag == RetagReason.TWO_OF_FOUR || seal.reasonForRetag == RetagReason.THREE_OF_FOUR) {

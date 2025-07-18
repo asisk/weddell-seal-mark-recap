@@ -56,70 +56,6 @@ fun SealCard(
         }
     }
 
-    // Used to search for a WedCheck match
-    // when the Tag Event is Retag
-    // and the Old Tag ID changed
-    LaunchedEffect(seal.oldTagId, seal.tagEventType) {
-        Log.d("LaunchedEffect", "change in oldTagId detected")
-        Log.d("LaunchedEffect", "seal.oldTagId: ${seal.oldTagId}")
-        Log.d("LaunchedEffect", "seal.tagEventType: ${seal.tagEventType}")
-
-        if (seal.oldTagId.isNotBlank() && seal.tagEventType == "Retag") {
-
-            if (seal.wedCheckMatch?.tagIdOne == seal.oldTagId) {
-                val wedCheckTagID = seal.wedCheckMatch.tagIdOne
-                Log.d(
-                    "LaunchedEffect",
-                    "wedcheck seal with tag ID: $wedCheckTagID already has the correct match"
-                )
-                return@LaunchedEffect
-            }
-
-            if (seal.hasWedCheckMatch) {
-                viewModel.removeWedCheckMatch(seal)
-            }
-
-            // find the seal, if we're not already looking for it
-            if (!uiState.isSearching) {
-                Log.d("LaunchedEffect", "looking up seal")
-                viewModel.findWedCheckMatch(seal, seal.oldTagId)
-            }
-        }
-    }
-
-    // Used to search for a WedCheck match
-    // when the Tag Event is Marked or New
-    // and we have a complete Tag ID
-    LaunchedEffect(seal.tagNumber, seal.tagAlpha) {
-        Log.d("LaunchedEffect", "change in either tagNumber or tagAlpha detected")
-
-        if (seal.tagIsValid && seal.tagEventType != "Retag") {
-            // construct a string without two alpha characters
-            // to allow comparison with WedCheck record
-            // and searching for a WedCheck record
-            val searchStr = seal.tagNumber + seal.tagAlpha
-
-            if (seal.hasWedCheckMatch && seal.wedCheckMatch?.tagIdOne == searchStr) {
-                val wedCheckTagID = seal.wedCheckMatch.tagIdOne
-                Log.d(
-                    "LaunchedEffect",
-                    "wedcheck seal with tag ID: $wedCheckTagID already has the correct match"
-                )
-                return@LaunchedEffect
-            }
-
-            if (seal.hasWedCheckMatch) {
-                viewModel.removeWedCheckMatch(seal)
-            }
-
-            // find the seal, if we're not already looking for it
-            if (!uiState.isSearching) {
-                Log.d("LaunchedEffect", "looking up seal for $searchStr")
-                viewModel.findWedCheckMatch(seal, searchStr)
-            }
-        }
-    }
-
     // VALIDATION ERROR BANNER
     if (uiState.isSaveAttempted && seal.validationErrors.isNotEmpty()) {
         Column(
@@ -460,6 +396,9 @@ fun SealCard(
                         selectedOption = seal.tagEventType,
                         onOptionSelected = {
                             viewModel.updateTagEventType(seal, it)
+                            if (it == "Retag") {
+                                viewModel.onRetagSelection(seal)
+                            }
                         }
                     )
                 }
@@ -467,11 +406,11 @@ fun SealCard(
         }
     }
 
-// TAG FIELDS
-// old tag id row - label & field
-// reason for retag row - label & dropdown
-// tag id row - label, field & alpha buttons
-// None of the tag fields should show if the No Tag checkbox has been selected
+    // TAG FIELDS
+    // old tag id row - label & field
+    // reason for retag row - label & dropdown
+    // tag id row - label, field & alpha buttons
+    // None of the tag fields should show if the No Tag checkbox has been selected
     if (!seal.isNoTag) {
 
         // OLD TAG ID
@@ -507,25 +446,44 @@ fun SealCard(
 
                         // OLD TAG ID
                         TagIDOutlinedTextField(
-                            value = seal.oldTagId,
+                            value = seal.oldTagNumber,
                             labelText = "Old Tag ID",
-                            placeholderText = "Enter Old Tag ID",
+                            placeholderText = "3 or 4 Digit Tag Number",
                             errorMessage = "",
                             keyboardType = KeyboardType.Text,
                             onClearValueDo = {
                                 viewModel.clearOldTag(seal.name)
-
-                                // clear the seal in the WedCheck model when this field is cleared to clear the Seal SpeNo
-                                viewModel.removeWedCheckMatch(seal)
                             },
                             onFocusChange = { isFocused, lastValue ->
                                 if (!isFocused) {
-                                    Log.d("Old Tag Row", "calling model update")
                                     // save the input to the model
-                                    viewModel.updateOldTag(seal, lastValue.uppercase().trim())
+                                    viewModel.updateOldTagNumber(seal, lastValue.uppercase().trim())
                                 }
                             }
                         )
+                    }
+                }
+
+                // OLD TAG ID ALPHA BUTTONS
+                val buttonListAlpha = listOf("A", "C", "D")
+
+                Box(
+                    modifier = Modifier
+                        .weight(.4f)
+                        .padding(start = 8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        SingleSelectTagAlphaButtonGroup(
+                            buttonListAlpha,
+                            seal.oldTagAlpha
+                        ) { newText ->
+                            viewModel.updateOldTagAlpha(seal, newText)
+                        }
                     }
                 }
             }
@@ -566,6 +524,7 @@ fun SealCard(
                             selected = seal.reasonForRetag,
                             onSelected = {
                                 viewModel.updateRetagReason(seal.name, it)
+                                viewModel.onRetagSelection(seal)
                             }
                         )
 
@@ -860,7 +819,9 @@ fun SealCard(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 ) {
                     if (seal.weightTaken) {
                         Spacer(modifier = Modifier.width(8.dp))

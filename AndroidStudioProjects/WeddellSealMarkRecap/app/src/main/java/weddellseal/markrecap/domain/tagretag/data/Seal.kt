@@ -16,8 +16,6 @@ data class Seal(
     val numRelatives: String = "", //TODO, replace with enum
     val numTags: String = "",
     val numTagsMatch: Boolean = false,
-    val oldTagId: String = "",
-    val oldTagMarks: Boolean = false,
     val photoYears: String = "",
     val previousPups: String = "",
     val pupPeed: Boolean = false,
@@ -26,8 +24,11 @@ data class Seal(
     val sexMatch: Boolean = false,
     val swimPups: String = "",
     val tagEventType: String = "", //TODO, replace with enum
-    val tagAlpha: String = "",
     val tagNumber: String = "",
+    val tagAlpha: String = "",
+    val oldTagNumber: String = "",
+    val oldTagAlpha: String = "",
+    val oldTagMarks: Boolean = false,
     val tissueTaken: Boolean = false,
     val tissue: String = "",
     val weight: Int = 0,
@@ -95,14 +96,23 @@ data class Seal(
             return reasons
         }
 
-    val tagIsValid: Boolean
-        get() = tagNumber.isNotEmpty() && tagNumber.length in 3..4
-
     val hasPupOne: Boolean
         get() = numRelatives == "1"
 
     val hasPupTwo: Boolean
         get() = numRelatives == "2"
+
+    val isTagIDValid: Boolean
+        get() = tagNumber.isNotEmpty() && tagAlpha.isNotEmpty() && tagNumber.length in 3..4
+
+    val isOldTagValid: Boolean
+        get() = oldTagNumber.isNotEmpty() && oldTagAlpha.isNotEmpty() && oldTagNumber.length in 2..4
+
+    val useTagID: Boolean
+        get() = tagEventType == "New" || tagEventType == "Marked" || tagEventType.isEmpty()
+
+    val useOldTag: Boolean
+        get() = tagEventType == "Retag"
 
     val hasWedCheckMatch: Boolean
         get() = wedCheckMatch != null
