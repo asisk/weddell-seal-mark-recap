@@ -36,11 +36,6 @@ fun buildObservationRecord(
         "0"
     }
 
-    var sex = ""
-    if (seal.sex != "") {
-        sex = seal.sex[0].toString()
-    }
-
     val numRels = seal.numRelatives
 
     var eventType = seal.tagEventType.alpha
@@ -144,7 +139,7 @@ fun buildObservationRecord(
         latitude = currentLocation?.coordinates?.latitude.toString(),  // example -77.73004, could also be 4 decimal precision
         longitude = currentLocation?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision
         ageClass = seal.ageClass.alpha,
-        sex = sex,
+        sex = seal.sex.alpha,
         numRelatives = numRels,
         oldTagIDOne = oldTagOne,
         oldTagIDTwo = oldTagTwo,

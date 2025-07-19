@@ -73,7 +73,7 @@ fun ObservationItem(
             }
         }
 
-        if (observation.ageClass == SealAgeClass.PUP.description) {
+        if (observation.ageClass == SealAgeClass.PUP.alpha) {
             Icon(
                 painter = painterResource(R.drawable.ic_pup_foreground),
                 contentDescription = "Pup",

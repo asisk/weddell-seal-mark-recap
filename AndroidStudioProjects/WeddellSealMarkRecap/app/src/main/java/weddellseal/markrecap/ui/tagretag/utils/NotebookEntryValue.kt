@@ -3,6 +3,7 @@ package weddellseal.markrecap.ui.tagretag.utils
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 
 // function used to display the notebook string on the seal card in the observations view
@@ -10,12 +11,6 @@ fun notebookEntryValueSeal(seal: Seal): String {
     val sb = StringBuilder()
     val age = if (seal.ageClass != SealAgeClass.UNKNOWN) {
         seal.ageClass.alpha
-    } else {
-        ""
-    }
-
-    val sex = if (seal.sex.isNotEmpty()) {
-        seal.sex[0].toString()
     } else {
         ""
     }
@@ -33,7 +28,7 @@ fun notebookEntryValueSeal(seal: Seal): String {
     }
 
     sb.append(age)
-    sb.append(sex)
+    sb.append(seal.sex.alpha)
     sb.append(numRels)
     sb.append("  ")
     sb.append(tag)
@@ -64,11 +59,6 @@ fun notebookEntryValueSeal(seal: Seal): String {
 fun notebookEntryValueObservation(obs: ObservationRecord): String {
     val sb = StringBuilder()
 
-    val sex = if (obs.sex.isNotEmpty()) {
-        obs.sex[0].toString()
-    } else {
-        ""
-    }
     val numRels = obs.numRelatives
 
     var tag = obs.tagIDOne
@@ -77,7 +67,7 @@ fun notebookEntryValueObservation(obs: ObservationRecord): String {
     }
 
     sb.append(SealAgeClass.fromAlpha(obs.ageClass).alpha)
-    sb.append(sex)
+    sb.append(SealSex.fromAlpha(obs.sex).alpha)
     sb.append(numRels)
     sb.append("  ")
     sb.append(tag)

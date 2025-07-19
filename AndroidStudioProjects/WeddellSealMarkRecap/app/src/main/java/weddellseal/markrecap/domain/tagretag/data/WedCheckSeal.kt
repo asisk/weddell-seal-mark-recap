@@ -15,7 +15,7 @@ data class WedCheckSeal(
     val momMassMeasurements: String = "",
     val numPreviousPups: String = "",
     val pupPeed: Boolean = false,
-    val sex: String = "",
+    val sex: SealSex = SealSex.NONE,
     val speNo: Int = 0,
     val pupinTTStudy: String = "",
     val tagEventType: TagEventType = TagEventType.UNKNOWN,

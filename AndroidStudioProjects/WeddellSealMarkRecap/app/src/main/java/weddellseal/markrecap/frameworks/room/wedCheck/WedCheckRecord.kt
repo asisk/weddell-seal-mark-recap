@@ -11,6 +11,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
@@ -52,12 +53,6 @@ data class WedCheckRecord(
 
 // Extension function to map WedCheckRecord to Seal
 fun WedCheckRecord.toSeal(): WedCheckSeal {
-    val sealSex = when (sex) {
-        "F" -> "Female"
-        "M" -> "Male"
-        "U" -> "Unknown"
-        else -> "Unknown"
-    }
 
     var ageNumeric = "Unknown"
     if (ageYears > 0) {
@@ -86,7 +81,7 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         numTags = numTags.toString(), //not intending to map this over to the observation screen per August 1, 2024 meeting, but added to support validation
         momMassMeasurements = momMassMeasurements,
         numPreviousPups = numPreviousPups,
-        sex = sealSex,
+        sex = SealSex.fromAlpha(sex),
         speNo = speno,
         pupinTTStudy = pupinTTStudy,
         tagEventType = TagEventType.UNKNOWN,

@@ -20,6 +20,7 @@ import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
@@ -62,7 +63,7 @@ class TagRetagModel(
         _primarySeal.update {
             it.copy(
                 ageClass = SealAgeClass.ADULT,
-                sex = "Male",
+                sex = SealSex.MALE,
                 numRelatives = "0"
             )
         }
@@ -73,7 +74,7 @@ class TagRetagModel(
         _primarySeal.update {
             it.copy(
                 ageClass = SealAgeClass.ADULT,
-                sex = "Female",
+                sex = SealSex.FEMALE,
                 numRelatives = "0"
             )
         }
@@ -84,7 +85,7 @@ class TagRetagModel(
         _primarySeal.update {
             it.copy(
                 ageClass = SealAgeClass.ADULT,
-                sex = "Female",
+                sex = SealSex.FEMALE,
                 numRelatives = "1"
             )
         }
@@ -471,7 +472,7 @@ class TagRetagModel(
         }
     }
 
-    fun updateSex(seal: Seal, input: String) {
+    fun updateSex(seal: Seal, input: SealSex) {
         when (seal.sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(sex = input) }
@@ -1176,7 +1177,7 @@ class TagRetagModel(
         }
 
         // number of Relatives shouldn't be populated for Female seals because it's likely that the seal has a pup
-        val numberRels = if (lookupSeal.sex == "Female") "" else "0"
+        val numberRels = if (lookupSeal.sex == SealSex.FEMALE) "" else "0"
 
         _primarySeal.update {
             it.copy(
@@ -1226,12 +1227,6 @@ class TagRetagModel(
 
         // MAP PRIMARY
         primaryRecord.let {
-            val sealSex = when (primaryRecord.sex) {
-                "F" -> "Female"
-                "M" -> "Male"
-                "U" -> "Unknown"
-                else -> ""
-            }
 
             var processedTagOneNumber = ""
             var processedTagOneAlpha = ""
@@ -1267,7 +1262,7 @@ class TagRetagModel(
                     colony = primaryRecord.colony,
                     observationRecordSpeno = primaryRecord.speno.toInt(),
                     ageClass = SealAgeClass.fromAlpha(primaryRecord.ageClass), // expecting to advance the seal age based on the last season seen
-                    sex = sealSex,
+                    sex = SealSex.fromAlpha(primaryRecord.sex),
                     numRelatives = primaryRecord.numRelatives,
                     condition = SealCondition.fromCode(primaryRecord.sealCondition),
                     tagNumber = processedTagOneNumber,
@@ -1293,13 +1288,6 @@ class TagRetagModel(
 
             // MAP PUPONE
             pupOneRecord?.let {
-
-                val sealSex = when (pupOneRecord.sex) {
-                    "F" -> "Female"
-                    "M" -> "Male"
-                    "U" -> "Unknown"
-                    else -> ""
-                }
 
                 var processedTagOneNumber = ""
                 var processedTagOneAlpha = ""
@@ -1334,7 +1322,7 @@ class TagRetagModel(
                     it.copy(
                         observationRecordSpeno = pupOneRecord.speno.toInt(),
                         ageClass = SealAgeClass.PUP, // expecting to advance the seal age based on the last season seen
-                        sex = sealSex,
+                        sex = SealSex.fromAlpha(pupOneRecord.sex),
                         numRelatives = pupOneRecord.numRelatives,
                         condition = SealCondition.fromLabel(pupOneRecord.sealCondition),
                         tagNumber = processedTagOneNumber,
@@ -1360,13 +1348,6 @@ class TagRetagModel(
 
             // MAP PUPTWO
             pupTwoRecord?.let {
-
-                val sealSex = when (pupTwoRecord.sex) {
-                    "F" -> "Female"
-                    "M" -> "Male"
-                    "U" -> "Unknown"
-                    else -> ""
-                }
 
                 var processedTagOneNumber = ""
                 var processedTagOneAlpha = ""
@@ -1401,7 +1382,7 @@ class TagRetagModel(
                     it.copy(
                         observationRecordSpeno = pupTwoRecord.speno.toInt(),
                         ageClass = SealAgeClass.PUP, // expecting to advance the seal age based on the last season seen
-                        sex = sealSex,
+                        sex = SealSex.fromAlpha(pupTwoRecord.sex),
                         numRelatives = pupTwoRecord.numRelatives,
                         condition = SealCondition.fromLabel(pupTwoRecord.sealCondition),
                         tagNumber = processedTagOneNumber,

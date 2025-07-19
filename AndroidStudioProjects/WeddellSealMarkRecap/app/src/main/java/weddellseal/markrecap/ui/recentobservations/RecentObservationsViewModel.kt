@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.files.data.FileState
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.ui.UiEvent
@@ -60,12 +62,12 @@ class RecentObservationsViewModel(
                     .filterNot { obs ->
                         // display pups with a mom in a combined row
                         val numRelatives = obs.numRelatives.toIntOrNull() ?: 0
-                        obs.ageClass == "P" && numRelatives > 0
+                        obs.ageClass == SealAgeClass.PUP.alpha && numRelatives > 0
                     }
                     .map { obs ->
                         val numRelatives = obs.numRelatives.toIntOrNull() ?: 0
                         // TODO, consider a calculated value on the record
-                        if (numRelatives > 0 && obs.ageClass == "A" && obs.sex == "F") {
+                        if (numRelatives > 0 && obs.ageClass == SealAgeClass.ADULT.alpha && obs.sex == SealSex.FEMALE.alpha) {
                             // only adult females can have pups
                             val pupOne = obs.relativeTagIDOne.takeIf { it.isNotEmpty() }
                                 ?.let { relativeId -> current.find { it.tagIDOne == relativeId } }

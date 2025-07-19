@@ -18,7 +18,7 @@ class SealTest {
         val seal = Seal(
             sealType = SealType.PRIMARY,
             ageClass = SealAgeClass.ADULT,
-            sex = "Female",
+            sex = SealSex.FEMALE,
             numRelatives = "2",
             tagEventType = TagEventType.MARKED,
             tagNumber = "123",
@@ -34,7 +34,7 @@ class SealTest {
         val seal = Seal(
             sealType = SealType.PRIMARY,
             ageClass = SealAgeClass.ADULT,
-            sex = "Female",
+            sex = SealSex.FEMALE,
             numRelatives = "2",
             tagEventType = TagEventType.MARKED,
             tagNumber = "12",  // Too short

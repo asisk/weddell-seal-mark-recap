@@ -19,7 +19,7 @@ data class Seal(
     val previousPups: String = "",
     val pupPeed: Boolean = false,
     val reasonForRetag: RetagReason = RetagReason.UNKNOWN,
-    val sex: String = "", //TODO, replace with enum
+    val sex: SealSex = SealSex.NONE,
     val sexMatch: Boolean = false,
     val swimPups: String = "",
     val tagEventType: TagEventType = TagEventType.UNKNOWN,
@@ -43,7 +43,7 @@ data class Seal(
     val isEntryStarted: Boolean
         get() = listOf(
             ageClass != SealAgeClass.UNKNOWN,
-            sex.isNotBlank(),
+            sex != SealSex.NONE,
             numRelatives.isNotBlank(),
             condition != SealCondition.UNKNOWN && condition != SealCondition.NONE,
             tagEventType != TagEventType.UNKNOWN,
@@ -71,7 +71,7 @@ data class Seal(
             // pup condition will be UNKNOWN when first instantiated
             // a condition of NONE means the value was selected as a way to set the value to blank from the TagRetag Screen
             if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($sealType)."
-            if (sex.isEmpty()) reasons += "Select a sex for $sealType."
+            if (sex == SealSex.NONE) reasons += "Select a sex for $sealType."
             if (numRelatives.isEmpty()) reasons += "Select number of relatives for $sealType."
             if (tagEventType == TagEventType.UNKNOWN) reasons += "Select a tag event type for $sealType."
             if (tagEventType == TagEventType.RETAG && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for $sealType."
@@ -152,10 +152,9 @@ data class Seal(
             }
 
             // ----- A WedCheck record is present, so validate Seal against it -----
-            //TODO, more testing with retag
             wedCheckMatch.let { record ->
 
-                if (sex != "Unknown" && sex != record.sex) {
+                if (sex != SealSex.UNKNOWN && sex != record.sex) {
                     // ----- Validation Rule -----
                     // Sex entered must match WedCheck entry unless the entered seal sex is "Unknown"
                     errors += "Sex doesn't match. WedCheck record has sex recorded as ${record.sex}."

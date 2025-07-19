@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
@@ -52,7 +53,7 @@ fun SealCard(
     var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
 
     LaunchedEffect(seal.numRelatives) {
-        numRelatives = if (seal.sex == "Male" && seal.sealType == SealType.PRIMARY) {
+        numRelatives = if (seal.sex == SealSex.MALE && seal.sealType == SealType.PRIMARY) {
             "0"
         } else {
             seal.numRelatives
@@ -180,7 +181,7 @@ fun SealCard(
 
                 SegmentedButtonGroup(
                     options = buttonListSex,
-                    selectedOption = seal.sex,
+                    selectedOption = seal.sex.description,
                     onOptionSelected = {
                         if (seal.sealType == SealType.PRIMARY && it == "Male") { //primary seals that are male do not have relatives
                             if (numRelatives != "" && numRelatives != "0") {
@@ -193,7 +194,7 @@ fun SealCard(
                                 viewModel.updateNumRelatives("0")
                             }
                         }
-                        viewModel.updateSex(seal, it)
+                        viewModel.updateSex(seal, SealSex.fromSelection(it))
                     }
                 )
             }
@@ -279,7 +280,7 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
 
-                } else if (seal.sealType == SealType.PRIMARY && seal.sex == "Male" && numRelatives == "0") {
+                } else if (seal.sealType == SealType.PRIMARY && seal.sex == SealSex.MALE && numRelatives == "0") {
                     // when the primary seal is a male, there can be no other relatives
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -325,7 +326,7 @@ fun SealCard(
                 onDismissRequest = { showDeleteRelativesDialog.value = false },
                 onConfirmation = {
                     showDeleteRelativesDialog.value = false
-                    if (seal.sex == "Male") {
+                    if (seal.sex == SealSex.MALE) {
                         possibleRelatives = "0"  // set the value to zero
                     }
                     viewModel.updateNumRelatives(possibleRelatives) // use the value selected by the user to update the model value

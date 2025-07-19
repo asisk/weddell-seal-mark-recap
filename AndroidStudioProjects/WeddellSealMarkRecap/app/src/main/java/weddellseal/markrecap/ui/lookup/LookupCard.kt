@@ -43,7 +43,7 @@ fun LookupCard(
         DataDisplayRow("Age Years", seal.ageYears)
 
         // SEX
-        DataDisplayRow("Sex", seal.sex)
+        DataDisplayRow("Sex", seal.sex.alpha)
 
         // TISSUE SAMPLED
         DataDisplayRow("Tissue Taken", seal.tissueSampled)
