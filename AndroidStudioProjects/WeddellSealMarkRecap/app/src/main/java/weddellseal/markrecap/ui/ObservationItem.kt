@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
 
@@ -72,7 +73,7 @@ fun ObservationItem(
             }
         }
 
-        if (observation.ageClass == "P") {
+        if (observation.ageClass == SealAgeClass.PUP.description) {
             Icon(
                 painter = painterResource(R.drawable.ic_pup_foreground),
                 contentDescription = "Pup",

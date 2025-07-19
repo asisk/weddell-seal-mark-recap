@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 @Composable
@@ -78,8 +79,11 @@ fun SealCard(
         }
     }
 
-//AGE
-    val buttonListAge = listOf("Adult", "Pup", "Yearling")
+    // AGE
+    val buttonListAge = SealAgeClass.values()
+        .filter { it != SealAgeClass.UNKNOWN}
+        .map { it.description }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,20 +111,20 @@ fun SealCard(
                 if (seal.name != "primary") {
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        "Pup",
+                        SealAgeClass.PUP.description,
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
                     SegmentedButtonGroup(
                         options = buttonListAge,
-                        selectedOption = seal.ageClass,
+                        selectedOption = seal.ageClass.description,
                         onOptionSelected = {
-                            if (seal.ageClass == "Pup" && seal.ageClass != it) {
+                            if (seal.ageClass == SealAgeClass.PUP && seal.ageClass.description != it) {
                                 // sex has been changed from pup to adult or yearling, clear pup fields
                                 viewModel.resetPupFields(seal.name)
                             }
 
-                            if (it == "Pup" || it == "Yearling") {
+                            if (it == SealAgeClass.PUP.description || it == SealAgeClass.YEARLING.description ) {
                                 // if the primary seal is a pup or a yearling, there are no relatives
                                 if (numRelatives != "" && numRelatives != "0") {
                                     possibleRelatives = "0"
@@ -206,7 +210,7 @@ fun SealCard(
             ) {
 
                 // display pup peed only for pups
-                if (seal.ageClass == "Pup") {
+                if (seal.ageClass == SealAgeClass.PUP) {
                     var isPupPeedChecked by remember {
                         mutableStateOf(seal.pupPeed)
                     }
@@ -266,7 +270,7 @@ fun SealCard(
                         numRelatives,
                         style = MaterialTheme.typography.titleLarge
                     )
-                } else if (seal.ageClass == "Pup" || seal.ageClass == "Yearling") {
+                } else if (seal.ageClass == SealAgeClass.PUP || seal.ageClass == SealAgeClass.YEARLING) {
                     // when the primary seal is a pup or yearling, there can be no other relatives
                     Text(
                         numRelatives,
@@ -775,7 +779,7 @@ fun SealCard(
     }
 
     // WEIGHT FOR PUPS ONLY
-    if (seal.ageClass == "Pup") {
+    if (seal.ageClass == SealAgeClass.PUP) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

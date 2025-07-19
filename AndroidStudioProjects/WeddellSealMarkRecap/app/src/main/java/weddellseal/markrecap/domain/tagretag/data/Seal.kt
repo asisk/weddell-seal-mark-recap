@@ -4,7 +4,7 @@ import weddellseal.markrecap.ui.utils.getCurrentYear
 
 data class Seal(
     val sealType: SealType = SealType.UNKNOWN, // TODO, implement this in place of name
-    val ageClass: String = "", //TODO, replace with enum
+    val ageClass: SealAgeClass = SealAgeClass.UNKNOWN,
     val ageYears: String = "",
     val colony: String = "",
     val comment: String = "",
@@ -43,7 +43,7 @@ data class Seal(
     // Only checking primary fields, not fields that appear as a result of a field being selected
     val isEntryStarted: Boolean
         get() = listOf(
-            ageClass.isNotBlank(),
+            ageClass != SealAgeClass.UNKNOWN,
             sex.isNotBlank(),
             numRelatives.isNotBlank(),
             condition != SealCondition.UNKNOWN && condition != SealCondition.NONE,
@@ -68,10 +68,10 @@ data class Seal(
             if (!isEntryStarted) return reasons // early return, skip validation checks when entry hasn't begun for this seal
 
             // --- Basic Required Fields ---
-            if (ageClass.isEmpty()) reasons += "Select an age for $name."
+            if (ageClass == SealAgeClass.UNKNOWN) reasons += "Select an age for $name."
             // pup condition will be UNKNOWN when first instantiated
             // a condition of NONE means the value was selected as a way to set the value to blank from the TagRetag Screen
-            if (ageClass == "Pup" && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($name)."
+            if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($name)."
             if (sex.isEmpty()) reasons += "Select a sex for $name."
             if (numRelatives.isEmpty()) reasons += "Select number of relatives for $name."
             if (tagEventType.isEmpty()) reasons += "Select a tag event type for $name."
@@ -184,7 +184,7 @@ data class Seal(
 
                 when (record.lastSeenSeason) {
                     currentYear -> {
-                        if (ageClass != record.age) {
+                        if (ageClass != record.ageClass) {
                             // ----- Validation Rule -----
                             // Seals entered in the current year cannot have a different age
                             errors += "Seal last observed this year. Age class can't change!"
@@ -192,20 +192,20 @@ data class Seal(
                     }
 
                     currentYear - 1 -> {
-                        val expectedAge = when (record.age) {
-                            "Pup" -> "Yearling"
-                            "Yearling" -> "Adult"
-                            else -> "Adult"
+                        val expectedAge = when (record.ageClass) {
+                            SealAgeClass.PUP -> SealAgeClass.YEARLING
+                            SealAgeClass.YEARLING -> SealAgeClass.ADULT
+                            else -> SealAgeClass.ADULT
                         }
                         if (ageClass != expectedAge) {
                             // ----- Validation Rule -----
                             // Seals entered in the previous year must be advanced to the next age class
-                            errors += "Seal observed last year as a ${record.age}. Age class should be $expectedAge!"
+                            errors += "Seal observed last year as a ${record.ageClass}. Age class should be $expectedAge!"
                         }
                     }
 
                     else -> {
-                        if (ageClass != "Adult") {
+                        if (ageClass != SealAgeClass.ADULT) {
                             // ----- Validation Rule -----
                             // Seals entered two or more years ago must be Adults
                             errors += "Seal observed two or more years ago. Age class should be Adult!"

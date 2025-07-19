@@ -26,7 +26,7 @@ data class ObservationRecord(
     @ColumnInfo(name = "census_id") val censusID: String,
     @ColumnInfo(name = "latitude") val latitude: String,  // example -77.73004, could also be 4 decimal precision
     @ColumnInfo(name = "longitude") val longitude: String,  // example 166.7941, could also be 2 decimal precision
-    @ColumnInfo(name = "age_class") val ageClass: String,
+    @ColumnInfo(name = "age_class") val ageClass: String, // A, P, Y
     @ColumnInfo(name = "sex") val sex: String,
     @ColumnInfo(name = "num_relatives") val numRelatives: String,
     @ColumnInfo(name = "old_tag_id_one") val oldTagIDOne: String,

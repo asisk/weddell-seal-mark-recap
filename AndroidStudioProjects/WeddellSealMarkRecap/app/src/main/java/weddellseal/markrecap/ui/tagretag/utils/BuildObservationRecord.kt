@@ -35,11 +35,6 @@ fun buildObservationRecord(
         "0"
     }
 
-    var ageClass = ""
-    if (seal.ageClass != "") {
-        ageClass = seal.ageClass[0].toString()
-    }
-
     var sex = ""
     if (seal.sex != "") {
         sex = seal.sex[0].toString()
@@ -149,7 +144,7 @@ fun buildObservationRecord(
         censusID = censusNumber,
         latitude = currentLocation?.coordinates?.latitude.toString(),  // example -77.73004, could also be 4 decimal precision
         longitude = currentLocation?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision
-        ageClass = ageClass,
+        ageClass = seal.ageClass.alpha,
         sex = sex,
         numRelatives = numRels,
         oldTagIDOne = oldTagOne,

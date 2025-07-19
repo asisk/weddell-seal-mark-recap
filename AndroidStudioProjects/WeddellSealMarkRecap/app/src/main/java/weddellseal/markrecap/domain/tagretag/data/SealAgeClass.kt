@@ -4,7 +4,7 @@ enum class SealAgeClass(val alpha: String, val description: String) {
     ADULT("A", "Adult"),
     PUP("P", "Pup"),
     YEARLING("Y", "Yearling"),
-    UNKNOWN("", "Unknown"); // initialization value only
+    UNKNOWN("", "Unknown"); // initial value
 
     companion object {
         // Convert alpha string to enum value
@@ -19,13 +19,4 @@ enum class SealAgeClass(val alpha: String, val description: String) {
         fun fromSelection(description: String): SealAgeClass =
             SealAgeClass.values().find { it.description == description } ?: UNKNOWN
     }
-
-}
-
-// Extension function to convert SealAge to display list
-// Used for the SegmentedButtonGroup in the TagRetag screen
-fun SealAgeClass.toList(): List<String> {
-    return SealAgeClass.values()
-        .filter { it != SealAgeClass.UNKNOWN}
-        .map { it.description }
 }

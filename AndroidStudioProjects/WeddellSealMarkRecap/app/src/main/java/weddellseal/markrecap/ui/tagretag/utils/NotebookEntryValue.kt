@@ -2,12 +2,13 @@ package weddellseal.markrecap.ui.tagretag.utils
 
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 
 // function used to display the notebook string on the seal card in the observations view
 fun notebookEntryValueSeal(seal: Seal): String {
     val sb = StringBuilder()
-    val age = if (seal.ageClass.isNotEmpty()) {
-        seal.ageClass[0].toString()
+    val age = if (seal.ageClass != SealAgeClass.UNKNOWN) {
+        seal.ageClass.alpha
     } else {
         ""
     }
@@ -50,7 +51,7 @@ fun notebookEntryValueSeal(seal: Seal): String {
     }
 
     // display condition only for Pups
-    if (seal.ageClass == "Pup" && seal.condition.code != "") {
+    if (seal.ageClass == SealAgeClass.PUP && seal.condition.code != "") {
         sb.append("  ")
         sb.append("C=")
         sb.append(seal.condition.code)

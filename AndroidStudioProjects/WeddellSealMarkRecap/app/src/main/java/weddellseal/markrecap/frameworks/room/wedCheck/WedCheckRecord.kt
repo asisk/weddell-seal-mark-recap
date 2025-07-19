@@ -9,6 +9,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
@@ -50,15 +51,6 @@ data class WedCheckRecord(
 
 // Extension function to map WedCheckRecord to Seal
 fun WedCheckRecord.toSeal(): WedCheckSeal {
-    var ageString = ""
-    if (ageClass == "A") {
-        ageString = "Adult"
-    } else if (ageClass == "P") {
-        ageString = "Pup"
-    } else if (ageClass == "Y") {
-        ageString = "Yearling"
-    }
-
     val sealSex = when (sex) {
         "F" -> "Female"
         "M" -> "Male"
@@ -84,7 +76,7 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
     }
 
     return WedCheckSeal(
-        age = ageString,
+        ageClass = SealAgeClass.fromAlpha(ageClass),
         ageYears = ageNumeric,
         comment = comments,
         condition = SealCondition.fromCode(condition),

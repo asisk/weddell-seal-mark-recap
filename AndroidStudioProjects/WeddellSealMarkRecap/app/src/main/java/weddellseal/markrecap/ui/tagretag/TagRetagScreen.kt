@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
@@ -188,7 +189,7 @@ fun TagRetagScreen(
                                 text = { Text("Mom & Pup") },
                                 onClick = {
                                     // update viewModel with prefilled fields
-                                    if (primarySeal.ageClass == "") {
+                                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
                                         viewModel.prefillMomAndPup()
                                     }
                                 },
@@ -207,7 +208,7 @@ fun TagRetagScreen(
                                 text = { Text("Single Female") },
                                 onClick = {
                                     // update viewModel with prefilled fields
-                                    if (primarySeal.ageClass == "") {
+                                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
                                         viewModel.prefillSingleFemale()
                                     }
                                 },
@@ -226,7 +227,7 @@ fun TagRetagScreen(
                                 text = { Text("Single Male") },
                                 onClick = {
                                     // update viewModel with prefilled fields
-                                    if (primarySeal.ageClass == "") {
+                                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
                                         viewModel.prefillSingleMale()
                                     }
                                 },

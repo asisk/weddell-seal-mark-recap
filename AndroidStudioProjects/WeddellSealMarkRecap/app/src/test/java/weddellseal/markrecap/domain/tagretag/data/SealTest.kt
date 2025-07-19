@@ -17,7 +17,7 @@ class SealTest {
     fun `seal is complete when all required fields are filled`() {
         val seal = Seal(
             name = "TestSeal",
-            ageClass = "Adult",
+            ageClass = SealAgeClass.ADULT,
             sex = "Female",
             numRelatives = "2",
             tagEventType = "Marked",
@@ -33,7 +33,7 @@ class SealTest {
     fun `seal validation returns error for invalid tag number length`() {
         val seal = Seal(
             name = "TestSeal",
-            ageClass = "Adult",
+            ageClass = SealAgeClass.ADULT,
             sex = "Female",
             numRelatives = "2",
             tagEventType = "Marked",

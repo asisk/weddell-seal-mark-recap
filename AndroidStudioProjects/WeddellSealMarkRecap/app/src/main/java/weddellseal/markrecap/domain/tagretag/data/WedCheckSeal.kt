@@ -1,7 +1,7 @@
 package weddellseal.markrecap.domain.tagretag.data
 
 data class WedCheckSeal(
-    val age: String = "",
+    val ageClass: SealAgeClass = SealAgeClass.UNKNOWN,
     val ageYears: String = "",
     val colony: String = "",
     val comment: String = "",
