@@ -21,6 +21,7 @@ import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.SealType
+import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
@@ -204,7 +205,7 @@ class TagRetagModel(
     }
 
     fun onRetagSelection(seal: Seal) { // TODO, consider passing the event Type as a parameter, and change the seal to sealType
-        if (primarySeal.value.tagEventType == "Retag"
+        if (primarySeal.value.tagEventType == TagEventType.RETAG
             && (primarySeal.value.reasonForRetag == RetagReason.ONE_OF_FOUR
                     || primarySeal.value.reasonForRetag == RetagReason.TWO_OF_FOUR
                     || primarySeal.value.reasonForRetag == RetagReason.THREE_OF_FOUR)
@@ -581,7 +582,7 @@ class TagRetagModel(
         }
     }
 
-    fun updateTagEventType(seal: Seal, input: String) {
+    fun updateTagEventType(seal: Seal, input: TagEventType) {
         when (seal.sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(tagEventType = input) }
@@ -1186,7 +1187,7 @@ class TagRetagModel(
                 tagAlpha = lookupSeal.tagOneAlpha,
                 oldTagNumber = lookupSeal.tagOneNumber,
                 oldTagAlpha = lookupSeal.tagOneAlpha,
-                tagEventType = "Marked",
+                tagEventType = lookupSeal.tagEventType,
                 lastPhysio = lookupSeal.lastPhysio,
                 colony = lookupSeal.colony,
                 wedCheckMatch = lookupSeal
@@ -1232,13 +1233,6 @@ class TagRetagModel(
                 else -> ""
             }
 
-            val tagEvent = when (primaryRecord.tagEvent) {
-                "M" -> "Marked"
-                "N" -> "New"
-                "R2" -> "Retag"
-                else -> ""
-            }
-
             var processedTagOneNumber = ""
             var processedTagOneAlpha = ""
             var numTags = 0
@@ -1280,7 +1274,7 @@ class TagRetagModel(
                     tagAlpha = processedTagOneAlpha,
                     oldTagNumber = processedOldTagNumber,
                     oldTagAlpha = processedOldTagAlpha,
-                    tagEventType = tagEvent,
+                    tagEventType = TagEventType.fromAlpha(primaryRecord.tagEvent),
                     reasonForRetag = RetagReason.fromLabel(primaryRecord.retagReason),
                     numTags = if (numTags > 0) numTags.toString() else "",
                     isNoTag = primaryRecord.tagIDOne == "NoTag" && primaryRecord.tagEvent == "Marked",
@@ -1304,13 +1298,6 @@ class TagRetagModel(
                     "F" -> "Female"
                     "M" -> "Male"
                     "U" -> "Unknown"
-                    else -> ""
-                }
-
-                val tagEvent = when (pupOneRecord.tagEvent) {
-                    "M" -> "Marked"
-                    "N" -> "New"
-                    "R2" -> "Retag"
                     else -> ""
                 }
 
@@ -1354,7 +1341,7 @@ class TagRetagModel(
                         tagAlpha = processedTagOneAlpha,
                         oldTagNumber = processedOldTagNumber,
                         oldTagAlpha = processedOldTagAlpha,
-                        tagEventType = tagEvent,
+                        tagEventType = TagEventType.fromAlpha(pupOneRecord.tagEvent),
                         reasonForRetag = RetagReason.fromCode(pupOneRecord.retagReason),
                         numTags = if (numTags > 0) numTags.toString() else "",
                         isNoTag = pupOneRecord.tagIDOne == "NoTag" && pupOneRecord.tagEvent == "Marked",
@@ -1378,13 +1365,6 @@ class TagRetagModel(
                     "F" -> "Female"
                     "M" -> "Male"
                     "U" -> "Unknown"
-                    else -> ""
-                }
-
-                val tagEvent = when (pupTwoRecord.tagEvent) {
-                    "M" -> "Marked"
-                    "N" -> "New"
-                    "R2" -> "Retag"
                     else -> ""
                 }
 
@@ -1428,7 +1408,7 @@ class TagRetagModel(
                         tagAlpha = processedTagOneAlpha,
                         oldTagNumber = processedOldTagNumber,
                         oldTagAlpha = processedOldTagAlpha,
-                        tagEventType = tagEvent,
+                        tagEventType = TagEventType.fromAlpha(pupTwoRecord.tagEvent),
                         reasonForRetag = RetagReason.fromCode(pupTwoRecord.retagReason),
                         numTags = if (numTags > 0) numTags.toString() else "",
                         isNoTag = pupTwoRecord.tagIDOne == "NoTag" && pupTwoRecord.tagEvent == "Marked",

@@ -3,6 +3,7 @@ package weddellseal.markrecap.ui.tagretag.utils
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.tagretag.TagRetagModel.ObservationMetadata
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
@@ -42,7 +43,7 @@ fun buildObservationRecord(
 
     val numRels = seal.numRelatives
 
-    var eventType = ""
+    var eventType = seal.tagEventType.alpha
     val numberOfTags = seal.numTags.toIntOrNull()
     val isTwoTags = numberOfTags != null && numberOfTags == 2
     var tagIdOne = seal.tagNumber + seal.tagAlpha
@@ -51,34 +52,31 @@ fun buildObservationRecord(
     var tagTwoIndicator = ""
     var oldTagOne = ""
     var oldTagTwo = ""
-    // if NoTag is selected, both tag columns should be NoTag, and event should be Marked
+
     if (seal.isNoTag) {
-        eventType = "M"
+        // if NoTag is selected, both tag columns should be NoTag, and event should be Marked
+        eventType = TagEventType.MARKED.alpha
         tagIdOne = "NoTag"
-    } else if (seal.tagEventType.isNotEmpty()) {
-        eventType = when (seal.tagEventType) {
-            "Marked" -> {
+
+    } else {
+        when (seal.tagEventType) { // set the tag columns based on the event type
+
+            TagEventType.MARKED -> {
                 if (isTwoTags) {
                     tagIdTwo = tagIdOne
                 }
-
-                // value for the event type of Marked
-                "M"
             }
 
-            "New" -> {
+            TagEventType.NEW -> {
                 tagOneIndicator = "+"
 
                 if (isTwoTags) {
                     tagIdTwo = tagIdOne
                     tagTwoIndicator = "+"
                 }
-
-                // value for the event type of New
-                "N"
             }
 
-            "Retag" -> {
+            TagEventType.RETAG -> {
                 tagOneIndicator = "+"
 
                 if (isTwoTags) {
@@ -91,16 +89,17 @@ fun buildObservationRecord(
                 // old tag one is only populated when certain reasons for retagging are selected
                 if (seal.reasonForRetag == RetagReason.ONE_OF_FOUR || seal.reasonForRetag == RetagReason.TWO_OF_FOUR || seal.reasonForRetag == RetagReason.THREE_OF_FOUR) {
                     // seal is missing a tag
-                    oldTagTwo = "NoTag" // the animal is missing a tag, so the second old tag field is marked as "NoTag"
+                    oldTagTwo =
+                        "NoTag" // the animal is missing a tag, so the second old tag field is marked as "NoTag"
                 } else {
-                    oldTagTwo = oldTagOne // if the seal is not missing a tag, ie another retag reason is selected, the second value for old tag should match the first value
+                    oldTagTwo =
+                        oldTagOne // if the seal is not missing a tag, ie another retag reason is selected, the second value for old tag should match the first value
                 }
-
-                // value for the event type of Retag
-                "R2"
             }
 
-            else -> {""}
+            TagEventType.UNKNOWN -> {
+                // do nothing
+            }
         }
     }
 
@@ -121,7 +120,7 @@ fun buildObservationRecord(
     if (seal.oldTagMarks) {
         sb.append("old tag marks; ")
     }
-    if (seal.tagEventType == "Retag" && (seal.reasonForRetag == RetagReason.NONE || seal.reasonForRetag == RetagReason.UNKNOWN)) {
+    if (seal.tagEventType == TagEventType.RETAG && (seal.reasonForRetag == RetagReason.NONE || seal.reasonForRetag == RetagReason.UNKNOWN)) {
         sb.append("reason for retag: ${seal.reasonForRetag.description}; ")
     }
     if (seal.validationMessage != "") {

@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealType
+import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 @Composable
@@ -398,10 +399,10 @@ fun SealCard(
                 } else {
                     SegmentedButtonGroup(
                         options = tagEventList,
-                        selectedOption = seal.tagEventType,
+                        selectedOption = seal.tagEventType.description,
                         onOptionSelected = {
-                            viewModel.updateTagEventType(seal, it)
-                            if (it == "Retag") {
+                            viewModel.updateTagEventType(seal, TagEventType.fromSelection(it))
+                            if (it == TagEventType.RETAG.description) {
                                 viewModel.onRetagSelection(seal)
                             }
                         }
@@ -419,7 +420,7 @@ fun SealCard(
     if (!seal.isNoTag) {
 
         // OLD TAG ID
-        if (seal.tagEventType == "Retag") {
+        if (seal.tagEventType == TagEventType.RETAG) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -495,7 +496,7 @@ fun SealCard(
         }
 
         // REASON FOR RETAG
-        if (seal.tagEventType == "Retag") {
+        if (seal.tagEventType == TagEventType.RETAG) {
             Row(
                 modifier = Modifier
                     .padding(10.dp)
@@ -562,7 +563,7 @@ fun SealCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
 //                    val errMessage = "3 or 4 digits"
-                    val fieldLabel = if (seal.tagEventType == "Retag") "New\nTag ID" else "Tag ID"
+                    val fieldLabel = if (seal.tagEventType == TagEventType.RETAG) "New\nTag ID" else "Tag ID"
 
                     Text(
                         fieldLabel,
@@ -581,7 +582,7 @@ fun SealCard(
 
                             // when the event type is Marked or New and this field has been cleared
                             // clear the seal in the WedCheck model when this field is cleared to clear the Seal SpeNo
-                            if (seal.tagEventType != "Retag") {
+                            if (seal.tagEventType != TagEventType.RETAG) {
                                 viewModel.removeWedCheckMatch(seal.sealType)
                             }
                         },
@@ -679,10 +680,10 @@ fun SealCard(
 
                         if (it) {
                             // per 9/4 meeting, event type should be Marked when NoTag is checked
-                            viewModel.updateTagEventType(seal, "Marked")
+                            viewModel.updateTagEventType(seal, TagEventType.MARKED)
                         } else {
                             // reset the event type if the checkbox is deselected
-                            viewModel.updateTagEventType(seal, "")
+                            viewModel.updateTagEventType(seal, TagEventType.UNKNOWN)
                         }
 
                         // when NoTag marked, clear the tag fields & speno
@@ -734,7 +735,7 @@ fun SealCard(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
-        if (seal.tagEventType == "New") {
+        if (seal.tagEventType == TagEventType.NEW) {
 
             Box(
                 modifier = Modifier

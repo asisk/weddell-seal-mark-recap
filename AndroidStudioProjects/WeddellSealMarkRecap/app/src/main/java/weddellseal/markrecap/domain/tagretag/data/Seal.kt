@@ -22,7 +22,7 @@ data class Seal(
     val sex: String = "", //TODO, replace with enum
     val sexMatch: Boolean = false,
     val swimPups: String = "",
-    val tagEventType: String = "", //TODO, replace with enum
+    val tagEventType: TagEventType = TagEventType.UNKNOWN,
     val tagNumber: String = "",
     val tagAlpha: String = "",
     val oldTagNumber: String = "",
@@ -46,7 +46,7 @@ data class Seal(
             sex.isNotBlank(),
             numRelatives.isNotBlank(),
             condition != SealCondition.UNKNOWN && condition != SealCondition.NONE,
-            tagEventType.isNotBlank(),
+            tagEventType != TagEventType.UNKNOWN,
             tagNumber.isNotBlank(),
             tagAlpha.isNotBlank(),
             numTags.isNotBlank(),
@@ -73,8 +73,8 @@ data class Seal(
             if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($sealType)."
             if (sex.isEmpty()) reasons += "Select a sex for $sealType."
             if (numRelatives.isEmpty()) reasons += "Select number of relatives for $sealType."
-            if (tagEventType.isEmpty()) reasons += "Select a tag event type for $sealType."
-            if (tagEventType == "Retag" && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for $sealType."
+            if (tagEventType == TagEventType.UNKNOWN) reasons += "Select a tag event type for $sealType."
+            if (tagEventType == TagEventType.RETAG && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for $sealType."
 
             // --- Tag Number ---
             if (!isNoTag) {
@@ -87,7 +87,7 @@ data class Seal(
                 // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).
                 // We'll still want validation on sex, age class, colony, etc. - just not the number of tags.
                 // Number of tags is required when a tag number is entered
-                if (tagEventType != "Retag" && numTags.isEmpty()) {
+                if (tagEventType != TagEventType.RETAG && numTags.isEmpty()) {
                     reasons += "Select number of tags for $sealType."
                 }
             }
@@ -108,10 +108,10 @@ data class Seal(
         get() = oldTagNumber.isNotEmpty() && oldTagAlpha.isNotEmpty() && oldTagNumber.length in 2..4
 
     val useTagID: Boolean
-        get() = tagEventType == "New" || tagEventType == "Marked" || tagEventType.isEmpty()
+        get() = tagEventType == TagEventType.NEW || tagEventType == TagEventType.MARKED || tagEventType == TagEventType.UNKNOWN
 
     val useOldTag: Boolean
-        get() = tagEventType == "Retag"
+        get() = tagEventType == TagEventType.RETAG
 
     val hasWedCheckMatch: Boolean
         get() = wedCheckMatch != null
@@ -133,7 +133,7 @@ data class Seal(
 
             // -----  The Seal has a tag number -----
 
-            if (tagEventType == "New") {
+            if (tagEventType == TagEventType.NEW) {
                 // ----- Validation Rule -----
                 // new event types CANNOT have a WedCheck record
                 if (wedCheckMatch != null) {
@@ -163,7 +163,7 @@ data class Seal(
 
                 // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).
                 // We'll still want validation on sex, age class, colony, etc. - just not the number of tags.
-                if (tagEventType != "Retag" && numTags != record.numTags) {
+                if (tagEventType != TagEventType.RETAG && numTags != record.numTags) {
                     // ----- Validation Rule -----
                     errors += "Number of tags doesn't match. WedCheck record has ${record.numTags} tags."
                 }

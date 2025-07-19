@@ -37,7 +37,7 @@ fun LookupCard(
         DataDisplayRow("Tag 2", seal.tagIdTwo)
 
         // AGE
-        DataDisplayRow("Age Class", seal.ageClass.description)
+        DataDisplayRow("Age Class", seal.ageClass.alpha)
 
         // AGE YEARS
         DataDisplayRow("Age Years", seal.ageYears)

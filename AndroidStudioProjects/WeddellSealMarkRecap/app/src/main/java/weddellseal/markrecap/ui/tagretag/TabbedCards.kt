@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealType
+import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 /**
@@ -171,7 +172,7 @@ fun TabbedCards(
 
                     // SPENO
                     // If the Tag Event Type is New, we don't display the Speno until the validation step
-                    val shouldShowSpeno = if (selectedSeal.tagEventType == "New" && !uiState.isSaveAttempted) false else true
+                    val shouldShowSpeno = if (selectedSeal.tagEventType == TagEventType.NEW && !uiState.isSaveAttempted) false else true
                     val spenoText = if (selectedSeal.hasWedCheckMatch) {
                         "Speno: ${selectedSeal.wedCheckMatch?.speNo}"
                     } else {

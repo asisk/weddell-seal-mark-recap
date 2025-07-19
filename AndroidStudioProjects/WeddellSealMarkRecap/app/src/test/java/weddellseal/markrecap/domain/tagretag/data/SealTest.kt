@@ -20,7 +20,7 @@ class SealTest {
             ageClass = SealAgeClass.ADULT,
             sex = "Female",
             numRelatives = "2",
-            tagEventType = "Marked",
+            tagEventType = TagEventType.MARKED,
             tagNumber = "123",
             numTags = "2"
         )
@@ -36,7 +36,7 @@ class SealTest {
             ageClass = SealAgeClass.ADULT,
             sex = "Female",
             numRelatives = "2",
-            tagEventType = "Marked",
+            tagEventType = TagEventType.MARKED,
             tagNumber = "12",  // Too short
             numTags = "2"
         )
@@ -51,7 +51,7 @@ class SealTest {
         val seal = Seal(
             sealType = SealType.PRIMARY,
             isNoTag = true,
-            tagEventType = "Marked"
+            tagEventType = TagEventType.MARKED,
         )
 
         assertTrue(seal.validationErrors.isEmpty())

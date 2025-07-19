@@ -18,7 +18,7 @@ data class WedCheckSeal(
     val sex: String = "",
     val speNo: Int = 0,
     val pupinTTStudy: String = "",
-    val tagEventType: String = "",
+    val tagEventType: TagEventType = TagEventType.UNKNOWN,
     val tagIdOne: String = "",
     val tagOneAlpha: String = "",
     val tagOneNumber: String = "",

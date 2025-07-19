@@ -11,6 +11,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
@@ -88,7 +89,7 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         sex = sealSex,
         speNo = speno,
         pupinTTStudy = pupinTTStudy,
-        tagEventType = "",
+        tagEventType = TagEventType.UNKNOWN,
         tagIdOne = tagIdOne,
         tagOneAlpha = processedTagOne.tagAlpha,
         tagOneNumber = processedTagOne.tagNumber,
