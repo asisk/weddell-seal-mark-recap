@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 /**
@@ -224,11 +225,10 @@ fun TabbedCards(
 
                 // DELETE DIALOG
                 if (showDeleteDialog.value) {
-                    val currentSeal = selectedSeal.name
-                    val deleteMessage = if (currentSeal == "primary") {
+                    val deleteMessage = if (selectedSeal.sealType == SealType.PRIMARY) {
                         "This will remove data you've entered for all seals. Are you sure?"
                     } else {
-                        "This will remove data you've entered for $currentSeal. Are you sure?"
+                        "This will remove data you've entered for $selectedSeal.name. Are you sure?"
                     }
 
                     RemoveDialog(
@@ -236,7 +236,7 @@ fun TabbedCards(
                         onConfirmation = {
                             if (tabItems.isNotEmpty()) {
                                 // remove the current seal
-                                viewModel.resetSeal(selectedSeal.name)
+                                viewModel.resetSeal(selectedSeal.sealType)
                                 showDeleteDialog.value = false
                             }
                         },
@@ -257,7 +257,7 @@ fun createTabItems(
 ): List<TabItem> {
     val items = mutableListOf<TabItem>()
 
-    items.add(TabItem("Seal", primarySealState) {
+    items.add(TabItem(SealType.PRIMARY.label, primarySealState) {
         SealCard(
             viewModel,
             primarySealState
@@ -265,7 +265,7 @@ fun createTabItems(
     })
 
     if (primarySealState.hasPupOne) {
-        items.add(TabItem("Pup One", pupOneSealState) {
+        items.add(TabItem(SealType.PUPONE.label, pupOneSealState) {
             SealCard(
                 viewModel,
                 pupOneSealState
@@ -274,7 +274,7 @@ fun createTabItems(
     }
 
     if (primarySealState.hasPupTwo) {
-        items.add(TabItem("Pup Two", pupTwoSealState) {
+        items.add(TabItem(SealType.PUPTWO.label, pupTwoSealState) {
             SealCard(
                 viewModel,
                 pupTwoSealState

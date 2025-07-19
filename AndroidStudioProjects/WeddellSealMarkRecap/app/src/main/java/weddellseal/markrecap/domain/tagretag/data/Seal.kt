@@ -3,7 +3,7 @@ package weddellseal.markrecap.domain.tagretag.data
 import weddellseal.markrecap.ui.utils.getCurrentYear
 
 data class Seal(
-    val sealType: SealType = SealType.UNKNOWN, // TODO, implement this in place of name
+    val sealType: SealType = SealType.UNKNOWN,
     val ageClass: SealAgeClass = SealAgeClass.UNKNOWN,
     val ageYears: String = "",
     val colony: String = "",
@@ -11,7 +11,6 @@ data class Seal(
     val condition: SealCondition = SealCondition.UNKNOWN,
     var isNoTag: Boolean = false,
     val lastPhysio: String = "",
-    val name: String = "", //TODO, replace with enum
     val notebookDataString: String = "",
     val numRelatives: String = "", //TODO, replace with enum
     val numTags: String = "",
@@ -68,28 +67,28 @@ data class Seal(
             if (!isEntryStarted) return reasons // early return, skip validation checks when entry hasn't begun for this seal
 
             // --- Basic Required Fields ---
-            if (ageClass == SealAgeClass.UNKNOWN) reasons += "Select an age for $name."
+            if (ageClass == SealAgeClass.UNKNOWN) reasons += "Select an age for $sealType."
             // pup condition will be UNKNOWN when first instantiated
             // a condition of NONE means the value was selected as a way to set the value to blank from the TagRetag Screen
-            if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($name)."
-            if (sex.isEmpty()) reasons += "Select a sex for $name."
-            if (numRelatives.isEmpty()) reasons += "Select number of relatives for $name."
-            if (tagEventType.isEmpty()) reasons += "Select a tag event type for $name."
-            if (tagEventType == "Retag" && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for $name."
+            if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($sealType)."
+            if (sex.isEmpty()) reasons += "Select a sex for $sealType."
+            if (numRelatives.isEmpty()) reasons += "Select number of relatives for $sealType."
+            if (tagEventType.isEmpty()) reasons += "Select a tag event type for $sealType."
+            if (tagEventType == "Retag" && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for $sealType."
 
             // --- Tag Number ---
             if (!isNoTag) {
                 if (tagNumber.isEmpty()) {
-                    reasons += "Enter a tag number for $name."
+                    reasons += "Enter a tag number for $sealType."
                 } else if (tagNumber.length !in 3..4) { //If tagNumber is not 3 or 4 characters long
-                    reasons += "Tag number must be 3 or 4 digits for $name."
+                    reasons += "Tag number must be 3 or 4 digits for $sealType."
                 }
 
                 // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).
                 // We'll still want validation on sex, age class, colony, etc. - just not the number of tags.
                 // Number of tags is required when a tag number is entered
                 if (tagEventType != "Retag" && numTags.isEmpty()) {
-                    reasons += "Select number of tags for $name."
+                    reasons += "Select number of tags for $sealType."
                 }
             }
 

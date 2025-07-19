@@ -176,13 +176,13 @@ fun TagRetagHeader(
                 onClick = {
                     // flag seals for review
                     if (!primarySeal.isValid) {
-                        viewModel.flagSealForReview(primarySeal.name)
+                        viewModel.flagSealForReview(primarySeal.sealType)
                     }
                     if (!pupOneSeal.isValid) {
-                        viewModel.flagSealForReview(pupOneSeal.name)
+                        viewModel.flagSealForReview(pupOneSeal.sealType)
                     }
                     if (!pupTwoSeal.isValid) {
-                        viewModel.flagSealForReview(pupTwoSeal.name)
+                        viewModel.flagSealForReview(pupTwoSeal.sealType)
                     }
 
                     viewModel.createLog(location)

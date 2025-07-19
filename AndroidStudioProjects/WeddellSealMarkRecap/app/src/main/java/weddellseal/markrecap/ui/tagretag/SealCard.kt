@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 @Composable
@@ -50,7 +51,7 @@ fun SealCard(
     var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
 
     LaunchedEffect(seal.numRelatives) {
-        numRelatives = if (seal.sex == "Male" && seal.name == "primary") {
+        numRelatives = if (seal.sex == "Male" && seal.sealType == SealType.PRIMARY) {
             "0"
         } else {
             seal.numRelatives
@@ -108,7 +109,7 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
                 // when the primary seal is a pup or yearling, there can be no other relatives
-                if (seal.name != "primary") {
+                if (seal.sealType != SealType.PRIMARY) {
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         SealAgeClass.PUP.description,
@@ -121,7 +122,7 @@ fun SealCard(
                         onOptionSelected = {
                             if (seal.ageClass == SealAgeClass.PUP && seal.ageClass.description != it) {
                                 // sex has been changed from pup to adult or yearling, clear pup fields
-                                viewModel.resetPupFields(seal.name)
+                                viewModel.resetPupFields(seal.sealType)
                             }
 
                             if (it == SealAgeClass.PUP.description || it == SealAgeClass.YEARLING.description ) {
@@ -180,7 +181,7 @@ fun SealCard(
                     options = buttonListSex,
                     selectedOption = seal.sex,
                     onOptionSelected = {
-                        if (seal.name == "primary" && it == "Male") { //primary seals that are male do not have relatives
+                        if (seal.sealType == SealType.PRIMARY && it == "Male") { //primary seals that are male do not have relatives
                             if (numRelatives != "" && numRelatives != "0") {
                                 possibleRelatives = "0"
                                 // handle the case where the number of relatives is being reduced
@@ -226,7 +227,7 @@ fun SealCard(
                             focusManager.clearFocus()
 
                             isPupPeedChecked = it
-                            viewModel.updatePupPeed(seal.name, it)
+                            viewModel.updatePupPeed(seal.sealType, it)
                         },
                         modifier = Modifier
                             .padding(8.dp)
@@ -264,7 +265,7 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                if (seal.name == "primary" && seal.isTagRetagEntry) {
+                if (seal.sealType == SealType.PRIMARY && seal.isTagRetagEntry) {
                     // when the primary seal has been populated from a observation log entry record
                     Text(
                         numRelatives,
@@ -277,7 +278,7 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
 
-                } else if (seal.name == "primary" && seal.sex == "Male" && numRelatives == "0") {
+                } else if (seal.sealType == SealType.PRIMARY && seal.sex == "Male" && numRelatives == "0") {
                     // when the primary seal is a male, there can be no other relatives
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -350,7 +351,7 @@ fun SealCard(
                 SealConditionDropdown(
                     selected = seal.condition,
                     onSelected = {
-                        viewModel.updateCondition(seal.name, it)
+                        viewModel.updateCondition(seal.sealType, it)
                     }
                 )
             }
@@ -456,7 +457,7 @@ fun SealCard(
                             errorMessage = "",
                             keyboardType = KeyboardType.Text,
                             onClearValueDo = {
-                                viewModel.clearOldTag(seal.name)
+                                viewModel.clearOldTag(seal.sealType)
                             },
                             onFocusChange = { isFocused, lastValue ->
                                 if (!isFocused) {
@@ -527,7 +528,7 @@ fun SealCard(
                         RetagReasonDropDown(
                             selected = seal.reasonForRetag,
                             onSelected = {
-                                viewModel.updateRetagReason(seal.name, it)
+                                viewModel.updateRetagReason(seal.sealType, it)
                                 viewModel.onRetagSelection(seal)
                             }
                         )
@@ -581,7 +582,7 @@ fun SealCard(
                             // when the event type is Marked or New and this field has been cleared
                             // clear the seal in the WedCheck model when this field is cleared to clear the Seal SpeNo
                             if (seal.tagEventType != "Retag") {
-                                viewModel.removeWedCheckMatch(seal)
+                                viewModel.removeWedCheckMatch(seal.sealType)
                             }
                         },
                         onFocusChange = { isFocused, lastValue ->
@@ -658,7 +659,7 @@ fun SealCard(
                         options = numTagsList,
                         selectedOption = seal.numTags,
                         onOptionSelected = { newVal ->
-                            viewModel.updateNumTags(seal.name, newVal)
+                            viewModel.updateNumTags(seal.sealType, newVal)
                         }
                     )
                 }
@@ -674,7 +675,7 @@ fun SealCard(
                     checked = seal.isNoTag,
                     onCheckedChange = {
                         focusManager.clearFocus()
-                        viewModel.updateNoTag(seal.name, it)
+                        viewModel.updateNoTag(seal.sealType, it)
 
                         if (it) {
                             // per 9/4 meeting, event type should be Marked when NoTag is checked
@@ -686,9 +687,9 @@ fun SealCard(
 
                         // when NoTag marked, clear the tag fields & speno
                         viewModel.clearTagID(seal)
-                        viewModel.clearOldTag(seal.name)
-                        viewModel.clearNumTags(seal.name)
-                        viewModel.removeWedCheckMatch(seal)
+                        viewModel.clearOldTag(seal.sealType)
+                        viewModel.clearNumTags(seal.sealType)
+                        viewModel.removeWedCheckMatch(seal.sealType)
                     },
                 )
             }
@@ -717,7 +718,7 @@ fun SealCard(
                     checked = seal.tissueTaken,
                     onCheckedChange = {
                         focusManager.clearFocus()
-                        viewModel.updateTissueTaken(seal.name, it)
+                        viewModel.updateTissueTaken(seal.sealType, it)
                     }
                 )
             }
@@ -755,7 +756,7 @@ fun SealCard(
                         checked = seal.oldTagMarks,
                         onCheckedChange = {
                             focusManager.clearFocus()
-                            viewModel.updateOldTagMarks(seal.name, it)
+                            viewModel.updateOldTagMarks(seal.sealType, it)
                         },
                     )
                 }
@@ -772,7 +773,7 @@ fun SealCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 CommentField(seal.comment) { newText ->
-                    viewModel.updateComment(seal.name, newText)
+                    viewModel.updateComment(seal.sealType, newText)
                 }
             }
         }
@@ -808,7 +809,7 @@ fun SealCard(
                     Switch(
                         checked = seal.weightTaken,
                         onCheckedChange = { isChecked ->
-                            viewModel.updateIsWeightTaken(seal.name, isChecked)
+                            viewModel.updateIsWeightTaken(seal.sealType, isChecked)
                         }
                     )
                 }
@@ -835,11 +836,11 @@ fun SealCard(
                             onFocusChange = {
                                 val number: Int? = it.toIntOrNull()
                                 if (number != null) {
-                                    viewModel.updateWeight(seal, number)
+                                    viewModel.updateWeight(seal.sealType, number)
                                 }
                             },
                             onClearValueDo = {
-                                viewModel.updateWeight(seal, 0)
+                                viewModel.updateWeight(seal.sealType, 0)
                             }
                         )
                     }

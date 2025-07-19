@@ -7,7 +7,7 @@ class SealTest {
 
     @Test
     fun `seal is incomplete when required fields are missing`() {
-        val seal = Seal(name = "TestSeal")
+        val seal = Seal(sealType = SealType.PRIMARY)
 
         assertFalse(seal.isComplete)
         assertTrue(seal.completenessReasons.any { it.contains("Select an age") })
@@ -16,7 +16,7 @@ class SealTest {
     @Test
     fun `seal is complete when all required fields are filled`() {
         val seal = Seal(
-            name = "TestSeal",
+            sealType = SealType.PRIMARY,
             ageClass = SealAgeClass.ADULT,
             sex = "Female",
             numRelatives = "2",
@@ -32,7 +32,7 @@ class SealTest {
     @Test
     fun `seal validation returns error for invalid tag number length`() {
         val seal = Seal(
-            name = "TestSeal",
+            sealType = SealType.PRIMARY,
             ageClass = SealAgeClass.ADULT,
             sex = "Female",
             numRelatives = "2",
@@ -49,7 +49,7 @@ class SealTest {
     @Test
     fun `seal with isNoTag skips validation`() {
         val seal = Seal(
-            name = "Tagless",
+            sealType = SealType.PRIMARY,
             isNoTag = true,
             tagEventType = "Marked"
         )
