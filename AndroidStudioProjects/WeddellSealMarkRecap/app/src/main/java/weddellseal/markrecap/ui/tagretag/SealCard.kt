@@ -113,9 +113,9 @@ fun SealCard(
                 } else {
                     SegmentedButtonGroup(
                         options = buttonListAge,
-                        selectedOption = seal.age,
+                        selectedOption = seal.ageClass,
                         onOptionSelected = {
-                            if (seal.age == "Pup" && seal.age != it) {
+                            if (seal.ageClass == "Pup" && seal.ageClass != it) {
                                 // sex has been changed from pup to adult or yearling, clear pup fields
                                 viewModel.resetPupFields(seal.name)
                             }
@@ -206,7 +206,7 @@ fun SealCard(
             ) {
 
                 // display pup peed only for pups
-                if (seal.age == "Pup") {
+                if (seal.ageClass == "Pup") {
                     var isPupPeedChecked by remember {
                         mutableStateOf(seal.pupPeed)
                     }
@@ -266,7 +266,7 @@ fun SealCard(
                         numRelatives,
                         style = MaterialTheme.typography.titleLarge
                     )
-                } else if (seal.age == "Pup" || seal.age == "Yearling") {
+                } else if (seal.ageClass == "Pup" || seal.ageClass == "Yearling") {
                     // when the primary seal is a pup or yearling, there can be no other relatives
                     Text(
                         numRelatives,
@@ -775,7 +775,7 @@ fun SealCard(
     }
 
     // WEIGHT FOR PUPS ONLY
-    if (seal.age == "Pup") {
+    if (seal.ageClass == "Pup") {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

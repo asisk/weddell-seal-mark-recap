@@ -6,8 +6,8 @@ import weddellseal.markrecap.domain.tagretag.data.Seal
 // function used to display the notebook string on the seal card in the observations view
 fun notebookEntryValueSeal(seal: Seal): String {
     val sb = StringBuilder()
-    val age = if (seal.age.isNotEmpty()) {
-        seal.age[0].toString()
+    val age = if (seal.ageClass.isNotEmpty()) {
+        seal.ageClass[0].toString()
     } else {
         ""
     }
@@ -50,7 +50,7 @@ fun notebookEntryValueSeal(seal: Seal): String {
     }
 
     // display condition only for Pups
-    if (seal.age == "Pup" && seal.condition.code != "") {
+    if (seal.ageClass == "Pup" && seal.condition.code != "") {
         sb.append("  ")
         sb.append("C=")
         sb.append(seal.condition.code)

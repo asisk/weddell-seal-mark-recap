@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
-import weddellseal.markrecap.domain.tagretag.data.SealAge
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
@@ -49,16 +49,16 @@ class TagRetagModel(
     private val _primarySeal = MutableStateFlow(Seal(name = "primary"))
     val primarySeal: StateFlow<Seal> = _primarySeal
 
-    private val _pupOne = MutableStateFlow(Seal(name = "pupOne", age = "Pup"))
+    private val _pupOne = MutableStateFlow(Seal(name = "pupOne", ageClass = "Pup"))
     val pupOne: StateFlow<Seal> = _pupOne
 
-    private val _pupTwo = MutableStateFlow(Seal(name = "pupTwo", age = "Pup"))
+    private val _pupTwo = MutableStateFlow(Seal(name = "pupTwo", ageClass = "Pup"))
     val pupTwo: StateFlow<Seal> = _pupTwo
 
     fun prefillSingleMale() {
         _primarySeal.update {
             it.copy(
-                age = "Adult",
+                ageClass = "Adult",
                 sex = "Male",
                 numRelatives = "0"
             )
@@ -69,7 +69,7 @@ class TagRetagModel(
     fun prefillSingleFemale() {
         _primarySeal.update {
             it.copy(
-                age = "Adult",
+                ageClass = "Adult",
                 sex = "Female",
                 numRelatives = "0"
             )
@@ -80,7 +80,7 @@ class TagRetagModel(
     fun prefillMomAndPup() {
         _primarySeal.update {
             it.copy(
-                age = "Adult",
+                ageClass = "Adult",
                 sex = "Female",
                 numRelatives = "1"
             )
@@ -267,14 +267,14 @@ class TagRetagModel(
             Seal(
                 sealType = SealType.PUPONE,
                 name = "pupOne",
-                age = "Pup"
+                ageClass = "Pup"
             )
         }
         _pupTwo.update {
             Seal(
                 sealType = SealType.PUPTWO,
                 name = "pupTwo",
-                age = "Pup"
+                ageClass = "Pup"
             )
         }
     }
@@ -439,20 +439,20 @@ class TagRetagModel(
     fun updateAge(seal: Seal, input: String) {
         when (seal.name) {
             "primary" -> {
-                _primarySeal.update { it.copy(age = input) }
+                _primarySeal.update { it.copy(ageClass = input) }
                 updateNotebookEntry(primarySeal.value)
             }
 
             "pupOne" -> {
                 _pupOne.update {
-                    it.copy(age = input)
+                    it.copy(ageClass = input)
                 }
                 updateNotebookEntry(pupOne.value)
             }
 
             "pupTwo" -> {
                 _pupTwo.update {
-                    it.copy(age = input)
+                    it.copy(ageClass = input)
                 }
                 updateNotebookEntry(pupTwo.value)
             }
@@ -485,7 +485,7 @@ class TagRetagModel(
     fun updatePupPeed(sealName: String, input: Boolean) {
         when (sealName) {
             "primary" -> {
-                if (primarySeal.value.age == "Pup") {
+                if (primarySeal.value.ageClass == "Pup") {
                     _primarySeal.update { it.copy(pupPeed = true) }
                 }
             }
@@ -982,13 +982,13 @@ class TagRetagModel(
                 _pupOne.update {
                     Seal(
                         name = "pupOne",
-                        age = "Pup"
+                        ageClass = "Pup"
                     )
                 }
                 _pupTwo.update {
                     Seal(
                         name = "pupTwo",
-                        age = "Pup"
+                        ageClass = "Pup"
                     )
                 }
             }
@@ -1009,12 +1009,12 @@ class TagRetagModel(
                     //reassign it to pupOne
                     _pupOne.update { pupTwo.value }
                     //deactivate pupTwo
-                    _pupTwo.update { Seal(name = "pupTwo", age = "Pup") }
+                    _pupTwo.update { Seal(name = "pupTwo", ageClass = "Pup") }
                 } else {
                     _pupOne.update {
                         Seal(
                             name = "pupOne",
-                            age = "Pup",
+                            ageClass = "Pup",
                             numRelatives = primarySeal.value.numRelatives
                         )
                     }
@@ -1022,7 +1022,7 @@ class TagRetagModel(
             }
 
             "pupTwo" -> {
-                _pupTwo.update { Seal(name = "pupTwo", age = "Pup") }
+                _pupTwo.update { Seal(name = "pupTwo", ageClass = "Pup") }
 
                 if (pupOne.value.isEntryStarted) { // TODO, test!
                     _pupOne.update { it.copy(numRelatives = parentNumRels) }
@@ -1037,8 +1037,8 @@ class TagRetagModel(
 
     private fun removePups() {
         //called when primary seal number of relatives is set to zero
-        _pupOne.update { Seal(name = "pupOne", age = "Pup") }
-        _pupTwo.update { Seal(name = "pupTwo", age = "Pup") }
+        _pupOne.update { Seal(name = "pupOne", ageClass = "Pup") }
+        _pupTwo.update { Seal(name = "pupTwo", ageClass = "Pup") }
     }
 
     // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen selection of Tag/Retag
@@ -1075,7 +1075,7 @@ class TagRetagModel(
 
         _primarySeal.update {
             it.copy(
-                age = sealAgeAdvanced,
+                ageClass = sealAgeAdvanced,
                 sex = lookupSeal.sex,
                 numRelatives = numberRels,
                 tagNumber = lookupSeal.tagOneNumber,
@@ -1175,7 +1175,7 @@ class TagRetagModel(
                 it.copy(
                     colony = primaryRecord.colony,
                     observationRecordSpeno = primaryRecord.speno.toInt(),
-                    age = ageString, // expecting to advance the seal age based on the last season seen
+                    ageClass = ageString, // expecting to advance the seal age based on the last season seen
                     sex = sealSex,
                     numRelatives = primaryRecord.numRelatives,
                     condition = SealCondition.fromCode(primaryRecord.sealCondition),
@@ -1249,7 +1249,7 @@ class TagRetagModel(
                 _pupOne.update {
                     it.copy(
                         observationRecordSpeno = pupOneRecord.speno.toInt(),
-                        age = SealAge.PUP.description, // expecting to advance the seal age based on the last season seen
+                        ageClass = SealAgeClass.PUP.description, // expecting to advance the seal age based on the last season seen
                         sex = sealSex,
                         numRelatives = pupOneRecord.numRelatives,
                         condition = SealCondition.fromLabel(pupOneRecord.sealCondition),
@@ -1323,7 +1323,7 @@ class TagRetagModel(
                 _pupTwo.update {
                     it.copy(
                         observationRecordSpeno = pupTwoRecord.speno.toInt(),
-                        age = SealAge.PUP.description, // expecting to advance the seal age based on the last season seen
+                        ageClass = SealAgeClass.PUP.description, // expecting to advance the seal age based on the last season seen
                         sex = sealSex,
                         numRelatives = pupTwoRecord.numRelatives,
                         condition = SealCondition.fromLabel(pupTwoRecord.sealCondition),

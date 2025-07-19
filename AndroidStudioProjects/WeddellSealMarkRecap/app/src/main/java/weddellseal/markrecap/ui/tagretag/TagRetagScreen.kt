@@ -188,7 +188,7 @@ fun TagRetagScreen(
                                 text = { Text("Mom & Pup") },
                                 onClick = {
                                     // update viewModel with prefilled fields
-                                    if (primarySeal.age == "") {
+                                    if (primarySeal.ageClass == "") {
                                         viewModel.prefillMomAndPup()
                                     }
                                 },
@@ -207,7 +207,7 @@ fun TagRetagScreen(
                                 text = { Text("Single Female") },
                                 onClick = {
                                     // update viewModel with prefilled fields
-                                    if (primarySeal.age == "") {
+                                    if (primarySeal.ageClass == "") {
                                         viewModel.prefillSingleFemale()
                                     }
                                 },
@@ -226,7 +226,7 @@ fun TagRetagScreen(
                                 text = { Text("Single Male") },
                                 onClick = {
                                     // update viewModel with prefilled fields
-                                    if (primarySeal.age == "") {
+                                    if (primarySeal.ageClass == "") {
                                         viewModel.prefillSingleMale()
                                     }
                                 },

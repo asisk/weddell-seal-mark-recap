@@ -36,8 +36,8 @@ fun buildObservationRecord(
     }
 
     var ageClass = ""
-    if (seal.age != "") {
-        ageClass = seal.age[0].toString()
+    if (seal.ageClass != "") {
+        ageClass = seal.ageClass[0].toString()
     }
 
     var sex = ""
