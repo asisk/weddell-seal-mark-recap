@@ -113,7 +113,6 @@ class TagRetagModel(
 //    }
 
     data class UiState(
-        val observationRecord: ObservationRecord? = null,
         val metadata: ObservationMetadata = ObservationMetadata(),
 
         val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
@@ -140,19 +139,25 @@ class TagRetagModel(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _observationToEdit = MutableStateFlow<DisplayObservation?>(null)
-    val observationToEdit: StateFlow<DisplayObservation?> get() = _observationToEdit
+    private val _selectedRecentObservation = MutableStateFlow<DisplayObservation?>(null)
+    val selectedRecentObservation: StateFlow<DisplayObservation?> get() = _selectedRecentObservation
 
     fun onEditAttempt(observation: DisplayObservation) {
         viewModelScope.launch {
             if (!primarySeal.value.isEntryStarted) {
-                _observationToEdit.value = observation // set the observation to edit
+                _selectedRecentObservation.value = observation // set the observation to edit
                 _uiEvent.emit(UiEvent.ShowEditDialog)
             } else {
                 _uiEvent.emit(
                     UiEvent.ShowToast("Looks like you're already editing another seal! Save or clear, then edit this record.")
                 )
             }
+        }
+    }
+
+    fun onViewAttempt(observation: DisplayObservation) {
+        viewModelScope.launch {
+            _selectedRecentObservation.value = observation // set the observation to edit
         }
     }
 
@@ -1196,11 +1201,6 @@ class TagRetagModel(
         }
 
         updateNotebookEntry(primarySeal.value)
-    }
-
-    // TODO, make sure this addresses the need to view the pups for the record as well
-    fun loadObservationEntryForView(observation: ObservationRecord) {
-        _uiState.update { it.copy(observationRecord = observation) }
     }
 
     // used to pull over the fields from the ObservationRecord

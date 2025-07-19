@@ -72,8 +72,7 @@ fun TabbedCards(
         )
     }
 
-    // TODO, revisit whether this is necessary
-    // Render the tabs list based on changes with number of relatives or pups started
+    // Update the tab items when the seals change
     LaunchedEffect(
         primarySeal,
         pupOneSeal,

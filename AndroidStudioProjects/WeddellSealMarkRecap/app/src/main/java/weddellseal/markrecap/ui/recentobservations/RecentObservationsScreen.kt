@@ -62,7 +62,7 @@ fun RecentObservationsScreen(
     val uiEventFlow = tagRetagViewModel.uiEvent
 
     val displayObservations by viewModel.displayObservations.collectAsState()
-    val observationToEdit by tagRetagViewModel.observationToEdit.collectAsState()
+    val observationToEdit by tagRetagViewModel.selectedRecentObservation.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
 
@@ -153,7 +153,7 @@ fun RecentObservationsScreen(
                                         tagRetagViewModel.onEditAttempt(displayObs)
                                     },
                                     onViewDo = {
-                                        tagRetagViewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                        tagRetagViewModel.onViewAttempt(displayObs)
                                         navController.navigate(Screens.ObservationViewer.route)
                                     },
                                     observation = displayObs.primarySeal,
@@ -172,7 +172,7 @@ fun RecentObservationsScreen(
                                         tagRetagViewModel.onEditAttempt(displayObs)
                                     },
                                     onViewDo = {
-                                        tagRetagViewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                        tagRetagViewModel.onViewAttempt(displayObs)
                                         navController.navigate(Screens.ObservationViewer.route)
                                     },
                                     observation = displayObs.primarySeal,

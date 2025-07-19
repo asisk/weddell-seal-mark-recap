@@ -67,7 +67,7 @@ fun TagRetagFooter(
     val uiEventFlow = viewModel.uiEvent
 
     val displayObservations by recentObsViewModel.displayObservations.collectAsState()
-    val observationToEdit by viewModel.observationToEdit.collectAsState()
+    val selectedObservation by viewModel.selectedRecentObservation.collectAsState()
     var showEditDialog by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsState()
@@ -287,7 +287,7 @@ fun TagRetagFooter(
                                 viewModel.onEditAttempt(displayObs)
                             },
                             onViewDo = {
-                                viewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                viewModel.onViewAttempt(displayObs)
                                 navController.navigate(Screens.ObservationViewer.route)
                             },
                             observation = displayObs.primarySeal,
@@ -306,7 +306,7 @@ fun TagRetagFooter(
                                 viewModel.onEditAttempt(displayObs)
                             },
                             onViewDo = {
-                                viewModel.loadObservationEntryForView(displayObs.primarySeal)
+                                viewModel.onViewAttempt(displayObs)
                                 navController.navigate(Screens.ObservationViewer.route)
                             },
                             observation = displayObs.primarySeal,
@@ -331,7 +331,7 @@ fun TagRetagFooter(
                 showEditDialog = false
 
                 // Determine which seals are present and load them in the Tag/Retag Screen for Editing
-                observationToEdit?.let { record ->
+                selectedObservation?.let { record ->
                     viewModel.resetUiStateIndicators()
                     viewModel.loadSealForEdit(record)
                     navController.navigate(Screens.AddObservationLog.route)
