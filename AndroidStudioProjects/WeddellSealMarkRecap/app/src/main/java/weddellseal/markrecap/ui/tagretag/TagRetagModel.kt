@@ -1231,19 +1231,19 @@ class TagRetagModel(
 
             var processedTagOneNumberPrimary = ""
             var processedTagOneAlphaPrimary = ""
-            var numTags = 0
+            var numTagsPrimary = 0
 
             if (primaryRecord.tagIDOne != "NoTag") {
                 val processedTagOne = processTags(primaryRecord.tagIDOne)
                 if (processedTagOne.tagValid) {
-                    numTags++
+                    numTagsPrimary++
                     processedTagOneNumberPrimary = processedTagOne.tagNumber
                     processedTagOneAlphaPrimary = processedTagOne.tagAlpha
                 }
 
                 val processedTagTwo = processTags(primaryRecord.tagIDTwo)
                 if (processedTagTwo.tagValid) {
-                    numTags++
+                    numTagsPrimary++
                 }
             }
 
@@ -1252,7 +1252,7 @@ class TagRetagModel(
             if (primaryRecord.oldTagIDOne != "NoTag") {
                 val processedTagOne = processTags(primaryRecord.oldTagIDOne)
                 if (processedTagOne.tagValid) {
-                    numTags++
+                    numTagsPrimary++
                     processedOldTagNumberPrimary = processedTagOne.tagNumber
                     processedOldTagAlphaPrimary = processedTagOne.tagAlpha
                 }
@@ -1272,7 +1272,7 @@ class TagRetagModel(
                     oldTagAlpha = processedOldTagAlphaPrimary,
                     tagEventType = TagEventType.fromAlpha(primaryRecord.tagEvent),
                     reasonForRetag = RetagReason.fromLabel(primaryRecord.retagReason),
-                    numTags = if (numTags > 0) numTags.toString() else "",
+                    numTags = if (numTagsPrimary > 0) numTagsPrimary.toString() else "",
                     isNoTag = primaryRecord.tagIDOne == "NoTag" && primaryRecord.tagEvent == "Marked",
                     comment = primaryRecord.comments,
                     weightTaken = primaryRecord.weight != "",
@@ -1292,19 +1292,19 @@ class TagRetagModel(
 
                 var processedTagOneNumberPupOne = ""
                 var processedTagOneAlphaPupOne = ""
-                var numTags = 0
+                var numTagsPupOne = 0
 
                 if (pupOneRecord.tagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupOneRecord.tagIDOne)
                     if (processedTagOne.tagValid) {
-                        numTags++
+                        numTagsPupOne++
                         processedTagOneNumberPupOne = processedTagOne.tagNumber
                         processedTagOneAlphaPupOne = processedTagOne.tagAlpha
                     }
 
                     val processedTagTwo = processTags(pupOneRecord.tagIDTwo)
                     if (processedTagTwo.tagValid) {
-                        numTags++
+                        numTagsPupOne++
                     }
                 }
 
@@ -1313,7 +1313,7 @@ class TagRetagModel(
                 if (pupOneRecord.oldTagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupOneRecord.oldTagIDOne)
                     if (processedTagOne.tagValid) {
-                        numTags++
+                        numTagsPupOne++
                         processedOldTagNumberPupOne = processedTagOne.tagNumber
                         processedOldTagAlphaPupOne = processedTagOne.tagAlpha
                     }
@@ -1332,7 +1332,7 @@ class TagRetagModel(
                         oldTagAlpha = processedOldTagAlphaPupOne,
                         tagEventType = TagEventType.fromAlpha(pupOneRecord.tagEvent),
                         reasonForRetag = RetagReason.fromCode(pupOneRecord.retagReason),
-                        numTags = if (numTags > 0) numTags.toString() else "",
+                        numTags = if (numTagsPupOne > 0) numTagsPupOne.toString() else "",
                         isNoTag = pupOneRecord.tagIDOne == "NoTag" && pupOneRecord.tagEvent == "Marked",
                         comment = pupOneRecord.comments,
                         weightTaken = pupOneRecord.weight != "",
@@ -1352,19 +1352,19 @@ class TagRetagModel(
 
                 var processedTagOneNumberPupTwo = ""
                 var processedTagOneAlphaPupTwo = ""
-                var numTags = 0
+                var numTagsPupTwo = 0
 
                 if (pupTwoRecord.tagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupTwoRecord.tagIDOne)
                     if (processedTagOne.tagValid) {
-                        numTags++
+                        numTagsPupTwo++
                         processedTagOneNumberPupTwo = processedTagOne.tagNumber
                         processedTagOneAlphaPupTwo = processedTagOne.tagAlpha
                     }
 
                     val processedTagTwo = processTags(pupTwoRecord.tagIDTwo)
                     if (processedTagTwo.tagValid) {
-                        numTags++
+                        numTagsPupTwo++
                     }
                 }
 
@@ -1373,7 +1373,7 @@ class TagRetagModel(
                 if (pupTwoRecord.oldTagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupTwoRecord.oldTagIDOne)
                     if (processedTagOne.tagValid) {
-                        numTags++
+                        numTagsPupTwo++
                         processedOldTagNumberPupTwo = processedTagOne.tagNumber
                         processedOldTagAlphaPupTwo = processedTagOne.tagAlpha
                     }
@@ -1392,7 +1392,7 @@ class TagRetagModel(
                         oldTagAlpha = processedOldTagAlphaPupTwo,
                         tagEventType = TagEventType.fromAlpha(pupTwoRecord.tagEvent),
                         reasonForRetag = RetagReason.fromCode(pupTwoRecord.retagReason),
-                        numTags = if (numTags > 0) numTags.toString() else "",
+                        numTags = if (numTagsPupTwo > 0) numTagsPupTwo.toString() else "",
                         isNoTag = pupTwoRecord.tagIDOne == "NoTag" && pupTwoRecord.tagEvent == "Marked",
                         comment = pupTwoRecord.comments,
                         weightTaken = pupTwoRecord.weight != "",
