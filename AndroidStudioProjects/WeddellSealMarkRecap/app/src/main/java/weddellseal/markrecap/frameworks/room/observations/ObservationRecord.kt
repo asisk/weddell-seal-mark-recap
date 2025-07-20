@@ -75,9 +75,6 @@ fun ObservationRecord.toSeal(): Seal {
     val processedOldTag = processTags(oldTagIDOne)
 
     return Seal(
-        colony = colony, //TODO, need to update the UI fields to reflect the colony and observers, location too?
-//            observer = record.observerInitials,
-        // location?
         observationRecordSpeno = speno.toInt(),
         ageClass = SealAgeClass.fromAlpha(ageClass), // expecting to advance the seal age based on the last season seen
         sex = SealSex.fromAlpha(sex),

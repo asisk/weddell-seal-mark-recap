@@ -1308,7 +1308,11 @@ class TagRetagModel(
                     )
                 }
 
-                _primarySeal.update { displayObservation.primarySeal.toSeal() }
+                _primarySeal.update {
+                    displayObservation.primarySeal.toSeal()
+                        .copy(sealType = SealType.PRIMARY)
+                }
+
                 updateNotebookEntry(primarySeal.value)
             }
         }
