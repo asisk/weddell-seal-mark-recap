@@ -84,7 +84,7 @@ fun SealCard(
 
     // AGE
     val buttonListAge = SealAgeClass.values()
-        .filter { it != SealAgeClass.UNKNOWN}
+        .filter { it != SealAgeClass.UNKNOWN }
         .map { it.description }
 
     Row(
@@ -127,7 +127,7 @@ fun SealCard(
                                 viewModel.resetPupFields(seal.sealType)
                             }
 
-                            if (it == SealAgeClass.PUP.description || it == SealAgeClass.YEARLING.description ) {
+                            if (it == SealAgeClass.PUP.description || it == SealAgeClass.YEARLING.description) {
                                 // if the primary seal is a pup or a yearling, there are no relatives
                                 if (numRelatives != "" && numRelatives != "0") {
                                     possibleRelatives = "0"
@@ -163,8 +163,9 @@ fun SealCard(
     ) {
 
         // SEX
-        val buttonListSex = listOf("Female", "Male", "Unknown")
-
+        val buttonListSex = SealSex.values()
+            .filter { it != SealSex.NONE }
+            .map { it.description }
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -361,9 +362,9 @@ fun SealCard(
     }
 
 // TAG EVENT TYPE
-//TODO, consider an enum for this an other strings
-    val tagEventList = listOf("Marked", "New", "Retag")
-
+    val tagEventList = TagEventType.values()
+        .filter { it != TagEventType.UNKNOWN }
+        .map { it.description }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -545,7 +546,6 @@ fun SealCard(
                                 viewModel.onRetagSelection(seal)
                             }
                         )
-
                     }
                 }
             }
@@ -575,7 +575,8 @@ fun SealCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
 //                    val errMessage = "3 or 4 digits"
-                    val fieldLabel = if (seal.tagEventType == TagEventType.RETAG) "New\nTag ID" else "Tag ID"
+                    val fieldLabel =
+                        if (seal.tagEventType == TagEventType.RETAG) "New\nTag ID" else "Tag ID"
 
                     Text(
                         fieldLabel,
@@ -785,9 +786,18 @@ fun SealCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                CommentField(seal.comment) { newText ->
-                    viewModel.updateComment(seal.sealType, newText)
-                }
+                CommentField(
+                    value = seal.comment,
+                    onClearValueDo = {
+                        viewModel.updateComment(seal.sealType, "")
+                    },
+                    onFocusChange = { isFocused, lastValue ->
+                        if (!isFocused) {
+                            // save the input to the model
+                            viewModel.updateComment(seal.sealType, lastValue.trim())
+                        }
+                    }
+                )
             }
         }
     }
