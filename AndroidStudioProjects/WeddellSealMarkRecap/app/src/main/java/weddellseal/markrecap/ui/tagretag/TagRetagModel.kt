@@ -161,53 +161,50 @@ class TagRetagModel(
         }
     }
 
-    // used to determine whether to kick off an event to lookup a WedCheck match
+    // This function is used to ensure that each seal has it’s own WedCheck match & associated speno.
+    // Changes to one seal should not affect pup or mom.
+    // If there's not WedCheck match, no speno should be assigned.
+    // WedCheck match can be populated from the lookup record.
+
+    /* Notes on Display of speno */
+    // The WedCheck match record speno is displayed in the UI.
+    // Not shown in the UI when the Tag Event is New, but it should be available for validation step.
+
+    /* Notes on when to refresh the WedCheck match */
+    // Search with Tag ID when tag event changes to Marked or New.
+    // Search when the Tag ID number or alpha character changes.
+    // Search with Old Tag ID when tag event changes to Retag.
     fun requestCurrentWedCheckMatch(seal: Seal) {
-        var searchStr = "default"
-        if (seal.useTagID && seal.isTagIDValid) {
-            // This is a Marked or New tag event with a complete & valid tag value
-            searchStr = seal.tagNumber + seal.tagAlpha
-        } else if (seal.useOldTag && seal.isOldTagValid) {
-            // This is a Retag event with an Old Tag value that's complete and valid
-            searchStr = seal.oldTagNumber + seal.oldTagAlpha
-        } else {
+        val searchStr = when {
+            seal.useTagID && seal.isTagIDValid -> seal.tagNumber + seal.tagAlpha
+            seal.useOldTag && seal.isOldTagValid -> seal.oldTagNumber + seal.oldTagAlpha
+            else -> {
+                Log.d("TagRetagModel", "Seal does not have a valid tag to use for WedCheck lookup")
+                return
+            }
+        }
+
+        if (seal.wedCheckMatch?.tagIdOne == searchStr) {
             Log.d(
                 "TagRetagModel",
-                "Seal does not have a valid tag to use for WedCheck lookup"
+                "Seal with tag ID: $searchStr already has a current WedCheck match: ${seal.wedCheckMatch.tagIdOne}"
             )
-            if (seal.hasWedCheckMatch) {
-                removeWedCheckMatch(seal.sealType)
-            }
             return
         }
 
-        if (seal.wedCheckMatch != null) {
-
-            if (seal.wedCheckMatch.tagIdOne == searchStr) {
+        if (!uiState.value.isSearching) {
+            if (seal.wedCheckMatch != null) {
                 Log.d(
                     "TagRetagModel",
-                    "Seal with tag ID: $searchStr already has a current WedCheck match: ${seal.wedCheckMatch.tagIdOne}"
+                    "removing current WedCheck match for seal with tag ID: $searchStr"
                 )
-
-                return
+                removeWedCheckMatch(seal.sealType)
             }
-
-            Log.d(
-                "TagRetagModel",
-                "removing current WedCheck match for seal with tag ID: $searchStr"
-            )
-
-            removeWedCheckMatch(seal.sealType)
-        }
-
-        // There's a valid tag value
-        // kick off a lookup for a WedCheck match
-        if (!uiState.value.isSearching) {
             Log.d("TagRetagModel", "looking up seal for $searchStr")
             findWedCheckMatch(seal, searchStr)
+        } else {
+            Log.d("TagRetagModel", "ignoring requested lookup as search is already in progress")
         }
-
-        return
     }
 
     fun onRetagSelection(seal: Seal) { // TODO, consider passing the event Type as a parameter, and change the seal to sealType
@@ -339,22 +336,28 @@ class TagRetagModel(
         val deviceID = getDeviceName(context)
         val currentSeason = getCurrentYear().toString()
 
+        // Observe homeViewUiState and update metadata
+        // Observe seal validity & save eligibility
         viewModelScope.launch {
+            // Each time any of these change:
+            // 1) build a metadata object describing things like colony, observers, and season.
+            // 2) check each seal (primary, pup one, pup two) to see if their information is complete and valid.
+            // 3) create a list of reasons why the data isn’t ready to save.
             combine(
                 _primarySeal,
                 _pupOne,
                 _pupTwo,
                 homeViewUiState
-            ) { primary, pupOne, pupTwo, metadata ->
+            ) { primary, pupOne, pupTwo, homeUiState ->
 
                 // Initialize the metadata object
                 val metadata = ObservationMetadata(
-                    selectedColony = homeViewUiState.value.selectedColony,
-                    selectedObservers = homeViewUiState.value.selectedObservers,
-                    censusNumber = homeViewUiState.value.selectedCensusNumber,
-                    isCensusMode = homeViewUiState.value.isCensusMode,
+                    selectedColony = homeUiState.selectedColony,
+                    selectedObservers = homeUiState.selectedObservers,
+                    censusNumber = homeUiState.selectedCensusNumber,
+                    isCensusMode = homeUiState.isCensusMode,
                     deviceID = deviceID,
-                    currentSeason = currentSeason,
+                    currentSeason = currentSeason
                 )
 
                 // Check if save is enabled
@@ -366,16 +369,9 @@ class TagRetagModel(
                 }
 
                 // Check if the observation has valid seal data
-                var allSealsValid = true
-                if (!primary.isValid) {
-                    allSealsValid = false
-                }
-                if (primary.hasPupOne && !pupOne.isValid) {
-                    allSealsValid = false
-                }
-                if (primary.hasPupTwo && !pupTwo.isValid) {
-                    allSealsValid = false
-                }
+                val allSealsValid = primary.isValid &&
+                        (!primary.hasPupOne || pupOne.isValid) &&
+                        (!primary.hasPupTwo || pupTwo.isValid)
 
                 // emit a Triple that can be unpacked in `collect`
                 Triple(metadata, reasons, allSealsValid)
@@ -1020,6 +1016,11 @@ class TagRetagModel(
         }
     }
 
+    /* Notes on when to clear the WedCheck match */
+    // Remove the WedCheck match when the Tag ID field is cleared.
+    // Remove the WedCheck match when the Old Tag ID field is cleared.
+    // Remove the WedCheck match when No Tag is selected.
+    // Removed when the tag id or old tag id changes and a search for a WedCheck match is initiated.
     fun removeWedCheckMatch(sealName: SealType) {
         when (sealName) {
             SealType.PRIMARY -> {

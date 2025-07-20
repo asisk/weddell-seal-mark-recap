@@ -394,7 +394,7 @@ fun SealCard(
                     // the database record needs to have an event type of marked for Retag
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        "Marked",
+                        TagEventType.MARKED.description,
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
@@ -405,6 +405,11 @@ fun SealCard(
                             viewModel.updateTagEventType(seal, TagEventType.fromSelection(it))
                             if (it == TagEventType.RETAG.description) {
                                 viewModel.onRetagSelection(seal)
+
+                                // Clear the WedCheck match if the old tag ID does not match the WedCheck tag ID
+                                if (seal.wedCheckMatch != null && seal.wedCheckMatch.tagIdOne != seal.oldTagNumber + seal.oldTagAlpha) {
+                                    viewModel.removeWedCheckMatch(seal.sealType)
+                                }
                             }
                         }
                     )
@@ -460,6 +465,12 @@ fun SealCard(
                             keyboardType = KeyboardType.Text,
                             onClearValueDo = {
                                 viewModel.clearOldTag(seal.sealType)
+
+                                // when the event type is Retag and this field has been cleared
+                                // clear the seal in the WedCheck model when this field is cleared to clear the Seal SpeNo
+                                if (seal.tagEventType == TagEventType.RETAG) {
+                                    viewModel.removeWedCheckMatch(seal.sealType)
+                                }
                             },
                             onFocusChange = { isFocused, lastValue ->
                                 if (!isFocused) {
