@@ -41,9 +41,9 @@ class SealTest {
             numTags = "2"
         )
 
-        val errors = seal.validationErrors
+        val errors = seal.completenessReasons
         assertFalse(errors.isEmpty())
-        assertFalse(errors.any { it.contains("Tag number must be 3 or 4 digits") })
+        assertTrue(errors.any { it.contains("Tag number must be 3 or 4 digits") })
     }
 
     @Test
