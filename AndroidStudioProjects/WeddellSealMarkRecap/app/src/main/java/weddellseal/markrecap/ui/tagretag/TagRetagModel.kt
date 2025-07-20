@@ -1229,16 +1229,16 @@ class TagRetagModel(
         // MAP PRIMARY
         primaryRecord.let {
 
-            var processedTagOneNumber = ""
-            var processedTagOneAlpha = ""
+            var processedTagOneNumberPrimary = ""
+            var processedTagOneAlphaPrimary = ""
             var numTags = 0
 
             if (primaryRecord.tagIDOne != "NoTag") {
                 val processedTagOne = processTags(primaryRecord.tagIDOne)
                 if (processedTagOne.tagValid) {
                     numTags++
-                    processedTagOneNumber = processedTagOne.tagNumber
-                    processedTagOneAlpha = processedTagOne.tagAlpha
+                    processedTagOneNumberPrimary = processedTagOne.tagNumber
+                    processedTagOneAlphaPrimary = processedTagOne.tagAlpha
                 }
 
                 val processedTagTwo = processTags(primaryRecord.tagIDTwo)
@@ -1247,14 +1247,14 @@ class TagRetagModel(
                 }
             }
 
-            var processedOldTagNumber = ""
-            var processedOldTagAlpha = ""
+            var processedOldTagNumberPrimary = ""
+            var processedOldTagAlphaPrimary = ""
             if (primaryRecord.oldTagIDOne != "NoTag") {
                 val processedTagOne = processTags(primaryRecord.oldTagIDOne)
                 if (processedTagOne.tagValid) {
                     numTags++
-                    processedOldTagNumber = processedTagOne.tagNumber
-                    processedOldTagAlpha = processedTagOne.tagAlpha
+                    processedOldTagNumberPrimary = processedTagOne.tagNumber
+                    processedOldTagAlphaPrimary = processedTagOne.tagAlpha
                 }
             }
 
@@ -1266,10 +1266,10 @@ class TagRetagModel(
                     sex = SealSex.fromAlpha(primaryRecord.sex),
                     numRelatives = primaryRecord.numRelatives,
                     condition = SealCondition.fromCode(primaryRecord.sealCondition),
-                    tagNumber = processedTagOneNumber,
-                    tagAlpha = processedTagOneAlpha,
-                    oldTagNumber = processedOldTagNumber,
-                    oldTagAlpha = processedOldTagAlpha,
+                    tagNumber = processedTagOneNumberPrimary,
+                    tagAlpha = processedTagOneAlphaPrimary,
+                    oldTagNumber = processedOldTagNumberPrimary,
+                    oldTagAlpha = processedOldTagAlphaPrimary,
                     tagEventType = TagEventType.fromAlpha(primaryRecord.tagEvent),
                     reasonForRetag = RetagReason.fromLabel(primaryRecord.retagReason),
                     numTags = if (numTags > 0) numTags.toString() else "",
@@ -1290,16 +1290,16 @@ class TagRetagModel(
             // MAP PUPONE
             pupOneRecord?.let {
 
-                var processedTagOneNumber = ""
-                var processedTagOneAlpha = ""
+                var processedTagOneNumberPupOne = ""
+                var processedTagOneAlphaPupOne = ""
                 var numTags = 0
 
                 if (pupOneRecord.tagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupOneRecord.tagIDOne)
                     if (processedTagOne.tagValid) {
                         numTags++
-                        processedTagOneNumber = processedTagOne.tagNumber
-                        processedTagOneAlpha = processedTagOne.tagAlpha
+                        processedTagOneNumberPupOne = processedTagOne.tagNumber
+                        processedTagOneAlphaPupOne = processedTagOne.tagAlpha
                     }
 
                     val processedTagTwo = processTags(pupOneRecord.tagIDTwo)
@@ -1308,14 +1308,14 @@ class TagRetagModel(
                     }
                 }
 
-                var processedOldTagNumber = ""
-                var processedOldTagAlpha = ""
+                var processedOldTagNumberPupOne = ""
+                var processedOldTagAlphaPupOne = ""
                 if (pupOneRecord.oldTagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupOneRecord.oldTagIDOne)
                     if (processedTagOne.tagValid) {
                         numTags++
-                        processedOldTagNumber = processedTagOne.tagNumber
-                        processedOldTagAlpha = processedTagOne.tagAlpha
+                        processedOldTagNumberPupOne = processedTagOne.tagNumber
+                        processedOldTagAlphaPupOne = processedTagOne.tagAlpha
                     }
                 }
 
@@ -1326,10 +1326,10 @@ class TagRetagModel(
                         sex = SealSex.fromAlpha(pupOneRecord.sex),
                         numRelatives = pupOneRecord.numRelatives,
                         condition = SealCondition.fromLabel(pupOneRecord.sealCondition),
-                        tagNumber = processedTagOneNumber,
-                        tagAlpha = processedTagOneAlpha,
-                        oldTagNumber = processedOldTagNumber,
-                        oldTagAlpha = processedOldTagAlpha,
+                        tagNumber = processedTagOneNumberPupOne,
+                        tagAlpha = processedTagOneAlphaPupOne,
+                        oldTagNumber = processedOldTagNumberPupOne,
+                        oldTagAlpha = processedOldTagAlphaPupOne,
                         tagEventType = TagEventType.fromAlpha(pupOneRecord.tagEvent),
                         reasonForRetag = RetagReason.fromCode(pupOneRecord.retagReason),
                         numTags = if (numTags > 0) numTags.toString() else "",
@@ -1350,16 +1350,16 @@ class TagRetagModel(
             // MAP PUPTWO
             pupTwoRecord?.let {
 
-                var processedTagOneNumber = ""
-                var processedTagOneAlpha = ""
+                var processedTagOneNumberPupTwo = ""
+                var processedTagOneAlphaPupTwo = ""
                 var numTags = 0
 
                 if (pupTwoRecord.tagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupTwoRecord.tagIDOne)
                     if (processedTagOne.tagValid) {
                         numTags++
-                        processedTagOneNumber = processedTagOne.tagNumber
-                        processedTagOneAlpha = processedTagOne.tagAlpha
+                        processedTagOneNumberPupTwo = processedTagOne.tagNumber
+                        processedTagOneAlphaPupTwo = processedTagOne.tagAlpha
                     }
 
                     val processedTagTwo = processTags(pupTwoRecord.tagIDTwo)
@@ -1368,14 +1368,14 @@ class TagRetagModel(
                     }
                 }
 
-                var processedOldTagNumber = ""
-                var processedOldTagAlpha = ""
+                var processedOldTagNumberPupTwo = ""
+                var processedOldTagAlphaPupTwo = ""
                 if (pupTwoRecord.oldTagIDOne != "NoTag") {
                     val processedTagOne = processTags(pupTwoRecord.oldTagIDOne)
                     if (processedTagOne.tagValid) {
                         numTags++
-                        processedOldTagNumber = processedTagOne.tagNumber
-                        processedOldTagAlpha = processedTagOne.tagAlpha
+                        processedOldTagNumberPupTwo = processedTagOne.tagNumber
+                        processedOldTagAlphaPupTwo = processedTagOne.tagAlpha
                     }
                 }
 
@@ -1386,10 +1386,10 @@ class TagRetagModel(
                         sex = SealSex.fromAlpha(pupTwoRecord.sex),
                         numRelatives = pupTwoRecord.numRelatives,
                         condition = SealCondition.fromLabel(pupTwoRecord.sealCondition),
-                        tagNumber = processedTagOneNumber,
-                        tagAlpha = processedTagOneAlpha,
-                        oldTagNumber = processedOldTagNumber,
-                        oldTagAlpha = processedOldTagAlpha,
+                        tagNumber = processedTagOneNumberPupTwo,
+                        tagAlpha = processedTagOneAlphaPupTwo,
+                        oldTagNumber = processedOldTagNumberPupTwo,
+                        oldTagAlpha = processedOldTagAlphaPupTwo,
                         tagEventType = TagEventType.fromAlpha(pupTwoRecord.tagEvent),
                         reasonForRetag = RetagReason.fromCode(pupTwoRecord.retagReason),
                         numTags = if (numTags > 0) numTags.toString() else "",
