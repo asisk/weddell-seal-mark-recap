@@ -24,11 +24,10 @@ import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
-import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.observations.toSeal
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
-import weddellseal.markrecap.frameworks.room.wedCheck.processTags
 import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
 import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.home.HomeViewModel
@@ -1210,205 +1209,38 @@ class TagRetagModel(
     fun loadSealForEdit(
         displayObservation: DisplayObservation
     ) {
-
-        var primaryRecord: ObservationRecord? = null
-        var pupOneRecord: ObservationRecord? = null
-        var pupTwoRecord: ObservationRecord? = null
         when (displayObservation) {
             is DisplayObservation.WithPups -> {
-                primaryRecord = displayObservation.primarySeal
-                pupOneRecord = displayObservation.pupOne
-                pupTwoRecord = displayObservation.pupTwo
+                _primarySeal.update {
+                    displayObservation.primarySeal.toSeal()
+                        .copy(sealType = SealType.PRIMARY)
+                }
+                updateNotebookEntry(primarySeal.value)
+
+                displayObservation.pupOne?.let {
+                    _pupOne.update {
+                        displayObservation.pupOne.toSeal()
+                            .copy(sealType = SealType.PUPONE)
+                    }
+                    updateNotebookEntry(pupOne.value)
+                }
+
+                displayObservation.pupTwo?.let {
+                    _pupTwo.update {
+                        displayObservation.pupTwo.toSeal()
+                            .copy(sealType = SealType.PUPTWO)
+                    }
+                    updateNotebookEntry(pupTwo.value)
+                }
             }
 
             is DisplayObservation.Standalone -> {
-                primaryRecord = displayObservation.primarySeal
+                _primarySeal.update { displayObservation.primarySeal.toSeal() }
+                updateNotebookEntry(primarySeal.value)
             }
         }
 
-        // MAP PRIMARY
-        primaryRecord.let {
-
-            var processedTagOneNumberPrimary = ""
-            var processedTagOneAlphaPrimary = ""
-            var numTagsPrimary = 0
-
-            if (primaryRecord.tagIDOne != "NoTag") {
-                val processedTagOne = processTags(primaryRecord.tagIDOne)
-                if (processedTagOne.tagValid) {
-                    numTagsPrimary++
-                    processedTagOneNumberPrimary = processedTagOne.tagNumber
-                    processedTagOneAlphaPrimary = processedTagOne.tagAlpha
-                }
-
-                val processedTagTwo = processTags(primaryRecord.tagIDTwo)
-                if (processedTagTwo.tagValid) {
-                    numTagsPrimary++
-                }
-            }
-
-            var processedOldTagNumberPrimary = ""
-            var processedOldTagAlphaPrimary = ""
-            if (primaryRecord.oldTagIDOne != "NoTag") {
-                val processedTagOne = processTags(primaryRecord.oldTagIDOne)
-                if (processedTagOne.tagValid) {
-                    numTagsPrimary++
-                    processedOldTagNumberPrimary = processedTagOne.tagNumber
-                    processedOldTagAlphaPrimary = processedTagOne.tagAlpha
-                }
-            }
-
-            _primarySeal.update {
-                it.copy(
-                    colony = primaryRecord.colony,
-                    observationRecordSpeno = primaryRecord.speno.toInt(),
-                    ageClass = SealAgeClass.fromAlpha(primaryRecord.ageClass), // expecting to advance the seal age based on the last season seen
-                    sex = SealSex.fromAlpha(primaryRecord.sex),
-                    numRelatives = primaryRecord.numRelatives,
-                    condition = SealCondition.fromCode(primaryRecord.sealCondition),
-                    tagNumber = processedTagOneNumberPrimary,
-                    tagAlpha = processedTagOneAlphaPrimary,
-                    oldTagNumber = processedOldTagNumberPrimary,
-                    oldTagAlpha = processedOldTagAlphaPrimary,
-                    tagEventType = TagEventType.fromAlpha(primaryRecord.tagEvent),
-                    reasonForRetag = RetagReason.fromLabel(primaryRecord.retagReason),
-                    numTags = if (numTagsPrimary > 0) numTagsPrimary.toString() else "",
-                    isNoTag = primaryRecord.tagIDOne == "NoTag" && primaryRecord.tagEvent == "Marked",
-                    comment = primaryRecord.comments,
-                    weightTaken = primaryRecord.weight != "",
-                    weight = if (primaryRecord.weight != "") primaryRecord.weight.toInt() else 0,
-                    tissueTaken = primaryRecord.tissueSampled != "",
-                    flaggedForReview = primaryRecord.flaggedEntry != "",
-                    observationID = primaryRecord.id,
-                    isTagRetagEntry = true,
-                )
-            }
-
-            updateNotebookEntry(primarySeal.value)
-
-
-            // MAP PUPONE
-            pupOneRecord?.let {
-
-                var processedTagOneNumberPupOne = ""
-                var processedTagOneAlphaPupOne = ""
-                var numTagsPupOne = 0
-
-                if (pupOneRecord.tagIDOne != "NoTag") {
-                    val processedTagOne = processTags(pupOneRecord.tagIDOne)
-                    if (processedTagOne.tagValid) {
-                        numTagsPupOne++
-                        processedTagOneNumberPupOne = processedTagOne.tagNumber
-                        processedTagOneAlphaPupOne = processedTagOne.tagAlpha
-                    }
-
-                    val processedTagTwo = processTags(pupOneRecord.tagIDTwo)
-                    if (processedTagTwo.tagValid) {
-                        numTagsPupOne++
-                    }
-                }
-
-                var processedOldTagNumberPupOne = ""
-                var processedOldTagAlphaPupOne = ""
-                if (pupOneRecord.oldTagIDOne != "NoTag") {
-                    val processedTagOne = processTags(pupOneRecord.oldTagIDOne)
-                    if (processedTagOne.tagValid) {
-                        numTagsPupOne++
-                        processedOldTagNumberPupOne = processedTagOne.tagNumber
-                        processedOldTagAlphaPupOne = processedTagOne.tagAlpha
-                    }
-                }
-
-                _pupOne.update {
-                    it.copy(
-                        observationRecordSpeno = pupOneRecord.speno.toInt(),
-                        ageClass = SealAgeClass.PUP, // expecting to advance the seal age based on the last season seen
-                        sex = SealSex.fromAlpha(pupOneRecord.sex),
-                        numRelatives = pupOneRecord.numRelatives,
-                        condition = SealCondition.fromLabel(pupOneRecord.sealCondition),
-                        tagNumber = processedTagOneNumberPupOne,
-                        tagAlpha = processedTagOneAlphaPupOne,
-                        oldTagNumber = processedOldTagNumberPupOne,
-                        oldTagAlpha = processedOldTagAlphaPupOne,
-                        tagEventType = TagEventType.fromAlpha(pupOneRecord.tagEvent),
-                        reasonForRetag = RetagReason.fromCode(pupOneRecord.retagReason),
-                        numTags = if (numTagsPupOne > 0) numTagsPupOne.toString() else "",
-                        isNoTag = pupOneRecord.tagIDOne == "NoTag" && pupOneRecord.tagEvent == "Marked",
-                        comment = pupOneRecord.comments,
-                        weightTaken = pupOneRecord.weight != "",
-                        weight = if (pupOneRecord.weight != "") pupOneRecord.weight.toInt() else 0,
-                        tissueTaken = pupOneRecord.tissueSampled != "",
-                        flaggedForReview = pupOneRecord.flaggedEntry != "",
-                        observationID = pupOneRecord.id,
-                        isTagRetagEntry = true
-                    )
-                }
-
-                updateNotebookEntry(pupOne.value)
-            }
-
-            // MAP PUPTWO
-            pupTwoRecord?.let {
-
-                var processedTagOneNumberPupTwo = ""
-                var processedTagOneAlphaPupTwo = ""
-                var numTagsPupTwo = 0
-
-                if (pupTwoRecord.tagIDOne != "NoTag") {
-                    val processedTagOne = processTags(pupTwoRecord.tagIDOne)
-                    if (processedTagOne.tagValid) {
-                        numTagsPupTwo++
-                        processedTagOneNumberPupTwo = processedTagOne.tagNumber
-                        processedTagOneAlphaPupTwo = processedTagOne.tagAlpha
-                    }
-
-                    val processedTagTwo = processTags(pupTwoRecord.tagIDTwo)
-                    if (processedTagTwo.tagValid) {
-                        numTagsPupTwo++
-                    }
-                }
-
-                var processedOldTagNumberPupTwo = ""
-                var processedOldTagAlphaPupTwo = ""
-                if (pupTwoRecord.oldTagIDOne != "NoTag") {
-                    val processedTagOne = processTags(pupTwoRecord.oldTagIDOne)
-                    if (processedTagOne.tagValid) {
-                        numTagsPupTwo++
-                        processedOldTagNumberPupTwo = processedTagOne.tagNumber
-                        processedOldTagAlphaPupTwo = processedTagOne.tagAlpha
-                    }
-                }
-
-                _pupTwo.update {
-                    it.copy(
-                        observationRecordSpeno = pupTwoRecord.speno.toInt(),
-                        ageClass = SealAgeClass.PUP, // expecting to advance the seal age based on the last season seen
-                        sex = SealSex.fromAlpha(pupTwoRecord.sex),
-                        numRelatives = pupTwoRecord.numRelatives,
-                        condition = SealCondition.fromLabel(pupTwoRecord.sealCondition),
-                        tagNumber = processedTagOneNumberPupTwo,
-                        tagAlpha = processedTagOneAlphaPupTwo,
-                        oldTagNumber = processedOldTagNumberPupTwo,
-                        oldTagAlpha = processedOldTagAlphaPupTwo,
-                        tagEventType = TagEventType.fromAlpha(pupTwoRecord.tagEvent),
-                        reasonForRetag = RetagReason.fromCode(pupTwoRecord.retagReason),
-                        numTags = if (numTagsPupTwo > 0) numTagsPupTwo.toString() else "",
-                        isNoTag = pupTwoRecord.tagIDOne == "NoTag" && pupTwoRecord.tagEvent == "Marked",
-                        comment = pupTwoRecord.comments,
-                        weightTaken = pupTwoRecord.weight != "",
-                        weight = if (pupTwoRecord.weight != "") pupTwoRecord.weight.toInt() else 0,
-                        tissueTaken = pupTwoRecord.tissueSampled != "",
-                        flaggedForReview = pupTwoRecord.flaggedEntry != "",
-                        observationID = pupTwoRecord.id,
-                        isTagRetagEntry = true
-                    )
-                }
-
-                updateNotebookEntry(pupTwo.value)
-            }
-
-            _uiState.update { it.copy(isEditMode = true) }
-        }
+        _uiState.update { it.copy(isEditMode = true) }
     }
 
     fun flagSealForReview(type: SealType) {

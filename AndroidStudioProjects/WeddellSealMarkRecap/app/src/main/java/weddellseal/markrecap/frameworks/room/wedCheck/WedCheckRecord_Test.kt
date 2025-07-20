@@ -2,6 +2,7 @@ package weddellseal.markrecap.frameworks.room.wedCheck
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import weddellseal.markrecap.domain.tagretag.data.processTags
 
 class TagProcessorTest {
 

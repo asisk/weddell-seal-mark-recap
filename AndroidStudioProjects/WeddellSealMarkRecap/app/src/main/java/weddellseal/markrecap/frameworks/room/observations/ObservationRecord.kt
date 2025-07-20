@@ -8,6 +8,13 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import weddellseal.markrecap.domain.tagretag.data.RetagReason
+import weddellseal.markrecap.domain.tagretag.data.Seal
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.SealSex
+import weddellseal.markrecap.domain.tagretag.data.TagEventType
+import weddellseal.markrecap.domain.tagretag.data.processTags
 
 @Entity(
     tableName = "observationLogs",
@@ -45,8 +52,51 @@ data class ObservationRecord(
     @ColumnInfo(name = "tissue_sampled") val tissueSampled: String,
     @ColumnInfo(name = "comments") val comments: String,
     @ColumnInfo(name = "colony") val colony: String,
-    @ColumnInfo(name = "retag_reason")val retagReason: String,
-    @ColumnInfo(name = "insertedAt")  val insertedAt: Long = System.currentTimeMillis(), // Timestamp for noting if a record has been updated
-    @ColumnInfo(name = "updatedAt")  val updatedAt: Long? = null, // Timestamp for noting if a record has been updated
-    @ColumnInfo(name = "deletedAt")  val deletedAt: Long? = null // Timestamp for soft delete
+    @ColumnInfo(name = "retag_reason") val retagReason: String,
+    @ColumnInfo(name = "insertedAt") val insertedAt: Long = System.currentTimeMillis(), // Timestamp for noting if a record has been updated
+    @ColumnInfo(name = "updatedAt") val updatedAt: Long? = null, // Timestamp for noting if a record has been updated
+    @ColumnInfo(name = "deletedAt") val deletedAt: Long? = null // Timestamp for soft delete
 )
+
+fun ObservationRecord.toSeal(): Seal {
+
+    // Process tags
+    var numTags = 0
+    val processedTagOne = processTags(tagIDOne)
+    if (processedTagOne.tagValid) {
+        numTags++
+    }
+
+    val processedTagTwo = processTags(tagIDTwo)
+    if (processedTagTwo.tagValid) {
+        numTags++
+    }
+
+    val processedOldTag = processTags(oldTagIDOne)
+
+    return Seal(
+        colony = colony, //TODO, need to update the UI fields to reflect the colony and observers, location too?
+//            observer = record.observerInitials,
+        // location?
+        observationRecordSpeno = speno.toInt(),
+        ageClass = SealAgeClass.fromAlpha(ageClass), // expecting to advance the seal age based on the last season seen
+        sex = SealSex.fromAlpha(sex),
+        numRelatives = numRelatives,
+        condition = SealCondition.fromCode(sealCondition),
+        tagNumber = processedTagOne.tagNumber,
+        tagAlpha = processedTagTwo.tagAlpha,
+        oldTagNumber = processedOldTag.tagNumber,
+        oldTagAlpha = processedOldTag.tagAlpha,
+        tagEventType = TagEventType.fromAlpha(tagEvent),
+        reasonForRetag = RetagReason.fromLabel(retagReason),
+        numTags = if (numTags > 0) numTags.toString() else "",
+        isNoTag = tagIDOne == "NoTag" && tagEvent == TagEventType.MARKED.alpha,
+        comment = comments,
+        weightTaken = weight != "",
+        weight = if (weight != "") weight.toInt() else 0,
+        tissueTaken = tissueSampled != "",
+        flaggedForReview = flaggedEntry != "",
+        observationID = id,
+        isTagRetagEntry = true,
+    )
+}

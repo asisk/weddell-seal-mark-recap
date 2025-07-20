@@ -228,7 +228,7 @@ fun TabbedCards(
                     val deleteMessage = if (selectedSeal.sealType == SealType.PRIMARY) {
                         "This will remove data you've entered for all seals. Are you sure?"
                     } else {
-                        "This will remove data you've entered for $selectedSeal.name. Are you sure?"
+                        "This will remove data you've entered for ${selectedSeal.notebookDataString}. Are you sure?"
                     }
 
                     RemoveDialog(
