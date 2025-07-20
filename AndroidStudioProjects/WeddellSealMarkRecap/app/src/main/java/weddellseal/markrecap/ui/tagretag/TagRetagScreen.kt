@@ -79,9 +79,12 @@ fun TagRetagScreen(
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
             coroutineScope.launch {
-                snackBarHostState.showSnackbar("Entry successfully saved!", duration = SnackbarDuration.Long)
+                snackBarHostState.showSnackbar(
+                    "Entry successfully saved!",
+                    duration = SnackbarDuration.Long
+                )
             }
-            viewModel.resetUiStateIndicators()
+            viewModel.resetModelState()
         }
     }
 
@@ -160,6 +163,7 @@ fun TagRetagScreen(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
+
             TagRetagHeader(viewModel, homeViewModel)
 
             // TODO, move this to the a Header component specific to Census

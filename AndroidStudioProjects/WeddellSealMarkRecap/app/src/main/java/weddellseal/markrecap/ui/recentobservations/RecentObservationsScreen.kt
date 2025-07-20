@@ -197,7 +197,7 @@ fun RecentObservationsScreen(
                         showEditDialog = false
 
                         observationToEdit?.let { record ->
-                            tagRetagViewModel.resetUiStateIndicators()
+                            tagRetagViewModel.resetModelState()
                             tagRetagViewModel.loadSealForEdit(record)
                             navController.navigate(Screens.AddObservationLog.route)
                         }

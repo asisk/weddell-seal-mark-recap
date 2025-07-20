@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,6 +59,91 @@ class TagRetagModel(
         MutableStateFlow(Seal(sealType = SealType.PUPTWO, ageClass = SealAgeClass.PUP))
     val pupTwo: StateFlow<Seal> = _pupTwo
 
+    private var originalPrimarySeal: Seal? = null
+    private var originalPupOne: Seal? = null
+    private var originalPupTwo: Seal? = null
+
+    //    init {
+//        // Automatically update colonyLocation if it's set to ""
+//        // In other words, if the user has not selected a location, use the auto-detected location
+//        viewModelScope.launch {
+//            combine(
+//                sealColonyRepository.autoDetectedColony,
+//                sealColonyRepository.overrideAutoColony
+//            ) { detectedColony, overrideAutoColony ->
+//                Pair(detectedColony, overrideAutoColony)
+//            }.collect { (detectedColony, overrideAutoColony) ->
+//                detectedColony?.let {
+//                    if (!overrideAutoColony) {
+//                        _uiState.update{it.copy(selectedColony = it.location)}
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    data class UiState(
+        val metadata: ObservationMetadata = ObservationMetadata(),
+
+        val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
+
+        val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
+
+        val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
+        val observationTimestamp: String = "", // UI display value in Tag/Retag screen header
+        val observationRecordColony: String = "", // UI display value in Tag/Retag screen header
+        val observationRecordObservers: List<String> = emptyList<String>(), // UI display value in Tag/Retag screen header
+        val observationRecordLatitude: String = "", // UI display value in Tag/Retag screen header
+        val observationRecordLongitude: String = "", // UI display value in Tag/Retag screen header
+
+        val isSaved: Boolean = false,  // indicator that record was successfully saved
+        val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
+        val isSaveEnabled: Boolean = false, // indicator for save button
+
+        val ineligibleForSaveReason: String = "", // reasons save button is disabled
+
+        val allSealsValid: Boolean = false, // indicator that all seals are valid
+
+        val validationFailureReason: String = "", // reason for validation failure
+        val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
+    )
+
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
+    private val _selectedRecentObservation = MutableStateFlow<DisplayObservation?>(null)
+    val selectedRecentObservation: StateFlow<DisplayObservation?> get() = _selectedRecentObservation
+
+    private val _hasEdits = MutableStateFlow(false)
+    val hasEdits: StateFlow<Boolean> = _hasEdits
+
+    fun onEditAttempt(observation: DisplayObservation) {
+        viewModelScope.launch {
+            if (!primarySeal.value.isEntryStarted) {
+                _selectedRecentObservation.value = observation // set the observation to edit
+                _uiEvent.emit(UiEvent.ShowEditDialog)
+            } else {
+                _uiEvent.emit(
+                    UiEvent.ShowToast("Looks like you're already editing another seal! Save or clear, then edit this record.")
+                )
+            }
+        }
+    }
+
+    fun exitEditMode() {
+        _selectedRecentObservation.value = null // reset the observation to edit
+        resetModelState()
+    }
+
+    fun onViewAttempt(observation: DisplayObservation) {
+        viewModelScope.launch {
+            _selectedRecentObservation.value = observation // set the observation to edit
+        }
+    }
+
     fun prefillSingleMale() {
         _primarySeal.update {
             it.copy(
@@ -90,74 +176,6 @@ class TagRetagModel(
         }
         _pupOne.update { it.copy(numRelatives = "1") }
         _uiState.update { it.copy(isPrefilled = true) }
-    }
-
-    //    init {
-//        // Automatically update colonyLocation if it's set to ""
-//        // In other words, if the user has not selected a location, use the auto-detected location
-//        viewModelScope.launch {
-//            combine(
-//                sealColonyRepository.autoDetectedColony,
-//                sealColonyRepository.overrideAutoColony
-//            ) { detectedColony, overrideAutoColony ->
-//                Pair(detectedColony, overrideAutoColony)
-//            }.collect { (detectedColony, overrideAutoColony) ->
-//                detectedColony?.let {
-//                    if (!overrideAutoColony) {
-//                        _uiState.update{it.copy(selectedColony = it.location)}
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-    data class UiState(
-        val metadata: ObservationMetadata = ObservationMetadata(),
-
-        val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
-
-        val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
-
-        val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
-
-        val isSaved: Boolean = false,  // indicator that record was successfully saved
-        val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
-        val isSaveEnabled: Boolean = false, // indicator for save button
-        val disableSave: Boolean = false, // indicator that save button should be disabled
-        val ineligibleForSaveReason: String = "", // reasons save button is disabled
-
-        val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
-
-        val allSealsValid: Boolean = false, // indicator that all seals are valid
-        val validationFailureReason: String = "", // reason for validation failure
-    )
-
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
-
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
-
-    private val _selectedRecentObservation = MutableStateFlow<DisplayObservation?>(null)
-    val selectedRecentObservation: StateFlow<DisplayObservation?> get() = _selectedRecentObservation
-
-    fun onEditAttempt(observation: DisplayObservation) {
-        viewModelScope.launch {
-            if (!primarySeal.value.isEntryStarted) {
-                _selectedRecentObservation.value = observation // set the observation to edit
-                _uiEvent.emit(UiEvent.ShowEditDialog)
-            } else {
-                _uiEvent.emit(
-                    UiEvent.ShowToast("Looks like you're already editing another seal! Save or clear, then edit this record.")
-                )
-            }
-        }
-    }
-
-    fun onViewAttempt(observation: DisplayObservation) {
-        viewModelScope.launch {
-            _selectedRecentObservation.value = observation // set the observation to edit
-        }
     }
 
     // This function is used to ensure that each seal has it’s own WedCheck match & associated speno.
@@ -251,12 +269,17 @@ class TagRetagModel(
 // 1. after navigation command from the recent observation screen when a record is to be edited
 // 2. when a save is successful
 // 3. when a record is selected for editing from the Tag/Retag screen
-    fun resetUiStateIndicators() {
+    fun resetModelState() {
         _uiState.update {
             it.copy(
                 isSearching = false,
                 isPrefilled = false,
                 isEditMode = false,
+                observationTimestamp = "",
+                observationRecordObservers = emptyList(),
+                observationRecordColony = "",
+                observationRecordLatitude = "",
+                observationRecordLongitude = "",
                 isSaved = false,
                 isSaveAttempted = false,
                 isSaveEnabled = false,
@@ -283,6 +306,11 @@ class TagRetagModel(
                 ageClass = SealAgeClass.PUP
             )
         }
+
+        // reset the edit seal comparison values
+        originalPrimarySeal = null
+        originalPupOne = null
+        originalPupTwo = null
     }
 
     fun setIsSaving() {
@@ -346,15 +374,16 @@ class TagRetagModel(
                 _primarySeal,
                 _pupOne,
                 _pupTwo,
-                homeViewUiState
-            ) { primary, pupOne, pupTwo, homeUiState ->
+                homeViewUiState,
+                uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
+            ) { primary, pupOne, pupTwo, homeUiState, editMode ->
 
                 // Initialize the metadata object
                 val metadata = ObservationMetadata(
-                    selectedColony = homeUiState.selectedColony,
-                    selectedObservers = homeUiState.selectedObservers,
-                    censusNumber = homeUiState.selectedCensusNumber,
-                    isCensusMode = homeUiState.isCensusMode,
+                    selectedColony = if (editMode) uiState.value.observationRecordColony else homeUiState.selectedColony,
+                    selectedObservers = if (editMode) uiState.value.observationRecordObservers else homeUiState.selectedObservers,
+                    censusNumber = if (editMode) "" else homeUiState.selectedCensusNumber,
+                    isCensusMode = if (editMode) false else homeUiState.isCensusMode,
                     deviceID = deviceID,
                     currentSeason = currentSeason
                 )
@@ -362,6 +391,7 @@ class TagRetagModel(
                 // Check if save is enabled
                 val reasons = buildList {
                     if (!metadata.isValid) add(metadata.invalidReason)
+                    if (!primary.isEntryStarted) add("Missing all required fields!") // condition upon starting observation entry
                     if (!primary.isComplete) addAll(primary.completenessReasons)
                     if (primary.hasPupOne && !pupOne.isComplete) addAll(pupOne.completenessReasons)
                     if (primary.hasPupTwo && !pupTwo.isComplete) addAll(pupTwo.completenessReasons)
@@ -386,6 +416,29 @@ class TagRetagModel(
                 }
             }
         }
+
+        // Observe seal edits
+        viewModelScope.launch {
+            combine(
+                _primarySeal,
+                _pupOne,
+                _pupTwo,
+                uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
+            ) { currentPrimary, currentPupOne, currentPupTwo, editMode ->
+
+                if (!editMode) return@combine false
+
+                val primaryChanged = currentPrimary.isChangedFrom(originalPrimarySeal)
+                val pupOneChanged = currentPupOne.isChangedFrom(originalPupOne)
+                val pupTwoChanged = currentPupTwo.isChangedFrom(originalPupTwo)
+
+                primaryChanged || pupOneChanged || pupTwoChanged
+
+            }.collect { hasChanged ->
+                _hasEdits.value = hasChanged
+            }
+        }
+
     }
 
     fun checkNeedsConfirmation(
@@ -1211,6 +1264,16 @@ class TagRetagModel(
     ) {
         when (displayObservation) {
             is DisplayObservation.WithPups -> {
+                _uiState.update {
+                    it.copy(
+                        observationRecordColony = displayObservation.primarySeal.colony,
+                        observationRecordObservers = listOf(displayObservation.primarySeal.observerInitials),
+                        observationRecordLatitude = displayObservation.primarySeal.latitude,
+                        observationRecordLongitude = displayObservation.primarySeal.longitude,
+                        observationTimestamp = displayObservation.primarySeal.date + " " + displayObservation.primarySeal.time
+                    )
+                }
+
                 _primarySeal.update {
                     displayObservation.primarySeal.toSeal()
                         .copy(sealType = SealType.PRIMARY)
@@ -1235,10 +1298,24 @@ class TagRetagModel(
             }
 
             is DisplayObservation.Standalone -> {
+                _uiState.update {
+                    it.copy(
+                        observationRecordColony = displayObservation.primarySeal.colony,
+                        observationRecordObservers = listOf(displayObservation.primarySeal.observerInitials),
+                        observationRecordLatitude = displayObservation.primarySeal.latitude,
+                        observationRecordLongitude = displayObservation.primarySeal.longitude,
+                        observationTimestamp = displayObservation.primarySeal.date + " " + displayObservation.primarySeal.time
+                    )
+                }
+
                 _primarySeal.update { displayObservation.primarySeal.toSeal() }
                 updateNotebookEntry(primarySeal.value)
             }
         }
+
+        originalPrimarySeal = primarySeal.value // set the original value for comparison
+        originalPupOne = pupOne.value // set the original value for comparison
+        originalPupTwo = pupTwo.value // set the original value for comparison
 
         _uiState.update { it.copy(isEditMode = true) }
     }
@@ -1292,11 +1369,12 @@ class TagRetagModel(
 //                }
 
         }
+
+        //TODO, consider reseting the ui state, if not already doing this
         _uiState.update {
             it.copy(
                 isSaved = true,
                 isSaveAttempted = false,
-                isSaveEnabled = true
             )
         }
     }

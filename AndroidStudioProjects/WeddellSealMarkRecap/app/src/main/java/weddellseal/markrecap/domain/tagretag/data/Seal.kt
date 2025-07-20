@@ -214,4 +214,31 @@ data class Seal(
 
             return errors
         }
+
+    fun isChangedFrom(original: Seal?): Boolean {
+        if (original == null) return false
+
+        if (ageClass != original.ageClass) return true
+        if (comment != original.comment) return true
+        if (condition != original.condition) return true
+        if (isNoTag != original.isNoTag) return true
+        if (numRelatives != original.numRelatives) return true
+        if (numTags != original.numTags) return true
+        if (pupPeed != original.pupPeed) return true
+        if (reasonForRetag != original.reasonForRetag) return true
+        if (sex != original.sex) return true
+        if (tagEventType != original.tagEventType) return true
+        if (tagNumber != original.tagNumber) return true
+        if (tagAlpha != original.tagAlpha) return true
+        if (oldTagNumber != original.oldTagNumber) return true
+        if (oldTagAlpha != original.oldTagAlpha) return true
+        if (oldTagMarks != original.oldTagMarks) return true
+        if (tissueTaken != original.tissueTaken) return true
+        if (tissue != original.tissue) return true
+        if (weight != original.weight) return true
+        if (weightTaken != original.weightTaken) return true
+
+        return false
+    }
+
 }

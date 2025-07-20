@@ -58,6 +58,7 @@ fun TabbedCards(
     pupTwoSeal: Seal
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val hasEdits by viewModel.hasEdits.collectAsState()
 
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -171,7 +172,8 @@ fun TabbedCards(
 
                     // SPENO
                     // If the Tag Event Type is New, we don't display the Speno until the validation step
-                    val shouldShowSpeno = if (selectedSeal.tagEventType == TagEventType.NEW && !uiState.isSaveAttempted) false else true
+                    val shouldShowSpeno =
+                        if (selectedSeal.tagEventType == TagEventType.NEW && !uiState.isSaveAttempted) false else true
                     val spenoText = if (selectedSeal.hasWedCheckMatch) {
                         "Speno: ${selectedSeal.wedCheckMatch?.speNo}"
                     } else {
@@ -207,12 +209,18 @@ fun TabbedCards(
                     // TRASH CAN
                     IconButton(
                         modifier = Modifier.padding(10.dp),
-                        onClick = { showDeleteDialog.value = true },
+                        onClick = {
+                            if (uiState.isEditMode && !hasEdits)  return@IconButton
+
+                            if (primarySeal.isEntryStarted) {
+                                showDeleteDialog.value = true
+                            }
+                        },
                     ) {
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
                             contentDescription = "Remove Tab",
-                            tint = if (!primarySeal.isEntryStarted) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.onSurface,
+                            tint = if (!primarySeal.isEntryStarted || (uiState.isEditMode && !hasEdits)) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(48.dp),
                         )
                     }

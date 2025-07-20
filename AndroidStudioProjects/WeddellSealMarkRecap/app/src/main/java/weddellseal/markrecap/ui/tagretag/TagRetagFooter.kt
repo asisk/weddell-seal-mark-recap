@@ -71,6 +71,7 @@ fun TagRetagFooter(
     var showEditDialog by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsState()
+    val hasEdits by viewModel.hasEdits.collectAsState()
 
     val location by homeViewModel.currentLocation.collectAsState()
 
@@ -128,12 +129,14 @@ fun TagRetagFooter(
                 modifier = Modifier.padding(10.dp)
             ) {
                 ExtendedFloatingActionButton(
-                    elevation = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) FloatingActionButtonDefaults.elevation(
+                    elevation = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation || (uiState.isEditMode && !hasEdits)) FloatingActionButtonDefaults.elevation(
                         2.dp
                     ) else FloatingActionButtonDefaults.elevation(8.dp),
-                    containerColor = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary,
+                    containerColor = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation || (uiState.isEditMode && !hasEdits)) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary,
                     onClick = {
                         if (!uiState.isSaveEnabled) return@ExtendedFloatingActionButton  // guard early exit
+
+                        if (uiState.isEditMode && !hasEdits)  return@ExtendedFloatingActionButton
 
                         viewModel.setIsSaving()
 
@@ -332,7 +335,7 @@ fun TagRetagFooter(
 
                 // Determine which seals are present and load them in the Tag/Retag Screen for Editing
                 selectedObservation?.let { record ->
-                    viewModel.resetUiStateIndicators()
+                    viewModel.resetModelState()
                     viewModel.loadSealForEdit(record)
                     navController.navigate(Screens.AddObservationLog.route)
                 }
