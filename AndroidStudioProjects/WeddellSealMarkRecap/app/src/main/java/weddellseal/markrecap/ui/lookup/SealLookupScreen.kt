@@ -58,19 +58,19 @@ fun SealLookupScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     context.contentResolver
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.sealNotFound) {
         if (uiState.sealNotFound) {
-            scope.launch { snackbarHostState.showSnackbar("Seal not found!") }
+            scope.launch { snackBarHostState.showSnackbar("Seal not found!") }
         }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
