@@ -433,49 +433,6 @@ fun SealCard(
             }
         }
 
-        // REASON FOR RETAG
-        if (seal.tagEventType == TagEventType.RETAG) {
-            Row(
-                modifier = Modifier
-                    .padding(10.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            focusManager.clearFocus()
-                        })
-                    },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .fillMaxWidth(.4f)
-                    ) {
-                        Text(
-                            "Reason for Retag",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth(.5f)
-                    ) {
-                        RetagReasonDropDown(
-                            selected = seal.reasonForRetag,
-                            onSelected = {
-                                viewModel.updateRetagReason(seal.sealType, it)
-                                viewModel.onRetagSelection(seal)
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
         //TAG ID
         Row(
             modifier = Modifier
@@ -615,6 +572,33 @@ fun SealCard(
                     )
                 }
 
+                // REASON FOR RETAG
+                if (seal.tagEventType == TagEventType.RETAG) {
+                    Box(
+                        modifier = Modifier
+                            .weight(.6f)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+
+                            Text(
+                                "Reason\nfor\nRetag",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            RetagReasonDropDown(
+                                selected = seal.reasonForRetag,
+                                onSelected = {
+                                    viewModel.updateRetagReason(seal.sealType, it)
+                                    viewModel.onRetagSelection(seal)
+                                }
+                            )
+                        }
+                    }
+                }
+
                 // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
                 if (seal.tagEventType == TagEventType.NEW) {
                     Box(
@@ -647,7 +631,7 @@ fun SealCard(
         }
     }
 
-    // NUMBER OF TAGS, NO TAG
+    // REASON FOR RETAG, NUMBER OF TAGS, NO TAG
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -660,6 +644,32 @@ fun SealCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+//        // REASON FOR RETAG
+//        if (seal.tagEventType == TagEventType.RETAG) {
+//            Box(
+//                modifier = Modifier
+//                    .weight(.6f)
+//            ) {
+//                Row(
+//                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//
+//                    Text(
+//                        "Reason\nfor\nRetag",
+//                        style = MaterialTheme.typography.titleLarge
+//                    )
+//                    RetagReasonDropDown(
+//                        selected = seal.reasonForRetag,
+//                        onSelected = {
+//                            viewModel.updateRetagReason(seal.sealType, it)
+//                            viewModel.onRetagSelection(seal)
+//                        }
+//                    )
+//                }
+//            }
+//        }
 
         // NUMBER OF TAGS
         val numTagsList = listOf("1", "2")
