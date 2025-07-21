@@ -44,9 +44,32 @@ fun ObservationItem(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.padding(start = 40.dp),
-        ) {
+        // Three-dot menu
+        Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+            IconButton(onClick = { expanded = true }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert, // Three-dot icon
+                    contentDescription = "More options",
+                    Modifier.size(36.dp)
+                )
+            }
+
+            // Dropdown menu with options
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Edit") },
+                    onClick = { onEditDo(observation) })
+
+                DropdownMenuItem(
+                    text = { Text("View") },
+                    onClick = { onViewDo(observation) })
+            }
+        }
+
+        Column {
             Text(
                 text =
                     notebookEntryValueObservation(observation) +
@@ -88,31 +111,6 @@ fun ObservationItem(
                 painter = painterResource(R.drawable.ic_adult_foreground),
                 contentDescription = "Adult or Yearling",
             )
-        }
-
-        // Three-dot menu
-        Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-            IconButton(onClick = { expanded = true }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert, // Three-dot icon
-                    contentDescription = "More options",
-                    Modifier.size(36.dp)
-                )
-            }
-
-            // Dropdown menu with options
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Edit") },
-                    onClick = { onEditDo(observation) })
-
-                DropdownMenuItem(
-                    text = { Text("View") },
-                    onClick = { onViewDo(observation) })
-            }
         }
     }
 }

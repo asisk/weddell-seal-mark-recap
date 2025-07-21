@@ -27,7 +27,7 @@ enum class RetagReason (val code: String, val description: String) {
 // This is used for the dropdown UI when showing the current selection
 fun RetagReason.toLabel(): String {
     if (this == RetagReason.UNKNOWN) {
-        return "Select Condition"
+        return "Select Reason"
     }
     return this.description
 }
