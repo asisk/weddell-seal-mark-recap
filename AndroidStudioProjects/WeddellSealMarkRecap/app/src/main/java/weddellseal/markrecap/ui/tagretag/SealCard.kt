@@ -361,64 +361,6 @@ fun SealCard(
         }
     }
 
-// TAG EVENT TYPE
-    val tagEventList = TagEventType.values()
-        .filter { it != TagEventType.UNKNOWN }
-        .map { it.description }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Tag Event",
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                if (seal.isNoTag) {
-                    // the database record needs to have an event type of marked for Retag
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        TagEventType.MARKED.description,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                } else {
-                    SegmentedButtonGroup(
-                        options = tagEventList,
-                        selectedOption = seal.tagEventType.description,
-                        onOptionSelected = {
-                            viewModel.updateTagEventType(seal, TagEventType.fromSelection(it))
-                            if (it == TagEventType.RETAG.description) {
-                                viewModel.onRetagSelection(seal)
-
-                                // Clear the WedCheck match if the old tag ID does not match the WedCheck tag ID
-                                if (seal.wedCheckMatch != null && seal.wedCheckMatch.tagIdOne != seal.oldTagNumber + seal.oldTagAlpha) {
-                                    viewModel.removeWedCheckMatch(seal.sealType)
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        }
-    }
-
     // TAG FIELDS
     // old tag id row - label & field
     // reason for retag row - label & dropdown
@@ -630,6 +572,64 @@ fun SealCard(
                     ) { newText ->
                         viewModel.updateTagAlpha(seal, newText)
                     }
+                }
+            }
+        }
+    }
+
+    // TAG EVENT TYPE
+    val tagEventList = TagEventType.values()
+        .filter { it != TagEventType.UNKNOWN }
+        .map { it.description }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Tag Event",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                if (seal.isNoTag) {
+                    // the database record needs to have an event type of marked for Retag
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        TagEventType.MARKED.description,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                } else {
+                    SegmentedButtonGroup(
+                        options = tagEventList,
+                        selectedOption = seal.tagEventType.description,
+                        onOptionSelected = {
+                            viewModel.updateTagEventType(seal, TagEventType.fromSelection(it))
+                            if (it == TagEventType.RETAG.description) {
+                                viewModel.onRetagSelection(seal)
+
+                                // Clear the WedCheck match if the old tag ID does not match the WedCheck tag ID
+                                if (seal.wedCheckMatch != null && seal.wedCheckMatch.tagIdOne != seal.oldTagNumber + seal.oldTagAlpha) {
+                                    viewModel.removeWedCheckMatch(seal.sealType)
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }
