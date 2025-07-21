@@ -96,7 +96,6 @@ class TagRetagModel(
         val observationRecordLatitude: String = "", // UI display value in Tag/Retag screen header
         val observationRecordLongitude: String = "", // UI display value in Tag/Retag screen header
 
-        val isSaved: Boolean = false,  // indicator that record was successfully saved
         val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
         val isSaveEnabled: Boolean = false, // indicator for save button
 
@@ -127,7 +126,7 @@ class TagRetagModel(
                 _uiEvent.emit(UiEvent.ShowEditDialog)
             } else {
                 _uiEvent.emit(
-                    UiEvent.ShowToast("Looks like you're already editing another seal! Save or clear, then edit this record.")
+                    UiEvent.ShowEditToast("Looks like you're already editing another seal! Save or clear, then edit this record.")
                 )
             }
         }
@@ -280,7 +279,6 @@ class TagRetagModel(
                 observationRecordColony = "",
                 observationRecordLatitude = "",
                 observationRecordLongitude = "",
-                isSaved = false,
                 isSaveAttempted = false,
                 isSaveEnabled = false,
                 ineligibleForSaveReason = "",
@@ -320,7 +318,6 @@ class TagRetagModel(
     fun editAfterAttemptedSave() {
         _uiState.update {
             it.copy(
-                isSaved = false,
                 isSaveAttempted = false,
                 isSaveEnabled = true,
                 entryNeedsConfirmation = false,
@@ -1344,16 +1341,15 @@ class TagRetagModel(
         }
     }
 
-    fun createLog(
+    fun writeObservationRecord(
         currentLocation: GeoLocation?,
     ) {
         val sealsComplete = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-            .filter { it.isComplete } // checking for completeness & not validated (confirmed records will be invalid)
 
         for (seal in sealsComplete) {
             // get the tags for this seal's relatives
             val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
-            val log = buildObservationRecord(
+            val observationRecord = buildObservationRecord(
                 currentLocation,
                 seal,
                 relOneTag,
@@ -1361,26 +1357,19 @@ class TagRetagModel(
                 uiState.value.metadata,
             )
 
-            // write an entry to the database for each seal that has valid input (or has been confirmed, if invalid)
+            // write an entry to the database for each seal
             viewModelScope.launch {
-                observationRepo.addObservation(log)
+                observationRepo.writeObservation(observationRecord)
             }
-
-            //TODO, consider overwriting the database entry, instead of appending a new entry
-            // especially if the editmode is set
-//                if (primarySeal.observationID != 0) {
-//
-//                }
-
         }
 
-        //TODO, consider reseting the ui state, if not already doing this
-        _uiState.update {
-            it.copy(
-                isSaved = true,
-                isSaveAttempted = false,
+        viewModelScope.launch {
+            _uiEvent.emit(
+                UiEvent.ShowSavedToast("Record for ${primarySeal.value.notebookDataString} saved!")
             )
         }
+
+        resetModelState()
     }
 
     private fun getRelativesTags(sealName: SealType): Pair<String, String> {

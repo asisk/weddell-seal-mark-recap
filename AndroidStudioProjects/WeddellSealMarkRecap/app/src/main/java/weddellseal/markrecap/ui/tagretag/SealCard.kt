@@ -272,13 +272,14 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                if (seal.sealType == SealType.PRIMARY && seal.isTagRetagEntry) {
-                    // when the primary seal has been populated from a observation log entry record
-                    Text(
-                        numRelatives,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                } else if (seal.ageClass == SealAgeClass.PUP || seal.ageClass == SealAgeClass.YEARLING) {
+//                if (seal.sealType == SealType.PRIMARY && seal.isTagRetagEntry) {
+//                    // when the primary seal has been populated from a observation log entry record
+//                    Text(
+//                        numRelatives,
+//                        style = MaterialTheme.typography.titleLarge
+//                    )
+//                } else
+                    if (seal.ageClass == SealAgeClass.PUP || seal.ageClass == SealAgeClass.YEARLING) {
                     // when the primary seal is a pup or yearling, there can be no other relatives
                     Text(
                         numRelatives,

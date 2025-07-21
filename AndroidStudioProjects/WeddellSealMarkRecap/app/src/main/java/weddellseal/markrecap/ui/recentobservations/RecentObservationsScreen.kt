@@ -70,7 +70,7 @@ fun RecentObservationsScreen(
     LaunchedEffect(Unit) {
         uiEventFlow.collect { event ->
             when (event) {
-                is UiEvent.ShowToast -> {
+                is UiEvent.ShowEditToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
 

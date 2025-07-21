@@ -75,6 +75,7 @@ fun ObservationRecord.toSeal(): Seal {
     val processedOldTag = processTags(oldTagIDOne)
 
     return Seal(
+        observationID = id,
         observationRecordSpeno = speno.toInt(),
         ageClass = SealAgeClass.fromAlpha(ageClass), // expecting to advance the seal age based on the last season seen
         sex = SealSex.fromAlpha(sex),
@@ -93,7 +94,6 @@ fun ObservationRecord.toSeal(): Seal {
         weight = if (weight != "") weight.toInt() else 0,
         tissueTaken = tissueSampled != "",
         flaggedForReview = flaggedEntry != "",
-        observationID = id,
         isTagRetagEntry = true,
     )
 }

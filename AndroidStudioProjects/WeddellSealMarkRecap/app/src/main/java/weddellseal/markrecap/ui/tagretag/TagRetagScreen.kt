@@ -45,9 +45,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
@@ -59,9 +59,10 @@ fun TagRetagScreen(
     homeViewModel: HomeViewModel,
     recentObsViewModel: RecentObservationsViewModel
 ) {
+    val uiEventFlow = viewModel.uiEvent
+
     val uiState by viewModel.uiState.collectAsState()
     val homeUiState by homeViewModel.uiState.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     context.contentResolver
@@ -76,15 +77,18 @@ fun TagRetagScreen(
 //    }
 
     // SAVE SUCCESS
-    LaunchedEffect(uiState.isSaved) {
-        if (uiState.isSaved) {
-            coroutineScope.launch {
-                snackBarHostState.showSnackbar(
-                    "Entry successfully saved!",
-                    duration = SnackbarDuration.Long
-                )
+    LaunchedEffect(Unit) {
+        uiEventFlow.collect { event ->
+            when (event) {
+                is UiEvent.ShowSavedToast -> {
+                    snackBarHostState.showSnackbar(
+                        event.message,
+                        duration = SnackbarDuration.Long
+                    )
+                }
+
+                else -> Unit // ignore all other events
             }
-            viewModel.resetModelState()
         }
     }
 

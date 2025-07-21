@@ -253,7 +253,7 @@ fun TagRetagHeader(
                         viewModel.flagSealForReview(pupTwoSeal.sealType)
                     }
 
-                    viewModel.createLog(location)
+                    viewModel.writeObservationRecord(location)
                 },
                 icon = { Icon(Icons.Filled.Save, "Confirm & Save", Modifier.size(36.dp)) },
                 text = {

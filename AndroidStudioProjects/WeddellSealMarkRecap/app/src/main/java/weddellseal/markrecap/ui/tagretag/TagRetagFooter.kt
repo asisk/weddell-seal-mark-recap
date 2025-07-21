@@ -83,7 +83,7 @@ fun TagRetagFooter(
     LaunchedEffect(Unit) {
         uiEventFlow.collect { event ->
             when (event) {
-                is UiEvent.ShowToast -> {
+                is UiEvent.ShowEditToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
 
@@ -141,7 +141,7 @@ fun TagRetagFooter(
                         viewModel.setIsSaving()
 
                         if (uiState.allSealsValid) {
-                            viewModel.createLog(location)
+                            viewModel.writeObservationRecord(location)
                         } else {
                             // Ensure that the validation error list is current
                             // & mark as needsConfirmation if there are validation errors
