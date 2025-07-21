@@ -3,6 +3,8 @@ package weddellseal.markrecap.ui.admin.export
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -164,19 +166,34 @@ fun ExportObservations(
             )
         }
 
-        Row {
-            ExportObservationsCard(
-                state = wedDataCurrentExportState,
-                instructions = "Export Current Observations",
-                recentObservationsViewModel = recentObservationsViewModel,
-                ExportType.CURRENT
-            )
-            ExportObservationsCard(
-                state = wedDataFullExportState,
-                instructions = "Export All Observations",
-                recentObservationsViewModel = recentObservationsViewModel,
-                ExportType.ALL
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(end = 8.dp)
+            ) {
+                ExportObservationsCard(
+                    state = wedDataCurrentExportState,
+                    instructions = "Export Current Observations",
+                    recentObservationsViewModel = recentObservationsViewModel,
+                    ExportType.CURRENT
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(end = 8.dp)
+            ) {
+                ExportObservationsCard(
+                    state = wedDataFullExportState,
+                    instructions = "Export All Observations",
+                    recentObservationsViewModel = recentObservationsViewModel,
+                    ExportType.ALL
+                )
+            }
         }
     }
 }

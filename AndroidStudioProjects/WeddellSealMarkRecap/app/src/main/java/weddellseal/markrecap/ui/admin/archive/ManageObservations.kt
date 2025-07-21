@@ -2,6 +2,7 @@ package weddellseal.markrecap.ui.admin.archive
 
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,16 +38,30 @@ fun ManageObservations(
                 fontSize = 36.sp,
             )
         }
-
-        Row {
-            ArchiveCurrentObservationsCard(
-                viewModel,
-                instructions = "Archive Current Observation Records"
-            )
-            ClearDatabaseCard(
-                viewModel,
-                instructions = "Clear Database"
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(end = 8.dp)
+            ) {
+                ArchiveCurrentObservationsCard(
+                    viewModel,
+                    instructions = "Archive Current Observation Records"
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(end = 8.dp)
+            ) {
+                ClearDatabaseCard(
+                    viewModel,
+                    instructions = "Clear Database"
+                )
+            }
         }
     }
 }
