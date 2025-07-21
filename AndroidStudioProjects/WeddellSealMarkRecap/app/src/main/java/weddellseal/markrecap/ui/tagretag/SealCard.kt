@@ -51,6 +51,7 @@ fun SealCard(
 
     var numRelatives by remember { mutableStateOf(seal.numRelatives) }
     var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
+    var possibleSex by remember { mutableStateOf(seal.sex) }
 
     LaunchedEffect(seal.numRelatives) {
         numRelatives = if (seal.sex == SealSex.MALE && seal.sealType == SealType.PRIMARY) {
@@ -148,7 +149,7 @@ fun SealCard(
         }
     }
 
-// SEX & PUP PEED
+    // SEX & PUP PEED
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,19 +184,22 @@ fun SealCard(
                 SegmentedButtonGroup(
                     options = buttonListSex,
                     selectedOption = seal.sex.description,
-                    onOptionSelected = {
-                        if (seal.sealType == SealType.PRIMARY && it == "Male") { //primary seals that are male do not have relatives
+                    onOptionSelected = { selection ->
+                        if (seal.sealType == SealType.PRIMARY && selection == SealSex.MALE.description) {
+                            // primary seals that are male do not have relatives
                             if (numRelatives != "" && numRelatives != "0") {
-                                possibleRelatives = "0"
                                 // handle the case where the number of relatives is being reduced
                                 // pop a warning and ask for confirmation before moving forward
+                                possibleRelatives = "0"
+                                possibleSex = SealSex.MALE
                                 showDeleteRelativesDialog.value = true
-
                             } else {
                                 viewModel.updateNumRelatives("0")
+                                viewModel.updateSex(seal, SealSex.fromSelection(selection))
                             }
+                        } else {
+                            viewModel.updateSex(seal, SealSex.fromSelection(selection))
                         }
-                        viewModel.updateSex(seal, SealSex.fromSelection(it))
                     }
                 )
             }
@@ -327,10 +331,11 @@ fun SealCard(
                 onDismissRequest = { showDeleteRelativesDialog.value = false },
                 onConfirmation = {
                     showDeleteRelativesDialog.value = false
-                    if (seal.sex == SealSex.MALE) {
+                    if (possibleSex == SealSex.MALE) {
                         possibleRelatives = "0"  // set the value to zero
                     }
                     viewModel.updateNumRelatives(possibleRelatives) // use the value selected by the user to update the model value
+                    viewModel.updateSex(seal, possibleSex)
                 },
                 text = "This will remove data you've entered for pups. Are you sure?",
                 buttonText = "Yes, clear pup data."
