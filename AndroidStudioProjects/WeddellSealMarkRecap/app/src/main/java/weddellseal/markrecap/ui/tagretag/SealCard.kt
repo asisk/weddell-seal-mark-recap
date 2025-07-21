@@ -244,7 +244,7 @@ fun SealCard(
         }
     }
 
-// NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG, && CONDITION
+// NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG
     val numRelsList = listOf("0", "1", "2")
 
     Row(
@@ -279,7 +279,7 @@ fun SealCard(
 //                        style = MaterialTheme.typography.titleLarge
 //                    )
 //                } else
-                    if (seal.ageClass == SealAgeClass.PUP || seal.ageClass == SealAgeClass.YEARLING) {
+                if (seal.ageClass == SealAgeClass.PUP || seal.ageClass == SealAgeClass.YEARLING) {
                     // when the primary seal is a pup or yearling, there can be no other relatives
                     Text(
                         numRelatives,
@@ -341,29 +341,6 @@ fun SealCard(
                 text = "This will remove data you've entered for pups. Are you sure?",
                 buttonText = "Yes, clear pup data."
             )
-        }
-
-        // CONDITION
-        Box(
-            modifier = Modifier
-                .weight(.6f)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Condition",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                SealConditionDropdown(
-                    selected = seal.condition,
-                    onSelected = {
-                        viewModel.updateCondition(seal.sealType, it)
-                    }
-                )
-            }
         }
     }
 
@@ -637,11 +614,40 @@ fun SealCard(
                         }
                     )
                 }
+
+                // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
+                if (seal.tagEventType == TagEventType.NEW) {
+                    Box(
+                        modifier = Modifier
+                            .weight(.3f)
+                            .padding(start = 8.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Old Tag Marks",
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+
+                            Checkbox(
+                                modifier = Modifier.padding(8.dp),
+                                checked = seal.oldTagMarks,
+                                onCheckedChange = {
+                                    focusManager.clearFocus()
+                                    viewModel.updateOldTagMarks(seal.sealType, it)
+                                },
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 
-// NUMBER OF TAGS, NO TAG && TISSUE
+    // NUMBER OF TAGS, NO TAG
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -714,6 +720,44 @@ fun SealCard(
                 )
             }
         }
+    }
+
+    // CONDITION && TISSUE
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        // CONDITION
+        Box(
+            modifier = Modifier
+                .weight(.6f)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Condition",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                SealConditionDropdown(
+                    selected = seal.condition,
+                    onSelected = {
+                        viewModel.updateCondition(seal.sealType, it)
+                    }
+                )
+            }
+        }
 
         // TISSUE
         Box(
@@ -745,7 +789,7 @@ fun SealCard(
         }
     }
 
-// OLD TAG MARKS
+    // OLD TAG MARKS
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -753,35 +797,6 @@ fun SealCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
-        if (seal.tagEventType == TagEventType.NEW) {
-
-            Box(
-                modifier = Modifier
-                    .weight(.3f)
-                    .padding(start = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Old Tag Marks",
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-
-                    Checkbox(
-                        modifier = Modifier.padding(8.dp),
-                        checked = seal.oldTagMarks,
-                        onCheckedChange = {
-                            focusManager.clearFocus()
-                            viewModel.updateOldTagMarks(seal.sealType, it)
-                        },
-                    )
-                }
-            }
-        }
 
         // COMMENT
         Box(
