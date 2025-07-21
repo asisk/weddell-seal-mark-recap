@@ -171,7 +171,7 @@ fun TagRetagScreen(
 
             // TODO, move this to the a Header component specific to Census
             // CENSUS METADATA
-            if (homeUiState.selectedCensusNumber.isNotEmpty() && homeUiState.isCensusMode) {
+            if (homeUiState.selectedCensusNumber.isNotEmpty() && homeUiState.isCensusMode && !uiState.isEditMode) {
                 // Prepopulate Options
                 Row(
                     modifier = Modifier

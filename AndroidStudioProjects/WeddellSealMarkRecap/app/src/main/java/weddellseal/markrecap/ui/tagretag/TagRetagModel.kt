@@ -379,8 +379,8 @@ class TagRetagModel(
                 val metadata = ObservationMetadata(
                     selectedColony = if (editMode) uiState.value.observationRecordColony else homeUiState.selectedColony,
                     selectedObservers = if (editMode) uiState.value.observationRecordObservers else homeUiState.selectedObservers,
-                    censusNumber = if (editMode) "" else homeUiState.selectedCensusNumber,
-                    isCensusMode = if (editMode) false else homeUiState.isCensusMode,
+                    censusNumber = homeUiState.selectedCensusNumber,
+                    isCensusMode = homeUiState.isCensusMode,
                     deviceID = deviceID,
                     currentSeason = currentSeason
                 )
@@ -1203,7 +1203,7 @@ class TagRetagModel(
     }
 
     // used to pull over the fields from the WedCheckRecord upon Seal Lookup Screen selection of Tag/Retag
-// prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
+    // prepopulated fields: age, sex, #rels, tag event=marked per August 1 discussion
     fun populateSealFromLookup(lookupSeal: WedCheckSeal) {
         // advance the age based on the last seen season
         val currentYear = getCurrentYear()
