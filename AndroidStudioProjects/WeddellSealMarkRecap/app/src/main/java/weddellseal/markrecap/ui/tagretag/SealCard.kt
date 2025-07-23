@@ -399,7 +399,10 @@ fun SealCard(
                             onFocusChange = { isFocused, lastValue ->
                                 if (!isFocused) {
                                     // save the input to the model
-                                    viewModel.updateOldTagNumber(seal, lastValue.uppercase().trim())
+                                    viewModel.updateOldTagNumber(
+                                        seal.sealType,
+                                        lastValue.uppercase().trim()
+                                    )
                                 }
                             }
                         )
@@ -424,7 +427,7 @@ fun SealCard(
                             buttonListAlpha,
                             seal.oldTagAlpha
                         ) { newText ->
-                            viewModel.updateOldTagAlpha(seal, newText)
+                            viewModel.updateOldTagAlpha(seal.sealType, newText)
                         }
                     }
                 }
@@ -470,7 +473,7 @@ fun SealCard(
                         errorMessage = "",
                         keyboardType = KeyboardType.Number,
                         onClearValueDo = {
-                            viewModel.clearTagID(seal)
+                            viewModel.clearTagID(seal.sealType)
 
                             // when the event type is Marked or New and this field has been cleared
                             // clear the seal in the WedCheck model when this field is cleared to clear the Seal SpeNo
@@ -482,7 +485,7 @@ fun SealCard(
                             if (!isFocused) {
                                 Log.d("TagID Row", "Updating tag on Focus not active")
 
-                                viewModel.updateTagNumber(seal, lastValue)
+                                viewModel.updateTagNumber(seal.sealType, lastValue)
                             }
                         }
                     )
@@ -507,7 +510,7 @@ fun SealCard(
                         buttonListAlpha,
                         seal.tagAlpha
                     ) { newText ->
-                        viewModel.updateTagAlpha(seal, newText)
+                        viewModel.updateTagAlpha(seal.sealType, newText)
                     }
                 }
             }
@@ -515,9 +518,6 @@ fun SealCard(
     }
 
     // TAG EVENT TYPE
-    val tagEventList = TagEventType.values()
-        .filter { it != TagEventType.UNKNOWN }
-        .map { it.description }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -552,16 +552,38 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
+                    val tagEventList = TagEventType.values()
+                        .filter { it != TagEventType.UNKNOWN }
+                        .map { it.description }
+
                     SegmentedButtonGroup(
                         options = tagEventList,
                         selectedOption = seal.tagEventType.description,
                         onOptionSelected = {
-                            viewModel.updateTagEventType(seal, TagEventType.fromSelection(it))
-                            if (it == TagEventType.RETAG.description) {
-                                viewModel.onRetagSelection(seal)
+                            //TODO, consider moving all logic to new fun onEventTypeSelection in view model
 
-                                // Clear the WedCheck match if the old tag ID does not match the WedCheck tag ID
+                            if (seal.tagEventType == TagEventType.RETAG && it != TagEventType.RETAG.description) {
+                                // toggling back from Retag to New or Marked
+                                // do this before updating the event type
+                                viewModel.onRetagDeselection(
+                                    seal.sealType,
+                                    seal.oldTagNumber,
+                                    seal.oldTagAlpha
+                                )
+                            }
+
+                            viewModel.updateTagEventType(seal, TagEventType.fromSelection(it))
+
+                            if (it == TagEventType.RETAG.description) {
+                                viewModel.onRetagSelection(
+                                    seal.sealType,
+                                    seal.tagNumber,
+                                    seal.tagAlpha
+                                )
+
                                 if (seal.wedCheckMatch != null && seal.wedCheckMatch.tagIdOne != seal.oldTagNumber + seal.oldTagAlpha) {
+                                    // Ensure that the WedCheck match is removed
+                                    // if the old tag ID does not match the WedCheck tag ID
                                     viewModel.removeWedCheckMatch(seal.sealType)
                                 }
                             }
@@ -632,7 +654,6 @@ fun SealCard(
                         selected = seal.reasonForRetag,
                         onSelected = {
                             viewModel.updateRetagReason(seal.sealType, it)
-                            viewModel.onRetagSelection(seal)
                         }
                     )
                 }
@@ -705,7 +726,7 @@ fun SealCard(
                         }
 
                         // when NoTag marked, clear the tag fields & speno
-                        viewModel.clearTagID(seal)
+                        viewModel.clearTagID(seal.sealType)
                         viewModel.clearOldTag(seal.sealType)
                         viewModel.clearNumTags(seal.sealType)
                         viewModel.removeWedCheckMatch(seal.sealType)

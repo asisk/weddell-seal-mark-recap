@@ -223,52 +223,10 @@ class TagRetagModel(
         }
     }
 
-    // TODO, test this it should not be necessary
-    fun onRetagSelection(seal: Seal) { // TODO, consider passing the event Type as a parameter, and change the seal to sealType
-        if (primarySeal.value.tagEventType == TagEventType.RETAG
-            && (primarySeal.value.reasonForRetag == RetagReason.ONE_OF_FOUR
-                    || primarySeal.value.reasonForRetag == RetagReason.TWO_OF_FOUR
-                    || primarySeal.value.reasonForRetag == RetagReason.THREE_OF_FOUR)
-        ) {
-            when (seal.sealType) {
-                SealType.PRIMARY -> {
-                    _primarySeal.update {
-                        it.copy(
-                            oldTagNumber = seal.tagNumber,
-                            oldTagAlpha = seal.tagAlpha
-                        )
-                    }
-                }
-
-                SealType.PUPONE -> {
-                    _pupOne.update {
-                        it.copy(
-                            oldTagNumber = seal.tagNumber,
-                            oldTagAlpha = seal.tagAlpha
-                        )
-                    }
-                }
-
-                SealType.PUPTWO -> {
-                    _pupTwo.update {
-                        it.copy(
-                            oldTagNumber = seal.tagNumber,
-                            oldTagAlpha = seal.tagAlpha
-                        )
-                    }
-                }
-
-                SealType.UNKNOWN -> {
-                    // No action needed for UNKNOWN
-                }
-            }
-        }
-    }
-
     // called:
-// 1. after navigation command from the recent observation screen when a record is to be edited
-// 2. when a save is successful
-// 3. when a record is selected for editing from the Tag/Retag screen
+    // 1. after navigation command from the recent observation screen when a record is to be edited
+    // 2. when a save is successful
+    // 3. when a record is selected for editing from the Tag/Retag screen
     fun resetModelState() {
         _uiState.update {
             it.copy(
@@ -660,14 +618,14 @@ class TagRetagModel(
         }
     }
 
-    fun updateTagNumber(seal: Seal, input: String) {
+    fun updateTagNumber(sealType: SealType, input: String) {
         var tagNumber = input
         // Function to extract numeric value
         if (input.toIntOrNull() != null) {
             tagNumber = input
         }
 
-        when (seal.sealType) {
+        when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(tagNumber = tagNumber) }
                 updateNotebookEntry(primarySeal.value)
@@ -692,8 +650,8 @@ class TagRetagModel(
         }
     }
 
-    fun updateTagAlpha(seal: Seal, input: String) {
-        when (seal.sealType) {
+    fun updateTagAlpha(sealType: SealType, input: String) {
+        when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(tagAlpha = input) }
                 updateNotebookEntry(primarySeal.value)
@@ -718,14 +676,14 @@ class TagRetagModel(
         }
     }
 
-    fun updateOldTagNumber(seal: Seal, input: String) {
+    fun updateOldTagNumber(sealType: SealType, input: String) {
         var tagNumber = input
         // Function to extract numeric value
         if (input.toIntOrNull() != null) {
             tagNumber = input
         }
 
-        when (seal.sealType) {
+        when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(oldTagNumber = input) }
                 updateNotebookEntry(primarySeal.value)
@@ -750,8 +708,8 @@ class TagRetagModel(
         }
     }
 
-    fun updateOldTagAlpha(seal: Seal, input: String) {
-        when (seal.sealType) {
+    fun updateOldTagAlpha(sealType: SealType, input: String) {
+        when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(oldTagAlpha = input) }
                 updateNotebookEntry(primarySeal.value)
@@ -759,17 +717,13 @@ class TagRetagModel(
             }
 
             SealType.PUPONE -> {
-                _pupOne.update {
-                    it.copy(oldTagAlpha = input)
-                }
+                _pupOne.update { it.copy(oldTagAlpha = input) }
                 updateNotebookEntry(pupOne.value)
                 requestCurrentWedCheckMatch(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update {
-                    it.copy(oldTagAlpha = input)
-                }
+                _pupTwo.update { it.copy(oldTagAlpha = input) }
                 updateNotebookEntry(pupTwo.value)
                 requestCurrentWedCheckMatch(pupTwo.value)
             }
@@ -780,23 +734,19 @@ class TagRetagModel(
         }
     }
 
-    fun updateRetagReason(sealName: SealType, input: RetagReason) {
-        when (sealName) {
+    fun updateRetagReason(sealType: SealType, input: RetagReason) {
+        when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(reasonForRetag = input) }
             }
 
             SealType.PUPONE -> {
-                _pupOne.update {
-                    it.copy(reasonForRetag = input)
-                }
+                _pupOne.update { it.copy(reasonForRetag = input) }
                 updateNotebookEntry(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update {
-                    it.copy(reasonForRetag = input)
-                }
+                _pupTwo.update { it.copy(reasonForRetag = input) }
                 updateNotebookEntry(pupTwo.value)
             }
 
@@ -817,9 +767,7 @@ class TagRetagModel(
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update {
-                    it.copy(oldTagMarks = oldTagMarks)
-                }
+                _pupTwo.update { it.copy(oldTagMarks = oldTagMarks) }
             }
 
             SealType.UNKNOWN -> {
@@ -982,8 +930,8 @@ class TagRetagModel(
         }
     }
 
-    fun clearTagID(seal: Seal) {
-        when (seal.sealType) {
+    fun clearTagID(sealType: SealType) {
+        when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update {
                     it.copy(
@@ -1064,6 +1012,26 @@ class TagRetagModel(
                 // No action needed for UNKNOWN
             }
         }
+    }
+
+    // When retag is selected
+    // 1) Old Tag ID is set to the current Tag ID
+    // 2) Tag ID should be cleared
+    fun onRetagSelection(sealType: SealType, tagNumber: String, tagAlpha: String) {
+        //TODO, need to think about the value when populated from lookup
+        // Set Old Tag ID to current Tag ID
+        updateOldTagNumber(sealType, tagNumber)
+        updateOldTagAlpha(sealType, tagAlpha)
+
+        clearTagID(sealType)
+    }
+
+    fun onRetagDeselection(sealType: SealType, oldTagNumber: String, oldTagAlpha: String) {
+        // Set Tag ID to Old Tag ID when toggling back to Marked or New from Retag
+        updateTagNumber(sealType, oldTagNumber)
+        updateTagAlpha(sealType, oldTagAlpha)
+
+        clearOldTag(sealType)
     }
 
     /* Notes on when to clear the WedCheck match */
