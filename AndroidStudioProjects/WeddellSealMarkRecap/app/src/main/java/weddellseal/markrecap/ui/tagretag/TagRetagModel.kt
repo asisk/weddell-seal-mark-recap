@@ -223,6 +223,7 @@ class TagRetagModel(
         }
     }
 
+    // TODO, test this it should not be necessary
     fun onRetagSelection(seal: Seal) { // TODO, consider passing the event Type as a parameter, and change the seal to sealType
         if (primarySeal.value.tagEventType == TagEventType.RETAG
             && (primarySeal.value.reasonForRetag == RetagReason.ONE_OF_FOUR
@@ -1345,6 +1346,7 @@ class TagRetagModel(
         currentLocation: GeoLocation?,
     ) {
         val sealsComplete = listOf(primarySeal.value, pupOne.value, pupTwo.value)
+            .filter { it.isComplete } // filter out any seals that aren't complete
 
         for (seal in sealsComplete) {
             // get the tags for this seal's relatives
