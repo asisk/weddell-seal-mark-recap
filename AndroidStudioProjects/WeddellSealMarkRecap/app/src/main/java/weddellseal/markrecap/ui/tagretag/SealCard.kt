@@ -386,7 +386,7 @@ fun SealCard(
                             labelText = "3 or 4 Digit Tag Number",
                             placeholderText = "Enter Tag Number",
                             errorMessage = "",
-                            keyboardType = KeyboardType.Text,
+                            keyboardType = KeyboardType.Number,
                             onClearValueDo = {
                                 viewModel.clearOldTag(seal.sealType)
 
