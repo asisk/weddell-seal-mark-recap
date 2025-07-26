@@ -94,6 +94,5 @@ fun ObservationRecord.toSeal(): Seal {
         weight = if (weight != "") weight.toInt() else 0,
         tissueTaken = tissueSampled != "",
         flaggedForReview = flaggedEntry != "",
-        isTagRetagEntry = true,
     )
 }

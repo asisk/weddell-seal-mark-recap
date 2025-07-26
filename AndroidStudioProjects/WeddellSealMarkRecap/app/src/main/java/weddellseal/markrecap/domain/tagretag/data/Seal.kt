@@ -33,7 +33,6 @@ data class Seal(
     val weight: Int = 0,
     val weightTaken: Boolean = false,
     val observationID: Int = 0, // represents the record ID for an existing observation when mapping an ObservationRecord to a Seal
-    val isTagRetagEntry: Boolean = false,
     val observationRecordSpeno: Int = 0,
     val wedCheckMatch: WedCheckSeal? = null, // This could be null if there is no match in the database
     var flaggedForReview: Boolean = false,
