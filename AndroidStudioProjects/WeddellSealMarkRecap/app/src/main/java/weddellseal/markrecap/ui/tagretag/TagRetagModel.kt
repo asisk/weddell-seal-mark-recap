@@ -51,13 +51,22 @@ class TagRetagModel(
     private val _primarySeal = MutableStateFlow(Seal(sealType = SealType.PRIMARY))
     val primarySeal: StateFlow<Seal> = _primarySeal
 
+    private val _primarySealEdits = MutableStateFlow<List<String>>(emptyList())
+    val primarySealEdits: StateFlow<List<String>> = _primarySealEdits
+
     private val _pupOne =
         MutableStateFlow(Seal(sealType = SealType.PUPONE, ageClass = SealAgeClass.PUP))
     val pupOne: StateFlow<Seal> = _pupOne
 
+    private val _pupOneEdits = MutableStateFlow<List<String>>(emptyList())
+    val pupOneEdits: StateFlow<List<String>> = _pupOneEdits
+
     private val _pupTwo =
         MutableStateFlow(Seal(sealType = SealType.PUPTWO, ageClass = SealAgeClass.PUP))
     val pupTwo: StateFlow<Seal> = _pupTwo
+
+    private val _pupTwoEdits = MutableStateFlow<List<String>>(emptyList())
+    val pupTwoEdits: StateFlow<List<String>> = _pupTwoEdits
 
     private var originalPrimarySeal: Seal? = null
     private var originalPupOne: Seal? = null
@@ -92,7 +101,7 @@ class TagRetagModel(
         val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
         val observationTimestamp: String = "", // UI display value in Tag/Retag screen header
         val observationRecordColony: String = "", // UI display value in Tag/Retag screen header
-        val observationRecordObservers: List<String> = emptyList<String>(), // UI display value in Tag/Retag screen header
+        val observationRecordObservers: List<String> = emptyList(), // UI display value in Tag/Retag screen header
         val observationRecordLatitude: String = "", // UI display value in Tag/Retag screen header
         val observationRecordLongitude: String = "", // UI display value in Tag/Retag screen header
 
@@ -382,19 +391,58 @@ class TagRetagModel(
                 uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
             ) { currentPrimary, currentPupOne, currentPupTwo, editMode ->
 
-                if (!editMode) return@combine false
+                if (!editMode) return@combine Triple(
+                    emptyList<String>(),
+                    emptyList<String>(),
+                    emptyList<String>()
+                )
 
-                val primaryChanged = currentPrimary.isChangedFrom(originalPrimarySeal)
-                val pupOneChanged = currentPupOne.isChangedFrom(originalPupOne)
-                val pupTwoChanged = currentPupTwo.isChangedFrom(originalPupTwo)
+                // Check if edits have been made
+                val primarySealEdits = currentPrimary.edits(originalPrimarySeal)
+                val pupOneSealEdits = currentPupOne.edits(originalPupOne)
+                val pupTwoSealEdits = currentPupTwo.edits(originalPupTwo)
 
-                primaryChanged || pupOneChanged || pupTwoChanged
+                // emit a Triple that can be unpacked in `collect`
+                Triple(primarySealEdits, pupOneSealEdits, pupTwoSealEdits)
 
-            }.collect { hasChanged ->
-                _hasEdits.value = hasChanged
+            }.collect { (primarySealEdits, pupOneSealEdits, pupTwoSealEdits) ->
+                var edits = emptyList<String>()
+                if (primarySealEdits.isNotEmpty()) {
+                    edits = edits.plus(primarySealEdits)
+                    _primarySealEdits.update { primarySealEdits }
+                    _primarySeal.update {
+                        it.copy(
+                            hasEdits = true,
+                            comment = it.comment + "\n" + "Edited: $primarySealEdits"
+                        )
+                    }
+                }
+                if (pupOneSealEdits.isNotEmpty()) {
+                    edits = edits.plus(pupOneSealEdits)
+                    _pupOneEdits.update { pupOneSealEdits }
+                    _pupOne.update {
+                        it.copy(
+                            hasEdits = true,
+                            comment = it.comment + "\n" + "Edited: $pupOneSealEdits"
+                        )
+                    }
+                }
+                if (pupTwoSealEdits.isNotEmpty()) {
+                    edits = edits.plus(pupTwoSealEdits)
+                    _pupTwoEdits.update { pupTwoSealEdits }
+                    _pupTwo.update {
+                        it.copy(
+                            hasEdits = true,
+                            comment = it.comment + "\n" + "Edited: $pupTwoSealEdits"
+                        )
+                    }
+                }
+
+                if (edits.isNotEmpty()) {
+                    _hasEdits.value = true
+                }
             }
         }
-
     }
 
     fun checkNeedsConfirmation(
@@ -1091,6 +1139,24 @@ class TagRetagModel(
         }
     }
 
+    fun markPupRemoved(sealName: SealType) {
+        when (sealName) {
+            SealType.PUPONE -> {
+                _pupOne.update { it.copy(markedRemoved = true) }
+                _primarySeal.update { it.copy(pupOneRemoved = true) }
+            }
+
+            SealType.PUPTWO -> {
+                _pupTwo.update { it.copy(markedRemoved = true) }
+                _primarySeal.update { it.copy(pupTwoRemoved = true) }
+            }
+
+            else -> {
+                // No action for primary seal
+            }
+        }
+    }
+
     fun resetSeal(sealName: SealType) {
         var parentNumRels = primarySeal.value.numRelatives
         if (primarySeal.value.numRelatives != "" && primarySeal.value.numRelatives.toIntOrNull() != null) {
@@ -1313,30 +1379,68 @@ class TagRetagModel(
     fun writeObservationRecord(
         currentLocation: GeoLocation?,
     ) {
-        val sealsComplete = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-            .filter { it.isComplete } // filter out any seals that aren't complete
+        if (uiState.value.isEditMode) {
+            val sealsToRemove = listOf(primarySeal.value, pupOne.value, pupTwo.value)
+                // filter for seals that are to be removed
+                .filter { it.markedRemoved }
 
-        for (seal in sealsComplete) {
-            // get the tags for this seal's relatives
-            val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
-            val observationRecord = buildObservationRecord(
-                currentLocation,
-                seal,
-                relOneTag,
-                relTwoTag,
-                uiState.value.metadata,
-            )
-
-            // write an entry to the database for each seal
-            viewModelScope.launch {
-                observationRepo.writeObservation(observationRecord)
+            for (seal in sealsToRemove) {
+                // write an entry to the database for each seal
+                viewModelScope.launch {
+                    observationRepo.deleteObservation(seal.observationID)
+                }
             }
-        }
 
-        viewModelScope.launch {
-            _uiEvent.emit(
-                UiEvent.ShowSavedToast("Record for ${primarySeal.value.notebookDataString} saved!")
-            )
+            // TODO, test
+            val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
+                // filter for seals that are to be updated
+                .filter { !it.markedRemoved && it.hasEdits }
+
+            for (seal in sealToUpdate) {
+                // get the tags for this seal's relatives
+                val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
+                val observationRecord = buildObservationRecord(
+                    currentLocation,
+                    seal,
+                    relOneTag,
+                    relTwoTag,
+                    uiState.value.metadata,
+                )
+
+                // write an entry to the database for each seal
+                viewModelScope.launch {
+                    observationRepo.writeObservation(observationRecord)
+                }
+            }
+
+        } else {
+            val sealsComplete = listOf(primarySeal.value, pupOne.value, pupTwo.value)
+                // filter out any seals that aren't complete, are marked deleted, or have edits
+                .filter { it.isComplete && !it.markedRemoved && !it.hasEdits }
+
+            for (seal in sealsComplete) {
+                // get the tags for this seal's relatives
+                val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
+                // TODO, write a function on the Observation, toObservationRecord(), to replace buildObservationRecord
+                val observationRecord = buildObservationRecord(
+                    currentLocation,
+                    seal,
+                    relOneTag,
+                    relTwoTag,
+                    uiState.value.metadata,
+                )
+
+                // write an entry to the database for each seal
+                viewModelScope.launch {
+                    observationRepo.writeObservation(observationRecord)
+                }
+            }
+
+            viewModelScope.launch {
+                _uiEvent.emit(
+                    UiEvent.ShowSavedToast("Record for ${primarySeal.value.notebookDataString} saved!")
+                )
+            }
         }
 
         resetModelState()

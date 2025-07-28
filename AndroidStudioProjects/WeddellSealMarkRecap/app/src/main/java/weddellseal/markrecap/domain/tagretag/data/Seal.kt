@@ -36,6 +36,10 @@ data class Seal(
     val observationRecordSpeno: Int = 0,
     val wedCheckMatch: WedCheckSeal? = null, // This could be null if there is no match in the database
     var flaggedForReview: Boolean = false,
+    var markedRemoved: Boolean = false, // when in edit mode, pups can be removed from the database
+    var pupOneRemoved: Boolean = false,
+    var pupTwoRemoved: Boolean = false,
+    var hasEdits : Boolean = false,
 ) {
     // This is a check to see whether the user has begun data entry
     // Only checking primary fields, not fields that appear as a result of a field being selected
@@ -92,6 +96,19 @@ data class Seal(
             }
 
             return reasons
+        }
+
+    val hasPup: Boolean
+        get() {
+            if (sealType != SealType.PRIMARY) return false // only the primary seal can have pups
+
+            if (numRelatives == "0") return false // no pups if no relatives
+
+            if (numRelatives == "1" && pupOneRemoved) return false // pupOne removed
+
+            if (numRelatives == "2" && pupOneRemoved && pupTwoRemoved) return false // all pups were removed
+
+            return true
         }
 
     val hasPupOne: Boolean
@@ -214,30 +231,44 @@ data class Seal(
             return errors
         }
 
-    fun isChangedFrom(original: Seal?): Boolean {
-        if (original == null) return false
+    fun edits(original: Seal?): List<String> {
+        if (original == null) return emptyList()
 
-        if (ageClass != original.ageClass) return true
-        if (comment != original.comment) return true
-        if (condition != original.condition) return true
-        if (isNoTag != original.isNoTag) return true
-        if (numRelatives != original.numRelatives) return true
-        if (numTags != original.numTags) return true
-        if (pupPeed != original.pupPeed) return true
-        if (reasonForRetag != original.reasonForRetag) return true
-        if (sex != original.sex) return true
-        if (tagEventType != original.tagEventType) return true
-        if (tagNumber != original.tagNumber) return true
-        if (tagAlpha != original.tagAlpha) return true
-        if (oldTagNumber != original.oldTagNumber) return true
-        if (oldTagAlpha != original.oldTagAlpha) return true
-        if (oldTagMarks != original.oldTagMarks) return true
-        if (tissueTaken != original.tissueTaken) return true
-        if (tissue != original.tissue) return true
-        if (weight != original.weight) return true
-        if (weightTaken != original.weightTaken) return true
+        val edits = mutableListOf<String>()
 
-        return false
+        if (ageClass != original.ageClass)
+            edits.add("ageClass")
+        if (comment != original.comment)
+            edits.add("comment")
+        if (condition != original.condition)
+            edits.add("condition")
+        if (isNoTag != original.isNoTag)
+            edits.add("isNoTag")
+        if (numRelatives != original.numRelatives)
+            edits.add("numRelatives")
+        if (numTags != original.numTags)
+            edits.add("numTags")
+        if (pupPeed != original.pupPeed)
+            edits.add("pupPeed")
+        if (reasonForRetag != original.reasonForRetag)
+            edits.add("reasonForRetag")
+        if (sex != original.sex)
+            edits.add("sex")
+        if (tagEventType != original.tagEventType)
+            edits.add("tagEventType")
+        if (tagNumber != original.tagNumber || tagAlpha != original.tagAlpha)
+            edits.add("tagID")
+        if (oldTagNumber != original.oldTagNumber || oldTagMarks != original.oldTagMarks)
+            edits.add("oldTagID")
+        if (tissueTaken != original.tissueTaken || tissue != original.tissue)
+            edits.add("tissue")
+        if (weight != original.weight || weightTaken != original.weightTaken)
+            edits.add("weight")
+        if (pupOneRemoved != original.pupOneRemoved)
+            edits.add("pupOneRemoved")
+        if (pupTwoRemoved != original.pupTwoRemoved)
+            edits.add("pupTwoRemoved")
+
+        return edits
     }
-
 }

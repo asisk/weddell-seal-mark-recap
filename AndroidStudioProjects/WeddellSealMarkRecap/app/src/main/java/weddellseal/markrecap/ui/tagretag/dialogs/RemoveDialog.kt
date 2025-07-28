@@ -52,6 +52,12 @@ fun RemoveDialog(
                     style = MaterialTheme.typography.titleLarge
                 )
 
+                Text(
+                    text = "Are you sure?",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.titleLarge
+                )
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),

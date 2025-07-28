@@ -45,7 +45,13 @@ fun ConfirmEditDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "This will alter previously entered data. Are you sure?",
+                    text = "This will alter previously entered data.",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Text(
+                    text = "Are you sure?",
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.titleLarge
                 )

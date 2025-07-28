@@ -62,6 +62,10 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         observationDao.upsert(log)
     }
 
+    suspend fun deleteObservation(id: Int) {
+        observationDao.delete(id)
+    }
+
     suspend fun softDeleteAllObservations() {
         observationDao.softDeleteObservations()
     }

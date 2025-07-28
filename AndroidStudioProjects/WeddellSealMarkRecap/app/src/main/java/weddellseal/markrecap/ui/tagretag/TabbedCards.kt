@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -206,23 +207,29 @@ fun TabbedCards(
                         }
                     }
 
-                    // TRASH CAN
-                    IconButton(
-                        modifier = Modifier.padding(10.dp),
-                        onClick = {
-                            if (uiState.isEditMode && !hasEdits)  return@IconButton
+                    // if is edit mode, only show the trash can for pups
+                    // if not edit mode, show the trash can for all seals if the primary seal is started
+                    val showTrashCan =
+                        when {
+                            uiState.isEditMode -> selectedSeal.sealType != SealType.PRIMARY
+                            else -> primarySeal.isEntryStarted
+                        }
 
-                            if (primarySeal.isEntryStarted) {
-                                showDeleteDialog.value = true
-                            }
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Remove Tab",
-                            tint = if (!primarySeal.isEntryStarted || (uiState.isEditMode && !hasEdits)) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(48.dp),
-                        )
+                    if (showTrashCan) {
+                        // TRASH CAN
+                        IconButton(
+                            modifier = Modifier.padding(10.dp),
+                            onClick = { showDeleteDialog.value = true },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteOutline,
+                                contentDescription = "Remove Tab",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(48.dp),
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(48.dp))
                     }
                 }
 
@@ -234,22 +241,35 @@ fun TabbedCards(
                 // DELETE DIALOG
                 if (showDeleteDialog.value) {
                     val deleteMessage = if (selectedSeal.sealType == SealType.PRIMARY) {
-                        "This will remove data you've entered for all seals. Are you sure?"
+                        "This will remove data you've entered for all seals."
                     } else {
-                        "This will remove data you've entered for ${selectedSeal.notebookDataString}. Are you sure?"
+                        "This will remove data you've entered for\n${selectedSeal.notebookDataString}."
+                    }
+
+                    val buttonText = if (selectedSeal.sealType != SealType.PRIMARY) {
+                        "Yes, remove pup."
+                    } else {
+                        "Yes, clear all data."
                     }
 
                     RemoveDialog(
                         onDismissRequest = { showDeleteDialog.value = false },
                         onConfirmation = {
                             if (tabItems.isNotEmpty()) {
-                                // remove the current seal
-                                viewModel.resetSeal(selectedSeal.sealType)
+                                // remove the seal
+                                if (uiState.isEditMode &&
+                                    (selectedSeal.sealType == SealType.PUPONE || selectedSeal.sealType == SealType.PUPTWO)
+                                ) {
+                                    viewModel.markPupRemoved(selectedSeal.sealType)
+                                } else {
+                                    viewModel.resetSeal(selectedSeal.sealType)
+                                }
+
                                 showDeleteDialog.value = false
                             }
                         },
                         text = deleteMessage,
-                        buttonText = "Yes, clear data."
+                        buttonText = buttonText
                     )
                 }
             }
@@ -272,7 +292,7 @@ fun createTabItems(
         )
     })
 
-    if (primarySealState.hasPupOne) {
+    if (primarySealState.hasPupOne && !pupOneSealState.markedRemoved) {
         items.add(TabItem(SealType.PUPONE.label, pupOneSealState) {
             SealCard(
                 viewModel,
@@ -281,7 +301,7 @@ fun createTabItems(
         })
     }
 
-    if (primarySealState.hasPupTwo) {
+    if (primarySealState.hasPupTwo && !pupTwoSealState.markedRemoved) {
         items.add(TabItem(SealType.PUPTWO.label, pupTwoSealState) {
             SealCard(
                 viewModel,

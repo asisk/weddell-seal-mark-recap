@@ -25,6 +25,10 @@ interface ObservationDao {
     @Upsert
     suspend fun upsert(log: ObservationRecord)
 
+    // Delete a single record
+    @Query("DELETE FROM observationLogs WHERE id = :id")
+    suspend fun delete(id: Int)
+
     // Soft delete current records that haven't been deleted yet (where deletedAt is NULL)
     @Query("UPDATE observationLogs SET deletedAt = :deletedAt WHERE deletedAt IS NULL")
     suspend fun softDeleteObservations(deletedAt: Long = System.currentTimeMillis())
