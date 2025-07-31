@@ -1,10 +1,10 @@
 package weddellseal.markrecap.ui.tagretag.utils
 
-import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 
 // function used to display the notebook string on the seal card in the observations view
 fun notebookEntryValueSeal(seal: Seal): String {
@@ -13,11 +13,6 @@ fun notebookEntryValueSeal(seal: Seal): String {
         seal.ageClass.alpha
     } else {
         ""
-    }
-
-    var numRels = ""
-    if (seal.numRelatives != "") {
-        numRels = seal.numRelatives
     }
 
     val numberOfTags = seal.numTags.toIntOrNull()
@@ -29,7 +24,7 @@ fun notebookEntryValueSeal(seal: Seal): String {
 
     sb.append(age)
     sb.append(seal.sex.alpha)
-    sb.append(numRels)
+    sb.append(seal.numRelatives.label)
     sb.append("  ")
     sb.append(tag)
     sb.append("  ")

@@ -12,6 +12,7 @@ import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.SealRelatives
 import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.processTags
@@ -79,7 +80,7 @@ fun ObservationRecord.toSeal(): Seal {
         observationRecordSpeno = speno.toInt(),
         ageClass = SealAgeClass.fromAlpha(ageClass), // expecting to advance the seal age based on the last season seen
         sex = SealSex.fromAlpha(sex),
-        numRelatives = numRelatives,
+        numRelatives = SealRelatives.fromSelection(numRelatives),
         condition = SealCondition.fromCode(sealCondition),
         tagNumber = processedTagOne.tagNumber,
         tagAlpha = processedTagTwo.tagAlpha,

@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealRelatives
 import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
@@ -46,19 +46,13 @@ fun SealCard(
 
     val focusManager = LocalFocusManager.current
 
+    // local values used to prevent a user from changing model values if the selection is invalid based on other field values
+    var ageSelected by remember { mutableStateOf(seal.ageClass) }
+    var sexSelected by remember { mutableStateOf(seal.sex) }
+    var numRelsSelected by remember { mutableStateOf(seal.numRelatives) }
+
+    val promptForDeleteRelatives = remember { mutableStateOf("") }
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
-
-    var numRelatives by remember { mutableStateOf(seal.numRelatives) }
-    var possibleRelatives by remember { mutableStateOf(seal.numRelatives) }
-    var possibleSex by remember { mutableStateOf(seal.sex) }
-
-    LaunchedEffect(seal.numRelatives) {
-        numRelatives = if (seal.sex == SealSex.MALE && seal.sealType == SealType.PRIMARY) {
-            "0"
-        } else {
-            seal.numRelatives
-        }
-    }
 
     // VALIDATION ERROR BANNER
     if (uiState.isSaveAttempted && seal.validationErrors.isNotEmpty()) {
@@ -83,10 +77,6 @@ fun SealCard(
     }
 
     // AGE
-    val buttonListAge = SealAgeClass.values()
-        .filter { it != SealAgeClass.UNKNOWN }
-        .map { it.description }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -127,29 +117,31 @@ fun SealCard(
                             style = MaterialTheme.typography.titleLarge
                         )
                     } else {
+                        val buttonListAge = SealAgeClass.values()
+                            .filter { it != SealAgeClass.UNKNOWN }
+                            .map { it.description }
+
                         SegmentedButtonGroup(
                             options = buttonListAge,
                             selectedOption = seal.ageClass.description,
                             onOptionSelected = {
-                                if (seal.ageClass == SealAgeClass.PUP && seal.ageClass.description != it) {
-                                    // sex has been changed from pup to adult or yearling, clear pup fields
-                                    viewModel.resetPupFields(seal.sealType)
-                                }
+                                ageSelected = SealAgeClass.fromSelection(it)
 
-                                if (it == SealAgeClass.PUP.description || it == SealAgeClass.YEARLING.description) {
-                                    // if the primary seal is a pup or a yearling, there are no relatives
-                                    if (numRelatives != "" && numRelatives != "0") {
-                                        possibleRelatives = "0"
-
-                                        // handle the case where the number of relatives is reduced
-                                        // pop a warning and ask for confirmation before moving forward
+                                if (ageSelected == SealAgeClass.PUP || ageSelected == SealAgeClass.YEARLING) {
+                                    // if the primary seal is a pup or a yearling, there should be no relatives
+                                    if (seal.numRelatives.value > 0) {
+                                        // handle the case where the number of relatives is being reduced
+                                        // because the age selected does not support having pups
+                                        numRelsSelected = SealRelatives.ZERO
+                                        promptForDeleteRelatives.value =
+                                            "You've selected a pup or yearling for Age, and neither can have relatives.\n"
                                         showDeleteRelativesDialog.value = true
-
                                     } else {
-                                        viewModel.updateNumRelatives("0")
+                                        viewModel.updateAge(seal.sealType, ageSelected)
                                     }
+                                } else {
+                                    viewModel.updateAge(seal.sealType, ageSelected)
                                 }
-                                viewModel.updateAge(seal, it)
                             }
                         )
                     }
@@ -173,9 +165,6 @@ fun SealCard(
     ) {
 
         // SEX
-        val buttonListSex = SealSex.values()
-            .filter { it != SealSex.NONE }
-            .map { it.description }
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -198,24 +187,31 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
+                    val buttonListSex = SealSex.values()
+                        .filter { it != SealSex.NONE }
+                        .map { it.description }
+
                     SegmentedButtonGroup(
                         options = buttonListSex,
                         selectedOption = seal.sex.description,
                         onOptionSelected = { selection ->
+                            sexSelected = SealSex.fromSelection(selection)
+
                             if (seal.sealType == SealType.PRIMARY && selection == SealSex.MALE.description) {
-                                // primary seals that are male do not have relatives
-                                if (numRelatives != "" && numRelatives != "0") {
-                                    // handle the case where the number of relatives is being reduced
+                                // primary seals that are male cannot have relatives
+                                if (seal.numRelatives.value > 0) {
+                                    // the number of relatives is being reduced
                                     // pop a warning and ask for confirmation before moving forward
-                                    possibleRelatives = "0"
-                                    possibleSex = SealSex.MALE
+                                    numRelsSelected = SealRelatives.ZERO
+                                    promptForDeleteRelatives.value =
+                                        "You've selected Male for Sex, which cannot have relatives.\n"
                                     showDeleteRelativesDialog.value = true
                                 } else {
-                                    viewModel.updateNumRelatives("0")
-                                    viewModel.updateSex(seal, SealSex.fromSelection(selection))
+                                    viewModel.updateNumRelatives(SealRelatives.ZERO) // explicity set number of relatives to 0 when male is selected
+                                    viewModel.updateSex(seal.sealType, sexSelected)
                                 }
                             } else {
-                                viewModel.updateSex(seal, SealSex.fromSelection(selection))
+                                viewModel.updateSex(seal.sealType, sexSelected)
                             }
                         }
                     )
@@ -237,34 +233,25 @@ fun SealCard(
 
                 // display pup peed only for pups
                 if (seal.ageClass == SealAgeClass.PUP) {
-                    var isPupPeedChecked by remember {
-                        mutableStateOf(seal.pupPeed)
-                    }
-
                     Text(
                         text = "Pup" + "\n" + "Peed",
                         style = MaterialTheme.typography.titleLarge,
                     )
 
                     Checkbox(
-                        checked = isPupPeedChecked,
+                        checked = seal.pupPeed,
                         onCheckedChange = {
                             focusManager.clearFocus()
-
-                            isPupPeedChecked = it
                             viewModel.updatePupPeed(seal.sealType, it)
                         },
-                        modifier = Modifier
-                            .padding(8.dp)
+                        modifier = Modifier.padding(8.dp)
                     )
                 }
             }
         }
     }
 
-// NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG
-    val numRelsList = listOf("0", "1", "2")
-
+    // NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG
     Row(
         modifier = Modifier
             .padding(10.dp)
@@ -295,7 +282,7 @@ fun SealCard(
                     // pups may be removed via the delete button
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        numRelatives,
+                        seal.numRelatives.label,
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
@@ -303,41 +290,48 @@ fun SealCard(
                         // when the primary seal is a pup or yearling, there can be no other relatives
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            numRelatives,
+                            seal.numRelatives.label,
                             style = MaterialTheme.typography.titleLarge
                         )
 
-                    } else if (seal.sealType == SealType.PRIMARY && seal.sex == SealSex.MALE && numRelatives == "0") {
+                    } else if (seal.sealType == SealType.PRIMARY && seal.sex == SealSex.MALE && seal.numRelatives == SealRelatives.ZERO) {
                         // when the primary seal is a male, there can be no other relatives
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            numRelatives,
+                            seal.numRelatives.label,
                             style = MaterialTheme.typography.titleLarge
                         )
 
                     } else {
+                        val numRelsList = SealRelatives.values()
+                            .filter { it != SealRelatives.UNKNOWN }
+                            .map { it.label }
+
                         SegmentedButtonGroup(
                             options = numRelsList,
-                            selectedOption = numRelatives,
+                            selectedOption = seal.numRelatives.label,
                             onOptionSelected = {
-                                possibleRelatives = it  //value to be used if delete confirmed
+                                numRelsSelected =
+                                    SealRelatives.fromSelection(it)  //value to be used if delete confirmed
 
-                                if (it == "") {
-                                    if (seal.numRelatives != "0") { // no need to pop a dialog when zero is deselected by the user
-                                        // handle case where the number of relatives is being reduced
-                                        // pop a warning and ask for confirmation before moving forward
-                                        showDeleteRelativesDialog.value = true
-                                    } else {
-                                        numRelatives = it
-                                    }
+                                val isReducingRelatives =
+                                    numRelsSelected.value < seal.numRelatives.value
+                                            && seal.numRelatives != SealRelatives.ZERO // no need to pop a dialog when zero is deselected by the user
 
-                                } else if (seal.numRelatives != "" && it.toInt() < seal.numRelatives.toInt()) {
+                                when {
                                     // handle case where the number of relatives is being reduced
                                     // pop a warning and ask for confirmation before moving forward
-                                    showDeleteRelativesDialog.value = true
+                                    isReducingRelatives -> {
+                                        // Reducing count from known value → needs confirmation
+                                        promptForDeleteRelatives.value =
+                                            "It looks like you're trying to remove a relative.\n"
+                                        showDeleteRelativesDialog.value = true
+                                    }
 
-                                } else {
-                                    viewModel.updateNumRelatives(it)
+                                    else -> {
+                                        // Valid increase or same count → apply immediately
+                                        viewModel.updateNumRelatives(numRelsSelected)
+                                    }
                                 }
                             }
                         )
@@ -349,21 +343,66 @@ fun SealCard(
         // CONFIRM DELETE RELATIVES DIALOG
         // ask the user for confirmation of deletion of relatives
         // this situation arises when the number of relatives changes
+        // because of age selection, sex selection or number of relatives selection
         if (showDeleteRelativesDialog.value) {
-            RemoveDialog(
-                onDismissRequest = { showDeleteRelativesDialog.value = false },
-                onConfirmation = {
-                    showDeleteRelativesDialog.value = false
-                    if (possibleSex == SealSex.MALE) {
-                        possibleRelatives = "0"  // set the value to zero
+
+            val prompt = when {
+                seal.numRelatives == SealRelatives.ONE ->
+                    "This will remove data for Pup One, ${
+                        viewModel.getPupOneNotebookString().trim()
+                    }?"
+
+                else ->
+                    if (numRelsSelected == SealRelatives.ONE) {
+                        // removing pup two
+                        "This will remove data for Pup Two, ${
+                            viewModel.getPupTwoNotebookString().trim()
+                        }?"
+                    } else {
+                        "This will remove data for Pup One, ${
+                            viewModel.getPupOneNotebookString().trim()
+                        }, " +
+                                "and Pup Two, ${viewModel.getPupTwoNotebookString().trim()}?"
                     }
-                    viewModel.updateNumRelatives(possibleRelatives) // use the value selected by the user to update the model value
-                    viewModel.updateSex(
-                        seal,
-                        possibleSex
-                    ) // use the value selected by the user to update the model value
+            }
+
+            RemoveDialog(
+                onDismissRequest = {
+                    promptForDeleteRelatives.value = ""
+                    showDeleteRelativesDialog.value = false
+                    // reset the local values to the model values
+                    sexSelected = seal.sex
+                    ageSelected = seal.ageClass
+                    numRelsSelected = seal.numRelatives
                 },
-                text = "This will remove data you've entered for pups.",
+                onConfirmation = {
+                    promptForDeleteRelatives.value = ""
+                    showDeleteRelativesDialog.value = false
+
+                    if (seal.ageClass != ageSelected) {
+                        viewModel.updateAge(
+                            seal.sealType,
+                            ageSelected
+                        ) // use the value selected by the user to update the model value
+                    }
+
+                    if (seal.sex != sexSelected) {
+                        viewModel.updateSex(
+                            seal.sealType,
+                            sexSelected
+                        ) // use the value selected by the user to update the model value
+                    }
+
+                    if (seal.numRelatives != numRelsSelected) {
+                        viewModel.updateNumRelatives(numRelsSelected) // use the value selected by the user to update the model value
+                    }
+
+                    // reset the local values to the model values
+                    sexSelected = seal.sex
+                    ageSelected = seal.ageClass
+                    numRelsSelected = seal.numRelatives
+                },
+                text = promptForDeleteRelatives.value + prompt,
                 buttonText = "Yes, clear pup data."
             )
         }

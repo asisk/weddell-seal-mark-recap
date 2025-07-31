@@ -21,6 +21,7 @@ import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.SealRelatives
 import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
@@ -157,7 +158,7 @@ class TagRetagModel(
             it.copy(
                 ageClass = SealAgeClass.ADULT,
                 sex = SealSex.MALE,
-                numRelatives = "0"
+                numRelatives = SealRelatives.ZERO
             )
         }
         _uiState.update { it.copy(isPrefilled = true) }
@@ -168,7 +169,7 @@ class TagRetagModel(
             it.copy(
                 ageClass = SealAgeClass.ADULT,
                 sex = SealSex.FEMALE,
-                numRelatives = "0"
+                numRelatives = SealRelatives.ZERO
             )
         }
         _uiState.update { it.copy(isPrefilled = true) }
@@ -179,10 +180,10 @@ class TagRetagModel(
             it.copy(
                 ageClass = SealAgeClass.ADULT,
                 sex = SealSex.FEMALE,
-                numRelatives = "1"
+                numRelatives = SealRelatives.ONE
             )
         }
-        _pupOne.update { it.copy(numRelatives = "1") }
+        _pupOne.update { it.copy(numRelatives = SealRelatives.ONE) }
         _uiState.update { it.copy(isPrefilled = true) }
     }
 
@@ -502,24 +503,28 @@ class TagRetagModel(
         }
     }
 
-    fun updateAge(seal: Seal, input: String) {
-        when (seal.sealType) {
+    fun getPupOneNotebookString(): String {
+        return pupOne.value.notebookDataString
+    }
+
+    fun getPupTwoNotebookString(): String {
+        return pupTwo.value.notebookDataString
+    }
+
+    fun updateAge(sealType: SealType, input: SealAgeClass) {
+        when (sealType) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(ageClass = SealAgeClass.fromSelection(input)) }
+                _primarySeal.update { it.copy(ageClass = input) }
                 updateNotebookEntry(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update {
-                    it.copy(ageClass = SealAgeClass.fromSelection(input))
-                }
+                _pupOne.update { it.copy(ageClass = input) }
                 updateNotebookEntry(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update {
-                    it.copy(ageClass = SealAgeClass.fromSelection(input))
-                }
+                _pupTwo.update { it.copy(ageClass = input) }
                 updateNotebookEntry(pupTwo.value)
             }
 
@@ -529,24 +534,20 @@ class TagRetagModel(
         }
     }
 
-    fun updateSex(seal: Seal, input: SealSex) {
-        when (seal.sealType) {
+    fun updateSex(sealType: SealType, input: SealSex) {
+        when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(sex = input) }
                 updateNotebookEntry(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update {
-                    it.copy(sex = input)
-                }
+                _pupOne.update { it.copy(sex = input) }
                 updateNotebookEntry(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update {
-                    it.copy(sex = input)
-                }
+                _pupTwo.update { it.copy(sex = input) }
                 updateNotebookEntry(pupTwo.value)
             }
 
@@ -556,24 +557,21 @@ class TagRetagModel(
         }
     }
 
-    fun updatePupPeed(sealName: SealType, input: Boolean) {
-        when (sealName) {
+    fun updatePupPeed(sealType: SealType, input: Boolean) {
+        when (sealType) {
             SealType.PRIMARY -> {
-                if (primarySeal.value.ageClass == SealAgeClass.PUP) {
-                    _primarySeal.update { it.copy(pupPeed = true) }
-                }
+                _primarySeal.update { it.copy(pupPeed = input) }
+                updateNotebookEntry(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update {
-                    it.copy(pupPeed = input)
-                }
+                _pupOne.update { it.copy(pupPeed = input) }
+                updateNotebookEntry(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update {
-                    it.copy(pupPeed = input)
-                }
+                _pupTwo.update { it.copy(pupPeed = input) }
+                updateNotebookEntry(pupTwo.value)
             }
 
             SealType.UNKNOWN -> {
@@ -582,40 +580,41 @@ class TagRetagModel(
         }
     }
 
-    fun updateNumRelatives(input: String) {
-        val number: Int? = input.toIntOrNull()
-        if (number != null) {
-            when (number) {
-                0 -> {
-                    removePups()
-                }
-
-                1 -> {
-                    _pupOne.update {
-                        it.copy(numRelatives = input)
-                    }
-                    _pupTwo.update {
-                        it.copy(numRelatives = input)
-                    }
-                    updateNotebookEntry(pupOne.value)
-                    updateNotebookEntry(pupTwo.value)
-                }
-
-                2 -> {
-                    _pupOne.update {
-                        it.copy(numRelatives = input)
-                    }
-                    _pupTwo.update {
-                        it.copy(numRelatives = input)
-                    }
-                    updateNotebookEntry(pupOne.value)
-                    updateNotebookEntry(pupTwo.value)
-                }
+    fun updateNumRelatives(input: SealRelatives) {
+        when (input) {
+            SealRelatives.ZERO -> {
+                removePups()
             }
 
-            _primarySeal.update { it.copy(numRelatives = input) }
-            updateNotebookEntry(primarySeal.value)
+            SealRelatives.ONE -> {
+                _pupOne.update {
+                    it.copy(numRelatives = input)
+                }
+                _pupTwo.update {
+                    it.copy(numRelatives = input)
+                }
+                updateNotebookEntry(pupOne.value)
+                updateNotebookEntry(pupTwo.value)
+            }
+
+            SealRelatives.TWO -> {
+                _pupOne.update {
+                    it.copy(numRelatives = input)
+                }
+                _pupTwo.update {
+                    it.copy(numRelatives = input)
+                }
+                updateNotebookEntry(pupOne.value)
+                updateNotebookEntry(pupTwo.value)
+            }
+
+            SealRelatives.UNKNOWN -> {
+                removePups()
+            }
         }
+
+        _primarySeal.update { it.copy(numRelatives = input) }
+        updateNotebookEntry(primarySeal.value)
     }
 
     fun updateCondition(sealName: SealType, input: SealCondition) {
@@ -666,6 +665,7 @@ class TagRetagModel(
         }
     }
 
+    // TODO, why is this a string input and not a numeric input, see updateOldTagNumber
     fun updateTagNumber(sealType: SealType, input: String) {
         var tagNumber = input
         // Function to extract numeric value
@@ -725,12 +725,6 @@ class TagRetagModel(
     }
 
     fun updateOldTagNumber(sealType: SealType, input: String) {
-        var tagNumber = input
-        // Function to extract numeric value
-        if (input.toIntOrNull() != null) {
-            tagNumber = input
-        }
-
         when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(oldTagNumber = input) }
@@ -1159,10 +1153,10 @@ class TagRetagModel(
 
     fun resetSeal(sealName: SealType) {
         var parentNumRels = primarySeal.value.numRelatives
-        if (primarySeal.value.numRelatives != "" && primarySeal.value.numRelatives.toIntOrNull() != null) {
-            var number = parentNumRels.toInt()
+        if (primarySeal.value.numRelatives != SealRelatives.UNKNOWN) {
+            var number = parentNumRels.value
             number -= 1
-            parentNumRels = number.toString()
+            parentNumRels = SealRelatives.fromIntVal(number)
         }
 
         when (sealName) {
@@ -1273,7 +1267,7 @@ class TagRetagModel(
             it.copy(
                 ageClass = sealAgeAdvanced,
                 sex = lookupSeal.sex,
-                numRelatives = numberRels,
+                numRelatives = SealRelatives.fromSelection(numberRels),
                 tagNumber = lookupSeal.tagOneNumber,
                 tagAlpha = lookupSeal.tagOneAlpha,
                 oldTagNumber = lookupSeal.tagOneNumber,
@@ -1449,20 +1443,20 @@ class TagRetagModel(
     private fun getRelativesTags(sealName: SealType): Pair<String, String> {
         when (sealName) {
             SealType.PRIMARY -> {
-                var relOneTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
-                var relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
+                val relOneTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
+                val relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
                 return Pair(relOneTagId, relTwoTagId)
             }
 
             SealType.PUPONE -> {
-                var relOneTagId = primarySeal.value.tagNumber + primarySeal.value.tagAlpha
-                var relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
+                val relOneTagId = primarySeal.value.tagNumber + primarySeal.value.tagAlpha
+                val relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
                 return Pair(relOneTagId, relTwoTagId)
             }
 
             SealType.PUPTWO -> {
-                var relOneTagId = primarySeal.value.tagNumber + primarySeal.value.tagAlpha
-                var relTwoTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
+                val relOneTagId = primarySeal.value.tagNumber + primarySeal.value.tagAlpha
+                val relTwoTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
                 return Pair(relOneTagId, relTwoTagId)
             }
 

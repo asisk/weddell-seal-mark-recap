@@ -12,7 +12,7 @@ data class Seal(
     var isNoTag: Boolean = false,
     val lastPhysio: String = "",
     val notebookDataString: String = "",
-    val numRelatives: String = "", //TODO, replace with enum
+    val numRelatives: SealRelatives = SealRelatives.UNKNOWN,
     val numTags: String = "",
     val numTagsMatch: Boolean = false,
     val photoYears: String = "",
@@ -39,7 +39,7 @@ data class Seal(
     var markedRemoved: Boolean = false, // when in edit mode, pups can be removed from the database
     var pupOneRemoved: Boolean = false,
     var pupTwoRemoved: Boolean = false,
-    var hasEdits : Boolean = false,
+    var hasEdits: Boolean = false,
 ) {
     // This is a check to see whether the user has begun data entry
     // Only checking primary fields, not fields that appear as a result of a field being selected
@@ -47,7 +47,7 @@ data class Seal(
         get() = listOf(
             ageClass != SealAgeClass.UNKNOWN,
             sex != SealSex.NONE,
-            numRelatives.isNotBlank(),
+            numRelatives != SealRelatives.UNKNOWN,
             condition != SealCondition.UNKNOWN && condition != SealCondition.NONE,
             tagEventType != TagEventType.UNKNOWN,
             tagNumber.isNotBlank(),
@@ -70,28 +70,28 @@ data class Seal(
             if (!isEntryStarted) return reasons // early return, skip validation checks when entry hasn't begun for this seal
 
             // --- Basic Required Fields ---
-            if (ageClass == SealAgeClass.UNKNOWN) reasons += "Select an age for $sealType."
+            if (ageClass == SealAgeClass.UNKNOWN) reasons += "Select an age for ${sealType.label}."
             // pup condition will be UNKNOWN when first instantiated
             // a condition of NONE means the value was selected as a way to set the value to blank from the TagRetag Screen
-            if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for Pup ($sealType)."
-            if (sex == SealSex.NONE) reasons += "Select a sex for $sealType."
-            if (numRelatives.isEmpty()) reasons += "Select number of relatives for $sealType."
-            if (tagEventType == TagEventType.UNKNOWN) reasons += "Select a tag event type for $sealType."
-            if (tagEventType == TagEventType.RETAG && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for $sealType."
+            if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for ${sealType.label}."
+            if (sex == SealSex.NONE) reasons += "Select a sex for ${sealType.label}."
+            if (numRelatives == SealRelatives.UNKNOWN) reasons += "Select number of relatives for ${sealType.label}."
+            if (tagEventType == TagEventType.UNKNOWN) reasons += "Select a tag event type for ${sealType.label}."
+            if (tagEventType == TagEventType.RETAG && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for ${sealType.label}."
 
             // --- Tag Number ---
             if (!isNoTag) {
                 if (tagNumber.isEmpty()) {
-                    reasons += "Enter a tag number for $sealType."
+                    reasons += "Enter a tag number for ${sealType.label}."
                 } else if (tagNumber.length !in 3..4) { //If tagNumber is not 3 or 4 characters long
-                    reasons += "Tag number must be 3 or 4 digits for $sealType."
+                    reasons += "Tag number must be 3 or 4 digits for ${sealType.label}."
                 }
 
                 // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).
                 // We'll still want validation on sex, age class, colony, etc. - just not the number of tags.
                 // Number of tags is required when a tag number is entered
                 if (tagEventType != TagEventType.RETAG && numTags.isEmpty()) {
-                    reasons += "Select number of tags for $sealType."
+                    reasons += "Select number of tags for ${sealType.label}."
                 }
             }
 
@@ -102,20 +102,20 @@ data class Seal(
         get() {
             if (sealType != SealType.PRIMARY) return false // only the primary seal can have pups
 
-            if (numRelatives == "0") return false // no pups if no relatives
+            if (numRelatives == SealRelatives.ZERO) return false // no pups if no relatives
 
-            if (numRelatives == "1" && pupOneRemoved) return false // pupOne removed
+            if (numRelatives == SealRelatives.ONE && pupOneRemoved) return false // pupOne removed
 
-            if (numRelatives == "2" && pupOneRemoved && pupTwoRemoved) return false // all pups were removed
+            if (numRelatives == SealRelatives.TWO && pupOneRemoved && pupTwoRemoved) return false // all pups were removed
 
             return true
         }
 
     val hasPupOne: Boolean
-        get() = numRelatives == "1"
+        get() = numRelatives.value >= 1
 
     val hasPupTwo: Boolean
-        get() = numRelatives == "2"
+        get() = numRelatives == SealRelatives.TWO
 
     val isTagIDValid: Boolean
         get() = tagNumber.isNotEmpty() && tagAlpha.isNotEmpty() && tagNumber.length in 3..4

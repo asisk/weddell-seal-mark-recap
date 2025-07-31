@@ -30,13 +30,11 @@ fun buildObservationRecord(
         observers = metadataObservers
     }
 
-    var speNo = if (seal.hasWedCheckMatch) {
+    val speNo = if (seal.hasWedCheckMatch) {
         seal.wedCheckMatch?.speNo.toString()
     } else {
         "0"
     }
-
-    val numRels = seal.numRelatives
 
     var eventType = seal.tagEventType.alpha
     val numberOfTags = seal.numTags.toIntOrNull()
@@ -140,7 +138,7 @@ fun buildObservationRecord(
         longitude = currentLocation?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision
         ageClass = seal.ageClass.alpha,
         sex = seal.sex.alpha,
-        numRelatives = numRels,
+        numRelatives = seal.numRelatives.label,
         oldTagIDOne = oldTagOne,
         oldTagIDTwo = oldTagTwo,
         tagIDOne = tagIdOne,
