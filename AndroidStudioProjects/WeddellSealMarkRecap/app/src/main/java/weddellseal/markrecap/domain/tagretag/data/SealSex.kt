@@ -9,10 +9,10 @@ enum class SealSex(val alpha: String, val description: String) {
     companion object {
         // Convert alpha string to enum value
         fun fromAlpha(alpha: String?): SealSex =
-            values().find { it.alpha == alpha } ?: UNKNOWN
+            values().find { it.alpha == alpha } ?: NONE
 
         // Convert label string to enum value
         fun fromSelection(description: String): SealSex =
-            values().find { it.description == description } ?: UNKNOWN
+            values().find { it.description == description } ?: NONE
     }
 }

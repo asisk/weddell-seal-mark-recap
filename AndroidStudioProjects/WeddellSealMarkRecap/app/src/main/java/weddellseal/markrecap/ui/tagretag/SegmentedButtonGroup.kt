@@ -12,11 +12,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,15 +24,8 @@ fun SegmentedButtonGroup(
     selectedOption: String,
     onOptionSelected: (String) -> Unit
 ) {
-    // State to hold the currently selected option
-    val focusManager = LocalFocusManager.current // Access the focus manager
-    var currentSelection by remember { mutableStateOf(selectedOption) }
+    val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(selectedOption) {
-        currentSelection = selectedOption
-    }
-
-    // Row to hold all the segmented buttons
     Row(
         modifier = Modifier
             .padding(4.dp)
@@ -45,7 +33,7 @@ fun SegmentedButtonGroup(
             .padding(2.dp) // Padding between the background and the buttons
     ) {
         options.forEach { option ->
-            val isSelected = option == currentSelection
+            val isSelected = option == selectedOption
 
             // Individual Button for each option
             Button(
@@ -54,7 +42,6 @@ fun SegmentedButtonGroup(
 
                     // Toggle selection: deselect if already selected, select otherwise
                     if (isSelected) {
-                        currentSelection = ""
                         onOptionSelected("") // Deselect the button
                     } else {
                         onOptionSelected(option) // Select the button
@@ -84,7 +71,7 @@ fun SegmentedButtonGroup(
                             modifier = Modifier.padding(end = 4.dp)
                         )
                     }
-                    Text(text = option, style = MaterialTheme.typography.titleMedium)
+                    Text(text = option, style = MaterialTheme.typography.headlineSmall)
                 }
             }
         }
