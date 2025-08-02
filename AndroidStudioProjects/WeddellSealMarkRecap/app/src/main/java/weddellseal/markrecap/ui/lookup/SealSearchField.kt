@@ -41,14 +41,14 @@ fun SealSearchField(
         LocalFocusManager.current // State to manage whether the text field should lose focus
     val focusRequester =
         remember { FocusRequester() } // FocusRequester to manage focus programmatically
-    var isFocused by remember { mutableStateOf(false) } // Track focus state
     val keyboardController = LocalSoftwareKeyboardController.current
 
     OutlinedTextField(
         value = sealTagID,
         placeholder = { Text("Tag ID", fontSize = 25.sp) },
-        onValueChange = { newText ->
-            sealTagID = newText.uppercase().trim()
+        onValueChange = {
+            val sanitized = it.replace(Regex("[^0-9]"), "")
+            sealTagID = sanitized.uppercase().trim()
             onValueChanged(sealTagID)
         },
         label = { Text("Seal Tag ID", fontSize = 25.sp) },
@@ -65,7 +65,6 @@ fun SealSearchField(
                         viewModel.resetLookupSeal()
                     }
                 }
-                isFocused = focusState.isFocused // Update focus state
             }
             .focusRequester(focusRequester),
         keyboardOptions = KeyboardOptions.Default.copy(

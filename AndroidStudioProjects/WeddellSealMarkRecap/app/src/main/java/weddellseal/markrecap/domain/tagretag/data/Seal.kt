@@ -79,12 +79,18 @@ data class Seal(
             if (tagEventType == TagEventType.UNKNOWN) reasons += "Select a tag event type for ${sealType.label}."
             if (tagEventType == TagEventType.RETAG && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for ${sealType.label}."
 
-            // --- Tag Number ---
+            // --- Tag ID ---
+            // Don't validate Tag ID when No Tag is selected
             if (!isNoTag) {
+
                 if (tagNumber.isEmpty()) {
                     reasons += "Enter a tag number for ${sealType.label}."
                 } else if (tagNumber.length !in 3..4) { //If tagNumber is not 3 or 4 characters long
                     reasons += "Tag number must be 3 or 4 digits for ${sealType.label}."
+                }
+
+                if (tagAlpha.isEmpty()) {
+                    reasons += "Enter a tag alpha for ${sealType.label}."
                 }
 
                 // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).

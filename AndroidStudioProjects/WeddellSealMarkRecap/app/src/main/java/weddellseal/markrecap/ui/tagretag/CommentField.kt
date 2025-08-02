@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -50,19 +51,20 @@ fun CommentField(
         text = value
     }
 
-    // Detect focus changes and trigger the callback
-    LaunchedEffect(isFocused) {
-        onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
-        Log.d(
-            "CommentField LaunchedEffect",
-            "Trimming the field value to remove spaces and calling the onFocusChange lambda"
-        )
-    }
-
     OutlinedTextField(
         value = text,
-        onValueChange = { text = it },
+        onValueChange = {
+            val sanitized = it.replace(Regex("[^A-Za-z0-9;! ]"), "") // only allow numeric characters
+            text = sanitized.trim()
+        },
         label = { Text("Comments") },
+        supportingText = {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Comment field allows letters, numbers, semicolons, and exclamation points!",
+                textAlign = TextAlign.End,
+            )
+        },
         modifier = Modifier
             .height(80.dp)
             .fillMaxWidth()

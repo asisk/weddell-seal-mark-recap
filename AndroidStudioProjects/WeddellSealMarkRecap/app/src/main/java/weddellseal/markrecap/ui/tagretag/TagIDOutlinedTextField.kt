@@ -37,30 +37,26 @@ fun TagIDOutlinedTextField(
     onClearValueDo: () -> Unit,
     onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
 ) {
-    var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
+    val focusManager =
+        LocalFocusManager.current // State to manage whether the text field should lose focus
+    val focusRequester =
+        remember { FocusRequester() } // FocusRequester to manage focus programmatically
+    var isFocused by remember { mutableStateOf(false) } // Track focus state
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val focusManager = LocalFocusManager.current // State to manage whether the text field should lose focus
-    val focusRequester = remember { FocusRequester() } // FocusRequester to manage focus programmatically
-    var isFocused by remember { mutableStateOf(false) } // Track focus state
+    var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
 
     LaunchedEffect(value) {
         text = value
     }
 
-    // Detect focus changes and trigger the callback
-    LaunchedEffect(isFocused) {
-        onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
-        Log.d(
-            "TagIDOutlinedTextField LaunchedEffect",
-            "Trimming the field value to remove spaces and calling the onFocusChange lambda"
-        )
-    }
-
     OutlinedTextField(
         value = text,
-        onValueChange = { text = it },
+        onValueChange = {
+            val sanitized = it.replace(Regex("[^0-9]"), "") // only allow numeric characters
+            text = sanitized.trim()
+        },
         label = { Text(labelText) },
         placeholder = { Text(placeholderText) },
         textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
@@ -92,17 +88,9 @@ fun TagIDOutlinedTextField(
                 )
             }
         },
-//        supportingText = {
-//            Text(
-//                modifier = Modifier.fillMaxWidth(),
-//                text = errorMessage,
-//                textAlign = TextAlign.End,
-//            )
-//        },
         modifier = Modifier
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused // Update focus state
-                Log.d("TagIDOutlinedTextField", "Focus change detected isFocused: $isFocused, calling onFocusChange lambda")
                 onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
             }
             .focusRequester(focusRequester)

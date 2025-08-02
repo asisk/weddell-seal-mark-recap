@@ -35,7 +35,8 @@ fun PupWeightOutlinedTextField(
 ) {
     val focusManager =
         LocalFocusManager.current // State to manage whether the text field should lose focus
-    val focusRequester = remember { FocusRequester() } // FocusRequester to manage focus programmatically
+    val focusRequester =
+        remember { FocusRequester() } // FocusRequester to manage focus programmatically
     var isFocused by remember { mutableStateOf(false) } // Track focus state
     val keyboardController = LocalSoftwareKeyboardController.current
     var text by remember { mutableStateOf(if (value == "0") "" else value) } //used to prevent the model update until the user is done typing
@@ -46,7 +47,10 @@ fun PupWeightOutlinedTextField(
 
     OutlinedTextField(
         value = text,
-        onValueChange = { text = it },
+        onValueChange = {
+            val sanitized = it.replace(Regex("[^0-9]"), "") // only allow numeric characters
+            text = sanitized.trim()
+        },
         label = { Text("Weight in lbs") },
         placeholder = { "Enter weight in lbs" },
         textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
@@ -78,16 +82,12 @@ fun PupWeightOutlinedTextField(
         modifier = Modifier
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused // Update focus state
-                Log.d("TagIDOutlinedTextField", "Focus change detected isFocused: $isFocused, calling onFocusChange lambda")
+                Log.d(
+                    "TagIDOutlinedTextField",
+                    "Focus change detected isFocused: $isFocused, calling onFocusChange lambda"
+                )
                 onFocusChange(text.trim()) // Pass the latest value when focus changes
             }
             .focusRequester(focusRequester)
-//        supportingText = {
-//            Text(
-//                modifier = Modifier.fillMaxWidth(),
-//                text = "Weight",
-//                textAlign = TextAlign.End,
-//            )
-//        }
     )
 }
