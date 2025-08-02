@@ -28,9 +28,8 @@ fun SegmentedButtonGroup(
 
     Row(
         modifier = Modifier
-            .padding(4.dp)
             .background(color = Color.DarkGray, shape = RoundedCornerShape(50)) // Background color for the whole segmented group
-            .padding(2.dp) // Padding between the background and the buttons
+            .padding(4.dp) // Padding between the background and the buttons
     ) {
         options.forEach { option ->
             val isSelected = option == selectedOption
@@ -48,7 +47,7 @@ fun SegmentedButtonGroup(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSelected) Color.Black else Color.White, // Change color based on selection
+                    containerColor = if (isSelected) Color.Black else Color.White,
                     contentColor = if (isSelected) Color.White else Color.Black
                 ),
                 shape = when (option) {
@@ -57,8 +56,7 @@ fun SegmentedButtonGroup(
                     options.last() -> RoundedCornerShape(topEnd = 50.dp, bottomEnd = 50.dp)
                     else -> RoundedCornerShape(0.dp)
                 },
-                modifier = Modifier
-                    .padding(horizontal = 2.dp) // padding between the buttons
+                modifier = Modifier.padding(horizontal = 2.dp) // padding between the buttons
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
