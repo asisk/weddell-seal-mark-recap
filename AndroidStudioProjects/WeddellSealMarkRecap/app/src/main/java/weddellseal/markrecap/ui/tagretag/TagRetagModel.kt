@@ -1261,13 +1261,14 @@ class TagRetagModel(
         }
 
         // number of Relatives shouldn't be populated for Female seals because it's likely that the seal has a pup
-        val numberRels = if (lookupSeal.sex == SealSex.FEMALE) "" else "0"
+        val numberRels = if (lookupSeal.sex == SealSex.FEMALE
+            && sealAgeAdvanced == SealAgeClass.ADULT) SealRelatives.UNKNOWN else SealRelatives.ZERO
 
         _primarySeal.update {
             it.copy(
                 ageClass = sealAgeAdvanced,
                 sex = lookupSeal.sex,
-                numRelatives = SealRelatives.fromSelection(numberRels),
+                numRelatives = numberRels,
                 tagNumber = lookupSeal.tagOneNumber,
                 tagAlpha = lookupSeal.tagOneAlpha,
                 oldTagNumber = lookupSeal.tagOneNumber,
