@@ -47,7 +47,7 @@ fun SealSearchField(
         value = sealTagID,
         placeholder = { Text("Tag ID", fontSize = 25.sp) },
         onValueChange = {
-            val sanitized = it.replace(Regex("[^0-9]"), "")
+            val sanitized = it.replace(Regex("[^A-Za-z0-9]"), "")
             sealTagID = sanitized.uppercase().trim()
             onValueChanged(sealTagID)
         },
