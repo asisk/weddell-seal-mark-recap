@@ -10,8 +10,9 @@ import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
 
 fun buildObservationRecord(
-    currentLocation: GeoLocation?,
+    location: GeoLocation?,
     seal: Seal,
+    edits: String,
     relativeOneTag: String,
     relativeTwoTag: String,
     metadata: ObservationMetadata,
@@ -114,11 +115,16 @@ fun buildObservationRecord(
         sb.append("old tag marks; ")
     }
     if (seal.tagEventType == TagEventType.RETAG && (seal.reasonForRetag == RetagReason.NONE || seal.reasonForRetag == RetagReason.UNKNOWN)) {
-        sb.append("reason for retag: ${seal.reasonForRetag.description}; ")
+        sb.append("Reason for Retag: ${seal.reasonForRetag.description}; ")
     }
-    if (seal.validationMessage != "") {
-        sb.append(seal.validationMessage)
+
+    sb.append(seal.validationMessage)
+
+    // TODO, test when a parent seal has no changes but the pup does
+    if (seal.hasEdits) {
+        sb.append("Edited: $edits; ")
     }
+
     val comment = sb.append(seal.comment).toString()
 
     var flagged = ""
@@ -134,8 +140,8 @@ fun buildObservationRecord(
         date = getCurrentDateFormatted(), // date format: yyyy-MM-dd
         time = getCurrentTimeFormatted(), // time format: hh:mm:ss
         censusID = censusNumber,
-        latitude = currentLocation?.coordinates?.latitude.toString(),  // example -77.73004, could also be 4 decimal precision
-        longitude = currentLocation?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision
+        latitude = location?.coordinates?.latitude.toString(),  // example -77.73004, could also be 4 decimal precision
+        longitude = location?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision
         ageClass = seal.ageClass.alpha,
         sex = seal.sex.alpha,
         numRelatives = seal.numRelatives.label,

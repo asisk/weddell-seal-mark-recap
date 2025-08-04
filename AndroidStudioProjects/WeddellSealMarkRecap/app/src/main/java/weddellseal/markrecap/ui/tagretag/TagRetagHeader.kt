@@ -98,7 +98,8 @@ fun TagRetagHeader(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 val editModeLocation =
-                    "Lat : ${uiState.observationRecordLatitude}    " + "Long : ${uiState.observationRecordLongitude}"
+                    "Lat : ${uiState.observationLocation?.coordinates?.latitude}    " + "Long : ${uiState.observationLocation?.coordinates?.longitude}"
+
                 if (uiState.isEditMode) {
                     Text(
                         text = editModeLocation,
@@ -167,12 +168,15 @@ fun TagRetagHeader(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             ) {
-                val selectedText =
-                    if (uiState.metadata.selectedObservers.isEmpty()) "Select observers"
-                    else uiState.metadata.getObserversString()
+                val observersText =
+                    when (uiState.isEditMode) {
+                        true ->  uiState.originalMetadata.getObserversString()
+                        false -> if (uiState.metadata.selectedObservers.isEmpty()) "Select observers"
+                        else uiState.metadata.getObserversString()
+                    }
 
                 Text(
-                    text = "Observers:  $selectedText",
+                    text = "Observers:  $observersText",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (uiState.metadata.selectedObservers.isEmpty()) MaterialTheme.colorScheme.error.copy(
                         alpha = 0.9f
@@ -187,12 +191,15 @@ fun TagRetagHeader(
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val selectedText =
-                    if (uiState.metadata.selectedColony.isEmpty()) "Select a colony"
-                    else uiState.metadata.selectedColony
+
+                val colonyText =
+                    when (uiState.isEditMode) {
+                        true ->  uiState.originalMetadata.selectedColony
+                        false -> uiState.metadata.selectedColony.ifEmpty { "Select a colony" }
+                    }
 
                 Text(
-                    text = "Colony:  $selectedText",
+                    text = "Colony:  $colonyText",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
                         alpha = 0.9f

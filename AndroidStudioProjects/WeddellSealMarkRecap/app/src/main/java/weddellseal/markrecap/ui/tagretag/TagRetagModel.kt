@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
@@ -93,18 +94,17 @@ class TagRetagModel(
 //    }
 
     data class UiState(
-        val metadata: ObservationMetadata = ObservationMetadata(),
+        val metadata: ObservationMetadata = ObservationMetadata(), // current observation metadata
+        val originalMetadata: ObservationMetadata = ObservationMetadata(), // when a record is edited, these are the values that were originally saved for the observation
 
         val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
 
         val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
 
         val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
-        val observationTimestamp: String = "", // UI display value in Tag/Retag screen header
-        val observationRecordColony: String = "", // UI display value in Tag/Retag screen header
-        val observationRecordObservers: List<String> = emptyList(), // UI display value in Tag/Retag screen header
-        val observationRecordLatitude: String = "", // UI display value in Tag/Retag screen header
-        val observationRecordLongitude: String = "", // UI display value in Tag/Retag screen header
+        val observationTimestamp: String = "", // UI display value in Tag/Retag screen header, values originally saved for the observation
+        val observationLocation: GeoLocation? = null, // location originally saved for the observation
+        val observationCensusNumber: String = "", // census number originally saved for the observation
 
         val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
         val isSaveEnabled: Boolean = false, // indicator for save button
@@ -244,10 +244,8 @@ class TagRetagModel(
                 isPrefilled = false,
                 isEditMode = false,
                 observationTimestamp = "",
-                observationRecordObservers = emptyList(),
-                observationRecordColony = "",
-                observationRecordLatitude = "",
-                observationRecordLongitude = "",
+                originalMetadata = ObservationMetadata(),
+                observationLocation = null,
                 isSaveAttempted = false,
                 isSaveEnabled = false,
                 ineligibleForSaveReason = "",
@@ -346,8 +344,8 @@ class TagRetagModel(
 
                 // Initialize the metadata object
                 val metadata = ObservationMetadata(
-                    selectedColony = if (editMode) uiState.value.observationRecordColony else homeUiState.selectedColony,
-                    selectedObservers = if (editMode) uiState.value.observationRecordObservers else homeUiState.selectedObservers,
+                    selectedColony = if (editMode) uiState.value.originalMetadata.selectedColony else homeUiState.selectedColony,
+                    selectedObservers = if (editMode) uiState.value.originalMetadata.selectedObservers else homeUiState.selectedObservers,
                     censusNumber = homeUiState.selectedCensusNumber,
                     isCensusMode = homeUiState.isCensusMode,
                     deviceID = deviceID,
@@ -408,35 +406,21 @@ class TagRetagModel(
 
             }.collect { (primarySealEdits, pupOneSealEdits, pupTwoSealEdits) ->
                 var edits = emptyList<String>()
+
                 if (primarySealEdits.isNotEmpty()) {
                     edits = edits.plus(primarySealEdits)
                     _primarySealEdits.update { primarySealEdits }
-                    _primarySeal.update {
-                        it.copy(
-                            hasEdits = true,
-                            comment = it.comment + "\n" + "Edited: $primarySealEdits"
-                        )
-                    }
+                    _primarySeal.update { it.copy(hasEdits = true) }
                 }
                 if (pupOneSealEdits.isNotEmpty()) {
                     edits = edits.plus(pupOneSealEdits)
                     _pupOneEdits.update { pupOneSealEdits }
-                    _pupOne.update {
-                        it.copy(
-                            hasEdits = true,
-                            comment = it.comment + "\n" + "Edited: $pupOneSealEdits"
-                        )
-                    }
+                    _pupOne.update { it.copy(hasEdits = true) }
                 }
                 if (pupTwoSealEdits.isNotEmpty()) {
                     edits = edits.plus(pupTwoSealEdits)
                     _pupTwoEdits.update { pupTwoSealEdits }
-                    _pupTwo.update {
-                        it.copy(
-                            hasEdits = true,
-                            comment = it.comment + "\n" + "Edited: $pupTwoSealEdits"
-                        )
-                    }
+                    _pupTwo.update { it.copy(hasEdits = true) }
                 }
 
                 if (edits.isNotEmpty()) {
@@ -1262,7 +1246,8 @@ class TagRetagModel(
 
         // number of Relatives shouldn't be populated for Female seals because it's likely that the seal has a pup
         val numberRels = if (lookupSeal.sex == SealSex.FEMALE
-            && sealAgeAdvanced == SealAgeClass.ADULT) SealRelatives.UNKNOWN else SealRelatives.ZERO
+            && sealAgeAdvanced == SealAgeClass.ADULT
+        ) SealRelatives.UNKNOWN else SealRelatives.ZERO
 
         _primarySeal.update {
             it.copy(
@@ -1292,11 +1277,20 @@ class TagRetagModel(
         when (displayObservation) {
             is DisplayObservation.WithPups -> {
                 _uiState.update {
+                    val observationMetaData = ObservationMetadata(
+                        selectedColony = displayObservation.primarySeal.colony,
+                        selectedObservers = listOf(displayObservation.primarySeal.observerInitials),
+                        censusNumber = displayObservation.primarySeal.censusID,
+                        currentSeason = displayObservation.primarySeal.season,
+                        deviceID = displayObservation.primarySeal.deviceID,
+                    )
+
                     it.copy(
-                        observationRecordColony = displayObservation.primarySeal.colony,
-                        observationRecordObservers = listOf(displayObservation.primarySeal.observerInitials),
-                        observationRecordLatitude = displayObservation.primarySeal.latitude,
-                        observationRecordLongitude = displayObservation.primarySeal.longitude,
+                        originalMetadata = observationMetaData,
+                        observationLocation = safeGeoLocation(
+                            displayObservation.primarySeal.latitude,
+                            displayObservation.primarySeal.longitude
+                        ),
                         observationTimestamp = displayObservation.primarySeal.date + " " + displayObservation.primarySeal.time
                     )
                 }
@@ -1326,11 +1320,20 @@ class TagRetagModel(
 
             is DisplayObservation.Standalone -> {
                 _uiState.update {
+                    val observationMetaData = ObservationMetadata(
+                        selectedColony = displayObservation.primarySeal.colony,
+                        selectedObservers = listOf(displayObservation.primarySeal.observerInitials),
+                        censusNumber = displayObservation.primarySeal.censusID,
+                        currentSeason = displayObservation.primarySeal.season,
+                        deviceID = displayObservation.primarySeal.deviceID,
+                    )
+
                     it.copy(
-                        observationRecordColony = displayObservation.primarySeal.colony,
-                        observationRecordObservers = listOf(displayObservation.primarySeal.observerInitials),
-                        observationRecordLatitude = displayObservation.primarySeal.latitude,
-                        observationRecordLongitude = displayObservation.primarySeal.longitude,
+                        originalMetadata = observationMetaData,
+                        observationLocation = safeGeoLocation(
+                            displayObservation.primarySeal.latitude,
+                            displayObservation.primarySeal.longitude
+                        ),
                         observationTimestamp = displayObservation.primarySeal.date + " " + displayObservation.primarySeal.time
                     )
                 }
@@ -1386,20 +1389,38 @@ class TagRetagModel(
                 }
             }
 
+
             // TODO, test
             val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
                 // filter for seals that are to be updated
                 .filter { !it.markedRemoved && it.hasEdits }
 
             for (seal in sealToUpdate) {
+                val edits = when (seal.sealType) {
+                    SealType.PRIMARY -> {
+                        primarySealEdits.value.joinToString("; ")
+                    }
+
+                    SealType.PUPONE -> {
+                        pupOneEdits.value.joinToString("; ")
+                    }
+
+                    SealType.PUPTWO -> {
+                        pupTwoEdits.value.joinToString("; ")
+                    }
+
+                    SealType.UNKNOWN -> ""
+                }
+
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
                 val observationRecord = buildObservationRecord(
-                    currentLocation,
+                    uiState.value.observationLocation,
                     seal,
+                    edits,
                     relOneTag,
                     relTwoTag,
-                    uiState.value.metadata,
+                    uiState.value.originalMetadata,
                 )
 
                 // write an entry to the database for each seal
@@ -1416,10 +1437,11 @@ class TagRetagModel(
             for (seal in sealsComplete) {
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
-                // TODO, write a function on the Observation, toObservationRecord(), to replace buildObservationRecord
+                // TODO, consider a function on the Observation, toObservationRecord(), to replace buildObservationRecord
                 val observationRecord = buildObservationRecord(
                     currentLocation,
                     seal,
+                    "",
                     relOneTag,
                     relTwoTag,
                     uiState.value.metadata,
@@ -1464,4 +1486,14 @@ class TagRetagModel(
             SealType.UNKNOWN -> return Pair("", "")
         }
     }
+}
+
+fun safeGeoLocation(lat: String?, lon: String?): GeoLocation? {
+    val latDouble = lat?.toDoubleOrNull()
+    val lonDouble = lon?.toDoubleOrNull()
+
+    return if (latDouble != null && lonDouble != null) {
+        GeoLocation(Coordinates(latDouble, lonDouble))
+    } else
+        null
 }

@@ -867,38 +867,38 @@ fun SealCard(
         }
     }
 
-    // OLD TAG MARKS
+    // COMMENT
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 20.dp, end = 20.dp, top = 10.dp)
+
+    ) {
+
+        CommentField(
+            value = seal.comment,
+            onClearValueDo = {
+                viewModel.updateComment(seal.sealType, "")
+            },
+            onFocusChange = { isFocused, lastValue ->
+                if (!isFocused) {
+                    // save the input to the model
+                    viewModel.updateComment(seal.sealType, lastValue)
+                }
+            }
+        )
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.End
     ) {
-
-        // COMMENT
-        Box(
-            modifier = Modifier.weight(.6f)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                CommentField(
-                    value = seal.comment,
-                    onClearValueDo = {
-                        viewModel.updateComment(seal.sealType, "")
-                    },
-                    onFocusChange = { isFocused, lastValue ->
-                        if (!isFocused) {
-                            // save the input to the model
-                            viewModel.updateComment(seal.sealType, lastValue.trim())
-                        }
-                    }
-                )
-            }
-        }
+        Text(
+            text = "Comment field allows letters, numbers, semicolons, colons and exclamation points",
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 
     // WEIGHT FOR PUPS ONLY

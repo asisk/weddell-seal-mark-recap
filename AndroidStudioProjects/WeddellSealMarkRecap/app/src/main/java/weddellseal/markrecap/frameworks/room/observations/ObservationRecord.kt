@@ -83,7 +83,7 @@ fun ObservationRecord.toSeal(): Seal {
         numRelatives = SealRelatives.fromSelection(numRelatives),
         condition = SealCondition.fromCode(sealCondition),
         tagNumber = processedTagOne.tagNumber,
-        tagAlpha = processedTagTwo.tagAlpha,
+        tagAlpha = processedTagOne.tagAlpha,
         oldTagNumber = processedOldTag.tagNumber,
         oldTagAlpha = processedOldTag.tagAlpha,
         tagEventType = TagEventType.fromAlpha(tagEvent),

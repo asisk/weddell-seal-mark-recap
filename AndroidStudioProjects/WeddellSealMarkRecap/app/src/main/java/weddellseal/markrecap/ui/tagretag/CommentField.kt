@@ -2,7 +2,6 @@ package weddellseal.markrecap.ui.tagretag
 
 import android.util.Log
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
@@ -29,7 +28,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -54,22 +52,15 @@ fun CommentField(
     OutlinedTextField(
         value = text,
         onValueChange = {
-            val sanitized = it.replace(Regex("[^A-Za-z0-9;! ]"), "") // only allow numeric characters
+            val sanitized =
+                it.replace(Regex("[^A-Za-z0-9;:! ]"), "") // only allow certain characters
             text = sanitized.trim()
         },
         label = { Text("Comments") },
-        supportingText = {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Comment field allows letters, numbers, semicolons, and exclamation points!",
-                textAlign = TextAlign.End,
-            )
-        },
         modifier = Modifier
-            .height(80.dp)
             .fillMaxWidth()
-            .fillMaxHeight()
-            .verticalScroll(state = scrollState, enabled = true)
+            .height(80.dp)
+            .verticalScroll(scrollState)
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused // Update focus state
                 Log.d(
