@@ -53,8 +53,8 @@ fun CommentField(
         value = text,
         onValueChange = {
             val sanitized =
-                it.replace(Regex("[^A-Za-z0-9;:! ]"), "") // only allow certain characters
-            text = sanitized.trim()
+                it.replace(Regex("[^A-Za-z0-9 ;:!,']"), "") // only allow certain characters
+            text = sanitized // don't trim here because the data entry will be affected
         },
         label = { Text("Comments") },
         modifier = Modifier

@@ -120,9 +120,14 @@ fun buildObservationRecord(
 
     sb.append(seal.validationMessage)
 
+    var date = getCurrentDateFormatted()
+    var time = getCurrentTimeFormatted()
+
     // TODO, test when a parent seal has no changes but the pup does
     if (seal.hasEdits) {
-        sb.append("Edited: $edits; ")
+        sb.append("Edited $date at $time: $edits; ") // date that the record was edited + the edits made
+        date = metadata.originalDate // for edited records, the original date should be retained
+        time = metadata.originalTimestamp // for edited records, the original time should be retained
     }
 
     val comment = sb.append(seal.comment).toString()
@@ -137,8 +142,8 @@ fun buildObservationRecord(
         deviceID = metadata.deviceID,
         season = metadata.currentSeason,
         speno = speNo,
-        date = getCurrentDateFormatted(), // date format: yyyy-MM-dd
-        time = getCurrentTimeFormatted(), // time format: hh:mm:ss
+        date = date, // date format: yyyy-MM-dd
+        time = time, // time format: hh:mm:ss
         censusID = censusNumber,
         latitude = location?.coordinates?.latitude.toString(),  // example -77.73004, could also be 4 decimal precision
         longitude = location?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision

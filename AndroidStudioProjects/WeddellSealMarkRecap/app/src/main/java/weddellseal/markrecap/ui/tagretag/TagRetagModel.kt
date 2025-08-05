@@ -299,6 +299,8 @@ class TagRetagModel(
         val isCensusMode: Boolean = false,
         val deviceID: String = "Unknown", // no validation as the user cannot affect change, set default value in case of error getting device
         val currentSeason: String = "2025 Preset", // no validation as the user cannot affect change, set default value in case of error generating season
+        val originalDate: String = "",// used for writing edited records and retaining the original date
+        val originalTimestamp: String = "", // used for writing edited records and retaining the original timestamp
     ) {
         // computed property, evaluated only when explicitly accessed
         val isValid: Boolean
@@ -568,6 +570,8 @@ class TagRetagModel(
         when (input) {
             SealRelatives.ZERO -> {
                 removePups()
+                _primarySeal.update { it.copy(pupAdded = false) } // to support edit mode
+                updateNotebookEntry(primarySeal.value)
             }
 
             SealRelatives.ONE -> {
@@ -577,6 +581,7 @@ class TagRetagModel(
                 _pupTwo.update {
                     it.copy(numRelatives = input)
                 }
+                _primarySeal.update { it.copy(pupAdded = true) } // to support edit mode
                 updateNotebookEntry(pupOne.value)
                 updateNotebookEntry(pupTwo.value)
             }
@@ -588,12 +593,15 @@ class TagRetagModel(
                 _pupTwo.update {
                     it.copy(numRelatives = input)
                 }
+                _primarySeal.update { it.copy(pupAdded = true) } // to support edit mode
                 updateNotebookEntry(pupOne.value)
                 updateNotebookEntry(pupTwo.value)
             }
 
             SealRelatives.UNKNOWN -> {
                 removePups()
+                _primarySeal.update { it.copy(pupAdded = false) }
+                updateNotebookEntry(primarySeal.value)
             }
         }
 
@@ -1283,6 +1291,8 @@ class TagRetagModel(
                         censusNumber = displayObservation.primarySeal.censusID,
                         currentSeason = displayObservation.primarySeal.season,
                         deviceID = displayObservation.primarySeal.deviceID,
+                        originalDate = displayObservation.primarySeal.date,
+                        originalTimestamp = displayObservation.primarySeal.time
                     )
 
                     it.copy(
@@ -1326,6 +1336,8 @@ class TagRetagModel(
                         censusNumber = displayObservation.primarySeal.censusID,
                         currentSeason = displayObservation.primarySeal.season,
                         deviceID = displayObservation.primarySeal.deviceID,
+                        originalDate = displayObservation.primarySeal.date,
+                        originalTimestamp = displayObservation.primarySeal.time
                     )
 
                     it.copy(
@@ -1334,7 +1346,7 @@ class TagRetagModel(
                             displayObservation.primarySeal.latitude,
                             displayObservation.primarySeal.longitude
                         ),
-                        observationTimestamp = displayObservation.primarySeal.date + " " + displayObservation.primarySeal.time
+                        observationTimestamp = displayObservation.primarySeal.date + " " + displayObservation.primarySeal.time,
                     )
                 }
 
@@ -1378,21 +1390,29 @@ class TagRetagModel(
         currentLocation: GeoLocation?,
     ) {
         if (uiState.value.isEditMode) {
+
+            // filter for seals that are to be REMOVED
+            // this covers removing pups from female observation record
             val sealsToRemove = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-                // filter for seals that are to be removed
                 .filter { it.markedRemoved }
 
             for (seal in sealsToRemove) {
-                // write an entry to the database for each seal
+                // remove entry from the database for each seal
                 viewModelScope.launch {
                     observationRepo.deleteObservation(seal.observationID)
                 }
             }
 
+            if (primarySeal.value.pupAdded) { // TODO TEST, be wary of race condition
+                // remove the primary record and add a new observation records for mom with the pup
+                // this action supports ordering the mom and pup together
+                viewModelScope.launch {
+                    observationRepo.deleteObservation(primarySeal.value.observationID)
+                }
+            }
 
-            // TODO, test
+            // filter for seals that are to be UPDATED
             val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-                // filter for seals that are to be updated
                 .filter { !it.markedRemoved && it.hasEdits }
 
             for (seal in sealToUpdate) {
@@ -1430,6 +1450,7 @@ class TagRetagModel(
             }
 
         } else {
+            // new seal observation records
             val sealsComplete = listOf(primarySeal.value, pupOne.value, pupTwo.value)
                 // filter out any seals that aren't complete, are marked deleted, or have edits
                 .filter { it.isComplete && !it.markedRemoved && !it.hasEdits }

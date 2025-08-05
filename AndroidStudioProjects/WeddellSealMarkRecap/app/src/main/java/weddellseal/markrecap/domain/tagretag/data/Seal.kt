@@ -36,9 +36,10 @@ data class Seal(
     val observationRecordSpeno: Int = 0,
     val wedCheckMatch: WedCheckSeal? = null, // This could be null if there is no match in the database
     var flaggedForReview: Boolean = false,
-    var markedRemoved: Boolean = false, // when in edit mode, pups can be removed from the database
-    var pupOneRemoved: Boolean = false,
-    var pupTwoRemoved: Boolean = false,
+    var markedRemoved: Boolean = false, // when in edit mode, pups can be removed from the observations database
+    var pupOneRemoved: Boolean = false, // when in edit mode, pups can be removed from the observations database
+    var pupTwoRemoved: Boolean = false, // when in edit mode, pups can be removed from the observations database
+    var pupAdded: Boolean = false, // when in edit mode, pups can be added to an existing record
     var hasEdits: Boolean = false,
 ) {
     // This is a check to see whether the user has begun data entry
@@ -250,8 +251,14 @@ data class Seal(
             edits.add("condition" + " was: ${original.condition} now: $condition")
         if (isNoTag != original.isNoTag)
             edits.add("isNoTag" + " was: ${original.isNoTag} now: $isNoTag")
-        if (numRelatives != original.numRelatives)
-            edits.add("numRelatives" + " was: ${original.numRelatives} now: $numRelatives")
+        if (sealType == SealType.PRIMARY && numRelatives < original.numRelatives) // only the primary seal can have a change in relatives
+            edits.add(
+                "numRelatives decreased" + " was: ${original.numRelatives} now: $numRelatives"
+            )
+        if (sealType == SealType.PRIMARY && numRelatives > original.numRelatives) // only the primary seal can have a change in relatives
+            edits.add(
+                "numRelatives increased" + " was: ${original.numRelatives} now: $numRelatives"
+            )
         if (numTags != original.numTags)
             edits.add("numTags" + " was: ${original.numTags} now: $numTags")
         if (pupPeed != original.pupPeed)
@@ -276,7 +283,6 @@ data class Seal(
             edits.add("pupOneRemoved")
         if (pupTwoRemoved != original.pupTwoRemoved)
             edits.add("pupTwoRemoved")
-        //TODO, pupOne or pupTwo added
 
         return edits
     }

@@ -883,7 +883,7 @@ fun SealCard(
             onFocusChange = { isFocused, lastValue ->
                 if (!isFocused) {
                     // save the input to the model
-                    viewModel.updateComment(seal.sealType, lastValue)
+                    viewModel.updateComment(seal.sealType, lastValue.trim())
                 }
             }
         )
@@ -896,7 +896,7 @@ fun SealCard(
         horizontalArrangement = Arrangement.End
     ) {
         Text(
-            text = "Comment field allows letters, numbers, semicolons, colons and exclamation points",
+            text = "Comment field allows letters, numbers, and certain special characters.",
             style = MaterialTheme.typography.bodyMedium
         )
     }
