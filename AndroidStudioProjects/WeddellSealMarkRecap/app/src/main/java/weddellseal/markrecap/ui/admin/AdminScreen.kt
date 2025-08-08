@@ -116,7 +116,7 @@ fun AdminScreen(
                         selected = selectedItem == index,
                         onClick = {
                             if (index == 0) {
-                                navController.navigate(Screens.HomeScreen.route)
+                                navController.navigate(Screens.Home.route)
                             } else {
                                 selectedItem = index
                             }

@@ -36,6 +36,7 @@ import weddellseal.markrecap.ui.admin.WedCheckViewModel
 import weddellseal.markrecap.viewmodelfactories.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.tagretag.TagRetagScreen
 import weddellseal.markrecap.ui.admin.AdminScreen
+import weddellseal.markrecap.ui.census.CensusScreen
 import weddellseal.markrecap.ui.home.HomeScreen
 import weddellseal.markrecap.ui.permissions.LocationPermissionView
 import weddellseal.markrecap.ui.recentobservations.ObservationViewer
@@ -117,25 +118,31 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    val startNavigation = Screens.HomeScreen.route
+                    val startNavigation = Screens.Home.route
                     NavHost(navController = navController, startDestination = startNavigation) {
-                        composable(Screens.LocationPermissionScreen.route) {
+                        composable(Screens.LocationPermissions.route) {
                             LocationPermissionView(onNextClick = {
-                                navController.navigate(Screens.HomeScreen.route)
+                                navController.navigate(Screens.Home.route)
                             })
                         }
-                        composable(Screens.HomeScreen.route) {
+                        composable(Screens.Home.route) {
                             HomeScreen(
                                 navController,
                                 homeViewModel
                             )
                         }
-                        composable(Screens.AddObservationLog.route) {
+                        composable(Screens.TagRetag.route) {
                             TagRetagScreen(
                                 navController,
                                 tagRetagModel,
                                 homeViewModel,
                                 recentObservationsViewModel
+                            )
+                        }
+                        composable(Screens.Census.route) {
+                            CensusScreen(
+                                navController,
+                                homeViewModel
                             )
                         }
                         composable(Screens.RecentObservations.route) {
@@ -158,7 +165,7 @@ class MainActivity : ComponentActivity() {
                                 tagRetagModel
                             )
                         }
-                        composable(Screens.AdminScreen.route) {
+                        composable(Screens.Admin.route) {
                             AdminScreen(
                                 navController,
                                 wedCheckViewModel,
@@ -176,11 +183,12 @@ class MainActivity : ComponentActivity() {
 }
 
 sealed class Screens(val route: String) {
-    object LocationPermissionScreen : Screens("location_permissions")
-    object HomeScreen : Screens("home")
-    object AdminScreen : Screens("admin")
-    object AddObservationLog : Screens("add_log")
-    object RecentObservations : Screens("view_db")
+    object LocationPermissions : Screens("location_permissions")
+    object Home : Screens("home")
+    object Admin : Screens("admin")
+    object TagRetag : Screens("tag_retag")
+    object Census : Screens("census")
+    object RecentObservations : Screens("recent_entries")
     object SealLookupScreen : Screens("seal_lookup")
     object ObservationViewer : Screens("observation_viewer")
 }

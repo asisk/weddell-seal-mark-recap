@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.home
+package weddellseal.markrecap.ui.census
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape

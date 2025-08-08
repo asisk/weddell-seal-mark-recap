@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.home
+package weddellseal.markrecap.ui.census
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import weddellseal.markrecap.ui.home.HomeViewModel
 
 @Composable
 fun CensusDialog(

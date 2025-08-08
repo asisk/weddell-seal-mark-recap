@@ -1,17 +1,13 @@
 package weddellseal.markrecap.ui.home
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
@@ -22,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
@@ -40,22 +37,28 @@ fun ObserversDropDown(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { expanded = it }
     ) {
         TextField(
             readOnly = true,
             value = displayText,
             onValueChange = {},
-            label = { Text(label) },
+            label = {
+                Text(
+                    label, style = MaterialTheme.typography.titleLarge
+                )
+            },
             trailingIcon = {
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                    contentDescription = if (expanded) "Collapse" else "Expand"
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded,
+                    modifier = Modifier.size(36.dp)
                 )
             },
             modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(MenuAnchorType.PrimaryEditable, true)
+                .menuAnchor(MenuAnchorType.PrimaryEditable, true),
+            textStyle = MaterialTheme.typography.headlineSmall.copy(
+                textAlign = TextAlign.Center
+            )
         )
 
         ExposedDropdownMenu(
@@ -74,7 +77,7 @@ fun ObserversDropDown(
                             )
                             Text(
                                 text = option,
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.headlineSmall,
                                 modifier = Modifier.padding(start = 8.dp)
                             )
                         }

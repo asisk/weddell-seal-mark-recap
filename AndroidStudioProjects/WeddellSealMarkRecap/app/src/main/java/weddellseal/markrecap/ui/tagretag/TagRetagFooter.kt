@@ -337,7 +337,7 @@ fun TagRetagFooter(
                 selectedObservation?.let { record ->
                     viewModel.resetModelState()
                     viewModel.loadSealForEdit(record)
-                    navController.navigate(Screens.AddObservationLog.route)
+                    navController.navigate(Screens.TagRetag.route)
                 }
             },
         )
