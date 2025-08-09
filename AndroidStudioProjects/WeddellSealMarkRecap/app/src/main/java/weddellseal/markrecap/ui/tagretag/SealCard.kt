@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.SealRelatives
 import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
@@ -43,7 +44,6 @@ fun SealCard(
     seal: Seal
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
     val focusManager = LocalFocusManager.current
 
     // local values used to prevent a user from changing model values if the selection is invalid based on other field values
@@ -165,14 +165,10 @@ fun SealCard(
     ) {
 
         // SEX
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
+        Box {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     "Sex",
@@ -221,20 +217,20 @@ fun SealCard(
 
         // PUP PEED CHECKBOX
         Box(
-            modifier = Modifier
-                .weight(.3f)
-                .padding(start = 8.dp)
+            modifier = Modifier.weight(1f)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
 
                 // display pup peed only for pups
                 if (seal.ageClass == SealAgeClass.PUP) {
                     Text(
-                        text = "Pup" + "\n" + "Peed",
+                        text = "Pup Peed",
                         style = MaterialTheme.typography.titleLarge,
                     )
 
@@ -244,7 +240,6 @@ fun SealCard(
                             focusManager.clearFocus()
                             viewModel.updatePupPeed(seal.sealType, it)
                         },
-                        modifier = Modifier.padding(8.dp)
                     )
                 }
             }
@@ -594,14 +589,10 @@ fun SealCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
+        Box {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     "Tag Event",
@@ -616,6 +607,7 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
                 } else {
+
                     val tagEventList = TagEventType.values()
                         .filter { it != TagEventType.UNKNOWN }
                         .map { it.description }
@@ -658,14 +650,12 @@ fun SealCard(
                 // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
                 if (seal.tagEventType == TagEventType.NEW) {
                     Box(
-                        modifier = Modifier
-                            .weight(.3f)
-                            .padding(start = 8.dp)
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Row(
-//                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                        Column(
+                            Modifier.padding(horizontal = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
                             Text(
                                 text = "Old Tag Marks",
@@ -673,7 +663,6 @@ fun SealCard(
                             )
 
                             Checkbox(
-                                modifier = Modifier.padding(8.dp),
                                 checked = seal.oldTagMarks,
                                 onCheckedChange = {
                                     focusManager.clearFocus()
@@ -724,6 +713,7 @@ fun SealCard(
             }
         }
     }
+
     // NUMBER OF TAGS, NO TAG
     Row(
         modifier = Modifier
@@ -734,31 +724,23 @@ fun SealCard(
                     focusManager.clearFocus()
                 })
             },
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-
         // NUMBER OF TAGS
-        val numTagsList = listOf("1", "2")
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp)
-        ) {
+        Box {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
             ) {
-
                 if (!seal.isNoTag) {
-
                     Text(
                         "# of Tags",
                         style = MaterialTheme.typography.titleLarge
                     )
 
+                    val numTagsList = listOf("1", "2")
                     SegmentedButtonGroup(
                         options = numTagsList,
                         selectedOption = seal.numTags,
@@ -767,6 +749,17 @@ fun SealCard(
                         }
                     )
                 }
+            }
+        }
+
+        Box(
+            modifier = Modifier.weight(1f) // take the remaining space
+        ) {
+            Column(
+                Modifier.padding(horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
                 // NO TAG
                 Text(
                     text = "No Tag",
@@ -775,7 +768,6 @@ fun SealCard(
                 )
 
                 Checkbox(
-                    modifier = Modifier.padding(8.dp),
                     checked = seal.isNoTag,
                     onCheckedChange = {
                         focusManager.clearFocus()
@@ -815,23 +807,21 @@ fun SealCard(
     ) {
 
         // CONDITION
-        Box(
-            modifier = Modifier
-                .weight(.6f)
-        ) {
+        Box {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     "Condition",
                     style = MaterialTheme.typography.titleLarge
                 )
-                SealConditionDropdown(
-                    selected = seal.condition,
-                    onSelected = {
-                        viewModel.updateCondition(seal.sealType, it)
+
+                ConditionSegmentedButtonGroup(
+                    selectedOption = seal.condition.code,
+                    onOptionSelected = { selection ->
+                        val conditionSelected = SealCondition.fromCode(selection)
+                        viewModel.updateCondition(seal.sealType, conditionSelected)
                     }
                 )
             }
@@ -839,24 +829,21 @@ fun SealCard(
 
         // TISSUE
         Box(
-            modifier = Modifier
-                .weight(.4f)
-                .padding(start = 8.dp, end = 4.dp)
+            modifier = Modifier.weight(1f) // take the remaining space
         ) {
-            Row(
+            Column(
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "Tissue",
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 16.dp)
                 )
 
                 Checkbox(
-                    modifier = Modifier.padding(8.dp),
                     checked = seal.tissueTaken,
                     onCheckedChange = {
                         focusManager.clearFocus()

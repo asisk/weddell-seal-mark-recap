@@ -1,6 +1,8 @@
 package weddellseal.markrecap.ui.tagretag
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,14 +19,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
 
 @Composable
-fun SegmentedButtonGroup(
-    options: List<String>,
+fun ConditionSegmentedButtonGroup(
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
+
+    val sealConditionOptions = SealCondition.values()
+        .filter { it != SealCondition.NA && it != SealCondition.UNKNOWN && it != SealCondition.NONE }
+        .map { it.code }
 
     Row(
         modifier = Modifier
@@ -34,7 +40,7 @@ fun SegmentedButtonGroup(
             ) // Background color for the whole segmented group
             .padding(4.dp) // Padding between the background and the buttons
     ) {
-        options.forEach { option ->
+        sealConditionOptions.forEach { option ->
             val isSelected = option == selectedOption
 
             // Individual Button for each option
@@ -55,12 +61,21 @@ fun SegmentedButtonGroup(
                 ),
                 shape = when (option) {
                     // Adjust shapes to make buttons rounded at the ends
-                    options.first() -> RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp)
-                    options.last() -> RoundedCornerShape(topEnd = 50.dp, bottomEnd = 50.dp)
+                    sealConditionOptions.first() -> RoundedCornerShape(
+                        topStart = 50.dp,
+                        bottomStart = 50.dp
+                    )
+
+                    sealConditionOptions.last() -> RoundedCornerShape(
+                        topEnd = 50.dp,
+                        bottomEnd = 50.dp
+                    )
+
                     else -> RoundedCornerShape(0.dp)
                 },
-                modifier = Modifier.padding(horizontal = 2.dp) // padding between the buttons
+                modifier = Modifier.padding(horizontal = 2.dp), // Padding between buttons that creates the divider
             ) {
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -69,10 +84,21 @@ fun SegmentedButtonGroup(
                             imageVector = Icons.Default.Check,
                             contentDescription = "Selected",
                             tint = Color.White,
-                            modifier = Modifier.padding(end = 4.dp)
                         )
                     }
-                    Text(text = option, style = MaterialTheme.typography.headlineSmall)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = option,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(
+                            text = SealCondition.fromCode(option).description,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }

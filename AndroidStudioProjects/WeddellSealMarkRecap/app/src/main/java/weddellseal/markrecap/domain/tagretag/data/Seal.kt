@@ -76,7 +76,7 @@ data class Seal(
             // a condition of NONE means the value was selected as a way to set the value to blank from the TagRetag Screen
             if (ageClass == SealAgeClass.PUP && (condition == SealCondition.NONE || condition == SealCondition.UNKNOWN)) reasons += "Select condition for ${sealType.label}."
             if (sex == SealSex.NONE) reasons += "Select a sex for ${sealType.label}."
-            if (numRelatives == SealRelatives.UNKNOWN) reasons += "Select number of relatives for ${sealType.label}."
+            if (numRelatives == SealRelatives.UNKNOWN && ageClass == SealAgeClass.ADULT) reasons += "Select number of relatives for ${sealType.label}."
             if (tagEventType == TagEventType.UNKNOWN) reasons += "Select a tag event type for ${sealType.label}."
             if (tagEventType == TagEventType.RETAG && (reasonForRetag == RetagReason.NONE || reasonForRetag == RetagReason.UNKNOWN)) reasons += "Enter a reason for retag for ${sealType.label}."
 
