@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,7 +62,7 @@ fun SealCard(
                 .fillMaxWidth()
                 .padding(8.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.errorContainer, // Light red background
+                    color = Color(0xFFE30707), //  red background
                     shape = RoundedCornerShape(4.dp)
                 )
         ) {
@@ -69,7 +70,7 @@ fun SealCard(
                 Text(
                     modifier = Modifier.padding(8.dp),
                     text = error,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    color =  Color.White,
                     style = MaterialTheme.typography.titleLarge
                 )
             }
@@ -576,6 +577,84 @@ fun SealCard(
         }
     }
 
+    // NUMBER OF TAGS, NO TAG
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        // NUMBER OF TAGS
+        Box {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (!seal.isNoTag) {
+                    Text(
+                        "# of Tags",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    val numTagsList = listOf("1", "2")
+                    SegmentedButtonGroup(
+                        options = numTagsList,
+                        selectedOption = seal.numTags,
+                        onOptionSelected = { newVal ->
+                            viewModel.updateNumTags(seal.sealType, newVal)
+                        }
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier.weight(1f) // take the remaining space
+        ) {
+            Column(
+                Modifier.padding(horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // NO TAG
+                Text(
+                    text = "No Tag",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+
+                Checkbox(
+                    checked = seal.isNoTag,
+                    onCheckedChange = {
+                        focusManager.clearFocus()
+                        viewModel.updateNoTag(seal.sealType, it)
+
+                        if (it) {
+                            // per 9/4 meeting, event type should be Marked when NoTag is checked
+                            viewModel.updateTagEventType(seal, TagEventType.MARKED)
+                        } else {
+                            // reset the event type if the checkbox is deselected
+                            viewModel.updateTagEventType(seal, TagEventType.UNKNOWN)
+                        }
+
+                        // when NoTag marked, clear the tag fields & speno
+                        viewModel.clearTagID(seal.sealType)
+                        viewModel.clearOldTag(seal.sealType)
+                        viewModel.clearNumTags(seal.sealType)
+                        viewModel.removeWedCheckMatch(seal.sealType)
+                    },
+                )
+            }
+        }
+    }
+
     // TAG EVENT TYPE
     Row(
         modifier = Modifier
@@ -710,84 +789,6 @@ fun SealCard(
                         }
                     )
                 }
-            }
-        }
-    }
-
-    // NUMBER OF TAGS, NO TAG
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            },
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        // NUMBER OF TAGS
-        Box {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (!seal.isNoTag) {
-                    Text(
-                        "# of Tags",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-
-                    val numTagsList = listOf("1", "2")
-                    SegmentedButtonGroup(
-                        options = numTagsList,
-                        selectedOption = seal.numTags,
-                        onOptionSelected = { newVal ->
-                            viewModel.updateNumTags(seal.sealType, newVal)
-                        }
-                    )
-                }
-            }
-        }
-
-        Box(
-            modifier = Modifier.weight(1f) // take the remaining space
-        ) {
-            Column(
-                Modifier.padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // NO TAG
-                Text(
-                    text = "No Tag",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-
-                Checkbox(
-                    checked = seal.isNoTag,
-                    onCheckedChange = {
-                        focusManager.clearFocus()
-                        viewModel.updateNoTag(seal.sealType, it)
-
-                        if (it) {
-                            // per 9/4 meeting, event type should be Marked when NoTag is checked
-                            viewModel.updateTagEventType(seal, TagEventType.MARKED)
-                        } else {
-                            // reset the event type if the checkbox is deselected
-                            viewModel.updateTagEventType(seal, TagEventType.UNKNOWN)
-                        }
-
-                        // when NoTag marked, clear the tag fields & speno
-                        viewModel.clearTagID(seal.sealType)
-                        viewModel.clearOldTag(seal.sealType)
-                        viewModel.clearNumTags(seal.sealType)
-                        viewModel.removeWedCheckMatch(seal.sealType)
-                    },
-                )
             }
         }
     }
