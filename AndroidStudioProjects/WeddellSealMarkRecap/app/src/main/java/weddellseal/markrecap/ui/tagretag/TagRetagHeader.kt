@@ -44,6 +44,75 @@ fun TagRetagHeader(
     val pupOneSeal by viewModel.pupOne.collectAsState()
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
 
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = MaterialTheme.colorScheme.primaryContainer),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        if (location?.coordinates?.longitude != null) {
+            Icon(
+                Icons.Filled.LocationOn,
+                contentDescription = null,
+                tint = Color(0xFF1D9C06),
+                modifier = Modifier
+                    .padding(start = 10.dp, end = 10.dp)
+                    .size(40.dp),
+            )
+        } else {
+            Icon(
+                Icons.Filled.LocationOff,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
+                modifier = Modifier
+                    .padding(start = 10.dp, end = 10.dp)
+                    .size(40.dp),
+            )
+        }
+
+        Text(
+            text = location?.toLocationString() ?: "Cannot provide location coordinates!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(end = 10.dp)
+
+        )
+    }
+
+//    // COLONY & OBSERVERS
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(color = MaterialTheme.colorScheme.primaryContainer),
+//        horizontalArrangement = Arrangement.End
+//    ) {
+//        val observersText = if (uiState.metadata.selectedObservers.isEmpty()) "Select observers"
+//        else uiState.metadata.getObserversString()
+//
+//        Text(
+//            text = "Observers:  $observersText",
+//            style = MaterialTheme.typography.titleMedium,
+//            color = if (uiState.metadata.selectedObservers.isEmpty()) MaterialTheme.colorScheme.error.copy(
+//                alpha = 0.9f
+//            ) else MaterialTheme.colorScheme.onPrimaryContainer
+//        )
+//
+//        Spacer(modifier = Modifier.width(20.dp))
+//
+//        val colonyText = uiState.metadata.selectedColony.ifEmpty { "Select a colony" }
+//
+//        Text(
+//            text = "Colony:  $colonyText",
+//            style = MaterialTheme.typography.titleMedium,
+//            color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
+//                alpha = 0.9f
+//            ) else MaterialTheme.colorScheme.onPrimaryContainer
+//        )
+//
+//        Spacer(modifier = Modifier.width(10.dp))
+//    }
+
     if (uiState.isEditMode) {
         Row(
             modifier = Modifier
@@ -89,7 +158,7 @@ fun TagRetagHeader(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            // GPS Location
+            // GPS Location for Edit
             Row(
                 modifier = Modifier
                     .padding(top = 8.dp)
@@ -107,33 +176,6 @@ fun TagRetagHeader(
                         modifier = Modifier
                             .weight(1f)
                             .padding(start = 20.dp)
-                    )
-                } else {
-                    if (location?.coordinates?.longitude != null) {
-                        Icon(
-                            Icons.Filled.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFF1D9C06),
-                            modifier = Modifier
-                                .padding(start = 10.dp, end = 10.dp)
-                                .size(40.dp),
-                        )
-                    } else {
-                        Icon(
-                            Icons.Filled.LocationOff,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-                            modifier = Modifier
-                                .padding(start = 10.dp, end = 10.dp)
-                                .size(40.dp),
-                        )
-                    }
-
-                    Text(
-                        text = location?.toLocationString()
-                            ?: "Cannot provide location coordinates!",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -156,57 +198,57 @@ fun TagRetagHeader(
             }
         }
 
-        Column(
-            modifier = Modifier.weight(.8f),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Observers
-            Row(
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                val observersText =
-                    when (uiState.isEditMode) {
-                        true ->  uiState.originalMetadata.getObserversString()
-                        false -> if (uiState.metadata.selectedObservers.isEmpty()) "Select observers"
-                        else uiState.metadata.getObserversString()
-                    }
-
-                Text(
-                    text = "Observers:  $observersText",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (uiState.metadata.selectedObservers.isEmpty()) MaterialTheme.colorScheme.error.copy(
-                        alpha = 0.9f
-                    ) else Color.Black
-                )
-            }
-
-            // Colony Location
-            Row(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-
-                val colonyText =
-                    when (uiState.isEditMode) {
-                        true ->  uiState.originalMetadata.selectedColony
-                        false -> uiState.metadata.selectedColony.ifEmpty { "Select a colony" }
-                    }
-
-                Text(
-                    text = "Colony:  $colonyText",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
-                        alpha = 0.9f
-                    ) else Color.Black
-                )
-            }
-        }
+//        Column(
+//            modifier = Modifier.weight(.8f),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            // Observers
+//            Row(
+//                horizontalArrangement = Arrangement.Start,
+//                verticalAlignment = Alignment.CenterVertically,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(top = 8.dp)
+//            ) {
+//                val observersText =
+//                    when (uiState.isEditMode) {
+//                        true -> uiState.originalMetadata.getObserversString()
+//                        false -> if (uiState.metadata.selectedObservers.isEmpty()) "Select observers"
+//                        else uiState.metadata.getObserversString()
+//                    }
+//
+//                Text(
+//                    text = "Observers:  $observersText",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = if (uiState.metadata.selectedObservers.isEmpty()) MaterialTheme.colorScheme.error.copy(
+//                        alpha = 0.9f
+//                    ) else Color.Black
+//                )
+//            }
+//
+//            // Colony Location
+//            Row(
+//                modifier = Modifier
+//                    .padding(top = 8.dp)
+//                    .fillMaxWidth(),
+//                verticalAlignment = Alignment.CenterVertically,
+//            ) {
+//
+//                val colonyText =
+//                    when (uiState.isEditMode) {
+//                        true -> uiState.originalMetadata.selectedColony
+//                        false -> uiState.metadata.selectedColony.ifEmpty { "Select a colony" }
+//                    }
+//
+//                Text(
+//                    text = "Colony:  $colonyText",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
+//                        alpha = 0.9f
+//                    ) else Color.Black
+//                )
+//            }
+//        }
     }
 
     Spacer(modifier = Modifier.height(20.dp))

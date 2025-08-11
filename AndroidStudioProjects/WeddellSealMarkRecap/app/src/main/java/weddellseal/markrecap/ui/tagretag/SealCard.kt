@@ -70,7 +70,7 @@ fun SealCard(
                 Text(
                     modifier = Modifier.padding(8.dp),
                     text = error,
-                    color =  Color.White,
+                    color = Color.White,
                     style = MaterialTheme.typography.titleLarge
                 )
             }

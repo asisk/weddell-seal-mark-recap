@@ -107,6 +107,7 @@ fun TagRetagScreen(
                             }
                         }
                     },
+                    viewModel,
                     homeViewModel
                 )
             },

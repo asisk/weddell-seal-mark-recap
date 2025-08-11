@@ -50,6 +50,36 @@ class TagRetagModel(
     private val context: Context
         get() = getApplication()
 
+    data class UiState(
+        val metadata: ObservationMetadata = ObservationMetadata(), // current observation metadata
+        val originalMetadata: ObservationMetadata = ObservationMetadata(), // when a record is edited, these are the values that were originally saved for the observation
+
+        val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
+
+        val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
+
+        val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
+        val observationTimestamp: String = "", // UI display value in Tag/Retag screen header, values originally saved for the observation
+        val observationLocation: GeoLocation? = null, // location originally saved for the observation
+        val observationCensusNumber: String = "", // census number originally saved for the observation
+
+        val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
+        val isSaveEnabled: Boolean = false, // indicator for save button
+
+        val ineligibleForSaveReason: String = "", // reasons save button is disabled
+
+        val allSealsValid: Boolean = false, // indicator that all seals are valid
+
+        val validationFailureReason: String = "", // reason for validation failure
+        val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
+    )
+
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
     private val _primarySeal = MutableStateFlow(Seal(sealType = SealType.PRIMARY))
     val primarySeal: StateFlow<Seal> = _primarySeal
 
@@ -92,36 +122,6 @@ class TagRetagModel(
 //            }
 //        }
 //    }
-
-    data class UiState(
-        val metadata: ObservationMetadata = ObservationMetadata(), // current observation metadata
-        val originalMetadata: ObservationMetadata = ObservationMetadata(), // when a record is edited, these are the values that were originally saved for the observation
-
-        val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
-
-        val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
-
-        val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
-        val observationTimestamp: String = "", // UI display value in Tag/Retag screen header, values originally saved for the observation
-        val observationLocation: GeoLocation? = null, // location originally saved for the observation
-        val observationCensusNumber: String = "", // census number originally saved for the observation
-
-        val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
-        val isSaveEnabled: Boolean = false, // indicator for save button
-
-        val ineligibleForSaveReason: String = "", // reasons save button is disabled
-
-        val allSealsValid: Boolean = false, // indicator that all seals are valid
-
-        val validationFailureReason: String = "", // reason for validation failure
-        val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
-    )
-
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
-
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
 
     private val _selectedRecentObservation = MutableStateFlow<DisplayObservation?>(null)
     val selectedRecentObservation: StateFlow<DisplayObservation?> get() = _selectedRecentObservation
@@ -238,6 +238,9 @@ class TagRetagModel(
     // 2. when a save is successful
     // 3. when a record is selected for editing from the Tag/Retag screen
     fun resetModelState() {
+        // primary seals entered in Census mode should have an event type of Marked
+        val tagEventType =
+            if (uiState.value.metadata.isCensusMode) TagEventType.MARKED else TagEventType.UNKNOWN
         _uiState.update {
             it.copy(
                 isSearching = false,
@@ -256,7 +259,7 @@ class TagRetagModel(
 
         _primarySeal.update {
             Seal(
-                sealType = SealType.PRIMARY
+                sealType = SealType.PRIMARY, tagEventType = tagEventType // primary seals entered in Census mode should have an event type of Marked
             )
         }
         _pupOne.update {
@@ -344,7 +347,7 @@ class TagRetagModel(
                 uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
             ) { primary, pupOne, pupTwo, homeUiState, editMode ->
 
-                // Initialize the metadata object
+                // create the metadata object
                 val metadata = ObservationMetadata(
                     selectedColony = if (editMode) uiState.value.originalMetadata.selectedColony else homeUiState.selectedColony,
                     selectedObservers = if (editMode) uiState.value.originalMetadata.selectedObservers else homeUiState.selectedObservers,
@@ -427,6 +430,23 @@ class TagRetagModel(
 
                 if (edits.isNotEmpty()) {
                     _hasEdits.value = true
+                }
+            }
+        }
+
+        // Observe census mode
+        viewModelScope.launch {
+            combine(
+                _primarySeal,
+                homeViewUiState.map { it.isCensusMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>.
+            ) { currentPrimary, censusMode ->
+                val setEventTypeMarked = censusMode
+
+                setEventTypeMarked
+
+            }.collect { setEventTypeMarked ->
+                if (setEventTypeMarked) {
+                    _primarySeal.update { it.copy(tagEventType = TagEventType.MARKED) }
                 }
             }
         }
@@ -1266,7 +1286,7 @@ class TagRetagModel(
                 tagAlpha = lookupSeal.tagOneAlpha,
                 oldTagNumber = lookupSeal.tagOneNumber,
                 oldTagAlpha = lookupSeal.tagOneAlpha,
-                tagEventType = lookupSeal.tagEventType,
+                tagEventType = TagEventType.MARKED, // WedCheck seals are Marked by default
                 lastPhysio = lookupSeal.lastPhysio,
                 colony = lookupSeal.colony,
                 wedCheckMatch = lookupSeal
