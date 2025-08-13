@@ -35,7 +35,6 @@ fun TagRetagAppBar(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val homeUiState by homeViewModel.uiState.collectAsState()
-    val location by homeViewModel.currentLocation.collectAsState()
 
     TopAppBar(
         title = {
@@ -44,80 +43,42 @@ fun TagRetagAppBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // TAG/RETAG & CENSUS TITLE
-                Text(
-                    text = if (homeUiState.isCensusMode) "Census #${homeUiState.selectedCensusNumber}" else "Tag/Retag",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 36.sp, // Adjust this value as needed
-    textAlign = TextAlign.Start
+                if (homeUiState.isCensusMode) {
+                    Text(
+                        text = "#${homeUiState.selectedCensusNumber}",
+                        style = MaterialTheme.typography.displayMedium,
+                        textAlign = TextAlign.Start
                     )
 
-                Spacer(modifier = Modifier.width(20.dp))
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
 
                 val observersText =
-                    if (uiState.metadata.selectedObservers.isEmpty()) ""
+                    if (uiState.metadata.selectedObservers.isEmpty()) "Observers missing"
                     else uiState.metadata.getObserversString()
 
                 Text(
-                    text = "Observers:  $observersText",
+                    text = observersText,
                     color = if (uiState.metadata.selectedObservers.isEmpty()) MaterialTheme.colorScheme.error.copy(
                         alpha = 0.9f
                     ) else MaterialTheme.colorScheme.onPrimaryContainer,
-                            style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge
                 )
 
                 Spacer(modifier = Modifier.width(20.dp))
 
-                val colonyText = uiState.metadata.selectedColony.ifEmpty { "" }
+                val colonyText = uiState.metadata.selectedColony.ifEmpty { "Colony missing" }
 
                 Text(
-                    text = "Colony:  $colonyText",
+                    text = colonyText,
                     color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
                         alpha = 0.9f
                     ) else MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.titleLarge
 
-                    )
+                )
 
                 Spacer(modifier = Modifier.width(10.dp))
-
-                // GPS LOCATION
-//                Box(
-//                    modifier = Modifier.weight(0.6f)
-//                ) {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.End
-//                    ) {
-//
-//                        if (location?.coordinates?.longitude != null) {
-//                            Icon(
-//                                Icons.Filled.LocationOn,
-//                                contentDescription = null,
-//                                tint = Color(0xFF1D9C06),
-//                                modifier = Modifier
-//                                    .padding(start = 10.dp, end = 10.dp)
-//                                    .size(40.dp),
-//                            )
-//                        } else {
-//                            Icon(
-//                                Icons.Filled.LocationOff,
-//                                contentDescription = null,
-//                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-//                                modifier = Modifier
-//                                    .padding(start = 10.dp, end = 10.dp)
-//                                    .size(40.dp),
-//                            )
-//                        }
-//
-//                        Text(
-//                            text = location?.toLocationString()
-//                                ?: "Cannot provide location coordinates!",
-//                            style = MaterialTheme.typography.titleMedium,
-//                        )
-//                    }
-//                }
             }
         },
         navigationIcon = {

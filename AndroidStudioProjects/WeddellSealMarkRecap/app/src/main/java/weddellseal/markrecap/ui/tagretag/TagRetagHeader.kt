@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Cancel
@@ -26,9 +28,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.R
 import weddellseal.markrecap.domain.location.data.toLocationString
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.home.HomeViewModel
 
 @Composable
@@ -36,6 +41,7 @@ fun TagRetagHeader(
     viewModel: TagRetagModel,
     homeViewModel: HomeViewModel,
 ) {
+    val homeUiState by homeViewModel.uiState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     val location by homeViewModel.currentLocation.collectAsState()
@@ -47,8 +53,9 @@ fun TagRetagHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.primaryContainer),
-        horizontalArrangement = Arrangement.End,
+            .background(color = MaterialTheme.colorScheme.primaryContainer)
+            .padding(bottom = 10.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -58,8 +65,8 @@ fun TagRetagHeader(
                 contentDescription = null,
                 tint = Color(0xFF1D9C06),
                 modifier = Modifier
-                    .padding(start = 10.dp, end = 10.dp)
-                    .size(40.dp),
+                    .padding(end = 10.dp)
+                    .size(30.dp),
             )
         } else {
             Icon(
@@ -67,8 +74,8 @@ fun TagRetagHeader(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
                 modifier = Modifier
-                    .padding(start = 10.dp, end = 10.dp)
-                    .size(40.dp),
+                    .padding(end = 10.dp)
+                    .size(30.dp),
             )
         }
 
@@ -76,42 +83,93 @@ fun TagRetagHeader(
             text = location?.toLocationString() ?: "Cannot provide location coordinates!",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(end = 10.dp)
-
         )
     }
 
-//    // COLONY & OBSERVERS
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .background(color = MaterialTheme.colorScheme.primaryContainer),
-//        horizontalArrangement = Arrangement.End
-//    ) {
-//        val observersText = if (uiState.metadata.selectedObservers.isEmpty()) "Select observers"
-//        else uiState.metadata.getObserversString()
-//
-//        Text(
-//            text = "Observers:  $observersText",
-//            style = MaterialTheme.typography.titleMedium,
-//            color = if (uiState.metadata.selectedObservers.isEmpty()) MaterialTheme.colorScheme.error.copy(
-//                alpha = 0.9f
-//            ) else MaterialTheme.colorScheme.onPrimaryContainer
-//        )
-//
-//        Spacer(modifier = Modifier.width(20.dp))
-//
-//        val colonyText = uiState.metadata.selectedColony.ifEmpty { "Select a colony" }
-//
-//        Text(
-//            text = "Colony:  $colonyText",
-//            style = MaterialTheme.typography.titleMedium,
-//            color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
-//                alpha = 0.9f
-//            ) else MaterialTheme.colorScheme.onPrimaryContainer
-//        )
-//
-//        Spacer(modifier = Modifier.width(10.dp))
-//    }
+
+    // CENSUS PREPOPULATE OPTIONS
+    if (homeUiState.isCensusMode && !primarySeal.isEntryStarted) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            ExtendedFloatingActionButton(
+                icon = {
+                    Icon(
+                        painter = painterResource(R.mipmap.ic_mom_pup_foreground),
+                        contentDescription = "Mom and pup",
+                        modifier = Modifier.size(60.dp)
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Mom & Pup",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                },
+                onClick = {
+                    // update viewModel with prefilled fields
+                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
+                        viewModel.prefillMomAndPup()
+                    }
+                },
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                containerColor = MaterialTheme.colorScheme.secondary,
+            )
+
+            ExtendedFloatingActionButton(
+                icon = {
+                    Icon(
+                        Icons.Filled.Female,
+                        "Single Female",
+                        Modifier.size(36.dp)
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Single Female",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                },
+                onClick = {
+                    // update viewModel with prefilled fields
+                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
+                        viewModel.prefillSingleFemale()
+                    }
+                },
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                containerColor = MaterialTheme.colorScheme.secondary,
+            )
+
+            ExtendedFloatingActionButton(
+                icon = {
+                    Icon(
+                        Icons.Filled.Male,
+                        "Single Male",
+                        Modifier.size(36.dp)
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Single Male",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                onClick = {
+                    // update viewModel with prefilled fields
+                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
+                        viewModel.prefillSingleMale()
+                    }
+                },
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                containerColor = MaterialTheme.colorScheme.secondary,
+            )
+        }
+    }
 
     if (uiState.isEditMode) {
         Row(
@@ -148,48 +206,33 @@ fun TagRetagHeader(
                 }
             )
         }
-    }
 
-    // METADATA SECTION
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(
-            modifier = Modifier.weight(1f)
+
+        // METADATA SECTION FOR EDIT
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // GPS Location for Edit
-            Row(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                val editModeLocation =
-                    "Lat : ${uiState.observationLocation?.coordinates?.latitude}    " + "Long : ${uiState.observationLocation?.coordinates?.longitude}"
-
-                if (uiState.isEditMode) {
-                    Text(
-                        text = editModeLocation,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 20.dp)
-                    )
-                }
-            }
-
-            if (uiState.isEditMode) {
+                // GPS Location for Edit
                 Row(
                     modifier = Modifier
                         .padding(top = 8.dp)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
+                    // TODO, update this view to match the format in the top app bar, include observers, colony & location
+                    val editModeLocation =
+                        "${uiState.observationLocation?.coordinates?.latitude}    " +
+                                "${uiState.observationLocation?.coordinates?.longitude}    " +
+                                uiState.observationTimestamp
+
                     Text(
-                        text = "Observation Timestamp:  ${uiState.observationTimestamp}",
-                        style = MaterialTheme.typography.titleMedium,
+                        text = editModeLocation,
+                        style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier
                             .weight(1f)
                             .padding(start = 20.dp)
@@ -197,64 +240,11 @@ fun TagRetagHeader(
                 }
             }
         }
-
-//        Column(
-//            modifier = Modifier.weight(.8f),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            // Observers
-//            Row(
-//                horizontalArrangement = Arrangement.Start,
-//                verticalAlignment = Alignment.CenterVertically,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 8.dp)
-//            ) {
-//                val observersText =
-//                    when (uiState.isEditMode) {
-//                        true -> uiState.originalMetadata.getObserversString()
-//                        false -> if (uiState.metadata.selectedObservers.isEmpty()) "Select observers"
-//                        else uiState.metadata.getObserversString()
-//                    }
-//
-//                Text(
-//                    text = "Observers:  $observersText",
-//                    style = MaterialTheme.typography.titleMedium,
-//                    color = if (uiState.metadata.selectedObservers.isEmpty()) MaterialTheme.colorScheme.error.copy(
-//                        alpha = 0.9f
-//                    ) else Color.Black
-//                )
-//            }
-//
-//            // Colony Location
-//            Row(
-//                modifier = Modifier
-//                    .padding(top = 8.dp)
-//                    .fillMaxWidth(),
-//                verticalAlignment = Alignment.CenterVertically,
-//            ) {
-//
-//                val colonyText =
-//                    when (uiState.isEditMode) {
-//                        true -> uiState.originalMetadata.selectedColony
-//                        false -> uiState.metadata.selectedColony.ifEmpty { "Select a colony" }
-//                    }
-//
-//                Text(
-//                    text = "Colony:  $colonyText",
-//                    style = MaterialTheme.typography.titleMedium,
-//                    color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
-//                        alpha = 0.9f
-//                    ) else Color.Black
-//                )
-//            }
-//        }
     }
-
-    Spacer(modifier = Modifier.height(20.dp))
 
     // Warning Banner displayed when data entered has validation errors
     if (uiState.isSaveAttempted && uiState.validationFailureReason.isNotBlank()) {
+        Spacer(modifier = Modifier.height(20.dp))
 
         // WARNING BANNER
         Row(

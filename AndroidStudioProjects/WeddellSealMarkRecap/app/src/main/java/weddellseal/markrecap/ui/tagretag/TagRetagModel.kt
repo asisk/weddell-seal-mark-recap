@@ -434,13 +434,16 @@ class TagRetagModel(
             }
         }
 
-        // Observe census mode
+        // Observe census mode to default Event Type to Marked
         viewModelScope.launch {
             combine(
                 _primarySeal,
                 homeViewUiState.map { it.isCensusMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>.
             ) { currentPrimary, censusMode ->
-                val setEventTypeMarked = censusMode
+
+                val setEventTypeMarked = censusMode &&
+                        currentPrimary.tagEventType == TagEventType.UNKNOWN
+                        && currentPrimary.isEntryStarted
 
                 setEventTypeMarked
 

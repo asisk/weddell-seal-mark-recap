@@ -156,6 +156,7 @@ fun TabbedCards(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp)
                     .zIndex(0f)
             ) {
                 Row(

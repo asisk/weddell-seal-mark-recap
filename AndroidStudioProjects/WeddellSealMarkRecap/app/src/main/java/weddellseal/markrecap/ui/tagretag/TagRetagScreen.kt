@@ -116,99 +116,23 @@ fun TagRetagScreen(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
             ) {
 
+                // This row stays fixed, not scrollable
                 TagRetagHeader(viewModel, homeViewModel)
 
-                // TODO, move this to the a Header component specific to Census
-                // CENSUS METADATA
-                if (homeUiState.selectedCensusNumber.isNotEmpty() && homeUiState.isCensusMode && !uiState.isEditMode) {
-                    // Prepopulate Options
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(4.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Box() {
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceEvenly,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                ExtendedFloatingActionButton(
-                                    icon = {
-                                        Icon(
-                                            Icons.Filled.BabyChangingStation,
-                                            "Mom & Pup",
-                                            Modifier.size(36.dp)
-                                        )
-                                    },
-                                    text = { Text("Mom & Pup") },
-                                    onClick = {
-                                        // update viewModel with prefilled fields
-                                        if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
-                                            viewModel.prefillMomAndPup()
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .alpha(if (uiState.isPrefilled) 0.5f else 1f) // Change opacity when inactive
-                                        .clickable(enabled = !uiState.isPrefilled) { } // Disable clicks if already selected
-                                )
-                                ExtendedFloatingActionButton(
-                                    icon = {
-                                        Icon(
-                                            Icons.Filled.Female,
-                                            "Single Female",
-                                            Modifier.size(36.dp)
-                                        )
-                                    },
-                                    text = { Text("Single Female") },
-                                    onClick = {
-                                        // update viewModel with prefilled fields
-                                        if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
-                                            viewModel.prefillSingleFemale()
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .alpha(if (uiState.isPrefilled) 0.5f else 1f) // Change opacity when inactive
-                                        .clickable(enabled = !uiState.isPrefilled) { } // Disable clicks if already selected
-                                )
-                                ExtendedFloatingActionButton(
-                                    icon = {
-                                        Icon(
-                                            Icons.Filled.Male,
-                                            "Single Male",
-                                            Modifier.size(36.dp)
-                                        )
-                                    },
-                                    text = { Text("Single Male") },
-                                    onClick = {
-                                        // update viewModel with prefilled fields
-                                        if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
-                                            viewModel.prefillSingleMale()
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .alpha(if (uiState.isPrefilled) 0.5f else 1f) // Change opacity when inactive
-                                        .clickable(enabled = !uiState.isPrefilled) { } // Disable clicks if already selected
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // SEAL CARDS
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    TabbedCards(viewModel, primarySeal, pupOneSeal, pupTwoSeal)
+                    // SEAL CARDS
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TabbedCards(viewModel, primarySeal, pupOneSeal, pupTwoSeal)
+                    }
+
+                    TagRetagFooter(viewModel, homeViewModel, recentObsViewModel, navController)
                 }
-
-                TagRetagFooter(viewModel, homeViewModel, recentObsViewModel, navController)
-
             }
         }
     }

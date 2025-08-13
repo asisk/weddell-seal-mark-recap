@@ -114,39 +114,67 @@ fun CensusScreen(
                         ),
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxSize(),
+                            modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
 
-                            val options = listOf("", "1", "2", "3", "4", "5", "6", "7", "8")
+                            val options = listOf("1", "2", "3", "4", "5", "6", "7", "8")
                             CensusDropDown(
                                 label = "Census Number",
                                 options = options,
                                 selectedOption = uiState.selectedCensusNumber,
-                                onValueChange = { viewModel.updateCensusNumber(it) }
+                                onValueChange = {
+                                    viewModel.updateCensusNumber(it)
+                                }
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Center,
                             ) {
+                                val elevationDisabled = FloatingActionButtonDefaults.elevation(2.dp)
+                                val elevationEnabled = FloatingActionButtonDefaults.elevation(8.dp)
+                                val colorDisabled = MaterialTheme.colorScheme.surface
+                                val colorEnabled = MaterialTheme.colorScheme.secondary
+
+                                // EXIT CENSUS BUTTON - only enabled if in a census
                                 ExtendedFloatingActionButton(
                                     modifier = Modifier.padding(10.dp),
-                                    elevation = FloatingActionButtonDefaults.elevation(8.dp),
-                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                    elevation = if (uiState.isCensusMode) elevationEnabled else elevationDisabled,
+                                    containerColor = if (uiState.isCensusMode) colorEnabled else colorDisabled,
                                     onClick = {
+                                        if (!uiState.isCensusMode) return@ExtendedFloatingActionButton  // guard early exit
+
+                                        viewModel.clearCensus()
+                                        navController.navigate(Screens.TagRetag.route)
+                                    },
+                                    icon = { /* no icon */ },
+                                    text = {
+                                        Text(
+                                            text = "Exit Census",
+                                            style = MaterialTheme.typography.headlineMedium,
+                                        )
+                                    }
+                                )
+
+                                // BEGIN CENSUS BUTTON - only enabled if census number is entered
+                                ExtendedFloatingActionButton(
+                                    modifier = Modifier.padding(10.dp),
+                                    elevation = if (uiState.selectedCensusNumber.isNotEmpty()) elevationEnabled else elevationDisabled,
+                                    containerColor = if (uiState.selectedCensusNumber.isNotEmpty()) colorEnabled else colorDisabled,
+                                    onClick = {
+                                        if (uiState.selectedCensusNumber.isEmpty()) return@ExtendedFloatingActionButton  // guard early exit
+
                                         viewModel.updateIsCensusMode(true)
                                         navController.navigate(Screens.TagRetag.route)
                                     },
                                     icon = { /* no icon */ },
                                     text = {
                                         Text(
-                                            text = "Begin Data Entry",
+                                            text = "Go to Census",
                                             style = MaterialTheme.typography.headlineMedium,
                                         )
                                     }

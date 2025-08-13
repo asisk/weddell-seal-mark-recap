@@ -104,25 +104,6 @@ fun TagRetagFooter(
             modifier = Modifier.fillMaxWidth(.4f),
             horizontalAlignment = Alignment.End
         ) {
-            // SAVE DISABLED WARNING
-            if (primarySeal.isEntryStarted && (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation)) {
-                Row(
-                    modifier = Modifier.padding(10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Warning,
-                        contentDescription = "Save disabled",
-                        tint = Color(0xFFFCA503)
-                    )
-                    Text(
-                        modifier = Modifier.padding(start = 8.dp),
-                        text = "Save disabled!",
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.height(48.dp))
-            }
 
             // SAVE BUTTON
             Row(
