@@ -259,7 +259,8 @@ class TagRetagModel(
 
         _primarySeal.update {
             Seal(
-                sealType = SealType.PRIMARY, tagEventType = tagEventType // primary seals entered in Census mode should have an event type of Marked
+                sealType = SealType.PRIMARY,
+                tagEventType = tagEventType // primary seals entered in Census mode should have an event type of Marked
             )
         }
         _pupOne.update {
@@ -348,9 +349,11 @@ class TagRetagModel(
             ) { primary, pupOne, pupTwo, homeUiState, editMode ->
 
                 // create the metadata object
-                val metadata = ObservationMetadata(
-                    selectedColony = if (editMode) uiState.value.originalMetadata.selectedColony else homeUiState.selectedColony,
-                    selectedObservers = if (editMode) uiState.value.originalMetadata.selectedObservers else homeUiState.selectedObservers,
+                val metadata = ObservationMetadata( //TODO, make sure this tests out
+//                    selectedColony = if (editMode) uiState.value.originalMetadata.selectedColony else homeUiState.selectedColony,
+//                    selectedObservers = if (editMode) uiState.value.originalMetadata.selectedObservers else homeUiState.selectedObservers,
+                    selectedColony = homeUiState.selectedColony,
+                    selectedObservers = homeUiState.selectedObservers,
                     censusNumber = homeUiState.selectedCensusNumber,
                     isCensusMode = homeUiState.isCensusMode,
                     deviceID = deviceID,

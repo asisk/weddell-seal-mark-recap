@@ -61,7 +61,7 @@ fun getCoordinatesLastUpdatedDate(): String {
     val currentDateTime =
         ZonedDateTime.now(ZoneId.systemDefault()) // Get the current date and time with timezone
     val formatter = DateTimeFormatter.ofPattern(
-        "MM.dd.yyyy HH:mm:ss a z",
+        "MM.dd.yyyy HH:mm:ss z",
         Locale.US
     ) // Define the desired format
     return currentDateTime.format(formatter) // Format the current date and time

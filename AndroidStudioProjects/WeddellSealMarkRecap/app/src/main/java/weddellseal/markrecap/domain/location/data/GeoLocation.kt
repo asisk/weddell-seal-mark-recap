@@ -20,5 +20,5 @@ val GeoLocation.Companion.bozeman: GeoLocation
     )
 
 fun GeoLocation.toLocationString(): String {
-    return "${this.coordinates.latitude}    " + "${this.coordinates.longitude}    " + "${this.updatedDate}"
+    return "${this.coordinates.latitude}    " + "${this.coordinates.longitude}"
 }

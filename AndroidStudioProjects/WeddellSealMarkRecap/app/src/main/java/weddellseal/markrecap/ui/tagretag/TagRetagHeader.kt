@@ -9,10 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Female
-import androidx.compose.material.icons.filled.LocationOff
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Warning
@@ -32,7 +31,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
-import weddellseal.markrecap.domain.location.data.toLocationString
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.home.HomeViewModel
 
@@ -49,43 +47,6 @@ fun TagRetagHeader(
     val primarySeal by viewModel.primarySeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.primaryContainer)
-            .padding(bottom = 10.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        if (location?.coordinates?.longitude != null) {
-            Icon(
-                Icons.Filled.LocationOn,
-                contentDescription = null,
-                tint = Color(0xFF1D9C06),
-                modifier = Modifier
-                    .padding(end = 10.dp)
-                    .size(30.dp),
-            )
-        } else {
-            Icon(
-                Icons.Filled.LocationOff,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-                modifier = Modifier
-                    .padding(end = 10.dp)
-                    .size(30.dp),
-            )
-        }
-
-        Text(
-            text = location?.toLocationString() ?: "Cannot provide location coordinates!",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(end = 10.dp)
-        )
-    }
-
 
     // CENSUS PREPOPULATE OPTIONS
     if (homeUiState.isCensusMode && !primarySeal.isEntryStarted) {
@@ -178,14 +139,61 @@ fun TagRetagHeader(
                 .background(MaterialTheme.colorScheme.primary)
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                modifier = Modifier.padding(end = 10.dp),
-                text = "Edit Mode: You are modifying an existing observation.",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
+            // CENSUS NUMBER
+            if (uiState.observationCensusNumber != "") {
+                Text(
+                    text = "#${uiState.observationCensusNumber}",
+                    style = MaterialTheme.typography.displayMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(36.dp))
+
+            // OBSERVERS & COLONY - FROM OBSERVATION RECORD
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = uiState.originalMetadata.getObserversString(),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+
+                Text(
+                    text = uiState.originalMetadata.selectedColony,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(36.dp))
+
+            // GPS LOCATION - FROM OBSERVATION RECORD
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val editModeLocation =
+                    "${uiState.observationLocation?.coordinates?.latitude}    " +
+                            "${uiState.observationLocation?.coordinates?.longitude}"
+
+                Text(
+                    text = editModeLocation,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+
+                Text(
+                    text = uiState.observationTimestamp,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSecondary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(36.dp))
+
+            // CANCEL EDIT BUTTON
             ExtendedFloatingActionButton(
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 onClick = {
@@ -200,45 +208,11 @@ fun TagRetagHeader(
                 },
                 text = {
                     Text(
-                        text = "Exit",
+                        text = "Cancel Edit",
                         style = MaterialTheme.typography.titleLarge,
                     )
                 }
             )
-        }
-
-
-        // METADATA SECTION FOR EDIT
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                // GPS Location for Edit
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    // TODO, update this view to match the format in the top app bar, include observers, colony & location
-                    val editModeLocation =
-                        "${uiState.observationLocation?.coordinates?.latitude}    " +
-                                "${uiState.observationLocation?.coordinates?.longitude}    " +
-                                uiState.observationTimestamp
-
-                    Text(
-                        text = editModeLocation,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 20.dp)
-                    )
-                }
-            }
         }
     }
 
@@ -252,7 +226,8 @@ fun TagRetagHeader(
                 .fillMaxWidth()
                 .background(Color(0xFFFFE0B2))
                 .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
