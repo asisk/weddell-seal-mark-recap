@@ -141,10 +141,10 @@ fun TagRetagHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // CENSUS NUMBER
-            if (uiState.observationCensusNumber != "") {
+            if (uiState.originalMetadata.censusNumber != "") {
                 Text(
-                    text = "#${uiState.observationCensusNumber}",
-                    style = MaterialTheme.typography.displayMedium,
+                    text = "#${uiState.originalMetadata.censusNumber}",
+                    style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }

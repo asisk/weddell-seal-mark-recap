@@ -61,7 +61,6 @@ class TagRetagModel(
         val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
         val observationTimestamp: String = "", // UI display value in Tag/Retag screen header, values originally saved for the observation
         val observationLocation: GeoLocation? = null, // location originally saved for the observation
-        val observationCensusNumber: String = "", // census number originally saved for the observation
 
         val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
         val isSaveEnabled: Boolean = false, // indicator for save button
@@ -345,8 +344,8 @@ class TagRetagModel(
                 _pupOne,
                 _pupTwo,
                 homeViewUiState,
-                uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
-            ) { primary, pupOne, pupTwo, homeUiState, editMode ->
+//                uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
+            ) { primary, pupOne, pupTwo, homeUiState ->
 
                 // create the metadata object
                 val metadata = ObservationMetadata( //TODO, make sure this tests out
