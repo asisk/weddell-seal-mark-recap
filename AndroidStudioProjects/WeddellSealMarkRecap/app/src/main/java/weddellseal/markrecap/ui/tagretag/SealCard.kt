@@ -102,6 +102,8 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
 
+                Spacer(modifier = Modifier.width(10.dp))
+
                 if (uiState.isEditMode && seal.sealType == SealType.PRIMARY && seal.hasPup) {
                     // age is not selectable in edit mode for the primary seal
                     Spacer(modifier = Modifier.width(10.dp))
@@ -175,6 +177,8 @@ fun SealCard(
                     "Sex",
                     style = MaterialTheme.typography.titleLarge
                 )
+
+                Spacer(modifier = Modifier.width(10.dp))
 
                 if (uiState.isEditMode && seal.sealType == SealType.PRIMARY && seal.hasPup) {
                     // sex is not selectable in edit mode for the primary seal
@@ -260,8 +264,7 @@ fun SealCard(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier
-                .weight(.7f)
+            modifier = Modifier.weight(.7f)
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -272,6 +275,8 @@ fun SealCard(
                     "# of Rels",
                     style = MaterialTheme.typography.titleLarge
                 )
+
+                Spacer(modifier = Modifier.width(10.dp))
 
                 if (uiState.isEditMode && seal.hasPup) {
                     // number of relatives is not selectable in edit mode if the primary seal has a pup
@@ -440,6 +445,8 @@ fun SealCard(
                             style = MaterialTheme.typography.titleLarge
                         )
 
+                        Spacer(modifier = Modifier.width(10.dp))
+
                         // OLD TAG ID
                         TagIDOutlinedTextField(
                             value = seal.oldTagNumber,
@@ -525,6 +532,8 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
 
+                    Spacer(modifier = Modifier.width(10.dp))
+
                     // TAG ID
                     TagIDOutlinedTextField(
                         value = seal.tagNumber,
@@ -603,6 +612,8 @@ fun SealCard(
                         style = MaterialTheme.typography.titleLarge
                     )
 
+                    Spacer(modifier = Modifier.width(10.dp))
+
                     val numTagsList = listOf("1", "2")
                     SegmentedButtonGroup(
                         options = numTagsList,
@@ -678,9 +689,12 @@ fun SealCard(
                     style = MaterialTheme.typography.titleLarge
                 )
 
+                Spacer(modifier = Modifier.width(10.dp))
+
                 if (seal.isNoTag) {
                     // the database record needs to have an event type of marked for Retag
                     Spacer(modifier = Modifier.width(10.dp))
+
                     Text(
                         TagEventType.MARKED.description,
                         style = MaterialTheme.typography.titleLarge
@@ -782,6 +796,9 @@ fun SealCard(
                         "Reason for Retag",
                         style = MaterialTheme.typography.titleLarge
                     )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
                     RetagReasonDropDown(
                         selected = seal.reasonForRetag,
                         onSelected = {
@@ -817,6 +834,8 @@ fun SealCard(
                     "Condition",
                     style = MaterialTheme.typography.titleLarge
                 )
+
+                Spacer(modifier = Modifier.width(10.dp))
 
                 ConditionSegmentedButtonGroup(
                     selectedOption = seal.condition.code,
