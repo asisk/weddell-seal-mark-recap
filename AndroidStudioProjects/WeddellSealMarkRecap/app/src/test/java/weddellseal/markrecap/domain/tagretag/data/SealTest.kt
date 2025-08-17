@@ -19,7 +19,7 @@ class SealTest {
             sealType = SealType.PRIMARY,
             ageClass = SealAgeClass.ADULT,
             sex = SealSex.FEMALE,
-            numRelatives = "2",
+            numRelatives = SealRelatives.TWO,
             tagEventType = TagEventType.MARKED,
             tagNumber = "123",
             numTags = "2"
@@ -35,7 +35,7 @@ class SealTest {
             sealType = SealType.PRIMARY,
             ageClass = SealAgeClass.ADULT,
             sex = SealSex.FEMALE,
-            numRelatives = "2",
+            numRelatives = SealRelatives.TWO,
             tagEventType = TagEventType.MARKED,
             tagNumber = "12",  // Too short
             numTags = "2"
