@@ -66,7 +66,6 @@ fun getOverTenYearsAgo(): Int {
 fun getCoordinatesLastUpdatedDate(): String {
     val offset =
         ZonedDateTime.now(ZoneId.systemDefault())
-    Log.d("getCoordinatesLastUpdatedDate", "offset.offset: ${offset.offset}")
     val nowAtOffset = Instant.now().atOffset(offset.offset)
     val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd    HH:mm:ss    xxx")
     return nowAtOffset.format(formatter) + "  UTC"
