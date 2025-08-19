@@ -1,8 +1,12 @@
 package weddellseal.markrecap.ui.home
 
+import android.Manifest
 import android.app.Application
+import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -109,7 +113,7 @@ class HomeViewModel(
     var isFollowingLocation = mutableStateOf(false)
     private var lastKnownCoordinates: Coordinates? = null
     private val _currentLocation = MutableStateFlow<GeoLocation?>(null)
-    val currentLocation: StateFlow<GeoLocation?> = _currentLocation.asStateFlow()
+    val currentLocation: StateFlow<GeoLocation?> = _currentLocation
 
     override fun onCleared() {
         super.onCleared()
@@ -142,10 +146,17 @@ class HomeViewModel(
         }.storeIn(jobs)
     }
 
+    fun hasPreciseLocation(context: Context): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     private fun applyLocationFollowing(isEnabled: Boolean) {
         Log.i(TAG, "follow location -> $isEnabled")
         isFollowingLocation.value = isEnabled
     }
+
 
     private fun configureLocationFollow() {
         viewModelScope.launch {
@@ -166,10 +177,10 @@ class HomeViewModel(
 
                 // Update the last known coordinates
                 lastKnownCoordinates = geoLocation.coordinates
-                Log.d("HomeViewModel", "Emitting location: $geoLocation")
                 _currentLocation.value = geoLocation
 
-                var sealColonyDefault = SealColony(
+                // Find and update the colony based on the location
+                val sealColonyDefault = SealColony(
                     colonyId = 0,
                     inOut = "none",
                     location = "Seal colony not detected",

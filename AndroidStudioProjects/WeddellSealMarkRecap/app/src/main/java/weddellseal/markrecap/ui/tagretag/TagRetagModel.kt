@@ -1118,6 +1118,7 @@ class TagRetagModel(
         }
     }
 
+    // TODO, why did this become unused???
     fun resetPupFields(sealName: SealType) {
         when (sealName) {
             SealType.PRIMARY -> {

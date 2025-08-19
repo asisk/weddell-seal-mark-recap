@@ -11,13 +11,14 @@ import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.runBlocking
-import weddellseal.markrecap.domain.location.data.GeoLocation
+import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.LocationSource
+import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.google.fusedLocation.types.fromFusedLocation
 import weddellseal.markrecap.ui.permissions.locationPermissionsGranted
 import java.util.concurrent.Executors
@@ -91,7 +92,7 @@ class FusedLocationSource(
     }
 
     override fun onLocationChanged(update: Location) {
-        runBlocking(Dispatchers.Unconfined) {
+        CoroutineScope(Dispatchers.Default).launch {
             locationFlow.emit(GeoLocation.Companion.fromFusedLocation(update))
         }
     }

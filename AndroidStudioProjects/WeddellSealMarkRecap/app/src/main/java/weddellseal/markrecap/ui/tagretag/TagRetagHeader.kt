@@ -132,6 +132,7 @@ fun TagRetagHeader(
         }
     }
 
+    // EDIT MODE HEADER
     if (uiState.isEditMode) {
         Row(
             modifier = Modifier
@@ -267,6 +268,7 @@ fun TagRetagHeader(
                         viewModel.flagSealForReview(pupTwoSeal.sealType)
                     }
 
+                    // TODO, test if this is being updated
                     viewModel.writeObservationRecord(location)
                 },
                 icon = { Icon(Icons.Filled.Save, "Confirm & Save", Modifier.size(36.dp)) },
