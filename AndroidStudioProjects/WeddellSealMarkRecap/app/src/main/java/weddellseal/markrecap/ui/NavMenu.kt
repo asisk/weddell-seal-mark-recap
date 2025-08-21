@@ -73,6 +73,26 @@ fun NavMenu(navController: NavHostController) {
             NavigationDrawerItem(
                 label = {
                     Text(
+                        "Seal Lookup", style = MaterialTheme.typography.displaySmall,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                },
+                selected = false,
+                icon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Go to Seal Lookup Screen",
+                        modifier = Modifier.size(36.dp)
+                    )
+                },
+                onClick = { navController.navigate(Screens.SealLookupScreen.route) }
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            NavigationDrawerItem(
+                label = {
+                    Text(
                         "Tag/Retag",
                         style = MaterialTheme.typography.displaySmall,
                         modifier = Modifier.padding(start = 8.dp)
@@ -133,23 +153,23 @@ fun NavMenu(navController: NavHostController) {
 
             Spacer(Modifier.height(24.dp))
 
-            NavigationDrawerItem(
-                label = {
-                    Text(
-                        "Seal Lookup", style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                selected = false,
-                icon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Go to Seal Lookup Screen",
-                        modifier = Modifier.size(36.dp)
-                    )
-                },
-                onClick = { navController.navigate(Screens.SealLookupScreen.route) }
-            )
+//            NavigationDrawerItem(
+//                label = {
+//                    Text(
+//                        "Seal Lookup", style = MaterialTheme.typography.displaySmall,
+//                        modifier = Modifier.padding(start = 8.dp)
+//                    )
+//                },
+//                selected = false,
+//                icon = {
+//                    Icon(
+//                        Icons.Default.Search,
+//                        contentDescription = "Go to Seal Lookup Screen",
+//                        modifier = Modifier.size(36.dp)
+//                    )
+//                },
+//                onClick = { navController.navigate(Screens.SealLookupScreen.route) }
+//            )
 
             Spacer(Modifier.height(32.dp))
 
