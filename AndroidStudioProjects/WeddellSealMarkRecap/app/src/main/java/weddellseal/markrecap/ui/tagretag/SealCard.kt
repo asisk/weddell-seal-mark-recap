@@ -838,7 +838,7 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -849,7 +849,6 @@ fun SealCard(
     ) {
         Box {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
 
