@@ -5,8 +5,6 @@ enum class RetagReason (val code: String, val description: String) {
     ONE_OF_FOUR("1", "1 of 4"),
     TWO_OF_FOUR("2", "2 of 4"),
     THREE_OF_FOUR("3", "3 of 4"),
-    WORN("4", "Worn"),
-    BROKEN("5", "Broken"),
     OTHER("6", "Other"),
     UNKNOWN("", "Unknown"); // the retag option was never set, so the database value should be blank
 
