@@ -174,6 +174,7 @@ fun SealCard(
                                             "You've selected a pup or yearling for Age, and neither can have relatives.\n"
                                         showDeleteRelativesDialog.value = true
                                     } else {
+                                        viewModel.updateNumRelatives(SealRelatives.ZERO) // explicitly set number of relatives to 0 when pup or yearling is selected
                                         viewModel.updateAge(seal.sealType, ageSelected)
                                     }
                                 } else {
@@ -187,7 +188,7 @@ fun SealCard(
         }
     }
 
-    // SEX & PUP PEED
+    // SEX
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -197,11 +198,8 @@ fun SealCard(
                     focusManager.clearFocus()
                 })
             },
-        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        // SEX
         Box {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -242,7 +240,7 @@ fun SealCard(
                                         "You've selected Male for Sex, which cannot have relatives.\n"
                                     showDeleteRelativesDialog.value = true
                                 } else {
-                                    viewModel.updateNumRelatives(SealRelatives.ZERO) // explicity set number of relatives to 0 when male is selected
+                                    viewModel.updateNumRelatives(SealRelatives.ZERO) // explicitly set number of relatives to 0 when male is selected
                                     viewModel.updateSex(seal.sealType, sexSelected)
                                 }
                             } else {
@@ -253,39 +251,9 @@ fun SealCard(
                 }
             }
         }
-
-        // PUP PEED CHECKBOX
-        Box(
-            modifier = Modifier.weight(1f)
-        ) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-
-                // display pup peed only for pups
-                if (seal.ageClass == SealAgeClass.PUP) {
-                    Text(
-                        text = "Pup Peed",
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-
-                    Checkbox(
-                        checked = seal.pupPeed,
-                        onCheckedChange = {
-                            focusManager.clearFocus()
-                            viewModel.updatePupPeed(seal.sealType, it)
-                        },
-                    )
-                }
-            }
-        }
     }
 
-    // NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG
+    // NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG, & PUP PEED
     Row(
         modifier = Modifier
             .padding(8.dp)
@@ -294,16 +262,13 @@ fun SealCard(
                     focusManager.clearFocus()
                 })
             },
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier.weight(.7f)
-        ) {
+        Box {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     "# of Rels",
@@ -440,6 +405,36 @@ fun SealCard(
                 text = promptForDeleteRelatives.value + prompt,
                 buttonText = "Yes, clear pup data."
             )
+        }
+
+        Spacer(modifier = Modifier.width(30.dp))
+
+        // PUP PEED CHECKBOX
+        Box(
+            modifier = Modifier.weight(1f)  // take the remaining space
+        ) {
+            Column(
+                Modifier
+                    .padding(horizontal = 18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // display pup peed only for pups
+                if (seal.ageClass == SealAgeClass.PUP) {
+                    Text(
+                        text = "Pup Peed",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+
+                    Checkbox(
+                        checked = seal.pupPeed,
+                        onCheckedChange = {
+                            focusManager.clearFocus()
+                            viewModel.updatePupPeed(seal.sealType, it)
+                        },
+                    )
+                }
+            }
         }
     }
 
