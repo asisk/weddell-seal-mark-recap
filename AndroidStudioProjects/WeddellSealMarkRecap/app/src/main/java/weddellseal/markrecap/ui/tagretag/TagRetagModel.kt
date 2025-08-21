@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -372,7 +373,7 @@ class TagRetagModel(
                 // emit a Triple that can be unpacked in `collect`
                 Triple(metadata, reasons, allSealsValid)
 
-            }.collect { (metadata, reasons, allSealsValid) ->
+            }.collectLatest { (metadata, reasons, allSealsValid) ->
                 _uiState.update {
                     it.copy(
                         metadata = metadata,
@@ -407,7 +408,7 @@ class TagRetagModel(
                 // emit a Triple that can be unpacked in `collect`
                 Triple(primarySealEdits, pupOneSealEdits, pupTwoSealEdits)
 
-            }.collect { (primarySealEdits, pupOneSealEdits, pupTwoSealEdits) ->
+            }.collectLatest { (primarySealEdits, pupOneSealEdits, pupTwoSealEdits) ->
                 var edits = emptyList<String>()
 
                 if (primarySealEdits.isNotEmpty()) {
@@ -446,7 +447,7 @@ class TagRetagModel(
 
                 setEventTypeMarked
 
-            }.collect { setEventTypeMarked ->
+            }.collectLatest { setEventTypeMarked ->
                 if (setEventTypeMarked) {
                     _primarySeal.update { it.copy(tagEventType = TagEventType.MARKED) }
                 }
