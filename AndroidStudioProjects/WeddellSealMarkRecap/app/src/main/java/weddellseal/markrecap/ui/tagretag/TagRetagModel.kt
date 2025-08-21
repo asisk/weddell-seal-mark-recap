@@ -524,7 +524,6 @@ class TagRetagModel(
         when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(ageClass = input) }
-                Log.d("TagRetagModel", "updateAge: $input")
                 updateNotebookEntry(primarySeal.value)
             }
 
