@@ -87,9 +87,7 @@ fun ClearDatabaseCard(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.onDeleteAllAttempt() },
-                modifier = Modifier
-                    .padding(start = 16.dp)
+                onClick = { viewModel.onDeleteAllAttempt() }
             ) {
                 Text(
                     "Delete All",

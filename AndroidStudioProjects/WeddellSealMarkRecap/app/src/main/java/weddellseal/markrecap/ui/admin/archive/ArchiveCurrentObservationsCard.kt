@@ -55,7 +55,7 @@ fun ArchiveCurrentObservationsCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier
             .width(275.dp)
-            .height(300.dp)
+            .height(325.dp)
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(16.dp)
@@ -87,8 +87,7 @@ fun ArchiveCurrentObservationsCard(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.onArchiveAttempt() },
-                modifier = Modifier.padding(start = 16.dp)
+                onClick = { viewModel.onArchiveAttempt() }
             ) {
                 Text(
                     "Archive",

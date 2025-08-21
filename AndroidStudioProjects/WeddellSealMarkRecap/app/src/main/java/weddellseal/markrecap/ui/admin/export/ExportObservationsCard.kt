@@ -67,7 +67,7 @@ fun ExportObservationsCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier
             .width(275.dp)
-            .height(425.dp)
+            .height(350.dp)
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(16.dp)
@@ -99,12 +99,13 @@ fun ExportObservationsCard(
                 Text(text = state.fileType)
             }
 
-            var recordCount = if (exportType == ExportType.ALL) {
-                allObservationsCount
-            } else if (exportType == ExportType.CURRENT) {
-                currentObservationsCount
-            } else {
-                "0"
+            val recordCount = when (exportType) {
+                ExportType.ALL -> {
+                    allObservationsCount
+                }
+                ExportType.CURRENT -> {
+                    currentObservationsCount
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -120,9 +121,7 @@ fun ExportObservationsCard(
                     true
                 } else {
                     false
-                },
-                modifier = Modifier
-                    .padding(start = 16.dp)
+                }
             ) {
                 Text("Export",
                     style = MaterialTheme.typography.titleLarge,
