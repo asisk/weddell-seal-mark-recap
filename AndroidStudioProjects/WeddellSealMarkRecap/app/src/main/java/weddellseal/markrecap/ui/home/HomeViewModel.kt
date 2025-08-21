@@ -166,10 +166,6 @@ class HomeViewModel(
 
                 // Check if the coordinates have changed
                 if (geoLocation.coordinates == lastKnownCoordinates) {
-                    Log.i(
-                        TAG,
-                        "Coordinates are the same as the previous update. Skipping update."
-                    )
                     return@collect // Skip the update
                 }
 
