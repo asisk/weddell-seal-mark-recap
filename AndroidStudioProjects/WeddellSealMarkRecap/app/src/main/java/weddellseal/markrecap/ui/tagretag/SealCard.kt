@@ -31,6 +31,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.map
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
@@ -46,6 +48,18 @@ fun SealCard(
     seal: Seal
 ) {
     val uiState by viewModel.uiState.collectAsState()
+//    val isEditMode by remember {
+//        viewModel.uiState.map { it.isEditMode }
+//    }.collectAsStateWithLifecycle(false)
+//
+//    val isPrefilled by remember {
+//        viewModel.uiState.map { it.isPrefilled }
+//    }.collectAsStateWithLifecycle(false)
+//
+//    val isSaveAttempted by remember {
+//        viewModel.uiState.map { it.isSaveAttempted }
+//    }.collectAsStateWithLifecycle(false)
+
     val focusManager = LocalFocusManager.current
 
     // local values used to prevent a user from changing model values if the selection is invalid based on other field values
@@ -646,11 +660,9 @@ fun SealCard(
             }
         }
 
-        Box(
-            modifier = Modifier.weight(1f) // take the remaining space
-        ) {
+        Box {
             Column(
-                Modifier.padding(horizontal = 20.dp),
+                Modifier.padding(horizontal = 18.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -658,7 +670,6 @@ fun SealCard(
                 Text(
                     text = "No Tag",
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 16.dp)
                 )
 
                 Checkbox(
@@ -682,6 +693,32 @@ fun SealCard(
                         viewModel.removeWedCheckMatch(seal.sealType)
                     },
                 )
+            }
+        }
+
+        // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
+        if (seal.tagEventType == TagEventType.NEW) {
+            Box(
+                modifier = Modifier.weight(1f)  // take the remaining space
+            ) {
+                Column(
+                    Modifier.padding(horizontal = 18.dp).background(Color.Red),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Old Tag Marks",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+
+                    Checkbox(
+                        checked = seal.oldTagMarks,
+                        onCheckedChange = {
+                            focusManager.clearFocus()
+                            viewModel.updateOldTagMarks(seal.sealType, it)
+                        },
+                    )
+                }
             }
         }
     }
@@ -758,32 +795,6 @@ fun SealCard(
                             }
                         }
                     )
-                }
-
-                // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
-                if (seal.tagEventType == TagEventType.NEW) {
-                    Box(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(
-                            Modifier.padding(horizontal = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "Old Tag Marks",
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-
-                            Checkbox(
-                                checked = seal.oldTagMarks,
-                                onCheckedChange = {
-                                    focusManager.clearFocus()
-                                    viewModel.updateOldTagMarks(seal.sealType, it)
-                                },
-                            )
-                        }
-                    }
                 }
             }
         }
