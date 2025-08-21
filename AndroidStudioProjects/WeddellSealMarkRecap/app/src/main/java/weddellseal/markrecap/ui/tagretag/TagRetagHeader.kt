@@ -48,7 +48,7 @@ fun TagRetagHeader(
     val pupOneSeal by viewModel.pupOne.collectAsState()
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
 
-    // CENSUS PREPOPULATE OPTIONS
+    // CENSUS PREPOPULATE
     if (homeUiState.isCensusMode && !primarySeal.isEntryStarted) {
         Row(
             modifier = Modifier
@@ -57,7 +57,7 @@ fun TagRetagHeader(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
+            // CENSUS PREPOPULATE - MOM & PUP
             ExtendedFloatingActionButton(
                 icon = {
                     Icon(
@@ -82,6 +82,7 @@ fun TagRetagHeader(
                 containerColor = MaterialTheme.colorScheme.secondary,
             )
 
+            // CENSUS PREPOPULATE - SINGLE FEMALE
             ExtendedFloatingActionButton(
                 icon = {
                     Icon(
@@ -106,6 +107,7 @@ fun TagRetagHeader(
                 containerColor = MaterialTheme.colorScheme.secondary,
             )
 
+            // CENSUS PREPOPULATE - SINGLE MALE
             ExtendedFloatingActionButton(
                 icon = {
                     Icon(
@@ -141,7 +143,7 @@ fun TagRetagHeader(
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // CENSUS NUMBER
+            // EDIT OBSERVATION RECORD - CENSUS NUMBER
             if (uiState.originalMetadata.censusNumber != "") {
                 Text(
                     text = "#${uiState.originalMetadata.censusNumber}",
@@ -152,7 +154,7 @@ fun TagRetagHeader(
 
             Spacer(modifier = Modifier.width(36.dp))
 
-            // OBSERVERS & COLONY - FROM OBSERVATION RECORD
+            // EDIT OBSERVATION RECORD -OBSERVERS & COLONY
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -171,7 +173,7 @@ fun TagRetagHeader(
 
             Spacer(modifier = Modifier.width(36.dp))
 
-            // GPS LOCATION - FROM OBSERVATION RECORD
+            // EDIT OBSERVATION RECORD - GPS LOCATION
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -194,7 +196,7 @@ fun TagRetagHeader(
 
             Spacer(modifier = Modifier.width(36.dp))
 
-            // CANCEL EDIT BUTTON
+            // EDIT OBSERVATION RECORD - CANCEL EDIT BUTTON
             ExtendedFloatingActionButton(
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 onClick = {
@@ -221,7 +223,7 @@ fun TagRetagHeader(
     if (uiState.isSaveAttempted && uiState.validationFailureReason.isNotBlank()) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // WARNING BANNER
+        // VALIDATION - WARNING BANNER
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -251,7 +253,7 @@ fun TagRetagHeader(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
 
-            // CONFIRM AND SAVE BUTTON
+            // VALIDATION - CONFIRM AND SAVE BUTTON
             ExtendedFloatingActionButton(
                 modifier = Modifier.padding(start = 10.dp),
                 containerColor = MaterialTheme.colorScheme.secondary,
@@ -280,7 +282,7 @@ fun TagRetagHeader(
                 }
             )
 
-            // EDIT BUTTON ON VALIDATION ERROR
+            // VALIDATION - EDIT BUTTON ON VALIDATION ERROR
             ExtendedFloatingActionButton(
                 modifier = Modifier.padding(start = 10.dp),
                 containerColor = MaterialTheme.colorScheme.secondary,
