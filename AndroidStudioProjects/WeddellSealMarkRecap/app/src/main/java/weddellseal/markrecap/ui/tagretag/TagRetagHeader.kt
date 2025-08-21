@@ -49,7 +49,7 @@ fun TagRetagHeader(
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
 
     // CENSUS PREPOPULATE
-    if (homeUiState.isCensusMode && !primarySeal.isEntryStarted) {
+    if (homeUiState.isCensusMode) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
