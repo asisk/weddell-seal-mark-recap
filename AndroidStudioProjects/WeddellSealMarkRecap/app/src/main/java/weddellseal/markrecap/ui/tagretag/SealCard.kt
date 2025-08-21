@@ -115,7 +115,7 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp)
+            .padding(8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -191,7 +191,7 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp)
+            .padding(8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -288,7 +288,7 @@ fun SealCard(
     // NUMBER OF RELATIVES, CONFIRM DELETE RELATIVES DIALOG
     Row(
         modifier = Modifier
-            .padding(10.dp)
+            .padding(8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -455,7 +455,7 @@ fun SealCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp)
+                    .padding(8.dp)
                     .pointerInput(Unit) {
                         detectTapGestures(onTap = {
                             focusManager.clearFocus()
@@ -539,7 +539,7 @@ fun SealCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
+                .padding(8.dp)
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = {
                         focusManager.clearFocus()
@@ -702,7 +702,8 @@ fun SealCard(
                 modifier = Modifier.weight(1f)  // take the remaining space
             ) {
                 Column(
-                    Modifier.padding(horizontal = 18.dp).background(Color.Red),
+                    Modifier
+                        .padding(horizontal = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -727,7 +728,7 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp)
+            .padding(8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -841,11 +842,11 @@ fun SealCard(
         }
     }
 
-    // CONDITION && TISSUE
+    // CONDITION
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(start = 8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -858,7 +859,6 @@ fun SealCard(
         // CONDITION
         Box {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -877,15 +877,18 @@ fun SealCard(
                 )
             }
         }
+    }
 
+    // TISSUE && COMMENT
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 8.dp, end = 20.dp, top = 10.dp)
+
+    ) {
         // TISSUE
-        Box(
-            modifier = Modifier.weight(1f) // take the remaining space
-        ) {
+        Box {
             Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -903,15 +906,8 @@ fun SealCard(
                 )
             }
         }
-    }
 
-    // COMMENT
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(start = 20.dp, end = 20.dp, top = 10.dp)
-
-    ) {
+        Spacer(modifier = Modifier.width(30.dp))
 
         CommentField(
             value = seal.comment,

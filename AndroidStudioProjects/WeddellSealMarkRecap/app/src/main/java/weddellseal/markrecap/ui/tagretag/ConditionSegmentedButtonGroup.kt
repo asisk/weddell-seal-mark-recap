@@ -96,7 +96,7 @@ fun ConditionSegmentedButtonGroup(
                         )
                         Text(
                             text = SealCondition.fromCode(option).description,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
