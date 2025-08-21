@@ -243,8 +243,7 @@ fun HomeScaffold(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth(.45f),
+                                    modifier = Modifier.fillMaxWidth(.45f),
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -257,21 +256,28 @@ fun HomeScaffold(
                                         )
 
                                         Spacer(modifier = Modifier.width(30.dp))
-
-                                        Checkbox(
-                                            checked = uiState.manualColonyCheckbox,
-                                            onCheckedChange = {
-                                                viewModel.setManualColonyCheckbox(it)
-                                                if (!it) {
-                                                    viewModel.clearColony()
-                                                }
-                                            },
-                                        )
-
-                                        Text(
-                                            text = "Override",
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
+                                        Box(
+                                            modifier = Modifier.weight(1f)  // take the remaining space
+                                        ) {
+                                            Column(
+                                                Modifier.padding(horizontal = 18.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(
+                                                    text = "Override",
+                                                    style = MaterialTheme.typography.titleMedium
+                                                )
+                                                Checkbox(
+                                                    checked = uiState.manualColonyCheckbox,
+                                                    onCheckedChange = {
+                                                        viewModel.setManualColonyCheckbox(it)
+                                                        if (!it) {
+                                                            viewModel.clearColony()
+                                                        }
+                                                    },
+                                                )
+                                            }
+                                        }
                                     }
                                 }
 
