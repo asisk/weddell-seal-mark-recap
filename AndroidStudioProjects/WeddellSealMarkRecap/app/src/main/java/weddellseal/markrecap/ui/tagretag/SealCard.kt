@@ -57,7 +57,11 @@ fun SealCard(
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(seal.ageClass, seal.sex, seal.numRelatives) {
-        if (uiState.isPrefilled && ageSelected == SealAgeClass.UNKNOWN && sexSelected == SealSex.NONE && numRelsSelected == SealRelatives.UNKNOWN) {
+        if (uiState.isPrefilled
+            && ageSelected == SealAgeClass.UNKNOWN
+            && sexSelected == SealSex.NONE
+            && numRelsSelected == SealRelatives.UNKNOWN
+        ) {
             // only do this the first time the seal is prefilled, otherwise the local state values should reflect only the values the user selects
             // fix for prefill options not setting initial local state values,
             // which was resulting in age and sex being reset based on the local state which erased the prefill values
