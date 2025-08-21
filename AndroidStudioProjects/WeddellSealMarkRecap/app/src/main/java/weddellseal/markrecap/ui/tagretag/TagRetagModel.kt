@@ -308,7 +308,6 @@ class TagRetagModel(
                     && selectedObservers != emptyList<String>()
                     && (!isCensusMode || censusNumber != "")
 
-
         // computed property, evaluated only when explicitly accessed
         val invalidReason: String
             get() {
@@ -341,13 +340,11 @@ class TagRetagModel(
                 _pupOne,
                 _pupTwo,
                 homeViewUiState,
-//                uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
-            ) { primary, pupOne, pupTwo, homeUiState ->
+                uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
+            ) { primary, pupOne, pupTwo, homeUiState, editMode ->
 
                 // create the metadata object
-                val metadata = ObservationMetadata( //TODO, make sure this tests out
-//                    selectedColony = if (editMode) uiState.value.originalMetadata.selectedColony else homeUiState.selectedColony,
-//                    selectedObservers = if (editMode) uiState.value.originalMetadata.selectedObservers else homeUiState.selectedObservers,
+                val metadata = ObservationMetadata(
                     selectedColony = homeUiState.selectedColony,
                     selectedObservers = homeUiState.selectedObservers,
                     censusNumber = homeUiState.selectedCensusNumber,
@@ -358,7 +355,9 @@ class TagRetagModel(
 
                 // Check if save is enabled
                 val reasons = buildList {
-                    if (!metadata.isValid) add(metadata.invalidReason)
+                    if (!editMode) { // edit mode uses the original metadata, don't validate the current metadata
+                        if (!metadata.isValid) add(metadata.invalidReason)
+                    }
                     if (!primary.isEntryStarted) add("Missing all required fields!") // condition upon starting observation entry
                     if (!primary.isComplete) addAll(primary.completenessReasons)
                     if (primary.hasPupOne && !pupOne.isComplete) addAll(pupOne.completenessReasons)
