@@ -19,7 +19,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,18 +46,17 @@ fun SealCard(
     viewModel: TagRetagModel,
     seal: Seal
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-//    val isEditMode by remember {
-//        viewModel.uiState.map { it.isEditMode }
-//    }.collectAsStateWithLifecycle(false)
-//
-//    val isPrefilled by remember {
-//        viewModel.uiState.map { it.isPrefilled }
-//    }.collectAsStateWithLifecycle(false)
-//
-//    val isSaveAttempted by remember {
-//        viewModel.uiState.map { it.isSaveAttempted }
-//    }.collectAsStateWithLifecycle(false)
+    val isEditMode by remember {
+        viewModel.uiState.map { it.isEditMode }
+    }.collectAsStateWithLifecycle(false)
+
+    val isPrefilled by remember {
+        viewModel.uiState.map { it.isPrefilled }
+    }.collectAsStateWithLifecycle(false)
+
+    val isSaveAttempted by remember {
+        viewModel.uiState.map { it.isSaveAttempted }
+    }.collectAsStateWithLifecycle(false)
 
     val focusManager = LocalFocusManager.current
 
@@ -71,7 +69,7 @@ fun SealCard(
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(seal.ageClass, seal.sex, seal.numRelatives) {
-        if (uiState.isPrefilled
+        if (isPrefilled
             && ageSelected == SealAgeClass.UNKNOWN
             && sexSelected == SealSex.NONE
             && numRelsSelected == SealRelatives.UNKNOWN
@@ -90,7 +88,7 @@ fun SealCard(
     }
 
     // VALIDATION ERROR BANNER
-    if (uiState.isSaveAttempted && seal.validationErrors.isNotEmpty()) {
+    if (isSaveAttempted && seal.validationErrors.isNotEmpty()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -138,7 +136,7 @@ fun SealCard(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                if (uiState.isEditMode && seal.sealType == SealType.PRIMARY && seal.hasPup) {
+                if (isEditMode && seal.sealType == SealType.PRIMARY && seal.hasPup) {
                     // age is not selectable in edit mode for the primary seal
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -212,7 +210,7 @@ fun SealCard(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                if (uiState.isEditMode && seal.sealType == SealType.PRIMARY && seal.hasPup) {
+                if (isEditMode && seal.sealType == SealType.PRIMARY && seal.hasPup) {
                     // sex is not selectable in edit mode for the primary seal
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -277,7 +275,7 @@ fun SealCard(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                if (uiState.isEditMode && seal.hasPup) {
+                if (isEditMode && seal.hasPup) {
                     // number of relatives is not selectable in edit mode if the primary seal has a pup
                     // pups may be removed via the delete button
                     Spacer(modifier = Modifier.width(10.dp))
