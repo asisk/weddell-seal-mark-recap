@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +55,21 @@ fun SealCard(
 
     val promptForDeleteRelatives = remember { mutableStateOf("") }
     val showDeleteRelativesDialog = remember { mutableStateOf(false) }
+
+    LaunchedEffect(seal.ageClass, seal.sex, seal.numRelatives) {
+        if (uiState.isPrefilled && ageSelected == SealAgeClass.UNKNOWN && sexSelected == SealSex.NONE && numRelsSelected == SealRelatives.UNKNOWN) {
+            // only do this the first time the seal is prefilled, otherwise the local state values should reflect only the values the user selects
+            // fix for prefill options not setting initial local state values,
+            // which was resulting in age and sex being reset based on the local state which erased the prefill values
+            Log.d(
+                "TagRetagModel",
+                "prefilled seal, setting initial local state values for age, sex and numRels"
+            )
+            ageSelected = seal.ageClass
+            sexSelected = seal.sex
+            numRelsSelected = seal.numRelatives
+        }
+    }
 
     // VALIDATION ERROR BANNER
     if (uiState.isSaveAttempted && seal.validationErrors.isNotEmpty()) {
