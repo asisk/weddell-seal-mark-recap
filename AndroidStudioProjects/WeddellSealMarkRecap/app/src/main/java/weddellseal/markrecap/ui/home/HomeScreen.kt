@@ -134,14 +134,12 @@ fun HomeScaffold(
                     verticalArrangement = Arrangement.Top
                 ) {
 
-                    Spacer(modifier = Modifier.height(36.dp))
-
                     // Metadata values - Observers, Colony, Device Name
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(450.dp)
-                            .padding(start = 72.dp, end = 72.dp, top = 24.dp, bottom = 24.dp),
+                            .padding(start = 30.dp, end = 30.dp, top = 24.dp, bottom = 24.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(
                             defaultElevation = 6.dp
@@ -182,20 +180,20 @@ fun HomeScaffold(
                                             .size(36.dp),
                                     )
                                 }
-                                Column{
-                                Text(
-                                    text = location?.toLocationString() ?: "Locating...",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                location?.updatedDate?.let {
+                                Column {
                                     Text(
-                                        text = it,
-                                        style = MaterialTheme.typography.titleMedium,
+                                        text = location?.toLocationString() ?: "Locating...",
+                                        style = MaterialTheme.typography.titleLarge,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
+                                    location?.updatedDate?.let {
+                                        Text(
+                                            text = it,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
                                 }
-                            }
 //                                Text(
 //                                    text = if (viewModel.hasPreciseLocation(context))
 //                                        "Using precise location"
@@ -204,7 +202,7 @@ fun HomeScaffold(
 //                                )
                             }
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
 
                             // OBSERVERS
                             Row(
@@ -236,7 +234,7 @@ fun HomeScaffold(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
 
                             // COLONY
                             Row(
@@ -258,7 +256,7 @@ fun HomeScaffold(
                                             style = MaterialTheme.typography.headlineMedium
                                         )
 
-                                        Spacer(modifier = Modifier.width(40.dp))
+                                        Spacer(modifier = Modifier.width(30.dp))
 
                                         Checkbox(
                                             checked = uiState.manualColonyCheckbox,
@@ -271,7 +269,7 @@ fun HomeScaffold(
                                         )
 
                                         Text(
-                                            text = "Select\nManually",
+                                            text = "Override",
                                             style = MaterialTheme.typography.titleMedium
                                         )
                                     }
@@ -302,7 +300,7 @@ fun HomeScaffold(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
 
                             // DEVICE NAME
                             Row(
