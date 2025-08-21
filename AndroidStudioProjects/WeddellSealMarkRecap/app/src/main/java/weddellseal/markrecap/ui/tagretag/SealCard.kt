@@ -929,26 +929,23 @@ fun SealCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(8.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            // PUP WEIGHT SWITCH
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-            ) {
+            Box {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Spacer(modifier = Modifier.width(8.dp))
-
                     Text(
                         text = "Enter Weight",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleLarge,
                     )
 
                     Switch(
