@@ -797,26 +797,23 @@ fun SealCard(
     }
 
     // REASON FOR RETAG
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (seal.tagEventType == TagEventType.RETAG) {
-            Box(
-                modifier = Modifier.weight(.6f)
-            ) {
+    if (seal.tagEventType == TagEventType.RETAG) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
                 ) {
 
                     Text(
@@ -841,7 +838,7 @@ fun SealCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp)
+            .padding(8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -850,12 +847,12 @@ fun SealCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        // CONDITION
         Box {
             Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+
                 Text(
                     "Condition",
                     style = MaterialTheme.typography.titleLarge
