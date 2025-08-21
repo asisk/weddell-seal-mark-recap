@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -142,59 +143,66 @@ fun TagRetagHeader(
                 .background(MaterialTheme.colorScheme.primary)
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            // EDIT OBSERVATION RECORD - CENSUS NUMBER
-            if (uiState.originalMetadata.censusNumber != "") {
-                Text(
-                    text = "#${uiState.originalMetadata.censusNumber}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.width(36.dp))
-
-            // EDIT OBSERVATION RECORD -OBSERVERS & COLONY
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = uiState.originalMetadata.getObserversString(),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                Row(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // EDIT OBSERVATION RECORD - CENSUS NUMBER
+                    if (uiState.originalMetadata.censusNumber != "") {
+                        Text(
+                            text = "#${uiState.originalMetadata.censusNumber}",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                    }
+                    Text(
+                        text = uiState.originalMetadata.getObserversString(),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = uiState.originalMetadata.selectedColony,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
 
-                Text(
-                    text = uiState.originalMetadata.selectedColony,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                Row(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // EDIT OBSERVATION RECORD - GPS LOCATION
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val editModeLocation =
+                            "${uiState.observationLocation?.coordinates?.latitude}    " +
+                                    "${uiState.observationLocation?.coordinates?.longitude}"
+
+                        Text(
+                            text = editModeLocation,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+
+                        Text(
+                            text = uiState.observationTimestamp,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSecondary
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.width(36.dp))
-
-            // EDIT OBSERVATION RECORD - GPS LOCATION
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                val editModeLocation =
-                    "${uiState.observationLocation?.coordinates?.latitude}    " +
-                            "${uiState.observationLocation?.coordinates?.longitude}"
-
-                Text(
-                    text = editModeLocation,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-
-                Text(
-                    text = uiState.observationTimestamp,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
-            }
-
-            Spacer(modifier = Modifier.width(36.dp))
 
             // EDIT OBSERVATION RECORD - CANCEL EDIT BUTTON
             ExtendedFloatingActionButton(
