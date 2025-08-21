@@ -237,9 +237,6 @@ class TagRetagModel(
     // 2. when a save is successful
     // 3. when a record is selected for editing from the Tag/Retag screen
     fun resetModelState() {
-        // primary seals entered in Census mode should have an event type of Marked
-        val tagEventType =
-            if (uiState.value.metadata.isCensusMode) TagEventType.MARKED else TagEventType.UNKNOWN
         _uiState.update {
             it.copy(
                 isSearching = false,
@@ -259,7 +256,6 @@ class TagRetagModel(
         _primarySeal.update {
             Seal(
                 sealType = SealType.PRIMARY,
-                tagEventType = tagEventType // primary seals entered in Census mode should have an event type of Marked
             )
         }
         _pupOne.update {
@@ -443,9 +439,10 @@ class TagRetagModel(
                 homeViewUiState.map { it.isCensusMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>.
             ) { currentPrimary, censusMode ->
 
-                val setEventTypeMarked = censusMode &&
-                        currentPrimary.tagEventType == TagEventType.UNKNOWN
-                        && currentPrimary.isEntryStarted
+                val setEventTypeMarked =
+                    censusMode &&
+                            currentPrimary.tagEventType == TagEventType.UNKNOWN &&
+                            currentPrimary.isEntryStarted
 
                 setEventTypeMarked
 
@@ -526,6 +523,7 @@ class TagRetagModel(
         when (sealType) {
             SealType.PRIMARY -> {
                 _primarySeal.update { it.copy(ageClass = input) }
+                Log.d("TagRetagModel", "updateAge: $input")
                 updateNotebookEntry(primarySeal.value)
             }
 
