@@ -437,9 +437,9 @@ fun SealCard(
     }
 
     // TAG FIELDS
+    // tag id row - label, field & alpha buttons
     // old tag id row - label & field
     // reason for retag row - label & dropdown
-    // tag id row - label, field & alpha buttons
     // None of the tag fields should show if the No Tag checkbox has been selected
     if (!seal.isNoTag) {
 
