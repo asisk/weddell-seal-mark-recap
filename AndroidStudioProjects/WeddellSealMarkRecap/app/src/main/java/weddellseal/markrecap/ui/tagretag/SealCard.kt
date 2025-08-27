@@ -442,6 +442,89 @@ fun SealCard(
     // reason for retag row - label & dropdown
     // None of the tag fields should show if the No Tag checkbox has been selected
     if (!seal.isNoTag) {
+        // TAG ID
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(end = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val fieldLabel =
+                        if (seal.tagEventType == TagEventType.RETAG) "New\nTag ID" else "Tag ID"
+
+                    Text(
+                        fieldLabel,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    // TAG ID
+                    TagIDOutlinedTextField(
+                        value = seal.tagNumber,
+                        labelText = "3 or 4 Digit Tag Number",
+                        placeholderText = "Enter Tag Number",
+                        errorMessage = "",
+                        keyboardType = KeyboardType.Number,
+                        onClearValueDo = {
+                            viewModel.clearTagID(seal.sealType)
+
+                            // when the event type is Marked or New and this field has been cleared
+                            // clear the seal in the WedCheck model when this field is cleared to clear the Seal SpeNo
+                            if (seal.tagEventType != TagEventType.RETAG) {
+                                viewModel.removeWedCheckMatch(seal.sealType)
+                            }
+                        },
+                        onFocusChange = { isFocused, lastValue ->
+                            if (!isFocused) {
+                                Log.d("TagID Row", "Updating tag on Focus not active")
+
+                                viewModel.updateTagNumber(seal.sealType, lastValue)
+                            }
+                        }
+                    )
+                }
+            }
+
+            //TAG ID ALPHA BUTTONS
+            val buttonListAlpha = listOf("A", "C", "D")
+
+            Box(
+                modifier = Modifier
+                    .weight(.4f)
+                    .padding(start = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    SingleSelectTagAlphaButtonGroup(
+                        buttonListAlpha,
+                        seal.tagAlpha
+                    ) { newText ->
+                        viewModel.updateTagAlpha(seal.sealType, newText)
+                    }
+                }
+            }
+        }
 
         // OLD TAG ID
         if (seal.tagEventType == TagEventType.RETAG) {
@@ -523,90 +606,6 @@ fun SealCard(
                         ) { newText ->
                             viewModel.updateOldTagAlpha(seal.sealType, newText)
                         }
-                    }
-                }
-            }
-        }
-
-        //TAG ID
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        focusManager.clearFocus()
-                    })
-                },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-                    .padding(end = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val fieldLabel =
-                        if (seal.tagEventType == TagEventType.RETAG) "New\nTag ID" else "Tag ID"
-
-                    Text(
-                        fieldLabel,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    // TAG ID
-                    TagIDOutlinedTextField(
-                        value = seal.tagNumber,
-                        labelText = "3 or 4 Digit Tag Number",
-                        placeholderText = "Enter Tag Number",
-                        errorMessage = "",
-                        keyboardType = KeyboardType.Number,
-                        onClearValueDo = {
-                            viewModel.clearTagID(seal.sealType)
-
-                            // when the event type is Marked or New and this field has been cleared
-                            // clear the seal in the WedCheck model when this field is cleared to clear the Seal SpeNo
-                            if (seal.tagEventType != TagEventType.RETAG) {
-                                viewModel.removeWedCheckMatch(seal.sealType)
-                            }
-                        },
-                        onFocusChange = { isFocused, lastValue ->
-                            if (!isFocused) {
-                                Log.d("TagID Row", "Updating tag on Focus not active")
-
-                                viewModel.updateTagNumber(seal.sealType, lastValue)
-                            }
-                        }
-                    )
-                }
-            }
-
-            //TAG ID ALPHA BUTTONS
-            val buttonListAlpha = listOf("A", "C", "D")
-
-            Box(
-                modifier = Modifier
-                    .weight(.4f)
-                    .padding(start = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    SingleSelectTagAlphaButtonGroup(
-                        buttonListAlpha,
-                        seal.tagAlpha
-                    ) { newText ->
-                        viewModel.updateTagAlpha(seal.sealType, newText)
                     }
                 }
             }
