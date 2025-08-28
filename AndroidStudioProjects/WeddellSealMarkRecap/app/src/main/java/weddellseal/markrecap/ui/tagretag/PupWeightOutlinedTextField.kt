@@ -1,6 +1,5 @@
 package weddellseal.markrecap.ui.tagretag
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -30,7 +29,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun PupWeightOutlinedTextField(
     value: String,
-    onFocusChange: (String) -> Unit,
+    onFocusChange: (Boolean, String) -> Unit,
     onClearValueDo: () -> Unit,
 ) {
     val focusManager =
@@ -38,7 +37,9 @@ fun PupWeightOutlinedTextField(
     val focusRequester =
         remember { FocusRequester() } // FocusRequester to manage focus programmatically
     var isFocused by remember { mutableStateOf(false) } // Track focus state
+
     val keyboardController = LocalSoftwareKeyboardController.current
+
     var text by remember { mutableStateOf(if (value == "0") "" else value) } //used to prevent the model update until the user is done typing
 
     LaunchedEffect(value) {
@@ -73,6 +74,7 @@ fun PupWeightOutlinedTextField(
                 Icon(
                     Icons.Filled.Clear, contentDescription = "Clear text",
                     Modifier.clickable {
+                        text = ""
                         onClearValueDo()
                     }
                 )
@@ -82,11 +84,7 @@ fun PupWeightOutlinedTextField(
         modifier = Modifier
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused // Update focus state
-                Log.d(
-                    "TagIDOutlinedTextField",
-                    "Focus change detected isFocused: $isFocused, calling onFocusChange lambda"
-                )
-                onFocusChange(text.trim()) // Pass the latest value when focus changes
+                onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
             }
             .focusRequester(focusRequester)
     )

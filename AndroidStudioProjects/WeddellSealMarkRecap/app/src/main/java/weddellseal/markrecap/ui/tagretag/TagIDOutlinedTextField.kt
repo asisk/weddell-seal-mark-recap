@@ -1,6 +1,5 @@
 package weddellseal.markrecap.ui.tagretag
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -74,7 +73,6 @@ fun TagIDOutlinedTextField(
             onDone = {
                 focusManager.clearFocus()
                 keyboardController?.hide()
-                Log.d("LaunchedEffect in TagIDOutlinedTextField", "Clearing field focus")
             }
         ),
         trailingIcon = {

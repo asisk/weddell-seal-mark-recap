@@ -59,7 +59,6 @@ fun TabbedCards(
     pupTwoSeal: Seal
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val hasEdits by viewModel.hasEdits.collectAsState()
 
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }

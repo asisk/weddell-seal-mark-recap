@@ -21,16 +21,16 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 
+private val CONDITION_OPTIONS = SealCondition.values()
+    .filter { it != SealCondition.NA && it != SealCondition.UNKNOWN && it != SealCondition.NONE }
+    .map { it.code }
+
 @Composable
 fun ConditionSegmentedButtonGroup(
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
-
-    val sealConditionOptions = SealCondition.values()
-        .filter { it != SealCondition.NA && it != SealCondition.UNKNOWN && it != SealCondition.NONE }
-        .map { it.code }
 
     Row(
         modifier = Modifier
@@ -40,7 +40,7 @@ fun ConditionSegmentedButtonGroup(
             ) // Background color for the whole segmented group
             .padding(4.dp) // Padding between the background and the buttons
     ) {
-        sealConditionOptions.forEach { option ->
+        CONDITION_OPTIONS.forEach { option ->
             val isSelected = option == selectedOption
 
             // Individual Button for each option
@@ -61,12 +61,12 @@ fun ConditionSegmentedButtonGroup(
                 ),
                 shape = when (option) {
                     // Adjust shapes to make buttons rounded at the ends
-                    sealConditionOptions.first() -> RoundedCornerShape(
+                    CONDITION_OPTIONS.first() -> RoundedCornerShape(
                         topStart = 50.dp,
                         bottomStart = 50.dp
                     )
 
-                    sealConditionOptions.last() -> RoundedCornerShape(
+                    CONDITION_OPTIONS.last() -> RoundedCornerShape(
                         topEnd = 50.dp,
                         bottomEnd = 50.dp
                     )
