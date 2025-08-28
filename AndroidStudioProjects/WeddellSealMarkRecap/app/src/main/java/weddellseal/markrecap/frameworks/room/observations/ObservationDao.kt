@@ -13,10 +13,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ObservationDao {
 
-    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id DESC")
+    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id ASC")
     fun getCurrentObservationsOrdered(): Flow<List<ObservationRecord>>
 
-    @Query("SELECT * FROM observationLogs ORDER BY id DESC")
+    @Query("SELECT * FROM observationLogs ORDER BY id ASC")
     fun getAllObservationsForSeasonOrdered(): Flow<List<ObservationRecord>>
 
     @Query("SELECT COUNT(*) FROM observationLogs WHERE deletedAt IS NULL")
