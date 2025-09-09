@@ -42,7 +42,7 @@ private fun Modifier.clearFocusOnTap(fm: FocusManager) = pointerInput(fm) {
 
 @Composable
 fun SealCard(
-    viewModel: TagRetagModel,
+    viewModel: TagRetagViewModel,
     seal: Seal
 ) {
     val isEditMode by remember {

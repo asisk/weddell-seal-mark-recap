@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.ui.tagretag.ObservationTabItem
-import weddellseal.markrecap.ui.tagretag.TagRetagModel
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 /**
  * TabbedCards responds to changes in the model for each seal.
@@ -32,9 +32,9 @@ import weddellseal.markrecap.ui.tagretag.TagRetagModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ObservationTabbedCards(
-    tagRetagModel: TagRetagModel,
+    tagRetagViewModel: TagRetagViewModel,
 ) {
-    val selectedObservation by tagRetagModel.selectedRecentObservation.collectAsState()
+    val selectedObservation by tagRetagViewModel.selectedRecentObservation.collectAsState()
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var tabItems by remember {

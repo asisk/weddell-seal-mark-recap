@@ -56,7 +56,7 @@ class RecentObservationsViewModel(
 
     // Used to display the observation records
     val displayObservations: StateFlow<List<DisplayObservation>> =
-        observationRepo.currentObservations
+        observationRepo.currentObservationsDescByID
             .map { current ->
                 current
                     .filterNot { obs ->
@@ -88,7 +88,7 @@ class RecentObservationsViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val currentObservations: StateFlow<List<ObservationRecord>> =
-        observationRepo.currentObservations
+        observationRepo.currentObservationsDescByID
             .stateIn(
                 viewModelScope,
                 SharingStarted.Companion.Lazily,
@@ -96,7 +96,7 @@ class RecentObservationsViewModel(
             ) // Collect as StateFlow
 
     val allObservations: StateFlow<List<ObservationRecord>> =
-        observationRepo.allObservations
+        observationRepo.allObservationsDescByID
             .stateIn(
                 viewModelScope,
                 SharingStarted.Companion.Lazily,
@@ -118,6 +118,14 @@ class RecentObservationsViewModel(
             started = SharingStarted.Companion.WhileSubscribed(5_000),
             initialValue = 0
         )
+
+    val exportCurrentObservations: StateFlow<List<ObservationRecord>> =
+        observationRepo.currentObservationsByID
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Companion.Lazily,
+                emptyList()
+            ) // Collect as StateFlow
 
     // WEDDATACURRENT File State
     private val _wedDataCurrentExportState = MutableStateFlow(
@@ -258,18 +266,19 @@ class RecentObservationsViewModel(
     }
 
     fun exportRecords(context: Context, exportType: ExportType) {
-        viewModelScope.launch {
 
+        viewModelScope.launch {
             val uri = uiState.value.uriForFileExport
             val displayName = getDisplayNameFromUri(context, uri)
 
+            // these stateflow lists are sorted descending from the database, reverse to ascending
             val observations = if (exportType == ExportType.CURRENT) {
-                currentObservations
+                currentObservations.value.sortedBy { it.id }
             } else {
-                allObservations
+                allObservations.value.sortedBy { it.id }
             }
 
-            if (observations.value.isEmpty()) {
+            if (observations.isEmpty()) {
                 setWedDataFullFileErrorStatus("No records available to export.")
                 return@launch
             }
@@ -288,8 +297,8 @@ class RecentObservationsViewModel(
                 fileNameIsValid(context, uri)
 
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    observationRepo.writeDataToStream(outputStream, observations.value)
-                    updateStatus(observations.value.size, displayName)
+                    observationRepo.writeDataToStream(outputStream, observations)
+                    updateStatus(observations.size, displayName)
                 } ?: run {
                     throw IOException("Failed to write to file: $uri")
                 }

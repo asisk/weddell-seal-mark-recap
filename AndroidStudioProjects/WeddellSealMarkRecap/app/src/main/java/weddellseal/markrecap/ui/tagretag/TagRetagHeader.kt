@@ -36,7 +36,7 @@ import weddellseal.markrecap.ui.home.HomeViewModel
 
 @Composable
 fun TagRetagHeader(
-    viewModel: TagRetagModel,
+    viewModel: TagRetagViewModel,
     homeViewModel: HomeViewModel,
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()

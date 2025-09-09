@@ -13,11 +13,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ObservationDao {
 
-    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id ASC")
-    fun getCurrentObservationsOrdered(): Flow<List<ObservationRecord>>
+    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id DESC")
+    fun getCurrentObservationsDescByID(): Flow<List<ObservationRecord>>
 
-    @Query("SELECT * FROM observationLogs ORDER BY id ASC")
-    fun getAllObservationsForSeasonOrdered(): Flow<List<ObservationRecord>>
+    @Query("SELECT * FROM observationLogs ORDER BY id DESC")
+    fun getAllObservationsForSeasonDescByID(): Flow<List<ObservationRecord>>
+
+    @Query("SELECT * FROM observationLogs WHERE deletedAt IS NULL ORDER BY id")
+    fun getCurrentObservationsForSeasonByID(): Flow<List<ObservationRecord>>
 
     @Query("SELECT COUNT(*) FROM observationLogs WHERE deletedAt IS NULL")
     suspend fun getCount(): Int

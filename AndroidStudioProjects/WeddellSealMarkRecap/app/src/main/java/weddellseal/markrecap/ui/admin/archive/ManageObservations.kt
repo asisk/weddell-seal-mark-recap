@@ -33,7 +33,7 @@ fun ManageObservations(
         ) {
             Text(
                 modifier = Modifier.padding(bottom = 20.dp),
-                text = "Manage Observations",
+                text = "Manage Records",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 36.sp,
             )
@@ -49,7 +49,7 @@ fun ManageObservations(
             ) {
                 ArchiveCurrentObservationsCard(
                     viewModel,
-                    instructions = "Archive Current Observation Records"
+                    instructions = "Archive Current Records"
                 )
             }
             Box(

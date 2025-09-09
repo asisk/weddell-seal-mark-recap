@@ -13,12 +13,12 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.FileDownload
-import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.UploadFile
+import androidx.compose.material.icons.sharp.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
@@ -43,13 +43,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
-import weddellseal.markrecap.ui.home.SealColoniesViewModel
 import weddellseal.markrecap.ui.admin.archive.ManageObservations
 import weddellseal.markrecap.ui.admin.dashboard.DashboardScreen
 import weddellseal.markrecap.ui.admin.export.ExportObservations
 import weddellseal.markrecap.ui.admin.upload.FileUpload
+import weddellseal.markrecap.ui.home.SealColoniesViewModel
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.tagretag.ObserversViewModel
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +60,7 @@ fun AdminScreen(
     sealColoniesViewModel: SealColoniesViewModel,
     observersViewModel: ObserversViewModel,
     adminViewModel: AdminViewModel,
+    tagRetagViewModel: TagRetagViewModel,
     recentObservationsViewModel: RecentObservationsViewModel
 ) {
 
@@ -71,11 +73,11 @@ fun AdminScreen(
     }
 
     val items =
-        listOf("Home", "Dashboard", "Upload", "Export", "Archive")
+        listOf("Home", "Dashboard", "Import", "Export", "Archive")
     val selectedIcons = listOf(
         Icons.Default.Home,
         Icons.Default.Dashboard,
-        Icons.Default.UploadFile,
+        Icons.Sharp.UploadFile,
         Icons.Default.FileDownload,
         Icons.Default.Archive
     )
@@ -83,7 +85,7 @@ fun AdminScreen(
         listOf(
             Icons.Outlined.Home,
             Icons.Outlined.Dashboard,
-            Icons.Outlined.FileUpload,
+            Icons.Outlined.UploadFile,
             Icons.Outlined.FileDownload,
             Icons.Outlined.Archive
         )
@@ -159,7 +161,7 @@ fun AdminScreen(
                             observersViewModel
                         )
 
-                        3 -> ExportObservations(adminViewModel,recentObservationsViewModel)
+                        3 -> ExportObservations(adminViewModel, tagRetagViewModel, recentObservationsViewModel, navController)
 
                         4 -> ManageObservations(recentObservationsViewModel)
                     }

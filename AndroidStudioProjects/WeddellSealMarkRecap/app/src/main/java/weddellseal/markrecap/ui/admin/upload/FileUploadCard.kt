@@ -55,8 +55,6 @@ fun UploadCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier
             .width(400.dp)
-//            .fillMaxWidth()
-//            .height(240.dp)
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(16.dp)
@@ -75,7 +73,6 @@ fun UploadCard(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.UploadFile,
                         contentDescription = null,
@@ -94,13 +91,12 @@ fun UploadCard(
                     modifier = Modifier
                         .padding(start = 16.dp)
                 ) {
-                    Text("Upload",
+                    Text("Import",
                         style = MaterialTheme.typography.titleLarge,
                     )
                 }
             }
 
-            // Upload status
             if (state.status == FileStatus.ERROR || state.status == FileStatus.SUCCESS) {
                 Row(
                     modifier = Modifier

@@ -48,14 +48,14 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.AppBar
 import weddellseal.markrecap.ui.NavMenu
-import weddellseal.markrecap.ui.tagretag.TagRetagModel
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SealLookupScreen(
     navController: NavHostController,
     viewModel: SealLookupViewModel,
-    tagRetagViewModel: TagRetagModel
+    tagRetagViewModel: TagRetagViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()

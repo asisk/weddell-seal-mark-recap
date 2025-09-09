@@ -20,7 +20,7 @@ import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.viewmodelfactories.ObserversViewModelFactory
 import weddellseal.markrecap.viewmodelfactories.TagRetagViewModelFactory
-import weddellseal.markrecap.ui.tagretag.TagRetagModel
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 import weddellseal.markrecap.ui.admin.AdminViewModel
 import weddellseal.markrecap.ui.tagretag.ObserversViewModel
 import weddellseal.markrecap.viewmodelfactories.AdminViewModelFactory
@@ -88,8 +88,9 @@ class MainActivity : ComponentActivity() {
                 application,
                 observationRepository,
                 wedCheckRepository,
-                homeViewModel.uiState)
-        val tagRetagModel: TagRetagModel by viewModels { tagRetagViewModelFactory }
+                homeViewModel.uiState
+            )
+        val tagRetagViewModel: TagRetagViewModel by viewModels { tagRetagViewModelFactory }
 
         val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
         val recentObservationsViewModel: RecentObservationsViewModel by viewModels { recentObservationsViewModelFactory }
@@ -103,10 +104,12 @@ class MainActivity : ComponentActivity() {
         val sealLookupViewModelFactory = SealLookupViewModelFactory(application, wedCheckRepository)
         val sealLookupViewModel: SealLookupViewModel by viewModels { sealLookupViewModelFactory }
 
-        val sealColoniesViewModelFactory = SealColoniesViewModelFactory(application, sealColonyRepository, filesRepository)
+        val sealColoniesViewModelFactory =
+            SealColoniesViewModelFactory(application, sealColonyRepository, filesRepository)
         val sealColoniesViewModel: SealColoniesViewModel by viewModels { sealColoniesViewModelFactory }
 
-        val observersViewModelFactory = ObserversViewModelFactory(application, observersRepository, filesRepository)
+        val observersViewModelFactory =
+            ObserversViewModelFactory(application, observersRepository, filesRepository)
         val observersViewModel: ObserversViewModel by viewModels { observersViewModelFactory }
 
         // Set up the UI
@@ -134,7 +137,7 @@ class MainActivity : ComponentActivity() {
                         composable(Screens.TagRetag.route) {
                             TagRetagScreen(
                                 navController,
-                                tagRetagModel,
+                                tagRetagViewModel,
                                 homeViewModel,
                                 recentObservationsViewModel
                             )
@@ -149,20 +152,20 @@ class MainActivity : ComponentActivity() {
                             RecentObservationsScreen(
                                 navController,
                                 recentObservationsViewModel,
-                                tagRetagModel
+                                tagRetagViewModel
                             )
                         }
                         composable(Screens.SealLookupScreen.route) {
                             SealLookupScreen(
                                 navController,
                                 sealLookupViewModel,
-                                tagRetagModel
+                                tagRetagViewModel
                             )
                         }
                         composable(Screens.ObservationViewer.route) {
                             ObservationViewer(
                                 navController,
-                                tagRetagModel
+                                tagRetagViewModel
                             )
                         }
                         composable(Screens.Admin.route) {
@@ -172,6 +175,7 @@ class MainActivity : ComponentActivity() {
                                 sealColoniesViewModel,
                                 observersViewModel,
                                 adminViewModel,
+                                tagRetagViewModel,
                                 recentObservationsViewModel
                             )
                         }

@@ -44,7 +44,7 @@ fun FileUpload(
     // Track variables for error descriptions
     var expectedFilename by remember { mutableStateOf("") }
     var selectedFilename by remember { mutableStateOf("") }
-    var uploadAction by remember { mutableStateOf("") }
+    var fileUploadAction by remember { mutableStateOf("") }
     var errMessage by remember { mutableStateOf("") }
     var errTitle by remember { mutableStateOf("") }
 
@@ -91,7 +91,7 @@ fun FileUpload(
     // Function to handle the file selection logic
     fun handleWedCheckFileSelection(uri: Uri?) {
         if (uri != null) {
-            uploadAction = "Uploading WedCheck"
+            fileUploadAction = "Importing WedCheck"
             var fileName = ""
             expectedFilename = "WedCheck.csv or WedCheckFull.csv"
             Log.d("FileSelection", "URI: $uri")
@@ -119,7 +119,7 @@ fun FileUpload(
             if (fileName == "WedCheckFull.csv" || fileName == "WedCheck.csv") {
                 wedCheckViewModel.loadWedCheck(uri, fileName)
             } else {
-                errTitle = "Error $uploadAction"
+                errTitle = "Error $fileUploadAction"
                 errMessage =
                     "File name doesn't match!\nUnexpected file selected:  $selectedFilename\nExpected file:  $expectedFilename.\n"
                 wedCheckViewModel.setWedCheckFileErrorStatus(errMessage)
@@ -134,7 +134,7 @@ fun FileUpload(
 
     fun handleObserversFileSelection(uri: Uri?) {
         if (uri != null) {
-            uploadAction = "Uploading Observer Initials"
+            fileUploadAction = "Importing Observer Initials"
             var fileName = ""
             expectedFilename = "observers.csv"
             Log.d("FileSelection", "URI: $uri")
@@ -153,7 +153,7 @@ fun FileUpload(
             observersViewModel.setLastFilename(fileName)
 
             if (expectedFilename != fileName) {
-                errTitle = "Error $uploadAction"
+                errTitle = "Error $fileUploadAction"
                 errMessage =
                     "File name doesn't match!\nUnexpected file selected:  $selectedFilename\nExpected file:  $expectedFilename.\n"
                 observersViewModel.setFileErrorStatus(errMessage)
@@ -171,7 +171,7 @@ fun FileUpload(
     // Function to handle the file selection logic
     fun handleSealColonyFileSelection(uri: Uri?) {
         if (uri != null) {
-            uploadAction = "Uploading Colony Locations"
+            fileUploadAction = "Importing Colony Locations"
             var fileName = ""
             expectedFilename = "Colony_Locations.csv"
             Log.d("FileSelection", "URI: $uri")
@@ -191,7 +191,7 @@ fun FileUpload(
             sealColoniesViewModel.setLastFilename(fileName)
 
             if (expectedFilename != fileName) {
-                errTitle = "Error $uploadAction"
+                errTitle = "Error $fileUploadAction"
                 errMessage =
                     "File name doesn't match!\nUnexpected file selected:  $selectedFilename\nExpected file:  $expectedFilename.\n"
                 sealColoniesViewModel.setFileErrorStatus(errMessage)
@@ -243,7 +243,7 @@ fun FileUpload(
                 && wedCheckUploadFileState.message != ""
                 && !wedCheckViewModel.uiState.value.errAcked
             ) {
-                errTitle = "Error $uploadAction"
+                errTitle = "Error $fileUploadAction"
                 errMessage = wedCheckUploadFileState.message.toString()
                 selectedFilename = wedCheckUploadFileState.lastUploadFilename.toString()
 
@@ -258,7 +258,7 @@ fun FileUpload(
                 && observersFileState.message != ""
                 && !observersViewModel.uiState.value.errAcked
             ) {
-                errTitle = "Error $uploadAction"
+                errTitle = "Error $fileUploadAction"
                 errMessage = observersFileState.message.toString()
                 selectedFilename = observersFileState.lastUploadFilename.toString()
 
@@ -273,7 +273,7 @@ fun FileUpload(
                 && sealColonyFileState.message != ""
                 && !sealColoniesViewModel.uiState.value.errAcked
             ) {
-                errTitle = "Error $uploadAction"
+                errTitle = "Error $fileUploadAction"
                 errMessage = sealColonyFileState.message.toString()
                 selectedFilename = sealColonyFileState.lastUploadFilename.toString()
 
@@ -294,7 +294,7 @@ fun FileUpload(
         ) {
             Text(
                 modifier = Modifier.padding(bottom = 20.dp),
-                text = "Manage Uploads",
+                text = "Manage Imports",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 36.sp,
             )

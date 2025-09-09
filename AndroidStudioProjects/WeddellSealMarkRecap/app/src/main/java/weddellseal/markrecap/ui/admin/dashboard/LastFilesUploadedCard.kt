@@ -53,11 +53,11 @@ fun LastFilesUploadedCard(
                             .size(48.dp)
                             .padding(end = 12.dp)
                     )
-                    Text(text = "Last Uploaded", style = MaterialTheme.typography.headlineLarge)
+                    Text(text = "Last Imported", style = MaterialTheme.typography.headlineLarge)
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "This scrollable list shows files that were successfully uploaded.", style = MaterialTheme.typography.bodyLarge)
+            Text(text = "This scrollable list shows files that were successfully imported.", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(20.dp))
             FileUploadList(successfulUploads)
         }

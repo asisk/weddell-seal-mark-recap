@@ -41,7 +41,7 @@ import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.getCurrentYear
 import weddellseal.markrecap.ui.utils.getDeviceName
 
-class TagRetagModel(
+class TagRetagViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
     private val wedCheckRepo: WedCheckRepository,

@@ -27,7 +27,7 @@ import weddellseal.markrecap.ui.home.HomeViewModel
 @Composable
 fun TagRetagAppBar(
     onNavigationIconClick: () -> Unit,
-    viewModel: TagRetagModel,
+    viewModel: TagRetagViewModel,
     homeViewModel: HomeViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()

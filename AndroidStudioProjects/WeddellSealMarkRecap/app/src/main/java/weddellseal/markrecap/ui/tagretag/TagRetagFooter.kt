@@ -1,33 +1,25 @@
 package weddellseal.markrecap.ui.tagretag
 
 import android.widget.Toast
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,16 +39,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.ConfirmEditDialog
-import weddellseal.markrecap.ui.ObservationItem
+import weddellseal.markrecap.ui.RecentObservations
 import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.UiEvent.ShowEditDialog
 import weddellseal.markrecap.ui.home.HomeViewModel
-import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
 @Composable
 fun TagRetagFooter(
-    viewModel: TagRetagModel,
+    viewModel: TagRetagViewModel,
     homeViewModel: HomeViewModel,
     recentObsViewModel: RecentObservationsViewModel,
     navController: NavHostController,
@@ -66,7 +57,6 @@ fun TagRetagFooter(
 
     val uiEventFlow = viewModel.uiEvent
 
-    val displayObservations by recentObsViewModel.displayObservations.collectAsState()
     val selectedObservation by viewModel.selectedRecentObservation.collectAsState()
     var showEditDialog by remember { mutableStateOf(false) }
 
@@ -235,75 +225,7 @@ fun TagRetagFooter(
     )
 
     // RECENT OBSERVATIONS VIEW
-    Box(
-        modifier = Modifier
-            .padding(start = 40.dp, end = 40.dp, bottom = 40.dp)
-            .fillMaxWidth()
-            .heightIn(max = 400.dp)
-            .animateContentSize()
-            .border(4.dp, Color.LightGray)
-    ) {
-
-        if (displayObservations.isEmpty()) {
-            Text(
-                text = "No records to display.",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp),
-                color = Color.Gray
-            )
-        }
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // display individual records for observations
-            // those with pups will be displayed in one row
-            // if they have no relatives they will have their own row
-            items(displayObservations) { displayObs ->
-                when (displayObs) {
-                    is DisplayObservation.WithPups -> {
-                        ObservationItem(
-                            onEditDo = {
-                                // If the technician has a partially complete observation,
-                                // prevent them from editing
-                                viewModel.onEditAttempt(displayObs)
-                            },
-                            onViewDo = {
-                                viewModel.onViewAttempt(displayObs)
-                                navController.navigate(Screens.ObservationViewer.route)
-                            },
-                            observation = displayObs.primarySeal,
-                            pupOne = displayObs.pupOne,
-                            pupTwo = displayObs.pupTwo
-                        )
-
-                        HorizontalDivider()
-                    }
-
-                    is DisplayObservation.Standalone -> {
-                        ObservationItem(
-                            onEditDo = {
-                                // If the technician has a partially complete observation,
-                                // prevent them from editing
-                                viewModel.onEditAttempt(displayObs)
-                            },
-                            onViewDo = {
-                                viewModel.onViewAttempt(displayObs)
-                                navController.navigate(Screens.ObservationViewer.route)
-                            },
-                            observation = displayObs.primarySeal,
-                            pupOne = null,
-                            pupTwo = null
-                        )
-
-                        HorizontalDivider()
-                    }
-                }
-            }
-        }
-    }
+    RecentObservations(viewModel, recentObsViewModel, navController)
 
     // CONFIRM EDIT DIALOG
     if (showEditDialog) {

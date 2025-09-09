@@ -12,8 +12,11 @@ import java.io.OutputStreamWriter
 
 class ObservationRepository(private val observationDao: ObservationDao) {
 
-    val currentObservations: Flow<List<ObservationRecord>> = observationDao.getCurrentObservationsOrdered()
-    val allObservations: Flow<List<ObservationRecord>> = observationDao.getAllObservationsForSeasonOrdered()
+    val currentObservationsDescByID: Flow<List<ObservationRecord>> = observationDao.getCurrentObservationsDescByID()
+    val currentObservationsByID: Flow<List<ObservationRecord>> = observationDao.getCurrentObservationsForSeasonByID()
+
+    val allObservationsDescByID: Flow<List<ObservationRecord>> = observationDao.getAllObservationsForSeasonDescByID()
+
 
     // Write all observations to a CSV file
     fun writeDataToStream(outputStream: OutputStream, observations: List<ObservationRecord>) {

@@ -21,13 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import weddellseal.markrecap.ui.tagretag.TagRetagModel
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ObservationViewer(
     navController: NavHostController,
-    tagRetagModel: TagRetagModel
+    tagRetagViewModel: TagRetagViewModel
 ) {
 
     Scaffold(
@@ -68,26 +68,7 @@ fun ObservationViewer(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            ObservationTabbedCards(tagRetagModel)
-//                        ExtendedFloatingActionButton(
-//                            modifier = Modifier
-//                                .padding(bottom = 20.dp, start = 20.dp)
-//                                .fillMaxWidth(),
-//                            containerColor = Color.LightGray,
-//                            onClick = {
-////                                    obsViewModel.populateSeal(wedCheckViewModel.wedCheckSeal)
-//                                navController.navigate(Screens.AddObservationLog.route)
-//                            },
-//                            icon = { Icon(Icons.Filled.PostAdd, "Edit seal") },
-//                            text = {
-//                                Text(
-//                                    text = "Tag/Retag",
-//                                    fontSize = 18.sp, // Set your desired text size here
-//                                    fontWeight = FontWeight.Bold, // Optional: set the font weight
-//                                    color = Color.Black // Optional: set the text color
-//                                )
-//                            }
-//                        )
+            ObservationTabbedCards(tagRetagViewModel)
         }
     }
 }

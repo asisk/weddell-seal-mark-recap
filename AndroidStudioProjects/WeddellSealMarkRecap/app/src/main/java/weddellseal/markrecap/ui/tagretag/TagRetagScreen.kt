@@ -36,7 +36,7 @@ import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 @Composable
 fun TagRetagScreen(
     navController: NavHostController,
-    viewModel: TagRetagModel,
+    viewModel: TagRetagViewModel,
     homeViewModel: HomeViewModel,
     recentObsViewModel: RecentObservationsViewModel
 ) {

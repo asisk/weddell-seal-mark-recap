@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.ui.home.HomeViewModel
-import weddellseal.markrecap.ui.tagretag.TagRetagModel
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 class TagRetagViewModelFactory(
     private val application: Application,
@@ -18,8 +18,8 @@ class TagRetagViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(TagRetagModel::class.java)) {
-            return TagRetagModel(application, observationRepository, wedCheckRepo, uiState) as T
+        if (modelClass.isAssignableFrom(TagRetagViewModel::class.java)) {
+            return TagRetagViewModel(application, observationRepository, wedCheckRepo, uiState) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

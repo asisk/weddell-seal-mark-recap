@@ -53,7 +53,7 @@ import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabbedCards(
-    viewModel: TagRetagModel,
+    viewModel: TagRetagViewModel,
     primarySeal: Seal,
     pupOneSeal: Seal,
     pupTwoSeal: Seal
@@ -278,7 +278,7 @@ fun TabbedCards(
 }
 
 fun createTabItems(
-    viewModel: TagRetagModel,
+    viewModel: TagRetagViewModel,
     primarySealState: Seal,
     pupOneSealState: Seal,
     pupTwoSealState: Seal,
