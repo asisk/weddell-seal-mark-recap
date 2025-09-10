@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Composable
-fun LastFilesUploadedCard(
+fun LastFilesImportedCard(
     successfulUploads: List<FileUploadEntity>,
 ) {
     Card(
@@ -59,7 +59,7 @@ fun LastFilesUploadedCard(
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "This scrollable list shows files that were successfully imported.", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(20.dp))
-            FileUploadList(successfulUploads)
+            FileImportList(successfulUploads)
         }
     }
 }

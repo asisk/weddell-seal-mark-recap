@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Composable
-fun FileUploadList(successfulUploads: List<FileUploadEntity>) {
+fun FileImportList(successfulUploads: List<FileUploadEntity>) {
     if (successfulUploads.isEmpty()) {
         Text("No file uploads found.")
     } else {
@@ -21,7 +21,7 @@ fun FileUploadList(successfulUploads: List<FileUploadEntity>) {
             userScrollEnabled = true
         ) {
             items(successfulUploads) { file ->
-                FileUploadItem(successfulUpload = file)
+                FileImportItem(successfulUpload = file)
             }
         }
     }

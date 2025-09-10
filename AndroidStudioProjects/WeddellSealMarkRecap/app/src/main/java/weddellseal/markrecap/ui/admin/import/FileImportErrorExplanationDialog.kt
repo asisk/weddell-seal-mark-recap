@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.admin.upload
+package weddellseal.markrecap.ui.admin.import
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun FileUploadErrorExplanationDialog(
+fun FileImportErrorExplanationDialog(
     onDismiss: () -> Unit,
     title: String,
     text: String

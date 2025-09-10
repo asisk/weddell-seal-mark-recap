@@ -19,7 +19,7 @@ import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.ui.utils.formatFileUploadedDateTime
 
 @Composable
-fun FileUploadItem(successfulUpload: FileUploadEntity) {
+fun FileImportItem(successfulUpload: FileUploadEntity) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

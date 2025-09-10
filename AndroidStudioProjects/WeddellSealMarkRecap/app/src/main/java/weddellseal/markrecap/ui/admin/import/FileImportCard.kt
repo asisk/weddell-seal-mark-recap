@@ -1,4 +1,4 @@
-package weddellseal.markrecap.ui.admin.upload
+package weddellseal.markrecap.ui.admin.import
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,10 +35,9 @@ import weddellseal.markrecap.domain.files.data.icon
 import weddellseal.markrecap.ui.admin.FileStatus
 
 @Composable
-fun UploadCard(
+fun ImportCard(
     state: FileState,
 ) {
-
     var errMessage by remember { mutableStateOf("") }
     var lastFilename by remember { mutableStateOf("") }
     var statusColor by remember { mutableStateOf(Color(0xFF5884fa)) }
@@ -140,35 +139,3 @@ fun UploadCard(
         }
     }
 }
-
-//@Composable
-//fun FailedRowsDisplay(failedRows: List<FailedRow>) {
-//    if (failedRows.isNotEmpty()) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp)
-//        ) {
-//            Text(
-//                text = "Failed Rows",
-//                style = MaterialTheme.typography.titleLarge,
-//                color = MaterialTheme.colorScheme.error
-//            )
-//
-//            failedRows.forEach { row ->
-//                Text(
-//                    text = "Row ${row.rowNumber}: ${row.errorMessage}",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onError
-//                )
-//            }
-//        }
-//    } else {
-//        Text(
-//            text = "No failed rows found.",
-//            modifier = Modifier.padding(16.dp),
-//            style = MaterialTheme.typography.bodyMedium,
-//            color = MaterialTheme.colorScheme.primary
-//        )
-//    }
-//}

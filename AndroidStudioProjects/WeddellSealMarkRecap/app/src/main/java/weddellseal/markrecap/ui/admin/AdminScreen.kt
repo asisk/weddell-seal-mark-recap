@@ -46,7 +46,7 @@ import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.admin.archive.ManageObservations
 import weddellseal.markrecap.ui.admin.dashboard.DashboardScreen
 import weddellseal.markrecap.ui.admin.export.ExportObservations
-import weddellseal.markrecap.ui.admin.upload.FileUpload
+import weddellseal.markrecap.ui.admin.import.FileImport
 import weddellseal.markrecap.ui.home.SealColoniesViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.tagretag.ObserversViewModel
@@ -65,6 +65,7 @@ fun AdminScreen(
 ) {
 
     val adminUiState by adminViewModel.adminUiState.collectAsState()
+
     // Navigation Rail
     var selectedItem by remember { mutableIntStateOf(adminUiState.navRailSelection) }
 
@@ -155,7 +156,7 @@ fun AdminScreen(
                     when (selectedItem) {
                         1 -> DashboardScreen(adminViewModel)
 
-                        2 -> FileUpload(
+                        2 -> FileImport(
                             wedCheckViewModel,
                             sealColoniesViewModel,
                             observersViewModel
