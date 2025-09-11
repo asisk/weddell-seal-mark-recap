@@ -11,14 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,7 +40,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
@@ -76,11 +73,9 @@ fun HomeScaffold(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    val autoDetectedColony by viewModel.autoDetectedColony.collectAsState()
     val location by viewModel.currentLocation.collectAsState()
 
     val observerOptions by viewModel.observersList.collectAsState() // Collecting the list of observers
-    val coloniesList by viewModel.coloniesList.collectAsState()
 
     // Used to request permissions for Location
     RequestPermissionsEffect(viewModel)
@@ -237,74 +232,7 @@ fun HomeScaffold(
                             Spacer(modifier = Modifier.height(18.dp))
 
                             // COLONY
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(.45f),
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Start,
-                                    ) {
-                                        Text(
-                                            text = "Colony",
-                                            style = MaterialTheme.typography.headlineMedium
-                                        )
-
-                                        Spacer(modifier = Modifier.width(30.dp))
-                                        Box(
-                                            modifier = Modifier.weight(1f)  // take the remaining space
-                                        ) {
-                                            Column(
-                                                Modifier.padding(horizontal = 18.dp),
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Text(
-                                                    text = "Override",
-                                                    style = MaterialTheme.typography.titleMedium
-                                                )
-                                                Checkbox(
-                                                    checked = uiState.manualColonyCheckbox,
-                                                    onCheckedChange = {
-                                                        viewModel.setManualColonyCheckbox(it)
-                                                        if (!it) {
-                                                            viewModel.clearColony()
-                                                        }
-                                                    },
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Column(
-                                    modifier = Modifier.padding(8.dp)
-                                ) {
-                                    if (uiState.manualColonyCheckbox) {
-                                        ColonyDropDown(
-                                            label = "Selected Colony",
-                                            options = coloniesList,
-                                            selectedOption = uiState.selectedColony,
-                                            onValueChange = { valueSelected ->
-                                                viewModel.updateSelectedColony(valueSelected)
-                                            }
-                                        )
-                                    } else {
-                                        Text(
-                                            text = autoDetectedColony?.location
-                                                ?: "...detecting proximity to a known colony...",
-                                            style = MaterialTheme.typography.titleLarge.copy(
-                                                textAlign = TextAlign.Center
-                                            ),
-                                            modifier = Modifier.padding(top = 20.dp, bottom = 20.dp)
-                                        )
-                                    }
-                                }
-                            }
+                            ColonyRow(viewModel)
 
                             Spacer(modifier = Modifier.height(18.dp))
 
