@@ -31,6 +31,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.location.data.Coordinates
+import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.home.HomeViewModel
 
@@ -277,8 +279,11 @@ fun TagRetagHeader(
                         viewModel.flagSealForReview(pupTwoSeal.sealType)
                     }
 
-                    // TODO, test if this is being updated
-                    viewModel.writeObservationRecord(location)
+                    val colonyLocation = homeUiState.selectedColony?.let {
+                        GeoLocation(Coordinates(it.adjLat, it.adjLong))
+                    } ?: location
+
+                    viewModel.writeObservationRecord(colonyLocation)
                 },
                 icon = { Icon(Icons.Filled.Save, "Confirm & Save", Modifier.size(36.dp)) },
                 text = {

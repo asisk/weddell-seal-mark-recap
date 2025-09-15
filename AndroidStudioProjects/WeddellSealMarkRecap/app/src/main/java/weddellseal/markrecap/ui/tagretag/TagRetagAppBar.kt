@@ -55,8 +55,6 @@ fun TagRetagAppBar(
                     )
                 }
 
-//                Spacer(modifier = Modifier.width(36.dp))
-
                 val errorColor = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
 
                 // SELECTED OBSERVERS & COLONY
@@ -77,52 +75,6 @@ fun TagRetagAppBar(
                     ) else MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.titleLarge
                 )
-
-//                Spacer(modifier = Modifier.width(36.dp))
-
-                // DEVICE GPS LOCATION ICON
-//                if (location?.coordinates?.longitude != null && location?.coordinates?.latitude != null) {
-//                    Icon(
-//                        Icons.Filled.LocationOn,
-//                        contentDescription = null,
-//                        tint = Color(0xFF1D9C06),
-//                        modifier = Modifier
-//                            .padding(end = 8.dp)
-//                            .size(36.dp),
-//                    )
-//                } else {
-//                    Icon(
-//                        Icons.Filled.LocationOff,
-//                        contentDescription = null,
-//                        tint = errorColor,
-//                        modifier = Modifier
-//                            .padding(end = 8.dp)
-//                            .size(36.dp),
-//                    )
-//                }
-
-                // DEVICE GPS LOCATION COORDINATES & TIMESTAMP
-//                Column(
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-
-//                    Text(
-//                        text = location?.toLocationString() ?: "Locating...",
-//                        style = MaterialTheme.typography.titleLarge,
-//                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-//                        modifier = Modifier.then(Modifier).also {
-//                            Log.d("TagRetagAppBar", "Recomposing with location: $location")
-//                        }
-//                    )
-
-//                    location?.updatedDate?.let {
-//                        Text(
-//                            text = it,
-//                            style = MaterialTheme.typography.titleMedium,
-//                            color = MaterialTheme.colorScheme.onPrimaryContainer
-//                        )
-//                    }
-//                }
             }
         },
         navigationIcon = {

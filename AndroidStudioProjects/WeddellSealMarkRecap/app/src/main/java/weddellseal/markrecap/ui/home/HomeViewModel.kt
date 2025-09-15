@@ -45,11 +45,12 @@ class HomeViewModel(
         val isCensusMode: Boolean = false,
         val selectedCensusNumber: String = "",
         val selectedObservers: List<String> = listOf(),
-        val selectedColony: String = "",
-        val manualColonyCheckbox: Boolean = false
+        val selectedColony: SealColony?,
+        val overrideColony: Boolean = false
     )
 
-    private val _uiState = MutableStateFlow(UiState())
+    private val _uiState =
+        MutableStateFlow(UiState(selectedColony = null))
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     val observersList: StateFlow<List<String>> = observersRepository.observersList
@@ -61,36 +62,44 @@ class HomeViewModel(
     // Auto-detected colony
     private val _autoDetectedColony = MutableStateFlow<SealColony?>(null)
     val autoDetectedColony: StateFlow<SealColony?> = _autoDetectedColony
+
     fun setAutoDetectedColony(colony: SealColony?) {
         _autoDetectedColony.value = colony
     }
 
     // User Selection for Colony
     fun setManualColonyCheckbox(value: Boolean) {
-        _uiState.update {it.copy(manualColonyCheckbox = value)}
+        _uiState.update { it.copy(overrideColony = value) }
     }
+
     fun clearColony() {
-        _uiState.update{it.copy(selectedColony = "")}
+        _uiState.update { it.copy(selectedColony = null) }
     }
+
     fun updateSelectedColony(observationSiteSelected: String) {
-        _uiState.update{it.copy(selectedColony = observationSiteSelected)}
+        // lookup coordinates of selected colony, null if not found
+        viewModelScope.launch {
+            _uiState.update { it.copy(selectedColony = findColonyByName(observationSiteSelected)) }
+        }
     }
 
     // User Selection for Observers
     fun updateObserversSelection(selected: List<String>) {
-        val updated = if (selected.isEmpty()) emptyList() else selected
+        val updated = selected.ifEmpty { emptyList() }
         _uiState.update { it.copy(selectedObservers = updated) }
     }
 
     // User Selections for Census
     fun updateCensusNumber(censusNumber: String) {
-        _uiState.update{it.copy(selectedCensusNumber = censusNumber)}
+        _uiState.update { it.copy(selectedCensusNumber = censusNumber) }
     }
+
     fun updateIsCensusMode(observationMode: Boolean) {
-        _uiState.update{it.copy(isCensusMode = observationMode)}
+        _uiState.update { it.copy(isCensusMode = observationMode) }
     }
+
     fun clearCensus() {
-        _uiState.update{it.copy(selectedCensusNumber = "", isCensusMode = false)}
+        _uiState.update { it.copy(selectedCensusNumber = "", isCensusMode = false) }
     }
 
 //    init {
@@ -163,20 +172,22 @@ class HomeViewModel(
             Log.i(TAG, "observing location follow mode")
 
             locationSource.locationUpdates().collect { geoLocation ->
-
-                // Check if the coordinates have changed
+                // Check if the coordinates have changed, exit early if they remain unchanged
                 if (geoLocation.coordinates == lastKnownCoordinates) {
+//                    Log.i(TAG, "Location unchanged: ${geoLocation.coordinates.latitude}, ${geoLocation.coordinates.longitude}")
                     return@collect // Skip the update
                 }
 
-                Log.i(TAG, "New location received: $geoLocation")
+//                Log.i(TAG, "New location received: ${geoLocation.coordinates.latitude}, ${geoLocation.coordinates.longitude}")
 
-                // Update the last known coordinates
+                // Update the last known coordinates with the new coordinates
                 lastKnownCoordinates = geoLocation.coordinates
                 _currentLocation.value = geoLocation
 
-                // Find and update the colony based on the location
-                val sealColonyDefault = SealColony(
+//                Log.d(TAG, "${uiState.value.manualColonyCheckbox}")
+
+                // Find and update the colony based on the new coordinates
+                val colony = findColony(geoLocation.coordinates) ?: SealColony(
                     colonyId = 0,
                     inOut = "none",
                     location = "Seal colony not detected",
@@ -188,8 +199,8 @@ class HomeViewModel(
                     adjLat = 0.0,
                     fileUploadId = 0
                 )
-                // Find and update the colony based on the location
-                val colony = findColony(geoLocation.coordinates) ?: sealColonyDefault
+
+                // update the auto-detected colony
                 setAutoDetectedColony(colony)
             }
         }.storeIn(jobs)
@@ -202,6 +213,12 @@ class HomeViewModel(
                 coordinates.latitude,
                 coordinates.longitude
             )
+        }
+    }
+
+    suspend fun findColonyByName(colonyName: String): SealColony? {
+        return withContext(Dispatchers.IO) {
+            sealColonyRepository.findColonyByName(colonyName)
         }
     }
 }

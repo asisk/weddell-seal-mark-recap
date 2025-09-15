@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
+import weddellseal.markrecap.domain.location.data.Coordinates
+import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.RecentObservations
 import weddellseal.markrecap.ui.UiEvent
@@ -63,6 +65,7 @@ fun TagRetagFooter(
     val uiState by viewModel.uiState.collectAsState()
     val hasEdits by viewModel.hasEdits.collectAsState()
 
+    val homeUiState by homeViewModel.uiState.collectAsState()
     val location by homeViewModel.currentLocation.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
@@ -107,12 +110,17 @@ fun TagRetagFooter(
                     onClick = {
                         if (!uiState.isSaveEnabled) return@ExtendedFloatingActionButton  // guard early exit
 
-                        if (uiState.isEditMode && !hasEdits)  return@ExtendedFloatingActionButton
+                        if (uiState.isEditMode && !hasEdits) return@ExtendedFloatingActionButton
 
                         viewModel.setIsSaving()
 
                         if (uiState.allSealsValid) {
-                            viewModel.writeObservationRecord(location)
+
+                            val colonyLocation = homeUiState.selectedColony?.let {
+                                GeoLocation(Coordinates(it.adjLat, it.adjLong))
+                            } ?: location
+
+                            viewModel.writeObservationRecord(colonyLocation)
                         } else {
                             // Ensure that the validation error list is current
                             // & mark as needsConfirmation if there are validation errors

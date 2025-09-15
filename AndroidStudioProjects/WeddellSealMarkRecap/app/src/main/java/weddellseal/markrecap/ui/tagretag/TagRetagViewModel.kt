@@ -345,7 +345,7 @@ class TagRetagViewModel(
 
                 // create the metadata object
                 val metadata = ObservationMetadata(
-                    selectedColony = homeUiState.selectedColony,
+                    selectedColony = homeUiState.selectedColony?.location ?: "",
                     selectedObservers = homeUiState.selectedObservers,
                     censusNumber = homeUiState.selectedCensusNumber,
                     isCensusMode = homeUiState.isCensusMode,

@@ -41,6 +41,9 @@ interface SealColoniesDao {
     @Query("SELECT * FROM sealColonies WHERE :deviceLatitude BETWEEN sLimit AND nLimit AND :deviceLongitude BETWEEN wLimit AND eLimit")
     suspend fun findColonyByLatLong(deviceLatitude: Double, deviceLongitude: Double): SealColony?
 
+    @Query("SELECT * FROM sealColonies WHERE location = :colonyName")
+    suspend fun findColonyByName(colonyName: String): SealColony?
+
     @Query("DELETE FROM sealColonies WHERE colonyId = :id")
     suspend fun deleteById(id: Long)
 

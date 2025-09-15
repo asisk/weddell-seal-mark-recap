@@ -61,7 +61,7 @@ fun ColonyRow(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Checkbox(
-                            checked = uiState.manualColonyCheckbox,
+                            checked = uiState.overrideColony,
                             onCheckedChange = {
                                 viewModel.setManualColonyCheckbox(it)
                                 if (!it) {
@@ -75,16 +75,21 @@ fun ColonyRow(
         }
 
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (uiState.manualColonyCheckbox) {
+            if (uiState.overrideColony) {
                 ColonyDropDown(
                     label = "Selected Colony",
                     options = coloniesList,
-                    selectedOption = uiState.selectedColony,
+                    selectedOption = uiState.selectedColony?.location ?: "",
                     onValueChange = { valueSelected ->
                         viewModel.updateSelectedColony(valueSelected)
                     }
+                )
+                Text(
+                    text = uiState.selectedColony?.let { "${uiState.selectedColony?.adjLat}" + "  " + " ${uiState.selectedColony?.adjLong} " } ?: "",
+                    style = MaterialTheme.typography.titleMedium
                 )
             } else {
                 Text(
