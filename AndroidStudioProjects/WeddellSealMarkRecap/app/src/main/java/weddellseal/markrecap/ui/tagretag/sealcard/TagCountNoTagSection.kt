@@ -90,7 +90,7 @@ fun TagCountNoTagSection(
                     Checkbox(
                         checked = oldTagMarks,
                         onCheckedChange = {
-                            onToggleOldTagMarks
+                            onToggleOldTagMarks(it)
                         },
                     )
                 }
