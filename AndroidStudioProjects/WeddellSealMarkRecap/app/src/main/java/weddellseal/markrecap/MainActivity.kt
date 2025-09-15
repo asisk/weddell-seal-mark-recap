@@ -12,27 +12,31 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.google.fusedLocation.FusedLocationSource
-import weddellseal.markrecap.frameworks.room.SealColonyRepository
-import weddellseal.markrecap.frameworks.room.SupportingDataRepository
-import weddellseal.markrecap.frameworks.room.WedCheckRepository
-import weddellseal.markrecap.models.AddLogViewModelFactory
-import weddellseal.markrecap.models.TagRetagModel
-import weddellseal.markrecap.models.AdminViewModel
-import weddellseal.markrecap.models.AdminViewModelFactory
-import weddellseal.markrecap.models.HomeViewModel
-import weddellseal.markrecap.models.HomeViewModelFactory
-import weddellseal.markrecap.models.ObserversViewModel
-import weddellseal.markrecap.models.ObserversViewModelFactory
-import weddellseal.markrecap.models.RecentObservationsViewModel
-import weddellseal.markrecap.models.RecentObservationsViewModelFactory
-import weddellseal.markrecap.models.SealColoniesViewModel
-import weddellseal.markrecap.models.SealColoniesViewModelFactory
-import weddellseal.markrecap.models.WedCheckViewModel
-import weddellseal.markrecap.models.WedCheckViewModelFactory
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
+import weddellseal.markrecap.frameworks.room.files.FilesRepository
+import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
+import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
+import weddellseal.markrecap.viewmodelfactories.ObserversViewModelFactory
+import weddellseal.markrecap.viewmodelfactories.TagRetagViewModelFactory
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
+import weddellseal.markrecap.ui.admin.AdminViewModel
+import weddellseal.markrecap.ui.tagretag.ObserversViewModel
+import weddellseal.markrecap.viewmodelfactories.AdminViewModelFactory
+import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.viewmodelfactories.HomeViewModelFactory
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
+import weddellseal.markrecap.viewmodelfactories.RecentObservationsViewModelFactory
+import weddellseal.markrecap.ui.home.SealColoniesViewModel
+import weddellseal.markrecap.viewmodelfactories.SealColoniesViewModelFactory
+import weddellseal.markrecap.ui.lookup.SealLookupViewModel
+import weddellseal.markrecap.viewmodelfactories.SealLookupViewModelFactory
+import weddellseal.markrecap.ui.admin.WedCheckViewModel
+import weddellseal.markrecap.viewmodelfactories.WedCheckViewModelFactory
 import weddellseal.markrecap.ui.tagretag.TagRetagScreen
 import weddellseal.markrecap.ui.admin.AdminScreen
+import weddellseal.markrecap.ui.census.CensusScreen
 import weddellseal.markrecap.ui.home.HomeScreen
 import weddellseal.markrecap.ui.permissions.LocationPermissionView
 import weddellseal.markrecap.ui.recentobservations.ObservationViewer
@@ -42,10 +46,11 @@ import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
 class MainActivity : ComponentActivity() {
+    private lateinit var filesRepository: FilesRepository
     private lateinit var wedCheckRepository: WedCheckRepository
     private lateinit var observationRepository: ObservationRepository
-    private lateinit var supportingDataRepository: SupportingDataRepository
     private lateinit var sealColonyRepository: SealColonyRepository
+    private lateinit var observersRepository: ObserversRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,49 +58,61 @@ class MainActivity : ComponentActivity() {
         // Access the ObservationLogApplication instance
         val observationLogApplication = application as ObservationLogApplication
 
-        sealColonyRepository = SealColonyRepository()
-
-        // Set up the WedCheck model to be shared between views
-        val wedCheckDao = observationLogApplication.getWedCheckDao()
+        // Initialize the repositories
         val fileUploadDao = observationLogApplication.getFileUploadDao()
+        filesRepository = FilesRepository(fileUploadDao)
+
+        val wedCheckDao = observationLogApplication.getWedCheckDao()
         wedCheckRepository = WedCheckRepository(wedCheckDao, fileUploadDao)
 
         val observationDao = observationLogApplication.getObservationDao()
         observationRepository = ObservationRepository(observationDao)
 
-        val observersDao = observationLogApplication.getObserversDao()
         val sealColoniesDao = observationLogApplication.getSealColoniesDao()
-        supportingDataRepository =
-            SupportingDataRepository(observersDao, sealColoniesDao, fileUploadDao)
+        sealColonyRepository = SealColonyRepository(sealColoniesDao)
 
-        val addLogViewModelFactory =
-            AddLogViewModelFactory(application, observationRepository, sealColonyRepository)
-        val tagRetagModel: TagRetagModel by viewModels { addLogViewModelFactory }
+        val observersDao = observationLogApplication.getObserversDao()
+        observersRepository = ObserversRepository(observersDao)
 
+        // Initialize the view models
         val homeViewModelFactory =
             HomeViewModelFactory(
-                observationRepository,
-                supportingDataRepository,
                 FusedLocationSource(applicationContext),
-                sealColonyRepository
+                sealColonyRepository,
+                observersRepository
             )
         val homeViewModel: HomeViewModel by viewModels { homeViewModelFactory }
+
+        val tagRetagViewModelFactory =
+            TagRetagViewModelFactory(
+                application,
+                observationRepository,
+                wedCheckRepository,
+                homeViewModel.uiState
+            )
+        val tagRetagViewModel: TagRetagViewModel by viewModels { tagRetagViewModelFactory }
 
         val recentObservationsViewModelFactory = RecentObservationsViewModelFactory()
         val recentObservationsViewModel: RecentObservationsViewModel by viewModels { recentObservationsViewModelFactory }
 
-        val adminViewModelFactory = AdminViewModelFactory(application, supportingDataRepository)
+        val adminViewModelFactory = AdminViewModelFactory(application, filesRepository)
         val adminViewModel: AdminViewModel by viewModels { adminViewModelFactory }
 
-        val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository, supportingDataRepository)
+        val wedCheckViewModelFactory = WedCheckViewModelFactory(application, wedCheckRepository)
         val wedCheckViewModel: WedCheckViewModel by viewModels { wedCheckViewModelFactory }
 
-        val sealColoniesViewModelFactory = SealColoniesViewModelFactory(application, supportingDataRepository)
+        val sealLookupViewModelFactory = SealLookupViewModelFactory(application, wedCheckRepository)
+        val sealLookupViewModel: SealLookupViewModel by viewModels { sealLookupViewModelFactory }
+
+        val sealColoniesViewModelFactory =
+            SealColoniesViewModelFactory(application, sealColonyRepository, filesRepository)
         val sealColoniesViewModel: SealColoniesViewModel by viewModels { sealColoniesViewModelFactory }
 
-        val observersViewModelFactory = ObserversViewModelFactory(application, supportingDataRepository)
+        val observersViewModelFactory =
+            ObserversViewModelFactory(application, observersRepository, filesRepository)
         val observersViewModel: ObserversViewModel by viewModels { observersViewModelFactory }
 
+        // Set up the UI
         enableEdgeToEdge()
         setContent {
             WeddellSealMarkRecapTheme {
@@ -104,55 +121,61 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    val startNavigation = Screens.HomeScreen.route
+                    val startNavigation = Screens.Home.route
                     NavHost(navController = navController, startDestination = startNavigation) {
-                        composable(Screens.LocationPermissionScreen.route) {
+                        composable(Screens.LocationPermissions.route) {
                             LocationPermissionView(onNextClick = {
-                                navController.navigate(Screens.HomeScreen.route)
+                                navController.navigate(Screens.Home.route)
                             })
                         }
-                        composable(Screens.HomeScreen.route) {
+                        composable(Screens.Home.route) {
                             HomeScreen(
                                 navController,
-                                tagRetagModel,
                                 homeViewModel
                             )
                         }
-                        composable(Screens.AddObservationLog.route) {
+                        composable(Screens.TagRetag.route) {
                             TagRetagScreen(
                                 navController,
-                                tagRetagModel,
-                                wedCheckViewModel,
+                                tagRetagViewModel,
+                                homeViewModel,
                                 recentObservationsViewModel
+                            )
+                        }
+                        composable(Screens.Census.route) {
+                            CensusScreen(
+                                navController,
+                                homeViewModel
                             )
                         }
                         composable(Screens.RecentObservations.route) {
                             RecentObservationsScreen(
                                 navController,
                                 recentObservationsViewModel,
-                                tagRetagModel
+                                tagRetagViewModel
                             )
                         }
                         composable(Screens.SealLookupScreen.route) {
                             SealLookupScreen(
                                 navController,
-                                wedCheckViewModel,
-                                tagRetagModel
+                                sealLookupViewModel,
+                                tagRetagViewModel
                             )
                         }
                         composable(Screens.ObservationViewer.route) {
                             ObservationViewer(
                                 navController,
-                                tagRetagModel
+                                tagRetagViewModel
                             )
                         }
-                        composable(Screens.AdminScreen.route) {
+                        composable(Screens.Admin.route) {
                             AdminScreen(
                                 navController,
                                 wedCheckViewModel,
                                 sealColoniesViewModel,
                                 observersViewModel,
                                 adminViewModel,
+                                tagRetagViewModel,
                                 recentObservationsViewModel
                             )
                         }
@@ -164,11 +187,12 @@ class MainActivity : ComponentActivity() {
 }
 
 sealed class Screens(val route: String) {
-    object LocationPermissionScreen : Screens("location_permissions")
-    object HomeScreen : Screens("home")
-    object AdminScreen : Screens("admin")
-    object AddObservationLog : Screens("add_log")
-    object RecentObservations : Screens("view_db")
+    object LocationPermissions : Screens("location_permissions")
+    object Home : Screens("home")
+    object Admin : Screens("admin")
+    object TagRetag : Screens("tag_retag")
+    object Census : Screens("census")
+    object RecentObservations : Screens("recent_entries")
     object SealLookupScreen : Screens("seal_lookup")
     object ObservationViewer : Screens("observation_viewer")
 }

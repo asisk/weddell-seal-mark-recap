@@ -29,12 +29,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.models.WedCheckViewModel
 
 @Composable
 fun SealSearchField(
     value: String,
-    viewModel: WedCheckViewModel,
+    viewModel: SealLookupViewModel,
     onValueChanged: (String) -> Unit
 ) {
     var sealTagID by rememberSaveable { mutableStateOf(value) }
@@ -42,14 +41,14 @@ fun SealSearchField(
         LocalFocusManager.current // State to manage whether the text field should lose focus
     val focusRequester =
         remember { FocusRequester() } // FocusRequester to manage focus programmatically
-    var isFocused by remember { mutableStateOf(false) } // Track focus state
     val keyboardController = LocalSoftwareKeyboardController.current
 
     OutlinedTextField(
         value = sealTagID,
         placeholder = { Text("Tag ID", fontSize = 25.sp) },
-        onValueChange = { newText ->
-            sealTagID = newText.uppercase().trim()
+        onValueChange = {
+            val sanitized = it.replace(Regex("[^A-Za-z0-9]"), "")
+            sealTagID = sanitized.uppercase().trim()
             onValueChanged(sealTagID)
         },
         label = { Text("Seal Tag ID", fontSize = 25.sp) },
@@ -60,12 +59,12 @@ fun SealSearchField(
             .onFocusChanged { focusState ->
                 if (focusState.isFocused) {
                     // Reset the field in the model when the text field gains focus
-                    if (viewModel.wedCheckSeal.found) {
+                    if (viewModel.uiState.value.sealFound) {
                         sealTagID = ""
-                        viewModel.resetState()
+                        viewModel.resetLookupUiState()
+                        viewModel.resetLookupSeal()
                     }
                 }
-                isFocused = focusState.isFocused // Update focus state
             }
             .focusRequester(focusRequester),
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -79,22 +78,26 @@ fun SealSearchField(
                 keyboardController?.hide()
 
                 // reset the current seal for new search
-                viewModel.resetState()
+                viewModel.resetLookupUiState()
+                viewModel.resetLookupSeal()
 
                 // engage the search function
                 viewModel.findSealbyTagID(sealTagID)
             }
         ),
         trailingIcon = {
-            Icon(
-                Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier
-                    .clickable {
-                        sealTagID = ""
-                        viewModel.resetState()
-                    }
-                    .size(35.dp) // Adjust the size as needed
-            )
+            if (value.isNotEmpty()) {
+                Icon(
+                    Icons.Filled.Clear, contentDescription = "Clear text",
+                    Modifier
+                        .clickable {
+                            sealTagID = ""
+                            viewModel.resetLookupUiState()
+                            viewModel.resetLookupSeal()
+                        }
+                        .size(35.dp) // Adjust the size as needed
+                )
+            }
         },
         supportingText = {
             Text(

@@ -1,8 +1,6 @@
 package weddellseal.markrecap.ui.tagretag
 
-import android.util.Log
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -26,7 +24,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -36,41 +33,28 @@ fun TagIDOutlinedTextField(
     placeholderText: String,
     errorMessage: String,
     keyboardType: KeyboardType,
-    onValueChangeDo: (String) -> Unit,
     onClearValueDo: () -> Unit,
     onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
 ) {
-    var text by remember { mutableStateOf(value) }
-
-    val keyboardController = LocalSoftwareKeyboardController.current
-
     val focusManager =
         LocalFocusManager.current // State to manage whether the text field should lose focus
     val focusRequester =
         remember { FocusRequester() } // FocusRequester to manage focus programmatically
     var isFocused by remember { mutableStateOf(false) } // Track focus state
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
+
     LaunchedEffect(value) {
         text = value
-    }
-
-    // Detect focus changes and trigger the callback
-    LaunchedEffect(isFocused) {
-        onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
-        Log.d(
-            "TagIDOutlinedTextField LaunchedEffect",
-            "Trimming the field value to remove spaces and calling the onFocusChange lambda"
-        )
     }
 
     OutlinedTextField(
         value = text,
         onValueChange = {
-            text = it
-            if (it.isNotEmpty()) {
-                // save the input to the model
-                onValueChangeDo(it)
-            }
+            val sanitized = it.replace(Regex("[^0-9]"), "") // only allow numeric characters
+            text = sanitized.trim()
         },
         label = { Text(labelText) },
         placeholder = { Text(placeholderText) },
@@ -89,29 +73,22 @@ fun TagIDOutlinedTextField(
             onDone = {
                 focusManager.clearFocus()
                 keyboardController?.hide()
-                Log.d("LaunchedEffect in TagIDOutlinedTextField", "Clearing field focus")
             }
         ),
         trailingIcon = {
-            Icon(
-                Icons.Filled.Clear, contentDescription = "Clear text",
-                Modifier.clickable {
-                    text = ""
-                    onClearValueDo()
-                }
-            )
-        },
-        supportingText = {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = errorMessage,
-                textAlign = TextAlign.End,
-            )
+            if (text.isNotEmpty()) {
+                Icon(
+                    Icons.Filled.Clear, contentDescription = "Clear text",
+                    Modifier.clickable {
+                        text = ""
+                        onClearValueDo()
+                    }
+                )
+            }
         },
         modifier = Modifier
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused // Update focus state
-                Log.d("TagIDOutlinedTextField", "Focus change detected isFocused: $isFocused, calling onFocusChange lambda")
                 onFocusChange(isFocused, text.trim()) // Pass the latest value when focus changes
             }
             .focusRequester(focusRequester)

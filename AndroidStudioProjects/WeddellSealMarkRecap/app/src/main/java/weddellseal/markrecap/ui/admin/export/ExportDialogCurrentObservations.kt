@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import weddellseal.markrecap.frameworks.room.files.FileState
+import weddellseal.markrecap.domain.files.data.FileState
 import kotlin.Unit
 
 @Composable

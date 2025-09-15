@@ -13,12 +13,12 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.FileDownload
-import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.UploadFile
+import androidx.compose.material.icons.sharp.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
@@ -43,15 +43,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.models.AdminViewModel
-import weddellseal.markrecap.models.ObserversViewModel
-import weddellseal.markrecap.models.RecentObservationsViewModel
-import weddellseal.markrecap.models.SealColoniesViewModel
-import weddellseal.markrecap.models.WedCheckViewModel
-import weddellseal.markrecap.ui.admin.archive.ArchiveCurrentObservations
+import weddellseal.markrecap.ui.admin.archive.ManageObservations
 import weddellseal.markrecap.ui.admin.dashboard.DashboardScreen
 import weddellseal.markrecap.ui.admin.export.ExportObservations
-import weddellseal.markrecap.ui.admin.upload.FileUpload
+import weddellseal.markrecap.ui.admin.import.FileImport
+import weddellseal.markrecap.ui.home.SealColoniesViewModel
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
+import weddellseal.markrecap.ui.tagretag.ObserversViewModel
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,10 +60,12 @@ fun AdminScreen(
     sealColoniesViewModel: SealColoniesViewModel,
     observersViewModel: ObserversViewModel,
     adminViewModel: AdminViewModel,
+    tagRetagViewModel: TagRetagViewModel,
     recentObservationsViewModel: RecentObservationsViewModel
 ) {
 
     val adminUiState by adminViewModel.adminUiState.collectAsState()
+
     // Navigation Rail
     var selectedItem by remember { mutableIntStateOf(adminUiState.navRailSelection) }
 
@@ -73,11 +74,11 @@ fun AdminScreen(
     }
 
     val items =
-        listOf("Home", "Dashboard", "Upload", "Export", "Archive")
+        listOf("Home", "Dashboard", "Import", "Export", "Archive")
     val selectedIcons = listOf(
         Icons.Default.Home,
         Icons.Default.Dashboard,
-        Icons.Default.UploadFile,
+        Icons.Sharp.UploadFile,
         Icons.Default.FileDownload,
         Icons.Default.Archive
     )
@@ -85,7 +86,7 @@ fun AdminScreen(
         listOf(
             Icons.Outlined.Home,
             Icons.Outlined.Dashboard,
-            Icons.Outlined.FileUpload,
+            Icons.Outlined.UploadFile,
             Icons.Outlined.FileDownload,
             Icons.Outlined.Archive
         )
@@ -118,7 +119,7 @@ fun AdminScreen(
                         selected = selectedItem == index,
                         onClick = {
                             if (index == 0) {
-                                navController.navigate(Screens.HomeScreen.route)
+                                navController.navigate(Screens.Home.route)
                             } else {
                                 selectedItem = index
                             }
@@ -142,7 +143,7 @@ fun AdminScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = 0.5f
+                            alpha = 0.6f
                         }
                 )
 
@@ -155,15 +156,15 @@ fun AdminScreen(
                     when (selectedItem) {
                         1 -> DashboardScreen(adminViewModel)
 
-                        2 -> FileUpload(
+                        2 -> FileImport(
                             wedCheckViewModel,
                             sealColoniesViewModel,
                             observersViewModel
                         )
 
-                        3 -> ExportObservations(adminViewModel,recentObservationsViewModel)
+                        3 -> ExportObservations(adminViewModel, tagRetagViewModel, recentObservationsViewModel, navController)
 
-                        4 -> ArchiveCurrentObservations(recentObservationsViewModel)
+                        4 -> ManageObservations(recentObservationsViewModel)
                     }
                 }
             }

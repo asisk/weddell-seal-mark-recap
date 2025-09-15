@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import weddellseal.markrecap.models.HomeViewModel
 
 data class SelectableItem(val title: String, var isSelected: Boolean = false)
 
@@ -21,20 +20,13 @@ fun MultiSelectDropdownObservers(
     onValueChange: (List<String>) -> Unit
 ) {
     // Observe the observers list from the ViewModel
-    val options by viewModel.observers.collectAsState() // Collecting the list of observers
+    val options by viewModel.observersList.collectAsState() // Collecting the list of observers
     var expanded by remember { mutableStateOf(false) }
 
     var selectedItems by remember {
         mutableStateOf(options.map { option ->
             SelectableItem(option, option in selectedOptions)
         })
-    }
-
-    // Fetch observers only if the list is empty or data is considered stale
-    LaunchedEffect(Unit) {
-        if (viewModel.observers.value.isEmpty()) {
-            viewModel.fetchObservers()
-        }
     }
 
     LaunchedEffect(options) {

@@ -1,0 +1,29 @@
+package weddellseal.markrecap.domain.tagretag.data
+
+data class WedCheckSeal(
+    val ageClass: SealAgeClass = SealAgeClass.UNKNOWN,
+    val ageYears: String = "",
+    val colony: String = "",
+    val comment: String = "",
+    val condition: SealCondition = SealCondition.UNKNOWN,
+    val lastPhysio: String = "",
+    val lastSeenSeason: Int = 0,
+    val massPups: String = "",
+    val name: String = "",
+    val numRelatives: String = "",
+    val numTags: String = "",
+    val momMassMeasurements: String = "",
+    val numPreviousPups: String = "",
+    val pupPeed: Boolean = false,
+    val sex: SealSex = SealSex.NONE,
+    val speNo: Int = 0,
+    val pupinTTStudy: String = "",
+    val tagEventType: TagEventType = TagEventType.UNKNOWN,
+    val tagIdOne: String = "",
+    val tagOneAlpha: String = "",
+    val tagOneNumber: String = "",
+    val tagIdTwo: String = "",
+    val tagTwoAlpha: String = "",
+    val tagTwoNumber: String = "",
+    val tissueSampled: String = ""
+)

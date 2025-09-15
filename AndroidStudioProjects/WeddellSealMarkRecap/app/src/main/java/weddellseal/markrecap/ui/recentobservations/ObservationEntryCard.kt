@@ -10,13 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.frameworks.room.observations.ObservationLogEntry
+import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.DataDisplayRow
-import weddellseal.markrecap.ui.tagretag.notebookEntryValueObservation
+import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
 
 @Composable
 fun ObservationEntryCard(
-    observation: ObservationLogEntry
+    observation: ObservationRecord
 ) {
     Column(
         modifier = Modifier

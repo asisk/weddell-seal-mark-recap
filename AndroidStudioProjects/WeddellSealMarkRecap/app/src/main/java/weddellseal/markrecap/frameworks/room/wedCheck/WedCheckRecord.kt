@@ -9,7 +9,12 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import weddellseal.markrecap.frameworks.room.WedCheckSeal
+import weddellseal.markrecap.domain.tagretag.data.processTags
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.SealSex
+import weddellseal.markrecap.domain.tagretag.data.TagEventType
+import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Entity(
@@ -49,21 +54,6 @@ data class WedCheckRecord(
 
 // Extension function to map WedCheckRecord to Seal
 fun WedCheckRecord.toSeal(): WedCheckSeal {
-    var ageString = ""
-    if (ageClass == "A") {
-        ageString = "Adult"
-    } else if (ageClass == "P") {
-        ageString = "Pup"
-    } else if (ageClass == "Y") {
-        ageString = "Yearling"
-    }
-
-    val sealSex = when (sex) {
-        "F" -> "Female"
-        "M" -> "Male"
-        "U" -> "Unknown"
-        else -> "Unknown"
-    }
 
     var ageNumeric = "Unknown"
     if (ageYears > 0) {
@@ -83,20 +73,19 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
     }
 
     return WedCheckSeal(
-        age = ageString,
+        ageClass = SealAgeClass.fromAlpha(ageClass),
         ageYears = ageNumeric,
         comment = comments,
-        condition = condition,
-        found = true,
+        condition = SealCondition.fromCode(condition),
         lastSeenSeason = season,
         massPups = pupinMassStudy,
         numTags = numTags.toString(), //not intending to map this over to the observation screen per August 1, 2024 meeting, but added to support validation
         momMassMeasurements = momMassMeasurements,
         numPreviousPups = numPreviousPups,
-        sex = sealSex,
+        sex = SealSex.fromAlpha(sex),
         speNo = speno,
         pupinTTStudy = pupinTTStudy,
-        tagEventType = "",
+        tagEventType = TagEventType.UNKNOWN,
         tagIdOne = tagIdOne,
         tagOneAlpha = processedTagOne.tagAlpha,
         tagOneNumber = processedTagOne.tagNumber,
@@ -107,32 +96,4 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         lastPhysio = lastPhysio,
         colony = colony
     )
-}
-
-data class TagProcessingResult(
-    val tagValid: Boolean,
-    val tagAlpha: String,
-    val tagNumber: String
-)
-
-fun processTags(tag: String?): TagProcessingResult {
-    var tagValid = false
-    var finalTagAlpha = ""
-    var finalTagNumber = ""
-
-    fun validateTag(tag: String?) {
-
-        //verify that the tag is the valid format
-        if (tag.isNullOrBlank() || tag == "NA" || tag == "NoTag") return
-        if (tag.dropLast(1) == "") return
-        if (!tag.last().isLetter()) return
-
-        tagValid = true
-        finalTagAlpha = tag.last().toString()
-        finalTagNumber = tag.dropLast(1)
-    }
-
-    validateTag(tag)
-
-    return TagProcessingResult(tagValid, finalTagAlpha, finalTagNumber)
 }

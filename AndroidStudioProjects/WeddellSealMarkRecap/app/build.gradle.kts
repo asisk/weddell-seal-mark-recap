@@ -3,6 +3,11 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
 }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 android {
     namespace = "weddellseal.markrecap"
     compileSdk = 35
@@ -47,9 +52,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        jvmToolchain {
+            languageVersion.set(JavaLanguageVersion.of(17))
+        }
     }
+
     buildFeatures {
         compose = true
     }
@@ -69,6 +77,8 @@ android {
     }
 }
 dependencies {
+    implementation("androidx.compose.foundation:foundation:1.8.3")
+
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.core:core-ktx:1.15.0")

@@ -14,6 +14,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,22 +25,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.models.RecentObservationsViewModel
+import weddellseal.markrecap.ui.UiEvent
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
 @Composable
 fun ArchiveCurrentObservationsCard(
-    recentObservationsViewModel: RecentObservationsViewModel,
+    viewModel: RecentObservationsViewModel,
     instructions: String
 ) {
-    val currentObservationsCount by recentObservationsViewModel.currentObservationsCount.collectAsState()
-    val recordCountText = "Total Current Observations: $currentObservationsCount"
+    val uiEventFlow = viewModel.uiEvent
     var showArchiveDialog by remember { mutableStateOf(false) }
+
+    val currentObservationsCount by viewModel.currentObservationsCount.collectAsState()
+    val recordCountText = "Total Current Observations: $currentObservationsCount"
+
+    LaunchedEffect(Unit) {
+        uiEventFlow.collect { event ->
+            when (event) {
+                is UiEvent.ShowArchiveDialog -> {
+                    showArchiveDialog = true
+                }
+
+                else -> Unit // Ignore other events
+            }
+        }
+    }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier
             .width(275.dp)
-            .height(300.dp)
+            .height(325.dp)
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(16.dp)
@@ -71,23 +87,26 @@ fun ArchiveCurrentObservationsCard(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { showArchiveDialog = true },
-                modifier = Modifier
-                    .padding(start = 16.dp)
+                onClick = { viewModel.onArchiveAttempt() }
             ) {
-                Text("Archive")
+                Text(
+                    "Archive",
+                    style = MaterialTheme.typography.titleLarge,
+                )
             }
         }
         // CONFIRM ARCHIVE DIALOG
         // ask the user for confirmation of archiving the current observations
         if (showArchiveDialog) {
-            ArchiveDialog(
+            ManageObservationsDialog(
                 onDismissRequest = { showArchiveDialog = false },
                 onConfirmation = {
                     showArchiveDialog = false
-                    recentObservationsViewModel.markObservationsAsDeleted()
+                    viewModel.markObservationsAsDeleted()
                 },
-                currentObservationsCount = currentObservationsCount
+                count = currentObservationsCount,
+                message = "This will archive all current observations. Are you sure?",
+                noRecordsMessage = "No current observations to archive."
             )
         }
     }

@@ -12,10 +12,14 @@ import java.io.OutputStreamWriter
 
 class ObservationRepository(private val observationDao: ObservationDao) {
 
-    val currentObservations: Flow<List<ObservationLogEntry>> = observationDao.getCurrentObservationsOrdered()
-    val allObservations: Flow<List<ObservationLogEntry>> = observationDao.getAllObservationsOrdered()
+    val currentObservationsDescByID: Flow<List<ObservationRecord>> = observationDao.getCurrentObservationsDescByID()
+    val currentObservationsByID: Flow<List<ObservationRecord>> = observationDao.getCurrentObservationsForSeasonByID()
 
-    fun writeDataToStream(outputStream: OutputStream, observations: List<ObservationLogEntry>) {
+    val allObservationsDescByID: Flow<List<ObservationRecord>> = observationDao.getAllObservationsForSeasonDescByID()
+
+
+    // Write all observations to a CSV file
+    fun writeDataToStream(outputStream: OutputStream, observations: List<ObservationRecord>) {
         OutputStreamWriter(outputStream).use { writer ->
             val csvWriter = CSVWriter(writer)
 
@@ -57,17 +61,20 @@ class ObservationRepository(private val observationDao: ObservationDao) {
         }
     }
 
-    suspend fun addObservation(log: ObservationLogEntry) {
-        observationDao.insert(log)
+    suspend fun writeObservation(log: ObservationRecord) {
+        observationDao.upsert(log)
+    }
+
+    suspend fun deleteObservation(id: Int) {
+        observationDao.delete(id)
     }
 
     suspend fun softDeleteAllObservations() {
         observationDao.softDeleteObservations()
     }
 
-    suspend fun updateObservationEntry(log: ObservationLogEntry) {
-        // Example of updating an existing entry with ID 1
-        observationDao.updateObservationLogEntry(log)
+    suspend fun deleteAll() {
+        observationDao.deleteAll()
     }
 
 }

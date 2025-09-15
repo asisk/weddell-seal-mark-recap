@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ObserversDao {
@@ -28,7 +29,7 @@ interface ObserversDao {
     suspend fun getCount(): Int
 
     @Query("SELECT initials FROM observers")
-    fun getObserverInitials(): List<String>
+    fun getObserverInitials(): Flow<List<String>>
 
     @Query("SELECT * FROM observers WHERE fileUploadId = :fileUploadId")
     suspend fun getRecordsByFileUploadId(fileUploadId: Long): List<Observers>

@@ -11,7 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.models.AdminViewModel
+import weddellseal.markrecap.ui.admin.AdminViewModel
 
 @Composable
 fun DashboardScreen(
@@ -29,5 +29,5 @@ fun DashboardScreen(
         )
     }
 
-    LastFilesUploadedCard(adminViewModel.successfulUploads.collectAsState().value)
+    LastFilesImportedCard(adminViewModel.successfulUploads.collectAsState().value)
 }

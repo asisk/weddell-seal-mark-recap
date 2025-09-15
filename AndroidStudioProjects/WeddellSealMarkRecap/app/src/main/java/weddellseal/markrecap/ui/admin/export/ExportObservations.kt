@@ -3,8 +3,10 @@ package weddellseal.markrecap.ui.admin.export
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -21,16 +23,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import weddellseal.markrecap.models.AdminViewModel
-import weddellseal.markrecap.models.RecentObservationsViewModel
+import androidx.navigation.NavHostController
+import weddellseal.markrecap.ui.admin.AdminViewModel
+import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.admin.ExportType
 import weddellseal.markrecap.ui.admin.FileStatus
+import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 import weddellseal.markrecap.ui.utils.getFileExportDateTime
 
 @Composable
 fun ExportObservations(
     adminViewModel: AdminViewModel,
-    recentObservationsViewModel: RecentObservationsViewModel
+    tagRetagViewModel: TagRetagViewModel,
+    recentObservationsViewModel: RecentObservationsViewModel,
+    navController: NavHostController,
 ) {
     val context = LocalContext.current
 
@@ -74,7 +80,7 @@ fun ExportObservations(
 
     val createCurrentObservationsDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri: Uri? ->
-            fileAction = "Exporting Current Observations"
+            fileAction = "Exporting Current WedData"
             exportType = ExportType.CURRENT
 
             if (uri != null) {
@@ -90,7 +96,7 @@ fun ExportObservations(
 
     val createFullObservationsDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri: Uri? ->
-            fileAction = "Exporting All Observations"
+            fileAction = "Exporting All WedData"
             exportType = ExportType.ALL
 
             if (uri != null) {
@@ -151,11 +157,13 @@ fun ExportObservations(
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth(),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
             Text(
                 modifier = Modifier.padding(bottom = 20.dp),
                 text = "Export WedData",
@@ -164,19 +172,16 @@ fun ExportObservations(
             )
         }
 
-        Row {
-            ExportObservationsCard(
-                state = wedDataCurrentExportState,
-                instructions = "Export Current Observations",
-                recentObservationsViewModel = recentObservationsViewModel,
-                ExportType.CURRENT
-            )
-            ExportObservationsCard(
-                state = wedDataFullExportState,
-                instructions = "Export All Observations",
-                recentObservationsViewModel = recentObservationsViewModel,
-                ExportType.ALL
-            )
-        }
+        ExportAllObservationsCard(
+            state = wedDataFullExportState,
+            recentObservationsViewModel = recentObservationsViewModel
+        )
+
+        ExportCurrentObservationsCard(
+            state = wedDataCurrentExportState,
+            tagRetagViewModel = tagRetagViewModel,
+            recentObservationsViewModel = recentObservationsViewModel,
+            navController = navController
+        )
     }
 }

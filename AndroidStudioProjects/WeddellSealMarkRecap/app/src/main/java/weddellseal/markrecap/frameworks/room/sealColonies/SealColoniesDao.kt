@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SealColoniesDao {
@@ -28,7 +29,7 @@ interface SealColoniesDao {
     suspend fun getCount(): Int
 
     @Query("SELECT location FROM sealColonies")
-    fun getSealColonyNames(): List<String>
+    fun getSealColonyNames(): Flow<List<String>>
 
     @Query("SELECT * FROM sealColonies WHERE fileUploadId = :fileUploadId")
     suspend fun getRecordsByFileUploadId(fileUploadId: Long): List<SealColony>
