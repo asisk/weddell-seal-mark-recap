@@ -59,7 +59,7 @@ fun PupWeightSection(
                         if (!isFocused) onWeightCommitted(number)
                     }
                 },
-                onClearValueDo = { onWeightCleared }
+                onClearValueDo = { onWeightCleared() }
             )
         }
     }
