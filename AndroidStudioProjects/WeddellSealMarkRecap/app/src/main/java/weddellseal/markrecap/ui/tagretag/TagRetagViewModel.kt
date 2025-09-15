@@ -1,7 +1,6 @@
 package weddellseal.markrecap.ui.tagretag
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,30 +29,28 @@ import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observations.toSeal
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.toSeal
 import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.home.ObservationMetadata
 import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 import weddellseal.markrecap.ui.tagretag.utils.buildObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.getCurrentYear
-import weddellseal.markrecap.ui.utils.getDeviceName
 
 class TagRetagViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
     private val wedCheckRepo: WedCheckRepository,
+    private val metadata: StateFlow<ObservationMetadata>,
     private val homeViewUiState: StateFlow<HomeViewModel.UiState>,
 ) : AndroidViewModel(application) {
 
-    private val context: Context
-        get() = getApplication()
-
     data class UiState(
-        val metadata: ObservationMetadata = ObservationMetadata(), // current observation metadata
-        val originalMetadata: ObservationMetadata = ObservationMetadata(), // when a record is edited, these are the values that were originally saved for the observation
+        val originalMetadata: ObservationMetadata = ObservationMetadata(selectedColony = null), // when a record is edited, these are the values that were originally saved for the observation
 
         val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
 
@@ -244,7 +241,7 @@ class TagRetagViewModel(
                 isPrefilled = false,
                 isEditMode = false,
                 observationTimestamp = "",
-                originalMetadata = ObservationMetadata(),
+                originalMetadata = ObservationMetadata(selectedColony = null),
                 observationLocation = null,
                 isSaveAttempted = false,
                 isSaveEnabled = false,
@@ -292,96 +289,61 @@ class TagRetagViewModel(
         }
     }
 
-    data class ObservationMetadata(
-        val selectedColony: String = "",
-        val selectedObservers: List<String> = listOf(),
-        val censusNumber: String = "",
-        val isCensusMode: Boolean = false,
-        val deviceID: String = "Unknown", // no validation as the user cannot affect change, set default value in case of error getting device
-        val currentSeason: String = "2025 Preset", // no validation as the user cannot affect change, set default value in case of error generating season
-        val originalDate: String = "",// used for writing edited records and retaining the original date
-        val originalTimestamp: String = "", // used for writing edited records and retaining the original timestamp
-    ) {
-        // computed property, evaluated only when explicitly accessed
-        val isValid: Boolean
-            get() = selectedColony != ""
-                    && selectedObservers != emptyList<String>()
-                    && (!isCensusMode || censusNumber != "")
-
-        // computed property, evaluated only when explicitly accessed
-        val invalidReason: String
-            get() {
-                val sb = StringBuilder()
-                if (selectedColony == "") sb.append("Select a colony.")
-                if (isCensusMode && censusNumber == "") sb.append("\nSelect a census number.")
-                if (selectedObservers == emptyList<String>()) sb.append("\nSelect observer(s).")
-                return sb.toString()
-            }
-
-        fun getObserversString(): String {
-            return selectedObservers.joinToString(", ")
-        }
-    }
-
     // Initialize the ViewModel
     init {
-        val deviceID = getDeviceName(context)
-        val currentSeason = getCurrentYear().toString()
-
-        // Observe homeViewUiState and update metadata
+        // Observe homeViewModel metadata
         // Observe seal validity & save eligibility
         viewModelScope.launch {
             // Each time any of these change:
-            // 1) build a metadata object describing things like colony, observers, and season.
-            // 2) check each seal (primary, pup one, pup two) to see if their information is complete and valid.
-            // 3) create a list of reasons why the data isn’t ready to save.
+            // 1) check each seal (primary, pup one, pup two) to see if their information is complete and valid.
+            // 2) create a list of reasons why the data isn’t ready to save.
             combine(
                 _primarySeal,
                 _pupOne,
-                _pupTwo,
-                homeViewUiState,
-                uiState.map { it.isEditMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>
-            ) { primary, pupOne, pupTwo, homeUiState, editMode ->
+                _pupTwo
+            ) { primary, pupOne, pupTwo -> Triple(primary, pupOne, pupTwo) }
+                .combine(metadata) { triple, metadata -> Pair(triple, metadata) }
+                .combine(homeViewUiState.map { it.overrideColony }) { pair, overrideColony ->
+                    Triple(pair.first.first, pair.first.second, pair.first.third to overrideColony)
+                }
+                .combine(uiState.map { it.isEditMode }) { triple, editMode ->
+                    val primary = triple.first
+                    val pupOne = triple.second
+                    val pupTwo = triple.third.first
 
-                // create the metadata object
-                val metadata = ObservationMetadata(
-                    selectedColony = homeUiState.selectedColony?.location ?: "",
-                    selectedObservers = homeUiState.selectedObservers,
-                    censusNumber = homeUiState.selectedCensusNumber,
-                    isCensusMode = homeUiState.isCensusMode,
-                    deviceID = deviceID,
-                    currentSeason = currentSeason
-                )
+                    val overrideColony = triple.third.second
 
-                // Check if save is enabled
-                val reasons = buildList {
-                    if (!editMode) { // edit mode uses the original metadata, don't validate the current metadata
-                        if (!metadata.isValid) add(metadata.invalidReason)
+                    // Check if save is enabled
+                    val reasons = buildList {
+                        if (!editMode) { // edit mode uses the original metadata, don't validate the current metadata
+                            if (!metadata.value.isValid) add(metadata.value.invalidReason)
+                        }
+                        if (overrideColony) {
+                            if (!metadata.value.isSelectedColonyValid) add(metadata.value.invalidColonyReason)
+                        }
+                        if (!primary.isEntryStarted) add("Missing all required fields!") // condition upon starting observation entry
+                        if (!primary.isComplete) addAll(primary.completenessReasons)
+                        if (primary.hasPupOne && !pupOne.isComplete) addAll(pupOne.completenessReasons)
+                        if (primary.hasPupTwo && !pupTwo.isComplete) addAll(pupTwo.completenessReasons)
                     }
-                    if (!primary.isEntryStarted) add("Missing all required fields!") // condition upon starting observation entry
-                    if (!primary.isComplete) addAll(primary.completenessReasons)
-                    if (primary.hasPupOne && !pupOne.isComplete) addAll(pupOne.completenessReasons)
-                    if (primary.hasPupTwo && !pupTwo.isComplete) addAll(pupTwo.completenessReasons)
+
+                    // Check if the observation has valid seal data
+                    val allSealsValid = primary.isValid &&
+                            (!primary.hasPupOne || pupOne.isValid) &&
+                            (!primary.hasPupTwo || pupTwo.isValid)
+
+                    // emit a Triple that can be unpacked in `collect`
+                    Triple(metadata, reasons, allSealsValid)
+
+                }.collectLatest { (metadata, reasons, allSealsValid) ->
+                    _uiState.update {
+                        it.copy(
+                            isSaveEnabled = reasons.isEmpty(),
+                            ineligibleForSaveReason = reasons.joinToString("\n"),
+                            allSealsValid = allSealsValid
+                        )
+                    }
                 }
-
-                // Check if the observation has valid seal data
-                val allSealsValid = primary.isValid &&
-                        (!primary.hasPupOne || pupOne.isValid) &&
-                        (!primary.hasPupTwo || pupTwo.isValid)
-
-                // emit a Triple that can be unpacked in `collect`
-                Triple(metadata, reasons, allSealsValid)
-
-            }.collectLatest { (metadata, reasons, allSealsValid) ->
-                _uiState.update {
-                    it.copy(
-                        metadata = metadata,
-                        isSaveEnabled = reasons.isEmpty(),
-                        ineligibleForSaveReason = reasons.joinToString("\n"),
-                        allSealsValid = allSealsValid
-                    )
-                }
-            }
         }
 
         // Observe seal edits
@@ -436,7 +398,7 @@ class TagRetagViewModel(
         viewModelScope.launch {
             combine(
                 _primarySeal,
-                homeViewUiState.map { it.isCensusMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>.
+                metadata.map { it.isCensusMode }, // wrap the snapshot value of isEditMode in a Flow<Boolean>.
             ) { currentPrimary, censusMode ->
 
                 val setEventTypeMarked =
@@ -1309,7 +1271,18 @@ class TagRetagViewModel(
             is DisplayObservation.WithPups -> {
                 _uiState.update {
                     val observationMetaData = ObservationMetadata(
-                        selectedColony = displayObservation.primarySeal.colony,
+                        selectedColony = SealColony(
+                            colonyId = 0,
+                            inOut = "",
+                            location = displayObservation.primarySeal.colony,
+                            nLimit = 0.0,
+                            sLimit = 0.0,
+                            wLimit = 0.0,
+                            eLimit = 0.0,
+                            adjLong = 0.0,
+                            adjLat = 0.0,
+                            fileUploadId = 0
+                        ),
                         selectedObservers = listOf(displayObservation.primarySeal.observerInitials),
                         censusNumber = displayObservation.primarySeal.censusID,
                         currentSeason = displayObservation.primarySeal.season,
@@ -1354,7 +1327,18 @@ class TagRetagViewModel(
             is DisplayObservation.Standalone -> {
                 _uiState.update {
                     val observationMetaData = ObservationMetadata(
-                        selectedColony = displayObservation.primarySeal.colony,
+                        selectedColony = SealColony(
+                            colonyId = 0,
+                            inOut = "",
+                            location = displayObservation.primarySeal.colony,
+                            nLimit = 0.0,
+                            sLimit = 0.0,
+                            wLimit = 0.0,
+                            eLimit = 0.0,
+                            adjLong = 0.0,
+                            adjLat = 0.0,
+                            fileUploadId = 0
+                        ),
                         selectedObservers = listOf(displayObservation.primarySeal.observerInitials),
                         censusNumber = displayObservation.primarySeal.censusID,
                         currentSeason = displayObservation.primarySeal.season,
@@ -1488,7 +1472,7 @@ class TagRetagViewModel(
                     "",
                     relOneTag,
                     relTwoTag,
-                    uiState.value.metadata,
+                    metadata.value
                 )
 
                 // write an entry to the database for each seal

@@ -65,7 +65,7 @@ fun TagRetagFooter(
     val uiState by viewModel.uiState.collectAsState()
     val hasEdits by viewModel.hasEdits.collectAsState()
 
-    val homeUiState by homeViewModel.uiState.collectAsState()
+    val metadata by homeViewModel.metadata.collectAsState()
     val location by homeViewModel.currentLocation.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
@@ -116,7 +116,7 @@ fun TagRetagFooter(
 
                         if (uiState.allSealsValid) {
 
-                            val colonyLocation = homeUiState.selectedColony?.let {
+                            val colonyLocation = metadata.selectedColony?.let {
                                 GeoLocation(Coordinates(it.adjLat, it.adjLong))
                             } ?: location
 

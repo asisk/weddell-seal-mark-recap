@@ -24,6 +24,8 @@ import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
+import weddellseal.markrecap.ui.utils.getCurrentYear
+import weddellseal.markrecap.ui.utils.getDeviceName
 import weddellseal.markrecap.ui.utils.mutableJobSet
 import weddellseal.markrecap.ui.utils.storeIn
 
@@ -39,19 +41,33 @@ class HomeViewModel(
     observersRepository: ObserversRepository,
 ) : AndroidViewModel(application) {
 
+    private val context: Context
+        get() = getApplication()
+
     internal val jobs = mutableJobSet()
 
     data class UiState(
-        val isCensusMode: Boolean = false,
-        val selectedCensusNumber: String = "",
-        val selectedObservers: List<String> = listOf(),
-        val selectedColony: SealColony?,
         val overrideColony: Boolean = false
     )
 
-    private val _uiState =
-        MutableStateFlow(UiState(selectedColony = null))
+    private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private val _metadata = MutableStateFlow(ObservationMetadata(selectedColony = null))
+    val metadata: StateFlow<ObservationMetadata> = _metadata.asStateFlow()
+
+    // Initialize the ViewModel
+    init {
+        val deviceID = getDeviceName(context)
+        val currentSeason = getCurrentYear().toString()
+
+        _metadata.update {
+            it.copy(
+                deviceID = deviceID,
+                currentSeason = currentSeason
+            )
+        }
+    }
 
     val observersList: StateFlow<List<String>> = observersRepository.observersList
         .stateIn(viewModelScope, SharingStarted.Companion.Lazily, emptyList())
@@ -73,33 +89,33 @@ class HomeViewModel(
     }
 
     fun clearColony() {
-        _uiState.update { it.copy(selectedColony = null) }
+        _metadata.update { it.copy(selectedColony = null) }
     }
 
     fun updateSelectedColony(observationSiteSelected: String) {
         // lookup coordinates of selected colony, null if not found
         viewModelScope.launch {
-            _uiState.update { it.copy(selectedColony = findColonyByName(observationSiteSelected)) }
+            _metadata.update { it.copy(selectedColony = findColonyByName(observationSiteSelected)) }
         }
     }
 
     // User Selection for Observers
     fun updateObserversSelection(selected: List<String>) {
         val updated = selected.ifEmpty { emptyList() }
-        _uiState.update { it.copy(selectedObservers = updated) }
+        _metadata.update { it.copy(selectedObservers = updated) }
     }
 
     // User Selections for Census
     fun updateCensusNumber(censusNumber: String) {
-        _uiState.update { it.copy(selectedCensusNumber = censusNumber) }
+        _metadata.update { it.copy(censusNumber = censusNumber) }
     }
 
     fun updateIsCensusMode(observationMode: Boolean) {
-        _uiState.update { it.copy(isCensusMode = observationMode) }
+        _metadata.update { it.copy(isCensusMode = observationMode) }
     }
 
     fun clearCensus() {
-        _uiState.update { it.copy(selectedCensusNumber = "", isCensusMode = false) }
+        _metadata.update { it.copy(censusNumber = "", isCensusMode = false) }
     }
 
 //    init {

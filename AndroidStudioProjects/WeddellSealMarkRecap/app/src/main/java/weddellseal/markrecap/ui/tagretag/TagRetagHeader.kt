@@ -41,8 +41,8 @@ fun TagRetagHeader(
     viewModel: TagRetagViewModel,
     homeViewModel: HomeViewModel,
 ) {
-    val homeUiState by homeViewModel.uiState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val metadata by homeViewModel.metadata.collectAsState()
 
     val location by homeViewModel.currentLocation.collectAsState()
 
@@ -51,7 +51,7 @@ fun TagRetagHeader(
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
 
     // CENSUS PREPOPULATE
-    if (homeUiState.isCensusMode) {
+    if (metadata.isCensusMode) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -170,7 +170,7 @@ fun TagRetagHeader(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = uiState.originalMetadata.selectedColony,
+                        text = uiState.originalMetadata.selectedColony?.location ?: "",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -279,7 +279,7 @@ fun TagRetagHeader(
                         viewModel.flagSealForReview(pupTwoSeal.sealType)
                     }
 
-                    val colonyLocation = homeUiState.selectedColony?.let {
+                    val colonyLocation = metadata.selectedColony?.let {
                         GeoLocation(Coordinates(it.adjLat, it.adjLong))
                     } ?: location
 

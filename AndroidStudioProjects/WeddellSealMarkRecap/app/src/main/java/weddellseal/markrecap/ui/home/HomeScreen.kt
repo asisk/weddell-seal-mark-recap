@@ -71,7 +71,7 @@ fun HomeScaffold(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    val uiState by viewModel.uiState.collectAsState()
+    val metadata by viewModel.metadata.collectAsState()
 
     val location by viewModel.currentLocation.collectAsState()
 
@@ -219,7 +219,7 @@ fun HomeScaffold(
                                     ObserversDropDown(
                                         label = "Selected Observers",
                                         allOptions = observerOptions,
-                                        selectedOptions = uiState.selectedObservers,
+                                        selectedOptions = metadata.selectedObservers,
                                         onSelectionChanged = { updatedItems ->
                                             viewModel.updateObserversSelection(
                                                 updatedItems

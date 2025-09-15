@@ -25,9 +25,11 @@ import androidx.compose.ui.unit.dp
 fun ColonyRow(
     viewModel: HomeViewModel
 ) {
-
     val uiState by viewModel.uiState.collectAsState()
+    val metadata by viewModel.metadata.collectAsState()
+
     val autoDetectedColony by viewModel.autoDetectedColony.collectAsState()
+
     val coloniesList by viewModel.coloniesList.collectAsState()
 
     Row(
@@ -82,13 +84,13 @@ fun ColonyRow(
                 ColonyDropDown(
                     label = "Selected Colony",
                     options = coloniesList,
-                    selectedOption = uiState.selectedColony?.location ?: "",
+                    selectedOption = metadata.selectedColony?.location ?: "",
                     onValueChange = { valueSelected ->
                         viewModel.updateSelectedColony(valueSelected)
                     }
                 )
                 Text(
-                    text = uiState.selectedColony?.let { "${uiState.selectedColony?.adjLat}" + "  " + " ${uiState.selectedColony?.adjLong} " } ?: "",
+                    text = metadata.selectedColony?.let { "${metadata.selectedColony?.adjLat}" + "  " + " ${metadata.selectedColony?.adjLong} " } ?: "",
                     style = MaterialTheme.typography.titleMedium
                 )
             } else {

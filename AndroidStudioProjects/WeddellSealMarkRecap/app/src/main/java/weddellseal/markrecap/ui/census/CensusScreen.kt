@@ -49,7 +49,7 @@ fun CensusScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    val uiState by viewModel.uiState.collectAsState()
+    val metadata by viewModel.metadata.collectAsState()
 
     DisposableEffect(Unit) {
         onDispose {
@@ -123,7 +123,7 @@ fun CensusScreen(
                             CensusDropDown(
                                 label = "Census Number",
                                 options = options,
-                                selectedOption = uiState.selectedCensusNumber,
+                                selectedOption = metadata.censusNumber,
                                 onValueChange = {
                                     viewModel.updateCensusNumber(it)
                                 }
@@ -143,10 +143,10 @@ fun CensusScreen(
                                 // EXIT CENSUS BUTTON - only enabled if in a census
                                 ExtendedFloatingActionButton(
                                     modifier = Modifier.padding(10.dp),
-                                    elevation = if (uiState.isCensusMode) elevationEnabled else elevationDisabled,
-                                    containerColor = if (uiState.isCensusMode) colorEnabled else colorDisabled,
+                                    elevation = if (metadata.isCensusMode) elevationEnabled else elevationDisabled,
+                                    containerColor = if (metadata.isCensusMode) colorEnabled else colorDisabled,
                                     onClick = {
-                                        if (!uiState.isCensusMode) return@ExtendedFloatingActionButton  // guard early exit
+                                        if (!metadata.isCensusMode) return@ExtendedFloatingActionButton  // guard early exit
 
                                         viewModel.clearCensus()
                                         navController.navigate(Screens.TagRetag.route)
@@ -163,10 +163,10 @@ fun CensusScreen(
                                 // BEGIN CENSUS BUTTON - only enabled if census number is entered
                                 ExtendedFloatingActionButton(
                                     modifier = Modifier.padding(10.dp),
-                                    elevation = if (uiState.selectedCensusNumber.isNotEmpty()) elevationEnabled else elevationDisabled,
-                                    containerColor = if (uiState.selectedCensusNumber.isNotEmpty()) colorEnabled else colorDisabled,
+                                    elevation = if (metadata.censusNumber.isNotEmpty()) elevationEnabled else elevationDisabled,
+                                    containerColor = if (metadata.censusNumber.isNotEmpty()) colorEnabled else colorDisabled,
                                     onClick = {
-                                        if (uiState.selectedCensusNumber.isEmpty()) return@ExtendedFloatingActionButton  // guard early exit
+                                        if (metadata.censusNumber.isEmpty()) return@ExtendedFloatingActionButton  // guard early exit
 
                                         viewModel.updateIsCensusMode(true)
                                         navController.navigate(Screens.TagRetag.route)
