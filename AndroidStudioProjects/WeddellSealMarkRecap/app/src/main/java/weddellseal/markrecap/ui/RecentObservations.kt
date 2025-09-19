@@ -1,11 +1,7 @@
 package weddellseal.markrecap.ui
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,16 +29,9 @@ fun RecentObservations(
 ) {
     val displayObservations by recentObsViewModel.displayObservations.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .padding(start = 40.dp, end = 40.dp, bottom = 40.dp)
-            .fillMaxWidth()
-            .heightIn(max = 400.dp)
-            .animateContentSize()
-            .border(4.dp, Color.LightGray)
-    ) {
+    if (displayObservations.isEmpty()) {
 
-        if (displayObservations.isEmpty()) {
+        Box {
             Text(
                 text = "No records to display.",
                 style = MaterialTheme.typography.bodyLarge,
@@ -52,6 +41,8 @@ fun RecentObservations(
                 color = Color.Gray
             )
         }
+
+    } else {
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(14.dp)

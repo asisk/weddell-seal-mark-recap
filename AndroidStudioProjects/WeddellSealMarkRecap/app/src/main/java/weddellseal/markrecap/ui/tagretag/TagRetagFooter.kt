@@ -1,6 +1,8 @@
 package weddellseal.markrecap.ui.tagretag
 
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,8 +41,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.Screens
-import weddellseal.markrecap.domain.location.data.Coordinates
-import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.RecentObservations
 import weddellseal.markrecap.ui.UiEvent
@@ -64,9 +65,6 @@ fun TagRetagFooter(
 
     val uiState by viewModel.uiState.collectAsState()
     val hasEdits by viewModel.hasEdits.collectAsState()
-
-    val metadata by homeViewModel.metadata.collectAsState()
-    val location by homeViewModel.currentLocation.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
@@ -115,12 +113,7 @@ fun TagRetagFooter(
                         viewModel.setIsSaving()
 
                         if (uiState.allSealsValid) {
-
-                            val colonyLocation = metadata.selectedColony?.let {
-                                GeoLocation(Coordinates(it.adjLat, it.adjLong))
-                            } ?: location
-
-                            viewModel.writeObservationRecord(colonyLocation)
+                            viewModel.writeObservationRecord(homeViewModel.getColonyLocation())
                         } else {
                             // Ensure that the validation error list is current
                             // & mark as needsConfirmation if there are validation errors
@@ -233,7 +226,16 @@ fun TagRetagFooter(
     )
 
     // RECENT OBSERVATIONS VIEW
-    RecentObservations(viewModel, recentObsViewModel, navController)
+    Box(
+        modifier = Modifier
+            .padding(40.dp)
+            .fillMaxWidth()
+            .heightIn(max = 400.dp)
+            .animateContentSize()
+            .border(4.dp, Color.LightGray)
+    ) {
+        RecentObservations(viewModel, recentObsViewModel, navController)
+    }
 
     // CONFIRM EDIT DIALOG
     if (showEditDialog) {

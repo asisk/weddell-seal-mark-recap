@@ -47,7 +47,11 @@ class HomeViewModel(
     internal val jobs = mutableJobSet()
 
     data class UiState(
-        val overrideColony: Boolean = false
+        val overrideColony: Boolean = false,
+        val latitudeDegrees: Int = -77,
+        val latitudeDecimals: Int = 0,
+        val longitudeDegrees: Int = 166,
+        val longitudeDecimals: Int = 0
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -87,6 +91,29 @@ class HomeViewModel(
     fun setManualColonyCheckbox(value: Boolean) {
         _uiState.update { it.copy(overrideColony = value) }
     }
+
+    fun updateOtherColonyLatitude(value: String) {
+        val intVal = value.toIntOrNull()
+        if (intVal != null) {
+            _uiState.update { it.copy(latitudeDecimals = intVal) }
+        }
+    }
+
+    fun clearOtherColonyLatitude() {
+        _uiState.update { it.copy(latitudeDecimals = 0) }
+    }
+
+    fun updateOtherColonyLongitude(value: String) {
+        val intVal = value.toIntOrNull()
+        if (intVal != null) {
+            _uiState.update { it.copy(longitudeDecimals = intVal) }
+        }
+    }
+
+    fun clearOtherColonyLongitude() {
+        _uiState.update { it.copy(longitudeDecimals = 0) }
+    }
+
 
     fun clearColony() {
         _metadata.update { it.copy(selectedColony = null) }
@@ -236,5 +263,24 @@ class HomeViewModel(
         return withContext(Dispatchers.IO) {
             sealColonyRepository.findColonyByName(colonyName)
         }
+    }
+
+    // This uses coordinates from the auto-detected colony or
+    // from a colony that the user selects, including "Other"
+    // and then uses the coordinates that the user enters
+    fun getColonyLocation(): GeoLocation? {
+        val colony = metadata.value.selectedColony?.let {
+            if (it.location == "Other") {
+                val lat =
+                    uiState.value.latitudeDegrees + uiState.value.latitudeDecimals / 1000.0
+                val long =
+                    uiState.value.longitudeDegrees + uiState.value.longitudeDecimals / 1000.0
+
+                GeoLocation(Coordinates(lat, long))
+            } else {
+                GeoLocation(Coordinates(it.adjLat, it.adjLong))
+            }
+        } ?: currentLocation
+        return colony as GeoLocation?
     }
 }

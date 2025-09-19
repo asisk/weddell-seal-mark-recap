@@ -44,6 +44,7 @@ fun TagRetagHeader(
     val uiState by viewModel.uiState.collectAsState()
     val metadata by homeViewModel.metadata.collectAsState()
 
+    val homeUiState by homeViewModel.uiState.collectAsState()
     val location by homeViewModel.currentLocation.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
@@ -279,11 +280,7 @@ fun TagRetagHeader(
                         viewModel.flagSealForReview(pupTwoSeal.sealType)
                     }
 
-                    val colonyLocation = metadata.selectedColony?.let {
-                        GeoLocation(Coordinates(it.adjLat, it.adjLong))
-                    } ?: location
-
-                    viewModel.writeObservationRecord(colonyLocation)
+                    viewModel.writeObservationRecord(homeViewModel.getColonyLocation())
                 },
                 icon = { Icon(Icons.Filled.Save, "Confirm & Save", Modifier.size(36.dp)) },
                 text = {
