@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import org.intellij.lang.annotations.JdkConstants
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +57,7 @@ fun ColonyRow(
             Checkbox(
                 checked = uiState.overrideColony,
                 onCheckedChange = {
-                    viewModel.setManualColonyCheckbox(it)
+                    viewModel.setOverrideColonyCheckbox(it)
                     if (!it) {
                         viewModel.clearColony()
                     }

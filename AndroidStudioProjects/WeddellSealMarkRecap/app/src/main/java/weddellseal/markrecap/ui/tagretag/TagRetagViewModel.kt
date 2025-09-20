@@ -1374,17 +1374,21 @@ class TagRetagViewModel(
     }
 
     fun flagSealForReview(type: SealType) {
+        val confirmed = "technician confirmed"
         when (type) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(flaggedForReview = true) }
+                val updatedComment = _primarySeal.value.comment + confirmed
+                _primarySeal.update { it.copy(flaggedForReview = true, comment = updatedComment) }
             }
 
             SealType.PUPONE -> {
-                _pupOne.update { it.copy(flaggedForReview = true) }
+                val updatedComment = _pupOne.value.comment + confirmed
+                _pupOne.update { it.copy(flaggedForReview = true, comment = updatedComment) }
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(flaggedForReview = true) }
+                val updatedComment = _pupTwo.value.comment + confirmed
+                _pupTwo.update { it.copy(flaggedForReview = true, comment = updatedComment) }
             }
 
             SealType.UNKNOWN -> {
