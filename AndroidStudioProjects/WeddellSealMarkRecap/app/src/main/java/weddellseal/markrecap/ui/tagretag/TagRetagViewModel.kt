@@ -1253,7 +1253,7 @@ class TagRetagViewModel(
                 oldTagAlpha = lookupSeal.tagOneAlpha,
                 tagEventType = TagEventType.MARKED, // WedCheck seals are Marked by default
                 lastPhysio = lookupSeal.lastPhysio,
-                colony = lookupSeal.colony,
+                colony = lookupSeal.population,
                 wedCheckMatch = lookupSeal
             )
         }

@@ -183,34 +183,43 @@ class WedCheckViewModel(
                     val momMassMeasurementsIndex = headerRow.indexOf("MomMassMeasurements")
                     val conditionIndex = headerRow.indexOf("cond")
                     val lastPhysioIndex = headerRow.indexOf("last physio")
-                    val colonyIndex = headerRow.indexOf("population")
+                    val populationIndex = headerRow.indexOf("population")
+                    val latitudeIndex = headerRow.indexOf("lat")
+                    val longitudeIndex = headerRow.indexOf("long")
 
                     // Column indices based on the header
-                    val requiredHeaders = listOf(
-                        spenoIndex,
-                        lastSeenIndex,
-                        ageClassIndex,
-                        sexIndex,
-                        tagOneIndex,
-                        tagTwoIndex,
-                        noteIndex,
-                        ageIndex,
-                        tissueIndex,
-                        pupinMassStudyIndex,
-                        numPreviousPupsIndex,
-                        pupinTTStudyIndex,
-                        momMassMeasurementsIndex,
-                        conditionIndex,
-                        lastPhysioIndex,
-                        colonyIndex
+                    val headerMap = mapOf(
+                        "speno" to spenoIndex,
+                        "lastSeen" to lastSeenIndex,
+                        "ageClass" to ageClassIndex,
+                        "sex" to sexIndex,
+                        "tagOne" to tagOneIndex,
+                        "tagTwo" to tagTwoIndex,
+                        "note" to noteIndex,
+                        "age" to ageIndex,
+                        "tissue" to tissueIndex,
+                        "pupinMassStudy" to pupinMassStudyIndex,
+                        "numPreviousPups" to numPreviousPupsIndex,
+                        "pupinTTStudy" to pupinTTStudyIndex,
+                        "momMassMeasurements" to momMassMeasurementsIndex,
+                        "condition" to conditionIndex,
+                        "lastPhysio" to lastPhysioIndex,
+                        "population" to populationIndex,
+                        "latitude" to latitudeIndex,
+                        "longitude" to longitudeIndex
                     )
 
                     // Check if any required headers are missing
-                    if (!requiredHeaders.all { it != -1 }) {
+                    val missingHeaders = headerMap.filterValues { it == -1 }.keys
+                    if (missingHeaders.isNotEmpty()) {
                         failedRows.add(
                             FailedRow(
                                 rowNumber = 0,
-                                errorMessage = "CSV file missing required columns"
+                                errorMessage = "CSV file missing required columns: ${
+                                    missingHeaders.joinToString(
+                                        ", "
+                                    )
+                                }"
                             )
                         )
                         return Pair(csvData, failedRows)
@@ -246,8 +255,10 @@ class WedCheckViewModel(
                                     ?: "",
                                 condition = row.getOrNull(conditionIndex) ?: "",
                                 lastPhysio = row.getOrNull(lastPhysioIndex) ?: "",
-                                colony = row.getOrNull(colonyIndex) ?: "",
-                                fileUploadId = fileUploadId // This remains the same as it’s coming from your system, not the CSV
+                                population = row.getOrNull(populationIndex) ?: "",
+                                fileUploadId = fileUploadId, // This remains the same as it’s coming from your system, not the CSV
+                                latitude = row.getOrNull(latitudeIndex)?.toDoubleOrNull() ?: 0.0,
+                                longitude = row.getOrNull(longitudeIndex)?.toDoubleOrNull() ?: 0.0,
                             )
 
                             // Add the parsed entity to the list
@@ -290,6 +301,8 @@ class WedCheckViewModel(
                 )
             )
         } catch (e: Exception) {
+            e.printStackTrace()
+
             failedRows.add(
                 FailedRow(
                     rowNumber = 0,

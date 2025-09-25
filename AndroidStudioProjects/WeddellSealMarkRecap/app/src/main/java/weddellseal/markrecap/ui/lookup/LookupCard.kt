@@ -29,53 +29,44 @@ fun LookupCard(
             .verticalScroll(state = scrollState, enabled = true)
     ) {// Apply padding to left and right
 
-        // SPENO
         DataDisplayRow("SPENO", if (seal.speNo == 0) "" else seal.speNo.toString())
 
-        // TAGS
         DataDisplayRow("Tag 1", seal.tagIdOne)
         DataDisplayRow("Tag 2", seal.tagIdTwo)
 
-        // AGE
         DataDisplayRow("Age Class", seal.ageClass.alpha)
 
-        // AGE YEARS
         DataDisplayRow("Age Years", seal.ageYears)
 
-        // SEX
         DataDisplayRow("Sex", seal.sex.alpha)
 
-        // TISSUE SAMPLED
         DataDisplayRow("Tissue Taken", seal.tissueSampled)
 
-        // CONDITION
         DataDisplayRow("Condition", seal.condition.code)
 
-        // PREVIOUS PUPS
         DataDisplayRow("Last Physio", seal.lastPhysio)
 
-        // LAST SEEN
         DataDisplayRow(
             "Last Seen",
             if (seal.lastSeenSeason == 0) "" else seal.lastSeenSeason.toString()
         )
 
-        // PREVIOUS PUPS
-        DataDisplayRow("Colony", seal.colony)
+        DataDisplayRow("Population", seal.population)
 
-        // PREVIOUS PUPS
+        DataDisplayRow("Lat",
+            if (seal.latitude == 0.0) "" else seal.latitude.toString())
+
+        DataDisplayRow("Long",
+            if (seal.longitude == 0.0) "" else seal.longitude.toString())
+
         DataDisplayRow("Previous Pups", seal.numPreviousPups)
 
-        // MASS PUPS
         DataDisplayRow("Mass Pups", seal.massPups)
 
-        // SWIM PUPS
         DataDisplayRow("Swim Pups", seal.pupinTTStudy)
 
-        // PHOTO YEARS
         DataDisplayRow("Photo Years", seal.momMassMeasurements)
 
-        // COMMENTS
         DataDisplayRow("Comments", seal.comment)
     }
 }

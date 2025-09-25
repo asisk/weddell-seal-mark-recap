@@ -48,8 +48,10 @@ data class WedCheckRecord(
     @ColumnInfo(name = "momMassMeasurements") val momMassMeasurements: String,  // NA possible value, otherwise its a number
     @ColumnInfo(name = "condition") val condition: String,                      // NA possible value, otherwise its a number
     @ColumnInfo(name = "lastPhysio") val lastPhysio: String,                    // NA possible value, otherwise its a number
-    @ColumnInfo(name = "colony") val colony: String,                            // NA possible value, otherwise its a number
-    @ColumnInfo(name = "fileUploadId") val fileUploadId: Long                   // Foreign key reference
+    @ColumnInfo(name = "population") val population: String,                    // NA possible value, otherwise its a number
+    @ColumnInfo(name = "fileUploadId") val fileUploadId: Long,                  // Foreign key reference
+    @ColumnInfo(name = "latitude") val latitude: Double,
+    @ColumnInfo(name = "longitude") val longitude: Double
 )
 
 // Extension function to map WedCheckRecord to Seal
@@ -94,6 +96,8 @@ fun WedCheckRecord.toSeal(): WedCheckSeal {
         tagTwoNumber = processedTagTwo.tagNumber,
         tissueSampled = tissueSampled, // updated to map unchanged per August 1, 2024 meeting
         lastPhysio = lastPhysio,
-        colony = colony
+        population = population,
+        latitude = latitude,
+        longitude = longitude
     )
 }
