@@ -4,7 +4,10 @@ import weddellseal.markrecap.frameworks.room.files.FileUploadDao
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.ui.admin.FileStatus
 
-class WedCheckRepository(private val wedCheckDao: WedCheckDao, private val fileUploadDao: FileUploadDao) {
+class WedCheckRepository(
+    private val wedCheckDao: WedCheckDao,
+    private val fileUploadDao: FileUploadDao
+) {
     fun findSealbyTagID(sealTagID: String): WedCheckRecord {
         return wedCheckDao.lookupSealByTagID(sealTagID)
     }
@@ -13,17 +16,13 @@ class WedCheckRepository(private val wedCheckDao: WedCheckDao, private val fileU
         return wedCheckDao.lookupSealBySpeNo(speNo)
     }
 
-    fun getSealSpeNo(sealTagID: String): Int {
-        return wedCheckDao.lookupSpeNoByTagID(sealTagID)
-    }
-
     suspend fun insertCsvData(fileUploadId: Long, csvData: List<WedCheckRecord>): Result<Int> {
-           return try {
-               val count = wedCheckDao.insertWedCheckRecords(fileUploadId, csvData)
-               Result.success(count)
-           } catch (e: Exception) {
-               Result.failure(e)
-           }
+        return try {
+            val count = wedCheckDao.insertWedCheckRecords(fileUploadId, csvData)
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     // Insert file upload entry and get the fileUploadId
@@ -31,8 +30,12 @@ class WedCheckRepository(private val wedCheckDao: WedCheckDao, private val fileU
         return fileUploadDao.insertFileUpload(fileUpload)
     }
 
-    suspend fun updateFileUploadStatus(fileUploadId: Long, status: FileStatus, recordCount: Int, statusMsg: String) {
+    suspend fun updateFileUploadStatus(
+        fileUploadId: Long,
+        status: FileStatus,
+        recordCount: Int,
+        statusMsg: String
+    ) {
         fileUploadDao.updateFileUploadStatus(fileUploadId, status, recordCount, statusMsg)
     }
-
 }
