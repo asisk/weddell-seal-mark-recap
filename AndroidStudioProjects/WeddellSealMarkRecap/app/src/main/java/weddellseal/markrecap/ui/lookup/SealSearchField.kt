@@ -2,15 +2,19 @@ package weddellseal.markrecap.ui.lookup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,11 +36,11 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun SealSearchField(
-    value: String,
     viewModel: SealLookupViewModel,
-    onValueChanged: (String) -> Unit
 ) {
-    var sealTagID by rememberSaveable { mutableStateOf(value) }
+    val uiState by viewModel.uiState.collectAsState()
+
+    var searchString by rememberSaveable { mutableStateOf("") }
     val focusManager =
         LocalFocusManager.current // State to manage whether the text field should lose focus
     val focusRequester =
@@ -44,14 +48,13 @@ fun SealSearchField(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     OutlinedTextField(
-        value = sealTagID,
-        placeholder = { Text("Tag ID", fontSize = 25.sp) },
+        value = searchString,
+        placeholder = { Text("Tag ID or Speno", fontSize = 25.sp) },
         onValueChange = {
             val sanitized = it.replace(Regex("[^A-Za-z0-9]"), "")
-            sealTagID = sanitized.uppercase().trim()
-            onValueChanged(sealTagID)
+            searchString = sanitized.uppercase().trim()
         },
-        label = { Text("Seal Tag ID", fontSize = 25.sp) },
+        label = { Text("Tag ID or Speno", fontSize = 25.sp) },
         singleLine = true,
         textStyle = TextStyle(fontSize = 25.sp),
         modifier = Modifier
@@ -60,7 +63,7 @@ fun SealSearchField(
                 if (focusState.isFocused) {
                     // Reset the field in the model when the text field gains focus
                     if (viewModel.uiState.value.sealFound) {
-                        sealTagID = ""
+                        searchString = ""
                         viewModel.resetLookupUiState()
                         viewModel.resetLookupSeal()
                     }
@@ -82,16 +85,22 @@ fun SealSearchField(
                 viewModel.resetLookupSeal()
 
                 // engage the search function
-                viewModel.findSealbyTagID(sealTagID)
+                val possiblySpeno = searchString.toIntOrNull()
+                if (possiblySpeno != null) {
+                    viewModel.findSealbySpeno(possiblySpeno)
+                    searchString = possiblySpeno.toString()
+                } else {
+                    viewModel.findSealbyTagID(searchString)
+                }
             }
         ),
         trailingIcon = {
-            if (value.isNotEmpty()) {
+            if (searchString.isNotEmpty()) {
                 Icon(
                     Icons.Filled.Clear, contentDescription = "Clear text",
                     Modifier
                         .clickable {
-                            sealTagID = ""
+                            searchString = ""
                             viewModel.resetLookupUiState()
                             viewModel.resetLookupSeal()
                         }
@@ -101,10 +110,32 @@ fun SealSearchField(
         },
         supportingText = {
             Text(
-                text = "ex. 4932A",
+                text = "ex. 4932A or 30023",
                 textAlign = TextAlign.Start,
                 fontSize = 20.sp
             )
         }
     )
+
+    if (!uiState.sealFound) {
+        IconButton(
+            onClick = {
+                focusManager.clearFocus()
+                val possiblySpeno = searchString.toIntOrNull()
+                if (possiblySpeno != null) {
+                    viewModel.findSealbySpeno(possiblySpeno)
+                    searchString = possiblySpeno.toString()
+                } else {
+                    viewModel.findSealbyTagID(searchString)
+                }
+            },
+            modifier = Modifier.padding(bottom = 15.dp, end = 20.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search",
+                modifier = Modifier.size(45.dp)
+            )
+        }
+    }
 }
