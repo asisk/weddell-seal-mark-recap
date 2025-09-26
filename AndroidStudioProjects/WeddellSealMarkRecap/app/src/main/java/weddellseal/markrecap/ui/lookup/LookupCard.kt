@@ -50,9 +50,33 @@ fun LookupCard(
 
         DataDisplayRow("Sex", seal.sex.alpha)
 
-        DataDisplayRow("Tissue Taken", seal.tissueSampled)
+        if (seal.tissueSampled == "Need") {
+            // BANNER For White Island Seals that are observed outside of White Island colony
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFFFE0B2))
+                    .padding(14.dp),
+            ) {
+                DataDisplayRow("Tissue Taken", seal.tissueSampled)
+            }
+        } else {
+            DataDisplayRow("Tissue Taken", seal.tissueSampled)
+        }
 
-        DataDisplayRow("Condition", seal.condition.code)
+        if (seal.condition.description == "Dead") {
+            // BANNER For White Island Seals that are observed outside of White Island colony
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFFFE0B2))
+                    .padding(14.dp),
+            ) {
+                DataDisplayRow("Condition", seal.condition.code)
+            }
+        } else {
+            DataDisplayRow("Condition", seal.condition.code)
+        }
 
         DataDisplayRow("Last Physio", seal.lastPhysio)
 
