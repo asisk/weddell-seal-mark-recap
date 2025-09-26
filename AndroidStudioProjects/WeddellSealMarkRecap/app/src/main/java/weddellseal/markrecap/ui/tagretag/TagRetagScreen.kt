@@ -109,7 +109,7 @@ fun TagRetagScreen(
                 ) {
                     // SEAL CARDS
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        TabbedCards(viewModel, primarySeal, pupOneSeal, pupTwoSeal)
+                        TabbedCards(viewModel, homeViewModel,primarySeal, pupOneSeal, pupTwoSeal)
                     }
 
                     TagRetagFooter(viewModel, homeViewModel, recentObsViewModel, navController)

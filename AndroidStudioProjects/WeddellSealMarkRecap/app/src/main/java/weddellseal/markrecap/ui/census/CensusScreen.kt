@@ -119,7 +119,7 @@ fun CensusScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
 
-                            val options = listOf("1", "2", "3", "4", "5", "6", "7", "8")
+                            val options = listOf("1", "2", "3", "4", "5", "6", "7", "8", "w1", "w2")
                             CensusDropDown(
                                 label = "Census Number",
                                 options = options,

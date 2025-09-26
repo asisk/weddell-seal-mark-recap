@@ -160,6 +160,7 @@ class MainActivity : ComponentActivity() {
                             SealLookupScreen(
                                 navController,
                                 sealLookupViewModel,
+                                homeViewModel,
                                 tagRetagViewModel
                             )
                         }
