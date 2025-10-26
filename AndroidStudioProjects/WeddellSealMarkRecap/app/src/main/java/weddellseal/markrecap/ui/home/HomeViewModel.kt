@@ -103,23 +103,22 @@ class HomeViewModel(
             return
         }
 
-        Log.i(TAG, "Location permissions granted, proceed with observing location changes")
+        Log.i(TAG, "Location permissions granted, starting location updates")
+        Log.i(TAG, "Current permissions status - Fine: ${hasPreciseLocation(context)}")
 
         viewModelScope.launch {
             applyLocationFollowing(true)
             locationSource.startLocationUpdates()
+            Log.i(TAG, "Location updates initiated")
         }.storeIn(jobs)
     }
 
     private fun configureLocationFollow() {
-        viewModelScope.launch {
-            // Log.i(TAG, "observing location follow mode")
+        viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
+            Log.i(TAG, "Starting to observe location updates")
 
             locationSource.locationUpdates().collect { geoLocation ->
-                if (geoLocation.coordinates == uiState.value.lastKnownCoordinates) {
-                    return@collect // Unchanged, skip the update
-                }
-
+                // Update UI state with new coordinates (StateFlow updates are thread-safe)
                 _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
                 _currentLocation.value = geoLocation
             }
@@ -127,7 +126,7 @@ class HomeViewModel(
     }
 
     private fun observeColonyUpdates() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
             currentLocation
                 .filterNotNull()
                 .collect { geoLocation ->

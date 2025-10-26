@@ -13,9 +13,11 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.GeoLocation
@@ -64,8 +66,15 @@ class FusedLocationSource(
         }
     }
 
+    @OptIn(FlowPreview::class)
     override suspend fun locationUpdates(): Flow<GeoLocation> {
-        return locationFlow.distinctUntilChanged()
+        return locationFlow
+            .distinctUntilChanged { old, new ->
+                // Only consider locations "different" if they're more than 0.5 meters apart
+                val distance = old.coordinates.distanceTo(new.coordinates)
+                distance < 0.5
+            }
+            .sample(5000L) // Sample at most once per 5 seconds
     }
 
     @SuppressLint("MissingPermission")
@@ -76,14 +85,17 @@ class FusedLocationSource(
             return
         }
         fusedProviderClient.requestLocationUpdates(
-            LocationRequest.Builder(1000L).apply {
+            LocationRequest.Builder(5000L).apply {
                 setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
+                setMinUpdateDistanceMeters(0.5f) // Update for movement > 0.5 meters
+                setMaxUpdateDelayMillis(5000L) // Maximum 5 second delay
             }.build(),
             Executors.newSingleThreadExecutor(),
             this,
         )
-        isUpdating = true    }
+        isUpdating = true
+    }
 
     override suspend fun stopLocationUpdates() {
         if (!isUpdating) return
@@ -93,7 +105,11 @@ class FusedLocationSource(
 
     override fun onLocationChanged(update: Location) {
         CoroutineScope(Dispatchers.Default).launch {
-            locationFlow.emit(GeoLocation.Companion.fromFusedLocation(update))
+            try {
+                locationFlow.emit(GeoLocation.Companion.fromFusedLocation(update))
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing location update", e)
+            }
         }
     }
 }
