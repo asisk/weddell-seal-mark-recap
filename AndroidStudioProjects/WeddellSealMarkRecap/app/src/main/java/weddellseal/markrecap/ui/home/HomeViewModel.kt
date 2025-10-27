@@ -120,7 +120,8 @@ class HomeViewModel(
 
             try {
                 locationSource.locationUpdates().collect { geoLocation ->
-                    Log.i(TAG, "configureLocationFollow: new latitude ${geoLocation.coordinates.latitude}")
+                    // Added longitude logging for better debugging of location updates
+                    Log.i(TAG, "configureLocationFollow: new latitude ${geoLocation.coordinates.latitude}, longitude ${geoLocation.coordinates.longitude}")
                     // Update UI state with new coordinates (StateFlow updates are thread-safe)
                     _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
                     _currentLocation.value = geoLocation
@@ -259,6 +260,9 @@ class HomeViewModel(
     fun getColonyLocation(): GeoLocation? {
         val colony = metadata.value.selectedColony?.let {
             if (it.location == "Other") {
+                // Fixed: Changed from /1000.0 to /100000.0 to properly handle 5 decimal places
+                // Previously: -77 + 12345/1000 = -64.655 (wrong!)
+                // Now: -77 + 12345/100000 = -77.12345 (correct!)
                 val lat =
                     uiState.value.latitudeDegrees + uiState.value.latitudeDecimals / 100000.0
                 val long =

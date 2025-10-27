@@ -44,11 +44,9 @@ fun HomeScreen(
     // Used to request permissions for Location
     RequestPermissionsEffect(viewModel)
 
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.jobs.cancelAllAndClear()
-        }
-    }
+    // Removed DisposableEffect that was cancelling location update jobs
+    // Location updates should continue running in background for other screens
+    // The HomeViewModel.onCleared() method handles proper cleanup when Activity is destroyed
 
     ModalNavigationDrawer(
         drawerState = drawerState,
