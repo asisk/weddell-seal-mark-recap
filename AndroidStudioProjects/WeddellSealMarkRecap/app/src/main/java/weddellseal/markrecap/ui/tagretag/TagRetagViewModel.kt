@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag
 
 import android.app.Application
+import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -1467,6 +1468,7 @@ class TagRetagViewModel(
                 .filter { it.isComplete && !it.markedRemoved && !it.hasEdits }
 
             for (seal in sealsComplete) {
+                Log.i(TAG, "current location at the time of save ${currentLocation?.coordinates?.latitude}")
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
                 // TODO, consider a function on the Observation, toObservationRecord(), to replace buildObservationRecord

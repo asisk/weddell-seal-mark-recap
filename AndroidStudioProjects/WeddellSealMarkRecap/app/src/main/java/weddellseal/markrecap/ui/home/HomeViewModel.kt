@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -115,12 +116,22 @@ class HomeViewModel(
 
     private fun configureLocationFollow() {
         viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
-            Log.i(TAG, "Starting to observe location updates")
+            Log.i(TAG, "configureLocationFollow: Starting to observe location updates")
 
-            locationSource.locationUpdates().collect { geoLocation ->
-                // Update UI state with new coordinates (StateFlow updates are thread-safe)
-                _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
-                _currentLocation.value = geoLocation
+            try {
+                locationSource.locationUpdates().collect { geoLocation ->
+                    Log.i(TAG, "configureLocationFollow: new latitude ${geoLocation.coordinates.latitude}")
+                    // Update UI state with new coordinates (StateFlow updates are thread-safe)
+                    _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
+                    _currentLocation.value = geoLocation
+                    Log.d(TAG, "configureLocationFollow: Successfully updated location")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "configureLocationFollow: Error in location collection", e)
+                // Restart location collection after a delay
+                delay(2000)
+                Log.i(TAG, "configureLocationFollow: Restarting location collection")
+                configureLocationFollow() // Recursive restart
             }
         }.storeIn(jobs)
     }

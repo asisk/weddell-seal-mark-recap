@@ -79,11 +79,17 @@ class FusedLocationSource(
 
     @SuppressLint("MissingPermission")
     override suspend fun startLocationUpdates() {
-        if (isUpdating) return
+        Log.i(TAG, "startLocationUpdates called, isUpdating: $isUpdating")
+        if (isUpdating) {
+            Log.w(TAG, "Location updates already running, skipping start")
+            return
+        }
         if (!context.locationPermissionsGranted()) {
             Log.e(TAG, "startUpdates(): Location permissions not granted")
             return
         }
+        
+        Log.i(TAG, "Starting location updates with permissions granted")
         fusedProviderClient.requestLocationUpdates(
             LocationRequest.Builder(5000L).apply {
                 setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -95,18 +101,27 @@ class FusedLocationSource(
             this,
         )
         isUpdating = true
+        Log.i(TAG, "Location updates started successfully, isUpdating: $isUpdating")
     }
 
     override suspend fun stopLocationUpdates() {
-        if (!isUpdating) return
+        Log.i(TAG, "stopLocationUpdates called, isUpdating: $isUpdating")
+        if (!isUpdating) {
+            Log.w(TAG, "Location updates not running, skipping stop")
+            return
+        }
         fusedProviderClient.removeLocationUpdates(this)
         isUpdating = false
+        Log.i(TAG, "Location updates stopped successfully, isUpdating: $isUpdating")
     }
 
     override fun onLocationChanged(update: Location) {
+        Log.d(TAG, "onLocationChanged received: lat=${update.latitude}, lng=${update.longitude}, accuracy=${update.accuracy}m")
         CoroutineScope(Dispatchers.Default).launch {
             try {
-                locationFlow.emit(GeoLocation.Companion.fromFusedLocation(update))
+                val geoLocation = GeoLocation.Companion.fromFusedLocation(update)
+                locationFlow.emit(geoLocation)
+                Log.d(TAG, "Successfully emitted location update")
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing location update", e)
             }
