@@ -260,9 +260,9 @@ class HomeViewModel(
         val colony = metadata.value.selectedColony?.let {
             if (it.location == "Other") {
                 val lat =
-                    uiState.value.latitudeDegrees + uiState.value.latitudeDecimals / 1000.0
+                    uiState.value.latitudeDegrees + uiState.value.latitudeDecimals / 100000.0
                 val long =
-                    uiState.value.longitudeDegrees + uiState.value.longitudeDecimals / 1000.0
+                    uiState.value.longitudeDegrees + uiState.value.longitudeDecimals / 100000.0
 
                 GeoLocation(Coordinates(lat, long))
             } else {
