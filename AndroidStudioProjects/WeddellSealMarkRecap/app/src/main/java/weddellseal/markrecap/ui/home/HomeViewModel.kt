@@ -69,6 +69,9 @@ class HomeViewModel(
     private val _autoDetectedColony = MutableStateFlow<SealColony?>(null)
     val autoDetectedColony: StateFlow<SealColony?> = _autoDetectedColony
 
+    // Guard to prevent multiple location collection coroutines
+    private var isLocationCollectionActive = false
+
     val observersList: StateFlow<List<String>> = observersRepository.observersList
         .stateIn(viewModelScope, SharingStarted.Companion.Lazily, emptyList())
 
@@ -90,6 +93,7 @@ class HomeViewModel(
             locationSource.stopLocationUpdates()
         }
         jobs.clear()
+        isLocationCollectionActive = false
     }
 
     fun onPermissionsResult(granted: Boolean) {
@@ -108,18 +112,45 @@ class HomeViewModel(
         Log.i(TAG, "Current permissions status - Fine: ${hasPreciseLocation(context)}")
 
         viewModelScope.launch {
+            Log.i(TAG, "Starting location service sequence...")
             applyLocationFollowing(true)
+            Log.i(TAG, "Calling locationSource.startLocationUpdates()...")
             locationSource.startLocationUpdates()
+            Log.i(TAG, "Calling configureLocationFollow()...")
+            // Start location collection after location updates are started
+            configureLocationFollow()
             Log.i(TAG, "Location updates initiated")
         }.storeIn(jobs)
     }
 
     private fun configureLocationFollow() {
+        // Prevent multiple location collection coroutines
+        if (isLocationCollectionActive) {
+            Log.w(TAG, "configureLocationFollow: Already active, skipping duplicate call")
+            return
+        }
+        
+        isLocationCollectionActive = true
         viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
             Log.i(TAG, "configureLocationFollow: Starting to observe location updates")
 
             try {
+                Log.i(TAG, "About to call locationSource.locationUpdates().collect...")
+                // Add timeout to detect if location updates are being received
+                val startTime = System.currentTimeMillis()
+                
+                // Launch a separate coroutine to log periodic status
+                launch {
+                    while (isLocationCollectionActive) {
+                        delay(10000) // Log every 10 seconds
+                        val elapsedTime = System.currentTimeMillis() - startTime
+                        Log.i(TAG, "configureLocationFollow: Still waiting for location updates after ${elapsedTime}ms")
+                    }
+                }
+                
                 locationSource.locationUpdates().collect { geoLocation ->
+                    val elapsedTime = System.currentTimeMillis() - startTime
+                    Log.i(TAG, "configureLocationFollow: Received location update after ${elapsedTime}ms")
                     // Added longitude logging for better debugging of location updates
                     Log.i(TAG, "configureLocationFollow: new latitude ${geoLocation.coordinates.latitude}, longitude ${geoLocation.coordinates.longitude}")
                     // Update UI state with new coordinates (StateFlow updates are thread-safe)
@@ -129,6 +160,7 @@ class HomeViewModel(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "configureLocationFollow: Error in location collection", e)
+                isLocationCollectionActive = false
                 // Restart location collection after a delay
                 delay(2000)
                 Log.i(TAG, "configureLocationFollow: Restarting location collection")
@@ -159,10 +191,8 @@ class HomeViewModel(
             )
         }
 
-        // Launch both collectors once in init {} and let them idle until data arrives.
-        // In onPermissionsResult only toggle start/stopLocationUpdates().
-        // This addresses the risk of duplicate jobs in the case onPermissionsResult is called more than once.
-        configureLocationFollow()
+        // Only start colony observation - location collection starts after permissions are granted
+        // This prevents trying to collect from a flow that isn't emitting yet
         observeColonyUpdates()
     }
 

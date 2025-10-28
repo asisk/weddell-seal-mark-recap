@@ -1,5 +1,6 @@
 package weddellseal.markrecap.ui.home
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +15,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +30,6 @@ import weddellseal.markrecap.ui.CenteredAppBar
 import weddellseal.markrecap.ui.NavMenu
 import weddellseal.markrecap.ui.permissions.RequestPermissions
 import weddellseal.markrecap.ui.permissions.missingPermissions
-import weddellseal.markrecap.ui.utils.cancelAllAndClear
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,9 +109,12 @@ private fun RequestPermissionsEffect(
     vm: HomeViewModel,
 ) {
     val missing = LocalContext.current.missingPermissions()
+    Log.i("RequestPermissionsEffect", "Missing permissions: $missing")
     if (missing.isEmpty()) {
+        Log.i("RequestPermissionsEffect", "No missing permissions, calling vm.onPermissionsResult(true)")
         vm.onPermissionsResult(true)
         return
     }
+    Log.i("RequestPermissionsEffect", "Requesting permissions: $missing")
     RequestPermissions(missing, vm::onPermissionsResult)
 }

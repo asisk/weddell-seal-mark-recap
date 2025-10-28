@@ -20,14 +20,19 @@ fun RequestPermissions(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
         Log.i(TAG, "permissions result:\n${results.entries.joinToString(separator = "\n") { "${it.key}: ${it.value}" }}")
-        if (results.values.all { it }) {
+        val allGranted = results.values.all { it }
+        Log.i(TAG, "All permissions granted: $allGranted")
+        if (allGranted) {
+            Log.i(TAG, "Calling onCompleted(true)")
             onCompleted(true)
         } else {
+            Log.i(TAG, "Calling onCompleted(false)")
             onCompleted(false)
         }
     }
     // Request permissions
     LaunchedEffect(Unit) {
+        Log.i(TAG, "Launching permission request...")
         activityResultLauncher.launch(permissions.toTypedArray())
     }
 }
