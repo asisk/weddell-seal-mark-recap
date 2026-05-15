@@ -1401,6 +1401,8 @@ class TagRetagViewModel(
     fun writeObservationRecord(
         currentLocation: GeoLocation?,
     ) {
+        Log.i("writeObservationRecord", "latitude at time of write: ${currentLocation?.coordinates?.latitude}")
+
         if (uiState.value.isEditMode) {
 
             // filter for seals that are to be REMOVED

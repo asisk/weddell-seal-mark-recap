@@ -34,7 +34,7 @@ class FusedLocationSource(
 ) : LocationSource, LocationListener {
 
     private val fusedProviderClient: FusedLocationProviderClient
-    private val locationFlow = MutableSharedFlow<GeoLocation>()
+    private val locationFlow = MutableSharedFlow<GeoLocation>(replay = 1) // Added replay=1 to ensure UI gets latest location immediately
     private var isUpdating = false
 
     init {
@@ -72,9 +72,12 @@ class FusedLocationSource(
             .distinctUntilChanged { old, new ->
                 // Only consider locations "different" if they're more than 0.5 meters apart
                 val distance = old.coordinates.distanceTo(new.coordinates)
-                distance < 0.5
+                val isSame = distance < 0.5
+                // Added debugging to track why location updates might be filtered out
+                Log.d(TAG, "distinctUntilChanged: distance=${distance}m, isSame=$isSame")
+                isSame
             }
-            .sample(5000L) // Sample at most once per 5 seconds
+            .sample(2000L) // Reduced from 5000L to 2000L for faster UI updates
     }
 
     @SuppressLint("MissingPermission")
