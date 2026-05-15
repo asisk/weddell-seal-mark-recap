@@ -5,7 +5,7 @@ import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
-import weddellseal.markrecap.ui.tagretag.TagRetagViewModel.ObservationMetadata
+import weddellseal.markrecap.ui.home.ObservationMetadata
 import weddellseal.markrecap.ui.utils.getCurrentDateFormatted
 import weddellseal.markrecap.ui.utils.getCurrentTimeFormatted
 
@@ -19,7 +19,7 @@ fun buildObservationRecord(
 ): ObservationRecord {
     val metadataCensus = metadata.censusNumber
     val metadataObservers = metadata.getObserversString()
-    val metadataColony = metadata.selectedColony
+    val metadataColony = metadata.selectedColony?.location ?: ""
 
     var censusNumber = "0"
     if (metadataCensus != "") {

@@ -15,23 +15,36 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.ui.home.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagRetagAppBar(
     onNavigationIconClick: () -> Unit,
-    viewModel: TagRetagViewModel,
     homeViewModel: HomeViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val homeUiState by homeViewModel.uiState.collectAsState()
+    val metadata by homeViewModel.metadata.collectAsState()
+    val uiState by homeViewModel.uiState.collectAsState()
+
+    val currentLocation = homeViewModel.currentLocation
+    var colony by remember { mutableStateOf<SealColony?>(null) }
+
+    LaunchedEffect(currentLocation) {
+        if (currentLocation.value != null) {
+            colony = homeViewModel.findColony(currentLocation.value!!.coordinates)
+        }
+    }
 
     TopAppBar(
         title = {
@@ -41,9 +54,9 @@ fun TagRetagAppBar(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 // CENSUS NUMBER
-                if (homeUiState.isCensusMode) {
+                if (metadata.isCensusMode) {
                     Text(
-                        text = "Census #${homeUiState.selectedCensusNumber}",
+                        text = "Census #${metadata.censusNumber}",
                         style = MaterialTheme.typography.displaySmall,
                         textAlign = TextAlign.Start
                     )
@@ -55,74 +68,33 @@ fun TagRetagAppBar(
                     )
                 }
 
-//                Spacer(modifier = Modifier.width(36.dp))
-
                 val errorColor = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
 
                 // SELECTED OBSERVERS & COLONY
                 val observersText =
-                    if (uiState.metadata.selectedObservers.isEmpty()) "Observers missing"
-                    else uiState.metadata.getObserversString()
+                    if (metadata.selectedObservers.isEmpty()) "Observers missing"
+                    else metadata.getObserversString()
                 Text(
                     text = observersText,
-                    color = if (uiState.metadata.selectedObservers.isEmpty()) errorColor else MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = if (metadata.selectedObservers.isEmpty()) errorColor else MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                val colonyText = uiState.metadata.selectedColony.ifEmpty { "Colony missing" }
+
+                val colonyLocationName =
+                    if (uiState.overrideColony) {
+                        metadata.selectedColony?.location ?: "Colony missing"
+                    } else {
+                        colony?.location ?: "Colony missing"
+                    }
+
                 Text(
-                    text = colonyText,
-                    color = if (uiState.metadata.selectedColony.isEmpty()) MaterialTheme.colorScheme.error.copy(
+                    text = colonyLocationName,
+                    color = if (colonyLocationName == "Colony missing") MaterialTheme.colorScheme.error.copy(
                         alpha = 0.9f
                     ) else MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.titleLarge
                 )
-
-//                Spacer(modifier = Modifier.width(36.dp))
-
-                // DEVICE GPS LOCATION ICON
-//                if (location?.coordinates?.longitude != null && location?.coordinates?.latitude != null) {
-//                    Icon(
-//                        Icons.Filled.LocationOn,
-//                        contentDescription = null,
-//                        tint = Color(0xFF1D9C06),
-//                        modifier = Modifier
-//                            .padding(end = 8.dp)
-//                            .size(36.dp),
-//                    )
-//                } else {
-//                    Icon(
-//                        Icons.Filled.LocationOff,
-//                        contentDescription = null,
-//                        tint = errorColor,
-//                        modifier = Modifier
-//                            .padding(end = 8.dp)
-//                            .size(36.dp),
-//                    )
-//                }
-
-                // DEVICE GPS LOCATION COORDINATES & TIMESTAMP
-//                Column(
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-
-//                    Text(
-//                        text = location?.toLocationString() ?: "Locating...",
-//                        style = MaterialTheme.typography.titleLarge,
-//                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-//                        modifier = Modifier.then(Modifier).also {
-//                            Log.d("TagRetagAppBar", "Recomposing with location: $location")
-//                        }
-//                    )
-
-//                    location?.updatedDate?.let {
-//                        Text(
-//                            text = it,
-//                            style = MaterialTheme.typography.titleMedium,
-//                            color = MaterialTheme.colorScheme.onPrimaryContainer
-//                        )
-//                    }
-//                }
             }
         },
         navigationIcon = {

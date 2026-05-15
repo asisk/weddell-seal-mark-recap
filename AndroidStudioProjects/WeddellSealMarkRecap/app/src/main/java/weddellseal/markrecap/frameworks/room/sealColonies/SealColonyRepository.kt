@@ -24,6 +24,11 @@ class SealColonyRepository(
         return sealColoniesDao.findColonyByLatLong(searchLatitude,searchLongitude)
     }
 
+    // used to search for a seal colony by passing in the colony name selected in the dropdown by the user
+    suspend fun findColonyByName(colonyName: String): SealColony? {
+        return sealColoniesDao.findColonyByName(colonyName)
+    }
+
     suspend fun deleteSealColoniesByFileUpload(fileUploadId: Long) {
         withContext(Dispatchers.IO) {
             sealColoniesDao.deleteById(fileUploadId)

@@ -13,9 +13,11 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.GeoLocation
@@ -32,7 +34,7 @@ class FusedLocationSource(
 ) : LocationSource, LocationListener {
 
     private val fusedProviderClient: FusedLocationProviderClient
-    private val locationFlow = MutableSharedFlow<GeoLocation>()
+    private val locationFlow = MutableSharedFlow<GeoLocation>(replay = 1) // Added replay=1 to ensure UI gets latest location immediately
     private var isUpdating = false
 
     init {
@@ -64,36 +66,68 @@ class FusedLocationSource(
         }
     }
 
+    @OptIn(FlowPreview::class)
     override suspend fun locationUpdates(): Flow<GeoLocation> {
-        return locationFlow.distinctUntilChanged()
+        return locationFlow
+            .distinctUntilChanged { old, new ->
+                // Only consider locations "different" if they're more than 0.5 meters apart
+                val distance = old.coordinates.distanceTo(new.coordinates)
+                val isSame = distance < 0.5
+                // Added debugging to track why location updates might be filtered out
+                Log.d(TAG, "distinctUntilChanged: distance=${distance}m, isSame=$isSame")
+                isSame
+            }
+            .sample(2000L) // Reduced from 5000L to 2000L for faster UI updates
     }
 
     @SuppressLint("MissingPermission")
     override suspend fun startLocationUpdates() {
-        if (isUpdating) return
+        Log.i(TAG, "startLocationUpdates called, isUpdating: $isUpdating")
+        if (isUpdating) {
+            Log.w(TAG, "Location updates already running, skipping start")
+            return
+        }
         if (!context.locationPermissionsGranted()) {
             Log.e(TAG, "startUpdates(): Location permissions not granted")
             return
         }
+        
+        Log.i(TAG, "Starting location updates with permissions granted")
         fusedProviderClient.requestLocationUpdates(
-            LocationRequest.Builder(1000L).apply {
+            LocationRequest.Builder(5000L).apply {
                 setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
+                setMinUpdateDistanceMeters(0.5f) // Update for movement > 0.5 meters
+                setMaxUpdateDelayMillis(5000L) // Maximum 5 second delay
             }.build(),
             Executors.newSingleThreadExecutor(),
             this,
         )
-        isUpdating = true    }
+        isUpdating = true
+        Log.i(TAG, "Location updates started successfully, isUpdating: $isUpdating")
+    }
 
     override suspend fun stopLocationUpdates() {
-        if (!isUpdating) return
+        Log.i(TAG, "stopLocationUpdates called, isUpdating: $isUpdating")
+        if (!isUpdating) {
+            Log.w(TAG, "Location updates not running, skipping stop")
+            return
+        }
         fusedProviderClient.removeLocationUpdates(this)
         isUpdating = false
+        Log.i(TAG, "Location updates stopped successfully, isUpdating: $isUpdating")
     }
 
     override fun onLocationChanged(update: Location) {
+        Log.d(TAG, "onLocationChanged received: lat=${update.latitude}, lng=${update.longitude}, accuracy=${update.accuracy}m")
         CoroutineScope(Dispatchers.Default).launch {
-            locationFlow.emit(GeoLocation.Companion.fromFusedLocation(update))
+            try {
+                val geoLocation = GeoLocation.Companion.fromFusedLocation(update)
+                locationFlow.emit(geoLocation)
+                Log.d(TAG, "Successfully emitted location update")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing location update", e)
+            }
         }
     }
 }

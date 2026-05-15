@@ -1,16 +1,24 @@
 package weddellseal.markrecap.ui.tagretag
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
@@ -22,6 +30,7 @@ import weddellseal.markrecap.domain.tagretag.data.SealRelatives
 import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
+import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 import weddellseal.markrecap.ui.tagretag.sealcard.AgeSection
 import weddellseal.markrecap.ui.tagretag.sealcard.ConditionSection
@@ -43,6 +52,7 @@ private fun Modifier.clearFocusOnTap(fm: FocusManager) = pointerInput(fm) {
 @Composable
 fun SealCard(
     viewModel: TagRetagViewModel,
+    homeViewModel: HomeViewModel,
     seal: Seal
 ) {
     val isEditMode by remember {
@@ -56,6 +66,8 @@ fun SealCard(
     val isSaveAttempted by remember {
         viewModel.uiState.map { it.isSaveAttempted }
     }.collectAsStateWithLifecycle(false)
+
+    val autoDetectedColony by homeViewModel.autoDetectedColony.collectAsState()
 
     val focusManager = LocalFocusManager.current
 
@@ -88,6 +100,24 @@ fun SealCard(
     // VALIDATION BANNER
     if (isSaveAttempted && seal.validationErrors.isNotEmpty()) {
         ValidationBanner(seal)
+    }
+
+    if (seal.colony == "White Island") {
+        if (autoDetectedColony?.location != seal.colony) {
+            // BANNER For White Island Seals that are observed outside of White Island colony
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFFFE0B2))
+                    .padding(14.dp),
+            ) {
+                Text("This seal was last seen at White Island. Current colony detected by device is ${autoDetectedColony?.location}.")
+                Text(
+                    "Please take a photo of the tags and seal!",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            }
+        }
     }
 
     // AGE

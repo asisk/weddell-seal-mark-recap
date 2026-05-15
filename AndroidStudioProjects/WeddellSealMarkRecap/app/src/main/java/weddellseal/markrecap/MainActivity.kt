@@ -88,7 +88,8 @@ class MainActivity : ComponentActivity() {
                 application,
                 observationRepository,
                 wedCheckRepository,
-                homeViewModel.uiState
+                homeViewModel.metadata,
+                homeViewModel.uiState,
             )
         val tagRetagViewModel: TagRetagViewModel by viewModels { tagRetagViewModelFactory }
 
@@ -159,6 +160,7 @@ class MainActivity : ComponentActivity() {
                             SealLookupScreen(
                                 navController,
                                 sealLookupViewModel,
+                                homeViewModel,
                                 tagRetagViewModel
                             )
                         }

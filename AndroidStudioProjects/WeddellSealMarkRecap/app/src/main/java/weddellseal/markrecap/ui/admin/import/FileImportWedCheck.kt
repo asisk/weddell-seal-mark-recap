@@ -75,7 +75,7 @@ fun FileImportWedCheck(
             val validWedCheckFull = fileName.startsWith("WedCheckFull") && fileName.endsWith(".csv")
 
             if (validWedCheck || validWedCheckFull) {
-                wedCheckViewModel.loadWedCheck(uri, fileName)
+                wedCheckViewModel.importWedCheck(uri, fileName)
             } else {
                 errTitle = "Error $fileUploadAction"
                 errMessage =
@@ -95,13 +95,6 @@ fun FileImportWedCheck(
     ) { uri ->
         handleWedCheckFileSelection(uri)
     }
-//
-//    LaunchedEffect(state.status) {
-//        errMessage = state.message.toString()
-//        lastFilename = state.lastUploadFilename.toString()
-//        statusColor = state.status.color()
-//        statusIcon = state.status.icon()
-//    }
 
     LaunchedEffect(state.status) {
         if (state.status == FileStatus.ERROR) {

@@ -44,6 +44,7 @@ import androidx.compose.ui.zIndex
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
+import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 /**
@@ -54,6 +55,7 @@ import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 @Composable
 fun TabbedCards(
     viewModel: TagRetagViewModel,
+    homeViewModel: HomeViewModel,
     primarySeal: Seal,
     pupOneSeal: Seal,
     pupTwoSeal: Seal
@@ -66,6 +68,7 @@ fun TabbedCards(
         mutableStateOf(
             createTabItems(
                 viewModel,
+                homeViewModel,
                 primarySeal,
                 pupOneSeal,
                 pupTwoSeal,
@@ -81,6 +84,7 @@ fun TabbedCards(
     ) {
         tabItems = createTabItems(
             viewModel,
+            homeViewModel,
             primarySeal,
             pupOneSeal,
             pupTwoSeal
@@ -279,6 +283,7 @@ fun TabbedCards(
 
 fun createTabItems(
     viewModel: TagRetagViewModel,
+    homeViewModel: HomeViewModel,
     primarySealState: Seal,
     pupOneSealState: Seal,
     pupTwoSealState: Seal,
@@ -288,6 +293,7 @@ fun createTabItems(
     items.add(TabItem(SealType.PRIMARY.label, primarySealState) {
         SealCard(
             viewModel,
+            homeViewModel,
             primarySealState
         )
     })
@@ -296,6 +302,7 @@ fun createTabItems(
         items.add(TabItem(SealType.PUPONE.label, pupOneSealState) {
             SealCard(
                 viewModel,
+                homeViewModel,
                 pupOneSealState
             )
         })
@@ -305,6 +312,7 @@ fun createTabItems(
         items.add(TabItem(SealType.PUPTWO.label, pupTwoSealState) {
             SealCard(
                 viewModel,
+                homeViewModel,
                 pupTwoSealState
             )
         })

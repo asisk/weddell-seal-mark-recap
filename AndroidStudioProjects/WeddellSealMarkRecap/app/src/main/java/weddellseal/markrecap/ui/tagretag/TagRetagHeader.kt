@@ -31,6 +31,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.location.data.Coordinates
+import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.home.HomeViewModel
 
@@ -39,9 +41,10 @@ fun TagRetagHeader(
     viewModel: TagRetagViewModel,
     homeViewModel: HomeViewModel,
 ) {
-    val homeUiState by homeViewModel.uiState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val metadata by homeViewModel.metadata.collectAsState()
 
+    val homeUiState by homeViewModel.uiState.collectAsState()
     val location by homeViewModel.currentLocation.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
@@ -49,7 +52,7 @@ fun TagRetagHeader(
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
 
     // CENSUS PREPOPULATE
-    if (homeUiState.isCensusMode) {
+    if (metadata.isCensusMode) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -168,7 +171,7 @@ fun TagRetagHeader(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = uiState.originalMetadata.selectedColony,
+                        text = uiState.originalMetadata.selectedColony?.location ?: "",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -277,8 +280,7 @@ fun TagRetagHeader(
                         viewModel.flagSealForReview(pupTwoSeal.sealType)
                     }
 
-                    // TODO, test if this is being updated
-                    viewModel.writeObservationRecord(location)
+                    viewModel.writeObservationRecord(homeViewModel.getColonyLocation())
                 },
                 icon = { Icon(Icons.Filled.Save, "Confirm & Save", Modifier.size(36.dp)) },
                 text = {

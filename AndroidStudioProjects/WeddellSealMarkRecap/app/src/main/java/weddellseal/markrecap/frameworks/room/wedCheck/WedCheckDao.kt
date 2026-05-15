@@ -4,7 +4,6 @@ package weddellseal.markrecap.frameworks.room.wedCheck
  * Data access object for historic data records for seals.
  */
 
-import android.database.sqlite.SQLiteException
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy

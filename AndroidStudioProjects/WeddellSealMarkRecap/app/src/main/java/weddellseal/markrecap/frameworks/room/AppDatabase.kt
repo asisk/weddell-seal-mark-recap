@@ -26,14 +26,18 @@ import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckDao
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 
-@Database(entities = [ObservationRecord::class, WedCheckRecord::class, SealColony::class, Observers::class, FileUploadEntity::class], version = 17, exportSchema = false)
+@Database(
+    entities = [ObservationRecord::class, WedCheckRecord::class, SealColony::class, Observers::class, FileUploadEntity::class],
+    version = 19,
+    exportSchema = false
+)
 @TypeConverters(FileStatusConverter::class, FileTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun observationDao(): ObservationDao
     abstract fun wedCheckDao(): WedCheckDao
-    abstract fun fileUploadDao() : FileUploadDao
-    abstract fun sealColoniesDao() : SealColoniesDao
-    abstract fun observersDao() : ObserversDao
+    abstract fun fileUploadDao(): FileUploadDao
+    abstract fun sealColoniesDao(): SealColoniesDao
+    abstract fun observersDao(): ObserversDao
 
     //companion is visible to other classes
     companion object {
