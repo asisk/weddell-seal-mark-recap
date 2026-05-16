@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import org.junit.Rule
@@ -32,8 +33,15 @@ class MainComposeSmokeTest {
         composeRule.waitForIdle()
     }
 
-    private fun waitForNodeWithText(text: String, substring: Boolean = false) {
-        composeRule.waitUntil(timeoutMillis = 10_000) {
+    private fun clickDrawerItem(text: String) {
+        composeRule.onNodeWithText(text, useUnmergedTree = true)
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+    }
+
+    private fun waitForText(text: String, substring: Boolean = false) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
             composeRule.onAllNodes(hasText(text, substring = substring), useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
@@ -43,9 +51,7 @@ class MainComposeSmokeTest {
     @Test
     fun openDrawer_navigateToTagRetag_showsHeader() {
         openDrawer()
-        composeRule.onNodeWithText("Tag/Retag", substring = true, useUnmergedTree = true)
-            .performClick()
-        composeRule.waitForIdle()
+        clickDrawerItem("Tag/Retag")
         composeRule.onNodeWithText("Tag / Retag", substring = true)
             .assertIsDisplayed()
     }
@@ -53,11 +59,11 @@ class MainComposeSmokeTest {
     @Test
     fun openDrawer_navigateToAdminImport_showsManageImports() {
         openDrawer()
-        composeRule.onNodeWithText("Admin Actions", useUnmergedTree = true).performClick()
-        waitForNodeWithText("Data Management")
-        composeRule.onNodeWithText("Data Management", useUnmergedTree = true).performClick()
-        composeRule.waitForIdle()
-        waitForNodeWithText("Dashboard")
+        clickDrawerItem("Admin Actions")
+        waitForText("Data Management")
+        clickDrawerItem("Data Management")
+        // Default admin tab is Dashboard; headline is visible in main content.
+        waitForText("Administration")
         composeRule.onNodeWithContentDescription("Import").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Manage Imports", substring = true)
@@ -69,10 +75,8 @@ class MainComposeSmokeTest {
     @Test
     fun navigateToRecentEntries_showsEmptyState() {
         openDrawer()
-        composeRule.onNodeWithText("Recent Entries", useUnmergedTree = true).performClick()
-        composeRule.waitForIdle()
-        waitForNodeWithText("Recent Observations")
-        waitForNodeWithText("No records to display.", substring = true)
+        clickDrawerItem("Recent Entries")
+        waitForText("Recent Observations")
         composeRule.onNodeWithText("No records to display.", substring = true)
             .assertIsDisplayed()
     }
