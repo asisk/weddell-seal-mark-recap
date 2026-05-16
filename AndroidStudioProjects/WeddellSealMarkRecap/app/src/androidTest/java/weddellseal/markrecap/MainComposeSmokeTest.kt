@@ -39,8 +39,9 @@ class MainComposeSmokeTest {
         composeRule.waitForIdle()
     }
 
-    private fun clickLabeledControl(text: String) {
-        composeRule.onNodeWithText(text, useUnmergedTree = true)
+    /** Navigation rail items must use the merged semantics tree so the clickable parent is targeted. */
+    private fun clickNavigationRailItem(label: String) {
+        composeRule.onNodeWithText(label)
             .performClick()
         composeRule.waitForIdle()
     }
@@ -69,10 +70,12 @@ class MainComposeSmokeTest {
         clickDrawerItem("Data Management")
         // Default admin tab is Dashboard; headline is visible in main content.
         waitForText("Administration")
-        clickLabeledControl("Import")
+        clickNavigationRailItem("Import")
+        waitForText("Manage Imports")
         composeRule.onNodeWithText("Manage Imports", substring = true)
             .assertIsDisplayed()
         composeRule.onNodeWithText("WedCheck File", substring = true)
+            .performScrollTo()
             .assertIsDisplayed()
     }
 

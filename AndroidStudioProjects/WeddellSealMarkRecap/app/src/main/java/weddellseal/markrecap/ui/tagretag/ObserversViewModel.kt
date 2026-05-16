@@ -165,16 +165,6 @@ class ObserversViewModel(
         return observersRepository.insertObserversData(fileUploadId, csvData)
     }
 
-    private fun updateUiStateObservers(insertedCount: Int, failedRows: List<FailedRow>) {
-        _uiState.value =
-            uiState.value.copy(
-                loading = false,
-//                totalObserversRows = insertedCount,
-//                isError = failedRows.isNotEmpty(),
-//                failedObserversRows = failedRows
-            )
-    }
-
     private fun readObserverCsvData(
         contentResolver: ContentResolver,
         uri: Uri,

@@ -177,7 +177,6 @@ class MainActivity : ComponentActivity() {
                                 sealColoniesViewModel,
                                 observersViewModel,
                                 adminViewModel,
-                                tagRetagViewModel,
                                 recentObservationsViewModel
                             )
                         }

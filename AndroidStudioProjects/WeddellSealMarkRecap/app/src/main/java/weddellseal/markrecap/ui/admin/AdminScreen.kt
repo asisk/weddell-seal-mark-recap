@@ -50,7 +50,6 @@ import weddellseal.markrecap.ui.admin.import.FileImport
 import weddellseal.markrecap.ui.home.SealColoniesViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.tagretag.ObserversViewModel
-import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +59,6 @@ fun AdminScreen(
     sealColoniesViewModel: SealColoniesViewModel,
     observersViewModel: ObserversViewModel,
     adminViewModel: AdminViewModel,
-    tagRetagViewModel: TagRetagViewModel,
     recentObservationsViewModel: RecentObservationsViewModel
 ) {
 
@@ -162,7 +160,7 @@ fun AdminScreen(
                             observersViewModel
                         )
 
-                        3 -> ExportObservations(adminViewModel, tagRetagViewModel, recentObservationsViewModel, navController)
+                        3 -> ExportObservations(adminViewModel, recentObservationsViewModel)
 
                         4 -> ManageObservations(recentObservationsViewModel)
                     }

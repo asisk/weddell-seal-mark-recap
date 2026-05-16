@@ -51,7 +51,7 @@ fun NavMenu(navController: NavHostController) {
             Spacer(Modifier.height(32.dp))
 
             NavigationDrawerItem(
-                label = { "" },
+                label = { Text("") },
                 selected = false,
                 icon = {
                     Icon(

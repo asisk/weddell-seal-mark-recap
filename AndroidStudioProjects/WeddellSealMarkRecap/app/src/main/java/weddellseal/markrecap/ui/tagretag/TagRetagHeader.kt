@@ -31,8 +31,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
-import weddellseal.markrecap.domain.location.data.Coordinates
-import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.home.HomeViewModel
 
@@ -43,9 +41,6 @@ fun TagRetagHeader(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val metadata by homeViewModel.metadata.collectAsState()
-
-    val homeUiState by homeViewModel.uiState.collectAsState()
-    val location by homeViewModel.currentLocation.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
