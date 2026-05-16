@@ -5,7 +5,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -40,6 +39,12 @@ class MainComposeSmokeTest {
         composeRule.waitForIdle()
     }
 
+    private fun clickLabeledControl(text: String) {
+        composeRule.onNodeWithText(text, useUnmergedTree = true)
+            .performClick()
+        composeRule.waitForIdle()
+    }
+
     private fun waitForText(text: String, substring: Boolean = false) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             composeRule.onAllNodes(hasText(text, substring = substring), useUnmergedTree = true)
@@ -64,8 +69,7 @@ class MainComposeSmokeTest {
         clickDrawerItem("Data Management")
         // Default admin tab is Dashboard; headline is visible in main content.
         waitForText("Administration")
-        composeRule.onNodeWithContentDescription("Import").performClick()
-        composeRule.waitForIdle()
+        clickLabeledControl("Import")
         composeRule.onNodeWithText("Manage Imports", substring = true)
             .assertIsDisplayed()
         composeRule.onNodeWithText("WedCheck File", substring = true)
