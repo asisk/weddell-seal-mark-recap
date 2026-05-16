@@ -78,7 +78,8 @@ class HomeViewModelTest {
         vm.updateOtherColonyLongitude("25")
 
         val loc = vm.getColonyLocation()
-        assertEquals(-76.95, loc!!.coordinates.latitude, 0.001)
-        assertEquals(166.025, loc.coordinates.longitude, 0.001)
+        // Decimal field is up to 5 digits after "-77." / "166." (see CoordinatesTextField)
+        assertEquals(-77.0 + 50 / 100_000.0, loc!!.coordinates.latitude, 0.000_001)
+        assertEquals(166.0 + 25 / 100_000.0, loc.coordinates.longitude, 0.000_001)
     }
 }
