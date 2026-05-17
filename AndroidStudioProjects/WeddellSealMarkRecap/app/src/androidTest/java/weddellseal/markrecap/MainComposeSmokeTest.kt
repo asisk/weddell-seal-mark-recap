@@ -48,24 +48,21 @@ class MainComposeSmokeTest {
         }
     }
 
-    /** Waits until matching text is actually on screen (exists in tree and is displayed). */
+    /**
+     * Waits until [text] is scrolled into view and passes [assertIsDisplayed].
+     * Needed because [waitForText] only checks semantics presence, not visibility.
+     */
     private fun waitUntilDisplayed(text: String, substring: Boolean = false) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             try {
                 composeRule.onNodeWithText(text, substring = substring)
+                    .performScrollTo()
                     .assertIsDisplayed()
                 true
             } catch (_: AssertionError) {
                 false
             }
         }
-    }
-
-    // Merged tree + click action; use on dashboard only (import tab also has "Import" buttons).
-    private fun clickImportNavigationRailItem() {
-        composeRule.onNode(hasText("Import") and hasClickAction())
-            .performClick()
-        composeRule.waitForIdle()
     }
 
     @Test
@@ -83,11 +80,12 @@ class MainComposeSmokeTest {
         waitForText("Data Management")
         clickDrawerItem("Data Management")
         waitUntilDisplayed("Administration")
-        clickImportNavigationRailItem()
+        // Rail icon content descriptions are stable; label text "Import" also appears on card buttons.
+        composeRule.onNode(hasContentDescription("Import") and hasClickAction())
+            .performClick()
+        composeRule.waitForIdle()
         waitUntilDisplayed("Manage Imports")
-        composeRule.onNodeWithText("WedCheck File", substring = true)
-            .performScrollTo()
-            .assertIsDisplayed()
+        waitUntilDisplayed("WedCheck File", substring = true)
     }
 
     @Test
