@@ -46,8 +46,12 @@ fun TagIDOutlinedTextField(
 
     var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
 
-    LaunchedEffect(value) {
-        text = value
+    // Sync from the model only when not focused; otherwise recomposition can reset in-progress
+    // edits (pending tag number) back to the last committed value.
+    LaunchedEffect(value, isFocused) {
+        if (!isFocused) {
+            text = value
+        }
     }
 
     OutlinedTextField(

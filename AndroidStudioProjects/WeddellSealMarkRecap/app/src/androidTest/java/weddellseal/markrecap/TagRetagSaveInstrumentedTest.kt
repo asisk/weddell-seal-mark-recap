@@ -1,6 +1,7 @@
 package weddellseal.markrecap
 
 import android.Manifest
+import android.os.SystemClock
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
@@ -18,6 +19,7 @@ import androidx.test.rule.GrantPermissionRule
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,24 +37,23 @@ import weddellseal.markrecap.viewmodelfactories.HomeViewModelFactory
 import weddellseal.markrecap.viewmodelfactories.TagRetagViewModelFactory
 
 /**
- * End-to-end regression for pending Tag ID edits: user commits tag number 456 via the UI,
- * re-types 789 in the Tag ID field, and taps Save without blurring the field. The saved
- * observation must contain 789A (alpha is preset; this test targets pending number commits).
+ * Regression for pending Tag ID edits on save: after tag 456 is committed, the user re-types 789
+ * in [TagIDOutlinedTextField] and taps Save without blurring. The saved observation must be 789A.
  *
- * Uses public UI text/semantics only (no production test hooks). Non-tag required fields are
- * set on [TagRetagViewModel]; tag entry uses the real [TagIDOutlinedTextField].
+ * Blur/commit behavior is covered by JVM tests ([TagIdSectionCommitTest],
+ * [TagRetagViewModelTest]). This test uses the ViewModel only for non-tag setup and the initial
+ * committed tag number, then drives the in-progress edit and Save through public UI semantics.
  */
 @RunWith(AndroidJUnit4::class)
 class TagRetagSaveInstrumentedTest {
 
     companion object {
-        /** Primary seal tag row label when tag event is not Retag. */
         private const val TAG_ID_LABEL = "Tag ID"
-        /** [TagIDOutlinedTextField] label / placeholder (public UI strings). */
         private const val TAG_NUMBER_LABEL = "3 or 4 Digit Tag Number"
         private const val TAG_NUMBER_PLACEHOLDER = "Enter Tag Number"
-        /** UI only offers A, C, D. */
         private const val TAG_ALPHA = "A"
+        private const val COMMITTED_TAG_NUMBER = "456"
+        private const val IN_PROGRESS_TAG_NUMBER = "789"
     }
 
     @get:Rule
@@ -68,12 +69,11 @@ class TagRetagSaveInstrumentedTest {
         get() = InstrumentationRegistry.getInstrumentation()
             .targetContext.applicationContext as ObservationLogApplication
 
-    /**
-     * Tag number [OutlinedTextField]. The "Tag ID" label is a sibling, not an ancestor, so match
-     * on the field's own label or placeholder from [TagIDOutlinedTextField].
-     */
-    private val primaryTagNumberFieldMatcher: SemanticsMatcher
-        get() = hasSetTextAction().and(
+    private fun tagNumberFieldMatcher(displayedNumber: String): SemanticsMatcher =
+        hasSetTextAction().and(hasText(displayedNumber))
+
+    private fun tagNumberFieldMatcherFallback(): SemanticsMatcher =
+        hasSetTextAction().and(
             hasText(TAG_NUMBER_LABEL, substring = true)
                 .or(hasText(TAG_NUMBER_PLACEHOLDER, substring = true)),
         )
@@ -81,6 +81,16 @@ class TagRetagSaveInstrumentedTest {
     private fun openDrawer() {
         composeRule.onNode(hasContentDescription("Toggle drawer"), useUnmergedTree = true)
             .performClick()
+        composeRule.waitForIdle()
+    }
+
+    /** Scrolls [matcher] into view when it lives inside a scrollable parent. */
+    private fun scrollIntoView(matcher: SemanticsMatcher) {
+        try {
+            composeRule.onNode(matcher, useUnmergedTree = true).performScrollTo()
+        } catch (_: AssertionError) {
+            // Already visible or not in a scrollable parent.
+        }
         composeRule.waitForIdle()
     }
 
@@ -134,9 +144,16 @@ class TagRetagSaveInstrumentedTest {
             homeViewModel.updateObserversSelection(listOf("TST"))
         }
         composeRule.waitForIdle()
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            var valid = false
+            composeRule.runOnUiThread {
+                valid = homeViewModel.metadata.value.isValid
+            }
+            valid
+        }
     }
 
-    private fun prefillSealExceptTag(tagRetagViewModel: TagRetagViewModel) {
+    private fun prefillSealAndCommitTag(tagRetagViewModel: TagRetagViewModel) {
         composeRule.runOnUiThread {
             tagRetagViewModel.prefillSingleMale()
             tagRetagViewModel.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -145,112 +162,123 @@ class TagRetagSaveInstrumentedTest {
                 TagEventType.NEW,
             )
             tagRetagViewModel.updateNumTags(SealType.PRIMARY, "1")
-            // Alpha buttons are not reliably exposed to UI tests on device; this test targets
-            // pending tag *number* commits on save, not alpha selection.
             tagRetagViewModel.updateTagAlpha(SealType.PRIMARY, TAG_ALPHA)
+            tagRetagViewModel.updateTagNumber(SealType.PRIMARY, COMMITTED_TAG_NUMBER)
         }
         composeRule.waitForIdle()
     }
 
     private fun scrollToTagIdSection() {
-        composeRule.onNodeWithText(TAG_ID_LABEL, useUnmergedTree = true).performScrollTo()
-        composeRule.waitForIdle()
-    }
-
-    private fun waitUntilTagIdSectionReady() {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             composeRule.onAllNodes(hasText(TAG_ID_LABEL, substring = true), useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
+        scrollIntoView(hasText(TAG_ID_LABEL, substring = true))
     }
 
-    private fun primaryTagNumberField() =
-        if (composeRule.onAllNodes(primaryTagNumberFieldMatcher, useUnmergedTree = true)
+    private fun waitUntilTagNumberFieldShows(number: String) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(tagNumberFieldMatcher(number), useUnmergedTree = true)
                 .fetchSemanticsNodes()
-                .isNotEmpty()
+                .isNotEmpty() ||
+                composeRule.onAllNodes(tagNumberFieldMatcherFallback(), useUnmergedTree = true)
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
+        }
+    }
+
+    private fun tagNumberFieldMatcherResolved(): SemanticsMatcher =
+        if (composeRule.onAllNodes(
+                tagNumberFieldMatcher(COMMITTED_TAG_NUMBER),
+                useUnmergedTree = true,
+            ).fetchSemanticsNodes().isNotEmpty()
         ) {
-            composeRule.onNode(primaryTagNumberFieldMatcher, useUnmergedTree = true)
+            tagNumberFieldMatcher(COMMITTED_TAG_NUMBER)
         } else {
-            // Label/placeholder can be on a separate semantics node from the editable text.
-            // On the primary seal card the tag field is the first editable above the comment box.
-            composeRule.onAllNodes(hasSetTextAction(), useUnmergedTree = true)[0]
+            tagNumberFieldMatcherFallback()
         }
 
-    /** Commits the tag number by clearing focus (same as tapping outside the field). */
-    private fun commitTagNumberField() {
-        composeRule.onNodeWithText(TAG_ID_LABEL, useUnmergedTree = true).performClick()
-        composeRule.waitForIdle()
-    }
-
-    /** Types [number] and commits it by blurring the field. */
-    private fun enterAndCommitTagNumber(number: String) {
-        scrollToTagIdSection()
-        waitUntilTagIdSectionReady()
-        val field = primaryTagNumberField()
-        field.performClick()
-        field.performTextReplacement(number)
-        commitTagNumberField()
+    /**
+     * Re-fetch the matcher on each attempt. [performTextReplacement] focuses the field and can
+     * trigger recomposition; avoid [performClick] first, which was dropping the semantics node on
+     * API 36 before text could be entered.
+     */
+    private fun replaceTextWithRetry(matcher: SemanticsMatcher, number: String, attempts: Int = 5) {
+        var lastError: AssertionError? = null
+        repeat(attempts) {
+            composeRule.waitForIdle()
+            try {
+                composeRule.onNode(matcher, useUnmergedTree = true).performTextReplacement(number)
+                composeRule.waitForIdle()
+                return
+            } catch (error: AssertionError) {
+                lastError = error
+                Thread.sleep(150)
+            }
+        }
+        throw lastError!!
     }
 
     private fun replaceTagNumberWithoutBlur(number: String) {
         scrollToTagIdSection()
-        val field = primaryTagNumberField()
-        field.performClick()
-        field.performTextReplacement(number)
+        waitUntilTagNumberFieldShows(COMMITTED_TAG_NUMBER)
         composeRule.waitForIdle()
+        replaceTextWithRetry(tagNumberFieldMatcherResolved(), number)
+    }
+
+    private fun waitUntilSaveEnabled(tagRetagViewModel: TagRetagViewModel) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            var enabled = false
+            composeRule.runOnUiThread {
+                enabled = tagRetagViewModel.uiState.value.isSaveEnabled
+            }
+            enabled
+        }
     }
 
     private fun tapSave() {
-        composeRule.waitUntil(timeoutMillis = 15_000) {
-            composeRule.onAllNodes(hasContentDescription("Save Seal"), useUnmergedTree = true)
-                .fetchSemanticsNodes()
-                .isNotEmpty()
-        }
-        try {
-            composeRule.onNodeWithText("# of Tags", useUnmergedTree = true).performScrollTo()
-            composeRule.waitForIdle()
-        } catch (_: AssertionError) {
-            // Footer may already be visible on tall layouts.
-        }
+        scrollIntoView(hasContentDescription("Save Seal"))
         composeRule.onNode(hasContentDescription("Save Seal"), useUnmergedTree = true)
             .performClick()
         composeRule.waitForIdle()
     }
 
     private fun waitForObservation(
-        timeoutMillis: Long = 15_000,
+        timeoutMillis: Long = 20_000,
         predicate: (ObservationRecord) -> Boolean,
     ): ObservationRecord {
-        var found: ObservationRecord? = null
-        composeRule.waitUntil(timeoutMillis) {
-            val match = runBlocking {
+        val deadline = SystemClock.uptimeMillis() + timeoutMillis
+        var lastTagIds: List<String> = emptyList()
+        while (SystemClock.uptimeMillis() < deadline) {
+            val records = runBlocking {
                 app.observationRepo.currentObservationsDescByID.first()
-                    .firstOrNull(predicate)
             }
-            if (match != null) {
-                found = match
-                true
-            } else {
-                false
-            }
+            lastTagIds = records.map { it.tagIDOne }
+            records.firstOrNull(predicate)?.let { return it }
+            Thread.sleep(250)
         }
-        return found!!
+        throw AssertionError(
+            "No matching observation within ${timeoutMillis}ms. " +
+                "Saved tagIDOne values: $lastTagIds",
+        )
     }
 
     @Test
     fun saveTagRetag_persistsInProgressTagIdWithoutRequiringBlur() {
         clearAllObservations()
         setupTestObservers()
+
+        val homeViewModel = getHomeViewModel()
+        val tagRetagViewModel = getTagRetagViewModel(homeViewModel)
+        prefillSealAndCommitTag(tagRetagViewModel)
         navigateToTagRetag()
 
-        prefillSealExceptTag(getTagRetagViewModel(getHomeViewModel()))
-
-        enterAndCommitTagNumber("456")
-        replaceTagNumberWithoutBlur("789")
+        replaceTagNumberWithoutBlur(IN_PROGRESS_TAG_NUMBER)
+        waitUntilSaveEnabled(tagRetagViewModel)
         tapSave()
 
-        val expectedTagId = "789$TAG_ALPHA"
+        val expectedTagId = "$IN_PROGRESS_TAG_NUMBER$TAG_ALPHA"
         val saved = waitForObservation { it.tagIDOne == expectedTagId }
         assertEquals(
             "Save should persist the in-progress Tag ID edit even when the field still has focus",
@@ -258,5 +286,6 @@ class TagRetagSaveInstrumentedTest {
             saved.tagIDOne,
         )
         assertEquals(TagEventType.NEW.alpha, saved.tagEvent)
+        assertTrue(saved.observerInitials.contains("TST"))
     }
 }
