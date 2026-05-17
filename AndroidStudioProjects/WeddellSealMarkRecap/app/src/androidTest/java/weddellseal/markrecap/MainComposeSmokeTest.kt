@@ -49,20 +49,24 @@ class MainComposeSmokeTest {
     }
 
     /**
-     * Waits until [text] is scrolled into view and passes [assertIsDisplayed].
-     * Needed because [waitForText] only checks semantics presence, not visibility.
+     * Waits until [text] exists in the tree, then scrolls it into view and asserts display.
+     * [waitForText] alone is insufficient for scrollable admin content on slow CI emulators.
      */
     private fun waitUntilDisplayed(text: String, substring: Boolean = false) {
-        composeRule.waitUntil(timeoutMillis = 15_000) {
-            try {
-                composeRule.onNodeWithText(text, substring = substring)
-                    .performScrollTo()
-                    .assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
-        }
+        waitForText(text, substring)
+        composeRule.onNodeWithText(text, substring = substring, useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Navigation rail items must use the merged semantics tree so the clickable parent is targeted.
+     * Call only while the dashboard is showing (before import cards with "Import" buttons exist).
+     */
+    private fun clickImportNavigationRailItem() {
+        composeRule.onNode(hasText("Import") and hasClickAction())
+            .performClick()
+        composeRule.waitForIdle()
     }
 
     @Test
@@ -80,10 +84,7 @@ class MainComposeSmokeTest {
         waitForText("Data Management")
         clickDrawerItem("Data Management")
         waitUntilDisplayed("Administration")
-        // Rail icon content descriptions are stable; label text "Import" also appears on card buttons.
-        composeRule.onNode(hasContentDescription("Import") and hasClickAction())
-            .performClick()
-        composeRule.waitForIdle()
+        clickImportNavigationRailItem()
         waitUntilDisplayed("Manage Imports")
         waitUntilDisplayed("WedCheck File", substring = true)
     }
