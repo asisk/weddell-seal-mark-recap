@@ -34,22 +34,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import weddellseal.markrecap.domain.files.data.FileState
 import weddellseal.markrecap.domain.files.data.color
 import weddellseal.markrecap.domain.files.data.icon
 import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
-import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 
 @Composable
 fun ExportCurrentObservationsCard(
     state: FileState,
-    tagRetagViewModel: TagRetagViewModel,
     recentObservationsViewModel: RecentObservationsViewModel,
-    navController: NavHostController,
 ) {
-    val currentObservations by recentObservationsViewModel.currentObservations.collectAsState()
     val currentObservationsCount by recentObservationsViewModel.currentObservationsCount.collectAsState()
 
     var errMessage by remember { mutableStateOf("") }

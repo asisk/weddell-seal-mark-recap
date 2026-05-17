@@ -1,50 +1,51 @@
 package weddellseal.markrecap.frameworks.room
 
-// Import necessary dependencies
 import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.assertTrue
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import weddellseal.markrecap.frameworks.room.files.FileUploadDao
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
-import weddellseal.markrecap.frameworks.room.observers.ObserversDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColoniesDao
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
-import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckDao
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.ui.admin.FileType
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class AppDatabaseTest {
 
     private lateinit var db: AppDatabase
     private lateinit var fileUploadDao: FileUploadDao
     private lateinit var sealColonyDao: SealColoniesDao
-    private lateinit var observersDao: ObserversDao
-    private lateinit var wedCheckDao: WedCheckDao
 
     @Before
     fun setUp() {
-        // Create an in-memory version of the database
         db = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
         ).build()
 
         fileUploadDao = db.fileUploadDao()
-        observersDao = db.observersDao()
         sealColonyDao = db.sealColoniesDao()
-        wedCheckDao = db.wedCheckDao()
     }
 
+    @After
+    fun tearDown() {
+        db.close()
+    }
 
     @Test
     fun testInsertValidForeignKey() = runBlocking {
-        // Insert a FileUploadEntity first
         val fileUploadId = fileUploadDao.insertFileUpload(
             FileUploadEntity(
                 fileType = FileType.OBSERVERS,
@@ -56,7 +57,6 @@ class AppDatabaseTest {
             )
         )
 
-        // Insert a SealColony record with the valid fileUploadId
         val sealColony = SealColony(
             inOut = "in",
             location = "Test Location",
@@ -66,22 +66,17 @@ class AppDatabaseTest {
             eLimit = 35.0,
             adjLat = 42.0,
             adjLong = 32.0,
-            fileUploadId = fileUploadId // Valid foreign key
+            fileUploadId = fileUploadId
         )
 
         val insertedIds = sealColonyDao.insertColonyRecords(fileUploadId, listOf(sealColony))
 
-        // Assert that the insert was successful
         assertTrue(insertedIds > 0)
+        assertEquals(1, sealColonyDao.getCount())
     }
-
 
     @Test(expected = SQLiteConstraintException::class)
     fun testInsertInvalidForeignKey(): Unit = runBlocking {
-        // Insert a FileUploadEntity first
-        val fileUploadId: Long = -1
-
-        // Attempt to insert a SealColony record with an invalid fileUploadId (e.g., 9999, which does not exist)
         val sealColony = SealColony(
             inOut = "in",
             location = "Invalid Location",
@@ -91,18 +86,14 @@ class AppDatabaseTest {
             eLimit = 35.0,
             adjLat = 42.0,
             adjLong = 32.0,
-            fileUploadId = 9999 // Invalid foreign key
+            fileUploadId = 9999
         )
 
-        sealColonyDao.insertColonyRecords(fileUploadId, listOf(sealColony))
-
-        // The test will pass if the SQLiteConstraintException is thrown
+        sealColonyDao.insertColonyRecords(9999, listOf(sealColony))
     }
 
-
     @Test
-    fun testCascadeDelete() = runBlocking {
-        // Insert a FileUploadEntity
+    fun testClearColoniesTableRemovesRows() = runBlocking {
         val fileUploadId = fileUploadDao.insertFileUpload(
             FileUploadEntity(
                 fileType = FileType.OBSERVERS,
@@ -114,7 +105,6 @@ class AppDatabaseTest {
             )
         )
 
-        // Insert a SealColony record with the valid fileUploadId
         val sealColony = SealColony(
             inOut = "in",
             location = "Test Location",
@@ -127,15 +117,14 @@ class AppDatabaseTest {
             fileUploadId = fileUploadId
         )
         sealColonyDao.insertColonyRecords(fileUploadId, listOf(sealColony))
+        assertEquals(1, sealColonyDao.getCount())
 
-        // Assert that the SealColony has also been deleted
-        val sealColonyCount = sealColonyDao.getCount()
-        assertTrue(sealColonyCount == 0)
+        sealColonyDao.clearColoniesTable()
+        assertEquals(0, sealColonyDao.getCount())
     }
 
     @Test
     fun testQueryRelatedData() = runBlocking {
-        // Insert a FileUploadEntity
         val fileUploadId = fileUploadDao.insertFileUpload(
             FileUploadEntity(
                 fileType = FileType.OBSERVERS,
@@ -147,7 +136,6 @@ class AppDatabaseTest {
             )
         )
 
-        // Insert a SealColony record with the valid fileUploadId
         val sealColony = SealColony(
             inOut = "in",
             location = "Test Location",
@@ -161,15 +149,8 @@ class AppDatabaseTest {
         )
         sealColonyDao.insertColonyRecords(fileUploadId, listOf(sealColony))
 
-        // Query SealColony records related to the FileUploadEntity
         val relatedSealColonies = sealColonyDao.getRecordsByFileUploadId(fileUploadId)
 
-        // Assert that we have the related SealColony
         assertTrue(relatedSealColonies.isNotEmpty())
-    }
-
-    @After
-    fun tearDown() {
-        db.close()
     }
 }

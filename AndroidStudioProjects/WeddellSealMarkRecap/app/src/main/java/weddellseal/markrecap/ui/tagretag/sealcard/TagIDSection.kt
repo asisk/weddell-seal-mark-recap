@@ -55,7 +55,6 @@ private val TAG_ALPHAS = listOf("A", "C", "D")
                     value = number,
                     labelText = "3 or 4 Digit Tag Number",
                     placeholderText = "Enter Tag Number",
-                    errorMessage = "",
                     keyboardType = KeyboardType.Number,
                     onClearValueDo = onClear,
                     onFocusChange = { isFocused, lastValue ->

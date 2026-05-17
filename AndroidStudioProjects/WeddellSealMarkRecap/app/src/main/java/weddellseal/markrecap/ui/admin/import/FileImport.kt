@@ -1,10 +1,14 @@
 package weddellseal.markrecap.ui.admin.import
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,25 +26,28 @@ fun FileImport(
     sealColoniesViewModel: SealColoniesViewModel,
     observersViewModel: ObserversViewModel,
 ) {
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                modifier = Modifier.padding(bottom = 20.dp),
-                text = "Manage Imports",
-                style = MaterialTheme.typography.headlineMedium,
-                fontSize = 36.sp,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    modifier = Modifier.padding(bottom = 20.dp),
+                    text = "Manage Imports",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontSize = 36.sp,
+                )
+            }
+            FileImportWedCheck(wedCheckViewModel)
+            FileImportObservers(observersViewModel)
+            FileImportColonies(sealColoniesViewModel)
         }
-        FileImportWedCheck(wedCheckViewModel)
-        FileImportObservers(observersViewModel)
-        FileImportColonies(sealColoniesViewModel)
     }
 }

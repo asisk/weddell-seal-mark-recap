@@ -1,0 +1,58 @@
+# =============================================================================
+# weddell-seal-mark-recap — repository root
+# Covers the Android tree under AndroidStudioProjects/ and any other modules.
+# =============================================================================
+
+# Gradle
+.gradle/
+**/.gradle/
+**/build/
+!**/src/**/build/
+**/out/
+.kotlin/
+
+# Local SDK / machine paths
+**/local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Android / JVM build artifacts & packaging
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Generated / tooling
+bin/
+gen/
+captures/
+.navigation/
+.externalNativeBuild/
+.cxx/
+*.hprof
+
+# Logs & temp
+*.log
+*.tmp
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keystores (never commit signing material)
+*.jks
+*.keystore
+
+# Lint (when emitted at repo/module root)
+**/lint/intermediates/
+**/lint/generated/
+**/lint/outputs/
+**/lint/tmp/

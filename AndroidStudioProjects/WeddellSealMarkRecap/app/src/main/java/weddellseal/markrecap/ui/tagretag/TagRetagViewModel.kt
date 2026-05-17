@@ -336,7 +336,7 @@ class TagRetagViewModel(
                     // emit a Triple that can be unpacked in `collect`
                     Triple(metadata, reasons, allSealsValid)
 
-                }.collectLatest { (metadata, reasons, allSealsValid) ->
+                }.collectLatest { (_, reasons, allSealsValid) ->
                     _uiState.update {
                         it.copy(
                             isSaveEnabled = reasons.isEmpty(),

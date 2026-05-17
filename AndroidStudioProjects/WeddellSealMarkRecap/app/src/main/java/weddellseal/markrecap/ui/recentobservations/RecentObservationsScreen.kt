@@ -6,14 +6,12 @@ package weddellseal.markrecap.ui.recentobservations
 */
 
 import android.widget.Toast
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -100,14 +98,13 @@ fun RecentObservationsScreen(
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .fillMaxWidth(),
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .padding(start = 40.dp, end = 40.dp, bottom = 40.dp)
                         .fillMaxSize()
-                        .animateContentSize()
                         .border(4.dp, Color.LightGray)
                 ) {
                     RecentObservations(tagRetagViewModel, viewModel, navController)

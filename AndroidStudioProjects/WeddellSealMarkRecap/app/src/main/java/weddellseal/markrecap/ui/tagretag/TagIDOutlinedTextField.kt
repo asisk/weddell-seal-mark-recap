@@ -31,7 +31,6 @@ fun TagIDOutlinedTextField(
     value: String,
     labelText: String,
     placeholderText: String,
-    errorMessage: String,
     keyboardType: KeyboardType,
     onClearValueDo: () -> Unit,
     onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value

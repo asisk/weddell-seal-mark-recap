@@ -53,7 +53,7 @@ fun PupWeightOutlinedTextField(
             text = sanitized.trim()
         },
         label = { Text("Weight in lbs") },
-        placeholder = { "Enter weight in lbs" },
+        placeholder = { Text("Enter weight in lbs") },
         textStyle = TextStyle(fontSize = 20.sp), // Set custom text size here
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = if (text.isNotEmpty() && text.length !in 2..4) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,

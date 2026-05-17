@@ -1,10 +1,9 @@
-package weddellseal.markrecap.frameworks.room.wedCheck
+package weddellseal.markrecap.domain.tagretag.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import weddellseal.markrecap.domain.tagretag.data.processTags
 
-class TagProcessorTest {
+class ProcessedTagsTest {
 
     @Test
     fun testProcessTags_withValidTags() {
@@ -77,7 +76,7 @@ class TagProcessorTest {
         assertEquals("D", result.tagAlpha)
         assertEquals("101", result.tagNumber)
 
-        val resultTwo = processTags( "NoTag")
+        val resultTwo = processTags("NoTag")
         if (resultTwo.tagValid) {
             numTags++
         }
@@ -179,5 +178,6 @@ class TagProcessorTest {
         assertEquals("", resultTwo.tagAlpha)
         assertEquals("", resultTwo.tagNumber)
 
-        assertEquals(0, numTags)    }
+        assertEquals(0, numTags)
+    }
 }

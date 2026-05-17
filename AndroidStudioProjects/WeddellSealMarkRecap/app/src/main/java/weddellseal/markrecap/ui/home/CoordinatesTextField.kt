@@ -55,7 +55,7 @@ fun CoordinatesTextField(
                 .take(5)              // limit to 5 digits
             text = filtered
         },
-        label = { "" },
+        label = { Text("") },
         placeholder = { Text("12345") },
         textStyle = MaterialTheme.typography.titleLarge, // Set custom text size here
         colors = OutlinedTextFieldDefaults.colors(
