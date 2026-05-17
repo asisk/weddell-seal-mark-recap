@@ -33,6 +33,7 @@ fun TagIDOutlinedTextField(
     placeholderText: String,
     keyboardType: KeyboardType,
     onClearValueDo: () -> Unit,
+    onValueChange: (String) -> Unit = {},
     onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
 ) {
     val focusManager =
@@ -54,6 +55,7 @@ fun TagIDOutlinedTextField(
         onValueChange = {
             val sanitized = it.replace(Regex("[^0-9]"), "") // only allow numeric characters
             text = sanitized.trim()
+            onValueChange(text)
         },
         label = { Text(labelText) },
         placeholder = { Text(placeholderText) },
