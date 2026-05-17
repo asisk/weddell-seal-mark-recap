@@ -98,7 +98,7 @@ fun RecentObservationsScreen(
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .fillMaxWidth(),
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(
