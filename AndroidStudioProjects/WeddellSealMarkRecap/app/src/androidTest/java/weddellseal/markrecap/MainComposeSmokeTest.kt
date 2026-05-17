@@ -2,6 +2,7 @@ package weddellseal.markrecap
 
 import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -39,19 +40,32 @@ class MainComposeSmokeTest {
         composeRule.waitForIdle()
     }
 
-    /** Navigation rail items must use the merged semantics tree so the clickable parent is targeted. */
-    private fun clickNavigationRailItem(label: String) {
-        composeRule.onNodeWithText(label)
-            .performClick()
-        composeRule.waitForIdle()
-    }
-
     private fun waitForText(text: String, substring: Boolean = false) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             composeRule.onAllNodes(hasText(text, substring = substring), useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
+    }
+
+    /** Waits until matching text is actually on screen (exists in tree and is displayed). */
+    private fun waitUntilDisplayed(text: String, substring: Boolean = false) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            try {
+                composeRule.onNodeWithText(text, substring = substring)
+                    .assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    // Merged tree + click action; use on dashboard only (import tab also has "Import" buttons).
+    private fun clickImportNavigationRailItem() {
+        composeRule.onNode(hasText("Import") and hasClickAction())
+            .performClick()
+        composeRule.waitForIdle()
     }
 
     @Test
@@ -68,12 +82,9 @@ class MainComposeSmokeTest {
         clickDrawerItem("Admin Actions")
         waitForText("Data Management")
         clickDrawerItem("Data Management")
-        // Default admin tab is Dashboard; headline is visible in main content.
-        waitForText("Administration")
-        clickNavigationRailItem("Import")
-        waitForText("Manage Imports")
-        composeRule.onNodeWithText("Manage Imports", substring = true)
-            .assertIsDisplayed()
+        waitUntilDisplayed("Administration")
+        clickImportNavigationRailItem()
+        waitUntilDisplayed("Manage Imports")
         composeRule.onNodeWithText("WedCheck File", substring = true)
             .performScrollTo()
             .assertIsDisplayed()

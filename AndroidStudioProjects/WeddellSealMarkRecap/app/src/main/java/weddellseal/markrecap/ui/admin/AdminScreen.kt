@@ -4,9 +4,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
@@ -26,13 +28,8 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -63,13 +60,7 @@ fun AdminScreen(
 ) {
 
     val adminUiState by adminViewModel.adminUiState.collectAsState()
-
-    // Navigation Rail
-    var selectedItem by remember { mutableIntStateOf(adminUiState.navRailSelection) }
-
-    LaunchedEffect(adminUiState.navRailSelection) {
-        selectedItem = adminUiState.navRailSelection
-    }
+    val selectedItem = adminUiState.navRailSelection
 
     val items =
         listOf("Home", "Dashboard", "Import", "Export", "Archive")
@@ -90,7 +81,11 @@ fun AdminScreen(
         )
 
     Scaffold { innerPadding ->
-        Row(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
+        ) {
             NavigationRail(
                 modifier = Modifier
                     .padding(10.dp)
@@ -119,7 +114,7 @@ fun AdminScreen(
                             if (index == 0) {
                                 navController.navigate(Screens.Home.route)
                             } else {
-                                selectedItem = index
+                                adminViewModel.setNavRailSelection(index)
                             }
                         },
                         modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
@@ -129,27 +124,26 @@ fun AdminScreen(
 
             // Main Content
             Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
             ) {
-
-                // Seal Pup Image
                 Image(
                     painter = painterResource(R.drawable.pup1_2),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .fillMaxSize()
+                        .matchParentSize()
                         .graphicsLayer {
                             alpha = 0.6f
-                        }
+                        },
                 )
 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
-                        .padding(10.dp)
+                        .padding(10.dp),
                 ) {
                     when (selectedItem) {
                         1 -> DashboardScreen(adminViewModel)

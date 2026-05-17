@@ -53,7 +53,7 @@ fun ImportCard(
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier
-            .width(400.dp)
+            .fillMaxWidth()
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(16.dp)

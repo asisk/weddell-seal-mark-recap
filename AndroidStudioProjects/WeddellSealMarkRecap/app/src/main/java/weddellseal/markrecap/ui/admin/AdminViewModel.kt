@@ -29,7 +29,11 @@ class AdminViewModel(
         supportingDataRepository.successfulUploads
             .stateIn(viewModelScope, SharingStarted.Companion.Lazily, emptyList())
 
-    fun navToArchiveView(selection : Int) {
+    fun setNavRailSelection(selection: Int) {
         _adminUiState.value = AdminUiState(navRailSelection = selection)
+    }
+
+    fun navToArchiveView(selection: Int) {
+        setNavRailSelection(selection)
     }
 }
