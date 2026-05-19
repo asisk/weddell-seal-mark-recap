@@ -89,8 +89,6 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
-    implementation(platform(libs.compose.bom))
-
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
@@ -98,7 +96,6 @@ dependencies {
     implementation(libs.compose.material)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.material3)
-    implementation(libs.compose.material3.versioned)
 
     implementation(libs.compose.runtime.livedata)
     implementation(libs.compose.runtime.rxjava2)
@@ -150,7 +147,6 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
     // Compose UI tests on JVM (Robolectric), e.g. TagIdSectionCommitTest
-    testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
 
     implementation(libs.androidx.test.runner)
@@ -165,7 +161,7 @@ dependencies {
     // MockK for Android instrumented tests (src/androidTest/)
     androidTestImplementation(libs.mockk.android)
     // Optional -- UI testing with Compose
-    androidTestImplementation(libs.compose.ui.test.junit4.versioned)
+    androidTestImplementation(libs.compose.ui.test.junit4)
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
