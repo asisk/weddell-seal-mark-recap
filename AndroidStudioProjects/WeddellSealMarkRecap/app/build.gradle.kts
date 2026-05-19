@@ -1,7 +1,7 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 java {
     toolchain {
@@ -64,7 +64,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     packaging {
@@ -79,102 +79,94 @@ android {
     }
 }
 dependencies {
-    implementation("androidx.compose.foundation:foundation:1.8.3")
+    implementation(libs.compose.foundation)
 
-    implementation("androidx.activity:activity-compose:1.10.1")
-    implementation("androidx.activity:activity-ktx:1.10.1")
-    implementation("androidx.core:core-ktx:1.15.0")
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.core.ktx)
 
-    implementation("androidx.camera:camera-camera2:1.4.1")
-    implementation("androidx.camera:camera-lifecycle:1.4.1")
-    implementation("androidx.camera:camera-view:1.4.1")
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 
-    implementation(platform("androidx.compose:compose-bom:2025.03.00"))
+    implementation(platform(libs.compose.bom))
 
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.graphics)
+    implementation(libs.compose.ui.tooling.preview)
 
-    implementation("androidx.compose.material:material:1.7.8")
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation(libs.compose.material)
+    implementation(libs.compose.material.icons.extended)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.material3.versioned)
 
-    implementation("androidx.compose.runtime:runtime-livedata:1.7.8")
-    implementation("androidx.compose.runtime:runtime-rxjava2:1.7.8")
-    implementation("androidx.compose.runtime:runtime-rxjava3:1.7.8")
-    implementation("androidx.compose.runtime:runtime:1.7.8")
+    implementation(libs.compose.runtime.livedata)
+    implementation(libs.compose.runtime.rxjava2)
+    implementation(libs.compose.runtime.rxjava3)
+    implementation(libs.compose.runtime)
 
-    implementation("androidx.fragment:fragment-ktx:1.8.6")
-    implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("com.opencsv:opencsv:5.8")
-    implementation("commons-io:commons-io:2.16.1")
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.play.services.location)
+    implementation(libs.opencsv)
+    implementation(libs.commons.io)
 
-    val lifecycleVersion = "2.8.7"
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion")
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.savedstate)
 
-    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation(libs.androidx.navigation.compose)
 
-    val roomVersion = "2.5.2"
-    implementation("androidx.room:room-runtime:$roomVersion")
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.compiler)
 
     // To use Kotlin Symbol Processing (KSP)
-    ksp("androidx.room:room-compiler:$roomVersion")
+    ksp(libs.androidx.room.compiler)
 
     // optional - Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:$roomVersion")
+    implementation(libs.androidx.room.ktx)
 
     // optional - RxJava2 support for Room
-    implementation("androidx.room:room-rxjava2:$roomVersion")
+    implementation(libs.androidx.room.rxjava2)
 
     // optional - RxJava3 support for Room
-    implementation("androidx.room:room-rxjava3:$roomVersion")
+    implementation(libs.androidx.room.rxjava3)
 
     // optional - Guava support for Room, including Optional and ListenableFuture
-    implementation("androidx.room:room-guava:$roomVersion")
+    implementation(libs.androidx.room.guava)
 
     // optional - Paging 3 Integration
-    implementation("androidx.room:room-paging:$roomVersion")
-    implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation(libs.androidx.room.paging)
+    implementation(libs.androidx.documentfile)
 
     // Testing
-    testImplementation("androidx.room:room-testing:$roomVersion")
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("androidx.test:core:1.6.1")
-    testImplementation("androidx.test.ext:junit:1.2.1")
-    testImplementation("org.robolectric:robolectric:4.14.1")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.androidx.arch.core.testing)
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
     // Compose UI tests on JVM (Robolectric), e.g. TagIdSectionCommitTest
-    testImplementation(platform("androidx.compose:compose-bom:2025.03.00"))
-    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
 
-    implementation("androidx.test:runner:1.6.2")
-    implementation("androidx.test:core:1.6.1")
-    implementation("androidx.test.ext:junit:1.2.1")
+    implementation(libs.androidx.test.runner)
+    implementation(libs.androidx.test.core)
+    implementation(libs.androidx.test.ext.junit)
 
-    // UI testing with Espresso
-    androidTestImplementation("androidx.test:runner:1.6.2")
-    androidTestImplementation("androidx.test:rules:1.6.1")
-    androidTestImplementation ("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation ("androidx.test.espresso:espresso-contrib:3.6.1")
-    androidTestImplementation ("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation ("org.hamcrest:hamcrest:2.2")
-    // Add mockk for mocking dependencies
-    androidTestImplementation ("io.mockk:mockk:1.12.0")
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.ext.junit)
     // MockK for local unit tests (src/test/)
-    testImplementation ("io.mockk:mockk:1.13.5")
+    testImplementation(libs.mockk)
     // MockK for Android instrumented tests (src/androidTest/)
-    androidTestImplementation ("io.mockk:mockk-android:1.13.5")
+    androidTestImplementation(libs.mockk.android)
     // Optional -- UI testing with Compose
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
+    androidTestImplementation(libs.compose.ui.test.junit4.versioned)
 
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
