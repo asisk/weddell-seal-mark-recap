@@ -33,6 +33,7 @@ fun TagIDOutlinedTextField(
     placeholderText: String,
     keyboardType: KeyboardType,
     onClearValueDo: () -> Unit,
+    onValueChange: (String) -> Unit = {},
     onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
 ) {
     val focusManager =
@@ -45,8 +46,12 @@ fun TagIDOutlinedTextField(
 
     var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
 
-    LaunchedEffect(value) {
-        text = value
+    // Sync from the model only when not focused; otherwise recomposition can reset in-progress
+    // edits (pending tag number) back to the last committed value.
+    LaunchedEffect(value, isFocused) {
+        if (!isFocused) {
+            text = value
+        }
     }
 
     OutlinedTextField(
@@ -54,6 +59,7 @@ fun TagIDOutlinedTextField(
         onValueChange = {
             val sanitized = it.replace(Regex("[^0-9]"), "") // only allow numeric characters
             text = sanitized.trim()
+            onValueChange(text)
         },
         label = { Text(labelText) },
         placeholder = { Text(placeholderText) },

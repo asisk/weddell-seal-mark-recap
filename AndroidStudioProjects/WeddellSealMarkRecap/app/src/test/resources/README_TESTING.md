@@ -30,9 +30,14 @@ cd AndroidStudioProjects/WeddellSealMarkRecap
 Useful variants:
 
 ```bash
-# Run a single test class (example)
+# Run a single test class
 ./gradlew :app:testDebugUnitTest --tests "weddellseal.markrecap.domain.tagretag.data.SealTest"
+
+# Run a single test method
+./gradlew :app:testDebugUnitTest --tests "weddellseal.markrecap.ui.tagretag.sealcard.TagIdSectionCommitTest.tagNumber_isCommittedWhenFieldLosesFocus"
 ```
+
+The `--tests` filter works for JVM unit tests only (not for instrumented tests; see below).
 
 Reports: `app/build/reports/tests/testDebugUnitTest/index.html`
 
@@ -46,6 +51,26 @@ These install a test APK on a **running emulator or USB-connected device** and e
 ```bash
 cd AndroidStudioProjects/WeddellSealMarkRecap
 ./gradlew :app:connectedDebugAndroidTest
+```
+
+**Running one class or method:** `connectedDebugAndroidTest` does **not** support Gradle’s `--tests` option. Pass the class (and optionally method) to the instrumentation runner instead:
+
+```bash
+# Single test class
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=weddellseal.markrecap.TagRetagSaveInstrumentedTest
+
+# Single test method (Class#methodName)
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=weddellseal.markrecap.TagRetagSaveInstrumentedTest#saveTagRetag_persistsInProgressTagIdWithoutRequiringBlur
+```
+
+If more than one device is connected, target one serial (from `adb devices`):
+
+```bash
+./gradlew :app:connectedDebugAndroidTest \
+  --serial emulator-5554 \
+  -Pandroid.testInstrumentationRunnerArguments.class=weddellseal.markrecap.TagRetagSaveInstrumentedTest
 ```
 
 Reports: `app/build/reports/androidTests/connected/index.html` (path may vary slightly by AGP version).

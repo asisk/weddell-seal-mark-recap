@@ -102,6 +102,10 @@ class TagRetagViewModel(
     private var originalPupOne: Seal? = null
     private var originalPupTwo: Seal? = null
 
+    /** BUG FIX: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
+    private val pendingTagNumbers = mutableMapOf<SealType, String>()
+    private val pendingOldTagNumbers = mutableMapOf<SealType, String>()
+
     //    init {
 //        // Automatically update colonyLocation if it's set to ""
 //        // In other words, if the user has not selected a location, use the auto-detected location
@@ -274,6 +278,8 @@ class TagRetagViewModel(
         originalPrimarySeal = null
         originalPupOne = null
         originalPupTwo = null
+        pendingTagNumbers.clear()
+        pendingOldTagNumbers.clear()
     }
 
     fun setIsSaving() {
@@ -642,6 +648,25 @@ class TagRetagViewModel(
         }
     }
 
+    fun updatePendingTagNumber(sealType: SealType, input: String) {
+        if (sealType == SealType.UNKNOWN) return
+        pendingTagNumbers[sealType] = input
+    }
+
+    fun updatePendingOldTagNumber(sealType: SealType, input: String) {
+        if (sealType == SealType.UNKNOWN) return
+        pendingOldTagNumbers[sealType] = input
+    }
+
+    private fun commitPendingTagNumbers() {
+        pendingTagNumbers.toMap().forEach { (sealType, number) ->
+            updateTagNumber(sealType, number)
+        }
+        pendingOldTagNumbers.toMap().forEach { (sealType, number) ->
+            updateOldTagNumber(sealType, number)
+        }
+    }
+
     // TODO, why is this a string input and not a numeric input, see updateOldTagNumber
     fun updateTagNumber(sealType: SealType, input: String) {
         var tagNumber = input
@@ -673,6 +698,7 @@ class TagRetagViewModel(
                 // No action needed for UNKNOWN
             }
         }
+        pendingTagNumbers.remove(sealType)
     }
 
     fun updateTagAlpha(sealType: SealType, input: String) {
@@ -725,6 +751,7 @@ class TagRetagViewModel(
                 // No action needed for UNKNOWN
             }
         }
+        pendingOldTagNumbers.remove(sealType)
     }
 
     fun updateOldTagAlpha(sealType: SealType, input: String) {
@@ -1402,6 +1429,8 @@ class TagRetagViewModel(
         currentLocation: GeoLocation?,
     ) {
         Log.i("writeObservationRecord", "latitude at time of write: ${currentLocation?.coordinates?.latitude}")
+
+        commitPendingTagNumbers()
 
         if (uiState.value.isEditMode) {
 

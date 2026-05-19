@@ -27,6 +27,7 @@ private val TAG_ALPHAS = listOf("A", "C", "D")
     number: String,
     alpha: String,
     onClear: () -> Unit,
+    onNumberChanged: (String) -> Unit = {},
     onNumberCommitted: (String) -> Unit,
     onAlphaSelected: (String) -> Unit,
     modifier: Modifier
@@ -57,6 +58,7 @@ private val TAG_ALPHAS = listOf("A", "C", "D")
                     placeholderText = "Enter Tag Number",
                     keyboardType = KeyboardType.Number,
                     onClearValueDo = onClear,
+                    onValueChange = onNumberChanged,
                     onFocusChange = { isFocused, lastValue ->
                         if (!isFocused) onNumberCommitted(lastValue)
                     }

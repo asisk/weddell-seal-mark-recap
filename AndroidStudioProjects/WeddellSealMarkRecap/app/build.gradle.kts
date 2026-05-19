@@ -151,6 +151,9 @@ dependencies {
     testImplementation("androidx.test.ext:junit:1.2.1")
     testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    // Compose UI tests on JVM (Robolectric), e.g. TagIdSectionCommitTest
+    testImplementation(platform("androidx.compose:compose-bom:2025.03.00"))
+    testImplementation("androidx.compose.ui:ui-test-junit4")
 
     implementation("androidx.test:runner:1.6.2")
     implementation("androidx.test:core:1.6.1")

@@ -224,6 +224,7 @@ fun SealCard(
                     viewModel.removeWedCheckMatch(seal.sealType)
                 }
             },
+            onNumberChanged = { viewModel.updatePendingTagNumber(seal.sealType, it) },
             onNumberCommitted = { viewModel.updateTagNumber(seal.sealType, it) },
             onAlphaSelected = { viewModel.updateTagAlpha(seal.sealType, it) },
             modifier = Modifier.clearFocusOnTap(focusManager)
@@ -239,6 +240,7 @@ fun SealCard(
                     viewModel.clearOldTag(seal.sealType)
                     viewModel.removeWedCheckMatch(seal.sealType)
                 },
+                onNumberChanged = { viewModel.updatePendingOldTagNumber(seal.sealType, it) },
                 onNumberCommitted = {
                     viewModel.updateOldTagNumber(
                         seal.sealType,

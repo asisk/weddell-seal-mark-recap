@@ -79,4 +79,46 @@ class TagRetagViewModelTest {
         assertEquals("456B", written[0].tagIDOne)
         assertEquals(TagEventType.NEW.alpha, written[0].tagEvent)
     }
+
+    /**
+     * Models: user entered tag 456B, moved to another field (committed), then returned to Tag ID,
+     * changed it to 789B, and tapped Save without blurring the Tag ID field. The ViewModel still
+     * holds 456B because [TagIdSection] only commits on focus loss.
+     */
+    @Test
+    fun writeObservationRecord_persistsReEditedTagNumberWithoutRequiringBlur() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "B")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+
+        // User re-edits Tag ID in the UI to 789B but Save is tapped before the field blurs,
+        // so updateTagNumber is never called with "789" (only updatePendingTagNumber, on each keystroke).
+        vm.updatePendingTagNumber(SealType.PRIMARY, "789")
+        assertEquals("456", vm.primarySeal.value.tagNumber)
+
+        assertTrue(vm.uiState.value.isSaveEnabled)
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(1, written.size)
+        assertEquals(
+            "Save should persist the in-progress Tag ID edit even when the field still has focus",
+            "789B",
+            written[0].tagIDOne,
+        )
+    }
 }
