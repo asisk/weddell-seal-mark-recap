@@ -22,7 +22,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import weddellseal.markrecap.InstrumentedComposeTestSupport.waitForComposeReady
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
@@ -56,13 +58,17 @@ class TagRetagSaveInstrumentedTest {
         private const val IN_PROGRESS_TAG_NUMBER = "789"
     }
 
-    @get:Rule
-    val composeRule = createAndroidComposeRule<MainActivity>()
+    private val composeRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule
-    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+    private val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
+    )
+
+    @get:Rule
+    val testRules: TestRule = InstrumentedComposeTestSupport.ruleChain(
+        grantPermissionRule,
+        composeRule,
     )
 
     private val app: ObservationLogApplication
@@ -79,6 +85,7 @@ class TagRetagSaveInstrumentedTest {
         )
 
     private fun openDrawer() {
+        composeRule.waitForComposeReady()
         composeRule.onNode(hasContentDescription("Toggle drawer"), useUnmergedTree = true)
             .performClick()
         composeRule.waitForIdle()
