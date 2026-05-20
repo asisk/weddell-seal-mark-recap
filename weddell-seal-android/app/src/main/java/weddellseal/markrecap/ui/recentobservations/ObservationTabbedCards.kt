@@ -55,6 +55,14 @@ fun ObservationTabbedCards(
         modifier = Modifier
             .fillMaxWidth()
     ) {
+        if (tabItems.isEmpty()) {
+            Text(
+                text = "No observation selected.",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(24.dp),
+            )
+            return
+        }
 
         PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
             tabItems.forEachIndexed { index, tabItem ->
