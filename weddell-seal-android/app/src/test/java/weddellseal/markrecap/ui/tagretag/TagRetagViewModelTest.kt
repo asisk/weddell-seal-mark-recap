@@ -29,6 +29,7 @@ import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -48,6 +49,23 @@ class TagRetagViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun onViewAttempt_setsSelectedObservationBeforeNavigation() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        val record = TestFixtures.minimalObservationRecord()
+        val displayObs = DisplayObservation.Standalone(record)
+
+        vm.onViewAttempt(displayObs)
+
+        assertEquals(displayObs, vm.selectedRecentObservation.value)
     }
 
     @Test
