@@ -107,6 +107,7 @@ fun buildObservationRecord(
         pupWeight = seal.weight.toString()
     }
 
+    // build the comment
     val sb = StringBuilder()
     if (seal.pupPeed) {
         sb.append("pup peed; ")
@@ -114,6 +115,7 @@ fun buildObservationRecord(
     if (seal.oldTagMarks) {
         sb.append("old tag marks; ")
     }
+    // TODO, write a test to validate that if the tagEvent is retag and a reason is selected, that this logic does not populate the value because the comparisons should be != and not ==
     if (seal.tagEventType == TagEventType.RETAG && (seal.reasonForRetag == RetagReason.NONE || seal.reasonForRetag == RetagReason.UNKNOWN)) {
         sb.append("Reason for Retag: ${seal.reasonForRetag.description}; ")
     }

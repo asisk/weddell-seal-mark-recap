@@ -23,7 +23,7 @@ Adjust the path if your JDK is installed elsewhere (e.g. Temurin under `~/Librar
 These run on the JVM and do **not** require a device. Some use **Robolectric** for Android APIs (e.g. Room with `ApplicationProvider`).
 
 ```bash
-cd AndroidStudioProjects/WeddellSealMarkRecap
+cd weddell-seal-android
 ./gradlew :app:testDebugUnitTest
 ```
 
@@ -49,7 +49,7 @@ These install a test APK on a **running emulator or USB-connected device** and e
 2. Run:
 
 ```bash
-cd AndroidStudioProjects/WeddellSealMarkRecap
+cd weddell-seal-android
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
