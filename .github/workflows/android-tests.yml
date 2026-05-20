@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: AndroidStudioProjects/WeddellSealMarkRecap
+        working-directory: weddell-seal-android
 
     steps:
       - name: Checkout
@@ -37,13 +37,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-reports
-          path: AndroidStudioProjects/WeddellSealMarkRecap/app/build/reports/tests/
+          path: weddell-seal-android/app/build/reports/tests/
 
   instrumented-tests:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: AndroidStudioProjects/WeddellSealMarkRecap
+        working-directory: weddell-seal-android
 
     steps:
       - name: Checkout
@@ -74,7 +74,7 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          working-directory: AndroidStudioProjects/WeddellSealMarkRecap
+          working-directory: weddell-seal-android
           script: ./gradlew connectedDebugAndroidTest --stacktrace
 
       - name: Upload instrumented test reports
@@ -83,5 +83,5 @@ jobs:
         with:
           name: instrumented-test-reports
           path: |
-            AndroidStudioProjects/WeddellSealMarkRecap/app/build/reports/androidTests/
-            AndroidStudioProjects/WeddellSealMarkRecap/app/build/outputs/androidTest-results/
+            weddell-seal-android/app/build/reports/androidTests/
+            weddell-seal-android/app/build/outputs/androidTest-results/
