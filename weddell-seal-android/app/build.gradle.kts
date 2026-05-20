@@ -97,8 +97,6 @@ dependencies {
     implementation(libs.compose.material3)
 
     implementation(libs.compose.runtime.livedata)
-    implementation(libs.compose.runtime.rxjava2)
-    implementation(libs.compose.runtime.rxjava3)
     implementation(libs.compose.runtime)
 
     implementation(libs.androidx.fragment.ktx)
@@ -120,12 +118,6 @@ dependencies {
 
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation(libs.androidx.room.ktx)
-
-    // optional - RxJava2 support for Room
-    implementation(libs.androidx.room.rxjava2)
-
-    // optional - RxJava3 support for Room
-    implementation(libs.androidx.room.rxjava3)
 
     // optional - Guava support for Room, including Optional and ListenableFuture
     implementation(libs.androidx.room.guava)
