@@ -23,12 +23,14 @@ data class FileState(
 
 fun FileStatus.color(): Color = when (this) {
     FileStatus.IDLE -> Color.Gray
+    FileStatus.LOADING -> Color(0xFF5884fa)
     FileStatus.SUCCESS -> Color(0xFF0DBE0D)
     FileStatus.ERROR -> Color(0xFFD90101)
 }
 
 fun FileStatus.icon(): ImageVector = when (this) {
     FileStatus.IDLE -> Icons.Default.Pending
+    FileStatus.LOADING -> Icons.Default.Pending
     FileStatus.SUCCESS -> Icons.Default.CheckCircle
     FileStatus.ERROR -> Icons.Default.ErrorOutline
 }

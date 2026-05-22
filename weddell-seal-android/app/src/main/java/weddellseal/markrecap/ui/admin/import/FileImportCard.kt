@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,9 +44,9 @@ fun ImportCard(
     var statusColor by remember { mutableStateOf(Color(0xFF5884fa)) }
     var statusIcon by remember { mutableStateOf(Icons.Default.Pending) }
 
-    LaunchedEffect(state.status) {
+    LaunchedEffect(state.status, state.lastUploadFilename) {
         errMessage = state.message.toString()
-        lastFilename = state.lastUploadFilename.toString()
+        lastFilename = state.lastUploadFilename.orEmpty()
         statusColor = state.status.color()
         statusIcon = state.status.icon()
     }
@@ -87,12 +88,49 @@ fun ImportCard(
 
                 Button(
                     onClick = state.onUploadClick,
+                    enabled = state.status != FileStatus.LOADING,
                     modifier = Modifier
                         .padding(start = 16.dp)
                 ) {
                     Text("Import",
                         style = MaterialTheme.typography.titleLarge,
                     )
+                }
+            }
+
+            if (state.status == FileStatus.LOADING) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = statusColor,
+                        strokeWidth = 3.dp,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            text = "Importing file…",
+                            color = statusColor,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        if (lastFilename.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = lastFilename,
+                                color = statusColor,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
                 }
             }
 

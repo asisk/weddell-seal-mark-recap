@@ -16,6 +16,7 @@ enum class FileAction(val label: String) {
 
 enum class FileStatus(val message: String) {
     IDLE(""),
+    LOADING("Loading"),
     SUCCESS("Successful"),
     ERROR("Failed")
 }
