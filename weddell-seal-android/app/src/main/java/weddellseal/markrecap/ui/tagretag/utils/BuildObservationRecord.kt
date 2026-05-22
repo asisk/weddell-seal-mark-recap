@@ -115,8 +115,8 @@ fun buildObservationRecord(
     if (seal.oldTagMarks) {
         sb.append("old tag marks; ")
     }
-    // TODO, write a test to validate that if the tagEvent is retag and a reason is selected, that this logic does not populate the value because the comparisons should be != and not ==
-    if (seal.tagEventType == TagEventType.RETAG && (seal.reasonForRetag == RetagReason.NONE || seal.reasonForRetag == RetagReason.UNKNOWN)) {
+    // if the tagEvent is retag and a reason is selected, add the retag reason to the comment
+    if (seal.tagEventType == TagEventType.RETAG && (seal.reasonForRetag != RetagReason.NONE && seal.reasonForRetag != RetagReason.UNKNOWN)) {
         sb.append("Reason for Retag: ${seal.reasonForRetag.description}; ")
     }
 
@@ -125,7 +125,7 @@ fun buildObservationRecord(
     var date = getCurrentDateFormatted()
     var time = getCurrentTimeFormatted()
 
-    // TODO, test when a parent seal has no changes but the pup does
+    // TODO, test when a parent seal has no changes but the pup does not
     if (seal.hasEdits) {
         sb.append("Edited $date at $time: $edits; ") // date that the record was edited + the edits made
         date = metadata.originalDate // for edited records, the original date should be retained

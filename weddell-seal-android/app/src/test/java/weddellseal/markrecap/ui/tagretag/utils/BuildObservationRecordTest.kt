@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag.utils
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import weddellseal.markrecap.TestFixtures
@@ -121,6 +122,38 @@ class BuildObservationRecordTest {
         assertTrue(record.comments.contains("edited note"))
         assertEquals("2024-06-01", record.date)
         assertEquals("08:00:00", record.time)
+    }
+
+    @Test
+    fun retagWithSelectedReasonIncludesReasonInComments() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.RETAG,
+            tagNumber = "111",
+            tagAlpha = "A",
+            numTags = "1",
+            oldTagNumber = "222",
+            oldTagAlpha = "B",
+            reasonForRetag = RetagReason.ONE_OF_FOUR,
+            condition = SealCondition.GOOD,
+        )
+
+        val record = buildObservationRecord(
+            null,
+            seal,
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertEquals(RetagReason.ONE_OF_FOUR.description, record.retagReason)
+        assertTrue(
+            record.comments.contains("Reason for Retag: ${RetagReason.ONE_OF_FOUR.description}"),
+        )
     }
 
     @Test
