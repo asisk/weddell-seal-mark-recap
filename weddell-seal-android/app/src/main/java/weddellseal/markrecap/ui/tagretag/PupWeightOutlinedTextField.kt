@@ -3,8 +3,6 @@ package weddellseal.markrecap.ui.tagretag
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -17,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import weddellseal.markrecap.R
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -72,11 +72,12 @@ fun PupWeightOutlinedTextField(
         trailingIcon = {
             if (text.isNotEmpty()) {
                 Icon(
-                    Icons.Filled.Clear, contentDescription = "Clear text",
-                    Modifier.clickable {
+                    painter = painterResource(R.drawable.ic_clear),
+                    contentDescription = "Clear text",
+                    modifier = Modifier.clickable {
                         text = ""
                         onClearValueDo()
-                    }
+                    },
                 )
             }
         },

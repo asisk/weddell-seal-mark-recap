@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -48,9 +46,9 @@ fun ObservationItem(
         Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
             IconButton(onClick = { expanded = true }) {
                 Icon(
-                    imageVector = Icons.Default.MoreVert, // Three-dot icon
+                    painter = painterResource(R.drawable.ic_more_vert),
                     contentDescription = "More options",
-                    Modifier.size(36.dp)
+                    modifier = Modifier.size(36.dp),
                 )
             }
 

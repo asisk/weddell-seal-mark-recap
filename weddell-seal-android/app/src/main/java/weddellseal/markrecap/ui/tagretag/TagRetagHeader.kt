@@ -10,12 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Female
-import androidx.compose.material.icons.filled.Male
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -84,9 +78,9 @@ fun TagRetagHeader(
             ExtendedFloatingActionButton(
                 icon = {
                     Icon(
-                        Icons.Filled.Female,
-                        "Single Female",
-                        Modifier.size(36.dp)
+                        painter = painterResource(R.drawable.ic_female),
+                        contentDescription = "Single Female",
+                        modifier = Modifier.size(36.dp),
                     )
                 },
                 text = {
@@ -109,9 +103,9 @@ fun TagRetagHeader(
             ExtendedFloatingActionButton(
                 icon = {
                     Icon(
-                        Icons.Filled.Male,
-                        "Single Male",
-                        Modifier.size(36.dp)
+                        painter = painterResource(R.drawable.ic_male),
+                        contentDescription = "Single Male",
+                        modifier = Modifier.size(36.dp),
                     )
                 },
                 text = {
@@ -209,9 +203,9 @@ fun TagRetagHeader(
                 },
                 icon = {
                     Icon(
-                        Icons.Outlined.Cancel,
-                        "Exit Edit Mode",
-                        Modifier.size(36.dp),
+                        painter = painterResource(R.drawable.ic_cancel_outlined),
+                        contentDescription = "Exit Edit Mode",
+                        modifier = Modifier.size(36.dp),
                     )
                 },
                 text = {
@@ -238,10 +232,10 @@ fun TagRetagHeader(
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Warning,
+                painter = painterResource(R.drawable.ic_warning),
                 contentDescription = "Warning",
                 tint = Color(0xFFF57C00),
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = 8.dp),
             )
             Text(
                 text = "Please review the data you've entered and confirm it is correct before saving.",
@@ -277,7 +271,13 @@ fun TagRetagHeader(
 
                     viewModel.writeObservationRecord(homeViewModel.getColonyLocation())
                 },
-                icon = { Icon(Icons.Filled.Save, "Confirm & Save", Modifier.size(36.dp)) },
+                icon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_save),
+                        contentDescription = "Confirm & Save",
+                        modifier = Modifier.size(36.dp),
+                    )
+                },
                 text = {
                     Text(
                         text = "Confirm & Save",
@@ -297,7 +297,9 @@ fun TagRetagHeader(
                 },
                 icon = {
                     Icon(
-                        Icons.Filled.Save, "Edit", Modifier.size(36.dp)
+                        painter = painterResource(R.drawable.ic_save),
+                        contentDescription = "Edit",
+                        modifier = Modifier.size(36.dp),
                     )
                 },
                 text = {

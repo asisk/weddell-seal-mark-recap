@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOff
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +19,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.R
 import weddellseal.markrecap.domain.location.data.toLocationString
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +48,7 @@ fun DeviceGPSRow(
         Column {
             if (location?.coordinates?.longitude != null && location?.coordinates?.latitude != null) {
                 Icon(
-                    Icons.Filled.LocationOn,
+                    painter = painterResource(R.drawable.ic_location_on),
                     contentDescription = null,
                     tint = Color(0xFF1D9C06),
                     modifier = Modifier
@@ -58,7 +57,7 @@ fun DeviceGPSRow(
                 )
             } else {
                 Icon(
-                    Icons.Filled.LocationOff,
+                    painter = painterResource(R.drawable.ic_location_off),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
                     modifier = Modifier

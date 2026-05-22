@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,16 +20,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.R
 import weddellseal.markrecap.domain.files.data.FileState
 import weddellseal.markrecap.domain.files.data.color
-import weddellseal.markrecap.domain.files.data.icon
+import weddellseal.markrecap.domain.files.data.iconRes
 import weddellseal.markrecap.ui.admin.FileStatus
 
 @Composable
@@ -42,13 +42,13 @@ fun ImportCard(
     var errMessage by remember { mutableStateOf("") }
     var lastFilename by remember { mutableStateOf("") }
     var statusColor by remember { mutableStateOf(Color(0xFF5884fa)) }
-    var statusIcon by remember { mutableStateOf(Icons.Default.Pending) }
+    var statusIcon by remember { mutableIntStateOf(R.drawable.ic_pending) }
 
     LaunchedEffect(state.status, state.lastUploadFilename) {
         errMessage = state.message.toString()
         lastFilename = state.lastUploadFilename.orEmpty()
         statusColor = state.status.color()
-        statusIcon = state.status.icon()
+        statusIcon = state.status.iconRes()
     }
 
     Card(
@@ -74,7 +74,7 @@ fun ImportCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.UploadFile,
+                        painter = painterResource(R.drawable.ic_upload_file_outlined),
                         contentDescription = null,
                         tint = Color.Black,
                         modifier = Modifier
@@ -143,7 +143,7 @@ fun ImportCard(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = statusIcon,
+                        painter = painterResource(statusIcon),
                         contentDescription = null,
                         tint = statusColor,
                         modifier = Modifier
