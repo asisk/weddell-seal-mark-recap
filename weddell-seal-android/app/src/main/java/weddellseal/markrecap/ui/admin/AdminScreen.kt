@@ -10,17 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.outlined.Archive
-import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.icons.outlined.FileDownload
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.UploadFile
-import androidx.compose.material.icons.sharp.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
@@ -64,21 +53,20 @@ fun AdminScreen(
 
     val items =
         listOf("Home", "Dashboard", "Import", "Export", "Archive")
-    val selectedIcons = listOf(
-        Icons.Default.Home,
-        Icons.Default.Dashboard,
-        Icons.Sharp.UploadFile,
-        Icons.Default.FileDownload,
-        Icons.Default.Archive
+    val selectedIconRes = listOf(
+        R.drawable.ic_home,
+        R.drawable.ic_dashboard,
+        R.drawable.ic_upload_file_filled,
+        R.drawable.ic_file_download,
+        R.drawable.ic_archive,
     )
-    val unselectedIcons =
-        listOf(
-            Icons.Outlined.Home,
-            Icons.Outlined.Dashboard,
-            Icons.Outlined.UploadFile,
-            Icons.Outlined.FileDownload,
-            Icons.Outlined.Archive
-        )
+    val unselectedIconRes = listOf(
+        R.drawable.ic_home_outlined,
+        R.drawable.ic_dashboard_outlined,
+        R.drawable.ic_upload_file_outlined,
+        R.drawable.ic_file_download_outlined,
+        R.drawable.ic_archive_outlined,
+    )
 
     Scaffold { innerPadding ->
         Row(
@@ -94,9 +82,12 @@ fun AdminScreen(
                     NavigationRailItem(
                         icon = {
                             Icon(
-                                if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
+                                painter = painterResource(
+                                    if (selectedItem == index) selectedIconRes[index]
+                                    else unselectedIconRes[index],
+                                ),
                                 contentDescription = item,
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(48.dp),
                             )
                         },
                         label = {

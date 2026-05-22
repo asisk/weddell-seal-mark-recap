@@ -14,11 +14,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -38,8 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import weddellseal.markrecap.R
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.RecentObservations
@@ -126,9 +123,9 @@ fun TagRetagFooter(
                     },
                     icon = {
                         Icon(
-                            Icons.Filled.Save,
-                            "Save Seal",
-                            Modifier.size(36.dp),
+                            painter = painterResource(R.drawable.ic_save),
+                            contentDescription = "Save Seal",
+                            modifier = Modifier.size(36.dp),
                             tint = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSecondary,
                         )
                     },
@@ -159,9 +156,9 @@ fun TagRetagFooter(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Error,
+                        painter = painterResource(R.drawable.ic_error_outline),
                         contentDescription = "Error",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
                     )
                     Text(
                         modifier = Modifier.padding(start = 8.dp),
@@ -177,10 +174,12 @@ fun TagRetagFooter(
                     ) {
                         IconButton(onClick = { expanded = true }) {
                             Icon(
-                                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                painter = painterResource(
+                                    if (expanded) R.drawable.ic_arrow_drop_up else R.drawable.ic_arrow_drop_down,
+                                ),
                                 contentDescription = "Expand error details",
                                 tint = Color.Red,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(36.dp),
                             )
                         }
 

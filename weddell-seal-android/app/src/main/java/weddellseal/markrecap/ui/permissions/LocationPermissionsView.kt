@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import weddellseal.markrecap.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,9 +46,9 @@ fun LocationPermissionView(
         Spacer(modifier = Modifier.weight(1.0f))
 
         Icon(
-            Icons.Filled.LocationOn,
+            painter = painterResource(R.drawable.ic_location_on),
             contentDescription = "permission icon",
-            modifier = Modifier.size(100.dp)
+            modifier = Modifier.size(100.dp),
         )
 
         Text(text = "Enable Location", style = MaterialTheme.typography.headlineLarge)

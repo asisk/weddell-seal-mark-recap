@@ -13,10 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import weddellseal.markrecap.R
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
@@ -115,13 +113,13 @@ fun TabbedCards(
                             if (uiState.isSaveAttempted) {
                                 val iconColor =
                                     if (tabItem.seal.isValid) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
-                                val icon =
-                                    if (tabItem.seal.isValid) Icons.Default.Check else Icons.Default.Error
                                 Icon(
-                                    imageVector = icon,
+                                    painter = painterResource(
+                                        if (tabItem.seal.isValid) R.drawable.ic_check else R.drawable.ic_error_outline,
+                                    ),
                                     contentDescription = "Seal Valid",
                                     tint = iconColor,
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(32.dp),
                                 )
                             }
                         }
@@ -226,7 +224,7 @@ fun TabbedCards(
                             onClick = { showDeleteDialog.value = true },
                         ) {
                             Icon(
-                                imageVector = Icons.Default.DeleteOutline,
+                                painter = painterResource(R.drawable.ic_delete_outline),
                                 contentDescription = "Remove Tab",
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(48.dp),

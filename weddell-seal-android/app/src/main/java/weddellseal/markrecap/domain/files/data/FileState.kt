@@ -1,11 +1,8 @@
 package weddellseal.markrecap.domain.files.data
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Pending
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import weddellseal.markrecap.R
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 
@@ -27,8 +24,9 @@ fun FileStatus.color(): Color = when (this) {
     FileStatus.ERROR -> Color(0xFFD90101)
 }
 
-fun FileStatus.icon(): ImageVector = when (this) {
-    FileStatus.IDLE -> Icons.Default.Pending
-    FileStatus.SUCCESS -> Icons.Default.CheckCircle
-    FileStatus.ERROR -> Icons.Default.ErrorOutline
+@DrawableRes
+fun FileStatus.iconRes(): Int = when (this) {
+    FileStatus.IDLE -> R.drawable.ic_pending
+    FileStatus.SUCCESS -> R.drawable.ic_check_circle
+    FileStatus.ERROR -> R.drawable.ic_error_outline
 }

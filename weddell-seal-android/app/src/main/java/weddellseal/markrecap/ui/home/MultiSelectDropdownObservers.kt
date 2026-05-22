@@ -3,12 +3,11 @@ package weddellseal.markrecap.ui.home
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import weddellseal.markrecap.R
 
 data class SelectableItem(val title: String, var isSelected: Boolean = false)
 
@@ -63,8 +62,10 @@ fun MultiSelectDropdownObservers(
                 trailingIcon = {
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
-                            imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                            contentDescription = null
+                            painter = painterResource(
+                                if (expanded) R.drawable.ic_arrow_drop_up else R.drawable.ic_arrow_drop_down,
+                            ),
+                            contentDescription = null,
                         )
                     }
                 },

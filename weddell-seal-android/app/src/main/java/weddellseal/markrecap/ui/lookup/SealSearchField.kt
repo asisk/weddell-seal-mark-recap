@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -21,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import weddellseal.markrecap.R
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -97,14 +96,15 @@ fun SealSearchField(
         trailingIcon = {
             if (searchString.isNotEmpty()) {
                 Icon(
-                    Icons.Filled.Clear, contentDescription = "Clear text",
-                    Modifier
+                    painter = painterResource(R.drawable.ic_clear),
+                    contentDescription = "Clear text",
+                    modifier = Modifier
                         .clickable {
                             searchString = ""
                             viewModel.resetLookupUiState()
                             viewModel.resetLookupSeal()
                         }
-                        .size(35.dp) // Adjust the size as needed
+                        .size(35.dp),
                 )
             }
         },
@@ -132,9 +132,9 @@ fun SealSearchField(
             modifier = Modifier.padding(bottom = 15.dp, end = 20.dp),
         ) {
             Icon(
-                imageVector = Icons.Default.Search,
+                painter = painterResource(R.drawable.ic_search),
                 contentDescription = "Search",
-                modifier = Modifier.size(45.dp)
+                modifier = Modifier.size(45.dp),
             )
         }
     }

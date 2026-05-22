@@ -7,8 +7,6 @@ hilt = "2.53.1"
 compose-ui = "1.11.2"
 compose-foundation = "1.11.2"
 compose-material = "1.11.2"
-# material-icons-extended is no longer released past 1.7.8 (see Google Maven metadata)
-compose-material-icons-extended = "1.7.8"
 compose-material3 = "1.4.0"
 compose-runtime = "1.11.2"
 
@@ -47,7 +45,6 @@ compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", versi
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "compose-ui" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "compose-ui" }
 compose-material = { group = "androidx.compose.material", name = "material", version.ref = "compose-material" }
-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "compose-material-icons-extended" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "compose-material3" }
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "compose-runtime" }
 compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "compose-runtime" }
