@@ -150,9 +150,9 @@ class TagRetagViewModel(
     }
 
     fun onViewAttempt(observation: DisplayObservation) {
-        viewModelScope.launch {
-            _selectedRecentObservation.value = observation // set the observation to edit
-        }
+        // Set synchronously so ObservationViewer has data on first composition
+        // (navigation from RecentObservations runs in the same frame).
+        _selectedRecentObservation.value = observation
     }
 
     fun prefillSingleMale() {
