@@ -19,14 +19,16 @@ data class FileState(
 )
 
 fun FileStatus.color(): Color = when (this) {
-    FileStatus.IDLE -> Color.Gray
-    FileStatus.SUCCESS -> Color(0xFF0DBE0D)
     FileStatus.ERROR -> Color(0xFFD90101)
+    FileStatus.IDLE -> Color.Gray
+    FileStatus.LOADING -> Color(0xFF5884fa)
+    FileStatus.SUCCESS -> Color(0xFF0DBE0D)
 }
 
 @DrawableRes
 fun FileStatus.iconRes(): Int = when (this) {
-    FileStatus.IDLE -> R.drawable.ic_pending
-    FileStatus.SUCCESS -> R.drawable.ic_check_circle
     FileStatus.ERROR -> R.drawable.ic_error_outline
+    FileStatus.IDLE -> R.drawable.ic_pending
+    FileStatus.LOADING -> R.drawable.ic_progress_activity
+    FileStatus.SUCCESS -> R.drawable.ic_check_circle
 }

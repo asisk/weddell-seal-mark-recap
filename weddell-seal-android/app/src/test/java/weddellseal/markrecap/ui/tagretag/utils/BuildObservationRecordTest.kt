@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag.utils
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import weddellseal.markrecap.TestFixtures
@@ -124,6 +125,93 @@ class BuildObservationRecordTest {
     }
 
     @Test
+    fun retagWithSelectedReasonIncludesReasonInComments() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.RETAG,
+            tagNumber = "111",
+            tagAlpha = "A",
+            numTags = "1",
+            oldTagNumber = "222",
+            oldTagAlpha = "B",
+            reasonForRetag = RetagReason.ONE_OF_FOUR,
+            condition = SealCondition.GOOD,
+        )
+
+        val record = buildObservationRecord(
+            null,
+            seal,
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertEquals(RetagReason.ONE_OF_FOUR.description, record.retagReason)
+        assertTrue(
+            record.comments.contains("Reason for Retag: ${RetagReason.ONE_OF_FOUR.description}"),
+        )
+    }
+
+    @Test
+    fun retagWithNoneOrUnknownReasonOmitsReasonFromComments() {
+        listOf(RetagReason.NONE, RetagReason.UNKNOWN).forEach { reason ->
+            val record = buildObservationRecord(
+                null,
+                retagSeal(reasonForRetag = reason),
+                "",
+                "",
+                "",
+                TestFixtures.sampleMetadata(),
+            )
+
+            assertEquals(reason.description, record.retagReason)
+            assertFalse(record.comments.contains("Reason for Retag:"))
+        }
+    }
+
+    @Test
+    fun nonRetagEventOmitsReasonFromCommentsEvenWhenReasonSet() {
+        val seal = retagSeal(reasonForRetag = RetagReason.OTHER)
+            .copy(tagEventType = TagEventType.NEW)
+
+        val record = buildObservationRecord(
+            null,
+            seal,
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertFalse(record.comments.contains("Reason for Retag:"))
+    }
+
+    @Test
+    fun retagReasonAppearsBeforeUserCommentInCommentString() {
+        val record = buildObservationRecord(
+            null,
+            retagSeal(reasonForRetag = RetagReason.OTHER).copy(
+                pupPeed = true,
+                comment = "field note",
+            ),
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        val reasonSnippet = "Reason for Retag: Other;"
+        assertTrue(record.comments.startsWith("pup peed; "))
+        assertTrue(record.comments.contains(reasonSnippet))
+        assertTrue(record.comments.endsWith("field note"))
+        assertTrue(record.comments.indexOf(reasonSnippet) < record.comments.indexOf("field note"))
+    }
+
+    @Test
     fun dateTimeUsesCurrentWhenNoEdits() {
         val seal = TestFixtures.completePrimaryNewSeal()
         val record = buildObservationRecord(null, seal, "", "", "", TestFixtures.sampleMetadata())
@@ -131,4 +219,21 @@ class BuildObservationRecordTest {
         assertTrue(record.date.matches(Regex("\\d{4}-\\d{2}-\\d{2}")))
         assertTrue(record.time.matches(Regex("\\d{2}:\\d{2}:\\d{2}")))
     }
+
+    private fun retagSeal(
+        reasonForRetag: RetagReason = RetagReason.ONE_OF_FOUR,
+    ) = Seal(
+        sealType = SealType.PRIMARY,
+        ageClass = SealAgeClass.ADULT,
+        sex = SealSex.FEMALE,
+        numRelatives = SealRelatives.ZERO,
+        tagEventType = TagEventType.RETAG,
+        tagNumber = "111",
+        tagAlpha = "A",
+        numTags = "1",
+        oldTagNumber = "222",
+        oldTagAlpha = "B",
+        reasonForRetag = reasonForRetag,
+        condition = SealCondition.GOOD,
+    )
 }
