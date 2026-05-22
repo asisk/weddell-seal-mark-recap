@@ -93,6 +93,7 @@ class WedCheckViewModel(
     }
 
     fun importWedCheck(uri: Uri, filename: String) {
+        _wedCheckUploadState.update { it.copy(status = FileStatus.LOADING, message = "") }
         viewModelScope.launch(Dispatchers.IO) {
             // 1. Insert FileUploadEntity and get the fileUploadId
             val fileUploadId = insertFileUploadRecord(filename)

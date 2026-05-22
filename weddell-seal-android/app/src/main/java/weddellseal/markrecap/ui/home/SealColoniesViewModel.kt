@@ -89,6 +89,7 @@ class SealColoniesViewModel(
     }
 
     fun loadSealColoniesFile(uri: Uri, filename: String) {
+        _fileState.update { it.copy(status = FileStatus.LOADING, message = "") }
         viewModelScope.launch {
             // Insert the file and get the fileUploadId
             val fileUploadId = insertFileUpload(filename)
