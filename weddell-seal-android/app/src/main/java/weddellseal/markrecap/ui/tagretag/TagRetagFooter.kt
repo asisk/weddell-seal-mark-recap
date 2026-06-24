@@ -63,6 +63,7 @@ fun TagRetagFooter(
 
     val uiState by viewModel.uiState.collectAsState()
     val hasEdits by viewModel.hasEdits.collectAsState()
+    // primarySeal still needed for the "missing required fields" banner below.
     val primarySeal by viewModel.primarySeal.collectAsState()
     val focusManager = LocalFocusManager.current
 
@@ -105,6 +106,8 @@ fun TagRetagFooter(
 
                         if (uiState.isEditMode && !hasEdits) return@ExtendedFloatingActionButton
 
+                        // Blur commits the tag field; attemptSave commits pending tags and validates
+                        // using ViewModel state (not stale Compose snapshots).
                         focusManager.clearFocus()
                         viewModel.attemptSave(homeViewModel.getColonyLocation())
                     },

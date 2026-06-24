@@ -9,8 +9,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -55,6 +54,32 @@ class TagRetagViewModelTest {
     fun tearDown() {
         Dispatchers.resetMain()
     }
+
+    private fun wedCheckRecord(
+        speno: Int,
+        tagId: String,
+        sex: String = "M",
+    ) = WedCheckRecord(
+        speno = speno,
+        season = getCurrentYear(),
+        ageClass = "A",
+        sex = sex,
+        tagIdOne = tagId,
+        tagIdTwo = "NA",
+        comments = "",
+        ageYears = 3,
+        tissueSampled = "NA",
+        pupinMassStudy = "NA",
+        numPreviousPups = "NA",
+        pupinTTStudy = "NA",
+        momMassMeasurements = "NA",
+        condition = "3",
+        lastPhysio = "NA",
+        population = "NA",
+        fileUploadId = 1L,
+        latitude = -77.0,
+        longitude = 166.0,
+    )
 
     @Test
     fun onViewAttempt_setsSelectedObservationBeforeNavigation() = runTest {
@@ -145,6 +170,7 @@ class TagRetagViewModelTest {
         )
     }
 
+    /** Fix #1: [attemptSave] commits pending tag edits before writing. */
     @Test
     fun attemptSave_persistsPendingTagNumberWithoutRequiringBlur() = runTest {
         val app = ApplicationProvider.getApplicationContext<Application>()
@@ -174,6 +200,10 @@ class TagRetagViewModelTest {
         assertEquals("789B", written[0].tagIDOne)
     }
 
+    /**
+     * Fix #1: validation must use the committed tag (789A), not the pre-edit tag (456A) that
+     * still had a WedCheck match when the user tapped Save without blurring the tag field.
+     */
     @Test
     fun attemptSave_validatesUsingCommittedTagNotStaleModelSnapshot() = runTest {
         val app = ApplicationProvider.getApplicationContext<Application>()
@@ -219,17 +249,87 @@ class TagRetagViewModelTest {
         vm.updateTagAlpha(SealType.PRIMARY, "A")
         vm.updateNumTags(SealType.PRIMARY, "1")
         vm.findWedCheckMatch(vm.primarySeal.value, "456A")
-        runBlocking { delay(100) }
-
-        assertTrue(vm.primarySeal.value.hasWedCheckMatch)
-        assertTrue(vm.uiState.value.allSealsValid)
+        vm.primarySeal.first { it.hasWedCheckMatch && it.isValid }
 
         vm.updatePendingTagNumber(SealType.PRIMARY, "789")
         vm.attemptSave(TestFixtures.sampleGeoLocation())
+        vm.uiState.first { it.entryNeedsConfirmation }
 
         assertEquals("789", vm.primarySeal.value.tagNumber)
         assertTrue(written.isEmpty())
         assertTrue(vm.uiState.value.entryNeedsConfirmation)
         assertTrue(vm.uiState.value.validationFailureReason.contains("Seal not in database"))
+    }
+
+    /**
+     * Fix #2: Marked save awaits WedCheck for the committed tag so speno is not "0" when the
+     * user edits the tag number without blurring before Save.
+     */
+    @Test
+    fun writeObservationRecord_persistsSpenoForMarkedSealAfterPendingTagEdit() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+
+        val wedCheckFor789 = wedCheckRecord(speno = 42, tagId = "789A")
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID("789A") } returns wedCheckFor789
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.updatePendingTagNumber(SealType.PRIMARY, "789")
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(1, written.size)
+        assertEquals("789A", written[0].tagIDOne)
+        assertEquals("42", written[0].speno)
+    }
+
+    /** Fix #2: same speno behavior via the Confirm & Save path after validation. */
+    @Test
+    fun confirmAndSave_persistsSpenoForMarkedSealAfterPendingTagEdit() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+
+        val wedCheckFor789 = wedCheckRecord(speno = 55, tagId = "789A")
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID("789A") } returns wedCheckFor789
+        every { wedCheckRepo.findSealbyTagID("456A") } returns wedCheckRecord(speno = 99, tagId = "456A")
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.updatePendingTagNumber(SealType.PRIMARY, "789")
+        vm.setIsSaving()
+
+        vm.confirmAndSave(TestFixtures.sampleGeoLocation())
+        vm.primarySeal.first { !it.isEntryStarted }
+
+        assertEquals(1, written.size)
+        assertEquals("789A", written[0].tagIDOne)
+        assertEquals("55", written[0].speno)
     }
 }

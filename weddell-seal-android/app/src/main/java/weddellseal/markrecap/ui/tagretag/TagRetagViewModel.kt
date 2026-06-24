@@ -102,7 +102,7 @@ class TagRetagViewModel(
     private var originalPupOne: Seal? = null
     private var originalPupTwo: Seal? = null
 
-    /** BUG FIX: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
+    /** BUG FIX #1: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
     private val pendingTagNumbers = mutableMapOf<SealType, String>()
     private val pendingOldTagNumbers = mutableMapOf<SealType, String>()
 
@@ -296,46 +296,67 @@ class TagRetagViewModel(
             (!primary.hasPupTwo || pupTwo.isValid)
 
     /**
-     * Save button handler: commits pending tag edits, then validates or persists using the
-     * committed seal state (not the pre-commit snapshot held by the UI).
+     * Save button entry point (fix #1 + #2).
+     *
+     * Fix #1: [TagIDOutlinedTextField] keeps in-progress tag edits in [pendingTagNumbers] until
+     * blur. We must [commitPendingTagNumbers] before validating or writing, and read seal state
+     * from the ViewModel — not from a Compose snapshot captured at click time.
+     *
+     * Fix #2: After commit, [refreshAllWedCheckMatches] awaits WedCheck lookups so Marked/Retag
+     * validation and speno assignment use the committed tag, not a stale or in-flight match.
      */
     fun attemptSave(currentLocation: GeoLocation?) {
         commitPendingTagNumbers()
         setIsSaving()
 
-        val primary = _primarySeal.value
-        val pupOne = _pupOne.value
-        val pupTwo = _pupTwo.value
+        viewModelScope.launch {
+            refreshAllWedCheckMatches()
 
-        if (allSealsValid(primary, pupOne, pupTwo)) {
-            writeObservationRecord(currentLocation)
-        } else {
-            checkNeedsConfirmation(
-                primary.validationErrors,
-                pupOne.validationErrors,
-                pupTwo.validationErrors,
-            )
+            val primary = _primarySeal.value
+            val pupOne = _pupOne.value
+            val pupTwo = _pupTwo.value
+
+            if (allSealsValid(primary, pupOne, pupTwo)) {
+                writeObservationRecord(currentLocation)
+            } else {
+                checkNeedsConfirmation(
+                    primary.validationErrors,
+                    pupOne.validationErrors,
+                    pupTwo.validationErrors,
+                )
+            }
         }
     }
 
+    /**
+     * Confirm & Save entry point after the validation banner is shown.
+     *
+     * Runs in the ViewModel so flag-for-review and persistence use committed tag values and
+     * resolved WedCheck matches (same fix #1 / #2 requirements as [attemptSave]).
+     * [setIsSaving] is not called here; [UiState.isSaveAttempted] is already true from the first Save tap.
+     */
     fun confirmAndSave(currentLocation: GeoLocation?) {
         commitPendingTagNumbers()
 
-        val primary = _primarySeal.value
-        val pupOne = _pupOne.value
-        val pupTwo = _pupTwo.value
+        viewModelScope.launch {
+            refreshAllWedCheckMatches()
 
-        if (!primary.isValid) {
-            flagSealForReview(primary.sealType)
-        }
-        if (!pupOne.isValid) {
-            flagSealForReview(pupOne.sealType)
-        }
-        if (!pupTwo.isValid) {
-            flagSealForReview(pupTwo.sealType)
-        }
+            val primary = _primarySeal.value
+            val pupOne = _pupOne.value
+            val pupTwo = _pupTwo.value
 
-        writeObservationRecord(currentLocation)
+            if (!primary.isValid) {
+                flagSealForReview(primary.sealType)
+            }
+            if (!pupOne.isValid) {
+                flagSealForReview(pupOne.sealType)
+            }
+            if (!pupTwo.isValid) {
+                flagSealForReview(pupTwo.sealType)
+            }
+
+            writeObservationRecord(currentLocation)
+        }
     }
 
     fun editAfterAttemptedSave() {
@@ -501,35 +522,124 @@ class TagRetagViewModel(
                 _uiState.update { it.copy(isSearching = true) }
 
                 try {
-                    val sealFound: WedCheckRecord? = withContext(Dispatchers.IO) {
+                    val sealFound = withContext(Dispatchers.IO) {
                         wedCheckRepo.findSealbyTagID(searchTagID.trim())
                     }
 
-                    if (sealFound != null) {
-                        when (seal.sealType) {
-                            SealType.PRIMARY -> {
-                                _primarySeal.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-                            }
-
-                            SealType.PUPONE -> {
-                                _pupOne.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-                            }
-
-                            SealType.PUPTWO -> {
-                                _pupTwo.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-                            }
-
-                            SealType.UNKNOWN -> {
-                                // No action needed for UNKNOWN
-                            }
-                        }
-                    }
+                    // Guard against stale results if the tag changed or the form was reset
+                    // while this lookup was in flight.
+                    applyWedCheckLookupResult(seal.sealType, searchTagID, sealFound)
                 } catch (e: Exception) {
                     Log.e("SealLookup", "Error fetching seal: ${e.localizedMessage}", e)
                 }
                 _uiState.update { it.copy(isSearching = false) }
             }
         }
+    }
+
+    /** Tag string used for WedCheck lookup: current tag ID (Marked/New) or old tag ID (Retag). */
+    private fun wedCheckSearchTagFor(seal: Seal): String? = when {
+        seal.useTagID && seal.isTagIDValid -> seal.tagNumber + seal.tagAlpha
+        seal.useOldTag && seal.isOldTagValid -> seal.oldTagNumber + seal.oldTagAlpha
+        else -> null
+    }
+
+    /**
+     * Blocking WedCheck lookup for the save path (fix #2).
+     *
+     * [requestCurrentWedCheckMatch] / [findWedCheckMatch] are async; if we build the observation
+     * record before they finish, Marked/Retag entries are saved with speno "0" even when the tag
+     * exists in WedCheck. Only Marked and Retag need a match for speno; New tags intentionally skip.
+     */
+    private suspend fun resolveWedCheckForSeal(seal: Seal): Seal {
+        if (seal.isNoTag) return seal
+        if (seal.tagEventType != TagEventType.MARKED && seal.tagEventType != TagEventType.RETAG) {
+            return seal
+        }
+
+        val searchTag = wedCheckSearchTagFor(seal) ?: return seal
+        if (seal.wedCheckMatch?.tagIdOne == searchTag) return seal
+
+        return try {
+            val record = withContext(Dispatchers.IO) {
+                wedCheckRepo.findSealbyTagID(searchTag.trim())
+            }
+            seal.copy(wedCheckMatch = record.toSeal())
+        } catch (e: Exception) {
+            Log.e("SealLookup", "Error fetching seal for save: ${e.localizedMessage}", e)
+            seal.copy(wedCheckMatch = null)
+        }
+    }
+
+    /**
+     * Applies an async WedCheck lookup result only if the seal still has the same search tag.
+     * Prevents a slow in-flight lookup from attaching speno to the wrong tag or to a reset form.
+     */
+    private fun applyWedCheckLookupResult(
+        sealType: SealType,
+        searchTagID: String,
+        sealFound: WedCheckRecord,
+    ) {
+
+        val currentSeal = when (sealType) {
+            SealType.PRIMARY -> _primarySeal.value
+            SealType.PUPONE -> _pupOne.value
+            SealType.PUPTWO -> _pupTwo.value
+            SealType.UNKNOWN -> return
+        }
+
+        val expectedTag = wedCheckSearchTagFor(currentSeal) ?: return
+        if (expectedTag != searchTagID.trim()) return
+
+        when (sealType) {
+            SealType.PRIMARY -> {
+                _primarySeal.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
+            }
+
+            SealType.PUPONE -> {
+                _pupOne.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
+            }
+
+            SealType.PUPTWO -> {
+                _pupTwo.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
+            }
+
+            SealType.UNKNOWN -> Unit
+        }
+    }
+
+    private suspend fun refreshWedCheckMatchFor(sealType: SealType) {
+        val seal = when (sealType) {
+            SealType.PRIMARY -> _primarySeal.value
+            SealType.PUPONE -> _pupOne.value
+            SealType.PUPTWO -> _pupTwo.value
+            SealType.UNKNOWN -> return
+        }
+        if (!seal.isEntryStarted) return
+
+        val resolved = resolveWedCheckForSeal(seal)
+        when (sealType) {
+            SealType.PRIMARY -> {
+                _primarySeal.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
+            }
+
+            SealType.PUPONE -> {
+                _pupOne.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
+            }
+
+            SealType.PUPTWO -> {
+                _pupTwo.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
+            }
+
+            SealType.UNKNOWN -> Unit
+        }
+    }
+
+    /** Updates seal state with awaited WedCheck results before save validation or persistence. */
+    private suspend fun refreshAllWedCheckMatches() {
+        refreshWedCheckMatchFor(SealType.PRIMARY)
+        refreshWedCheckMatchFor(SealType.PUPONE)
+        refreshWedCheckMatchFor(SealType.PUPTWO)
     }
 
     fun getPupOneNotebookString(): String {
@@ -711,6 +821,7 @@ class TagRetagViewModel(
     }
 
     private fun commitPendingTagNumbers() {
+        // Flush in-progress tag ID edits from the UI before validation or persistence (fix #1).
         pendingTagNumbers.toMap().forEach { (sealType, number) ->
             updateTagNumber(sealType, number)
         }
@@ -1477,7 +1588,14 @@ class TagRetagViewModel(
         }
     }
 
-    fun writeObservationRecord(
+    /**
+     * Persists observation record(s) to the database.
+     *
+     * Suspend so WedCheck can be resolved and writes can complete before [resetModelState].
+     * [commitPendingTagNumbers] is also called from [attemptSave] / [confirmAndSave]; kept here
+     * as a safety net when this function is invoked directly (e.g. unit tests).
+     */
+    suspend fun writeObservationRecord(
         currentLocation: GeoLocation?,
     ) {
         Log.i("writeObservationRecord", "latitude at time of write: ${currentLocation?.coordinates?.latitude}")
@@ -1492,18 +1610,13 @@ class TagRetagViewModel(
                 .filter { it.markedRemoved }
 
             for (seal in sealsToRemove) {
-                // remove entry from the database for each seal
-                viewModelScope.launch {
-                    observationRepo.deleteObservation(seal.observationID)
-                }
+                observationRepo.deleteObservation(seal.observationID)
             }
 
             if (primarySeal.value.pupAdded) { // TODO TEST, be wary of race condition
                 // remove the primary record and add a new observation records for mom with the pup
                 // this action supports ordering the mom and pup together
-                viewModelScope.launch {
-                    observationRepo.deleteObservation(primarySeal.value.observationID)
-                }
+                observationRepo.deleteObservation(primarySeal.value.observationID)
             }
 
             // filter for seals that are to be UPDATED
@@ -1529,9 +1642,11 @@ class TagRetagViewModel(
 
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
+                // Await WedCheck so speno is populated before building the record (fix #2).
+                val sealForRecord = resolveWedCheckForSeal(seal)
                 val observationRecord = buildObservationRecord(
                     uiState.value.observationLocation,
-                    seal,
+                    sealForRecord,
                     edits,
                     relOneTag,
                     relTwoTag,
@@ -1539,9 +1654,7 @@ class TagRetagViewModel(
                 )
 
                 // write an entry to the database for each seal
-                viewModelScope.launch {
-                    observationRepo.writeObservation(observationRecord)
-                }
+                observationRepo.writeObservation(observationRecord)
             }
 
         } else {
@@ -1554,10 +1667,11 @@ class TagRetagViewModel(
                 Log.i(TAG, "current location at the time of save ${currentLocation?.coordinates?.latitude}")
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
-                // TODO, consider a function on the Observation, toObservationRecord(), to replace buildObservationRecord
+                // Await WedCheck so speno is populated before building the record (fix #2).
+                val sealForRecord = resolveWedCheckForSeal(seal)
                 val observationRecord = buildObservationRecord(
                     currentLocation,
-                    seal,
+                    sealForRecord,
                     "",
                     relOneTag,
                     relTwoTag,
@@ -1565,18 +1679,15 @@ class TagRetagViewModel(
                 )
 
                 // write an entry to the database for each seal
-                viewModelScope.launch {
-                    observationRepo.writeObservation(observationRecord)
-                }
+                observationRepo.writeObservation(observationRecord)
             }
 
-            viewModelScope.launch {
-                _uiEvent.emit(
-                    UiEvent.ShowSavedToast("Record for ${primarySeal.value.notebookDataString} saved!")
-                )
-            }
+            _uiEvent.emit(
+                UiEvent.ShowSavedToast("Record for ${primarySeal.value.notebookDataString} saved!")
+            )
         }
 
+        // Safe to reset only after awaited WedCheck resolution and DB writes complete.
         resetModelState()
     }
 
