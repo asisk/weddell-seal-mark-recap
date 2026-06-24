@@ -70,6 +70,9 @@ class TagRetagViewModel(
 
         val validationFailureReason: String = "", // reason for validation failure
         val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
+
+        /** Incremented on [resetModelState] so tag text fields drop leftover local state (fix #3). */
+        val tagFieldResetGeneration: Int = 0,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -253,6 +256,7 @@ class TagRetagViewModel(
                 ineligibleForSaveReason = "",
                 validationFailureReason = "",
                 entryNeedsConfirmation = false,
+                tagFieldResetGeneration = it.tagFieldResetGeneration + 1,
             )
         }
 
@@ -603,6 +607,8 @@ class TagRetagViewModel(
             SealType.PUPTWO -> {
                 _pupTwo.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
             }
+
+            else -> {}
         }
     }
 
@@ -628,6 +634,8 @@ class TagRetagViewModel(
             SealType.PUPTWO -> {
                 _pupTwo.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
             }
+
+            else -> {}
         }
     }
 

@@ -67,6 +67,10 @@ fun SealCard(
         viewModel.uiState.map { it.isSaveAttempted }
     }.collectAsStateWithLifecycle(false)
 
+    val tagFieldResetGeneration by remember {
+        viewModel.uiState.map { it.tagFieldResetGeneration }
+    }.collectAsStateWithLifecycle(0)
+
     val autoDetectedColony by homeViewModel.autoDetectedColony.collectAsState()
 
     val focusManager = LocalFocusManager.current
@@ -227,7 +231,8 @@ fun SealCard(
             onNumberChanged = { viewModel.updatePendingTagNumber(seal.sealType, it) },
             onNumberCommitted = { viewModel.updateTagNumber(seal.sealType, it) },
             onAlphaSelected = { viewModel.updateTagAlpha(seal.sealType, it) },
-            modifier = Modifier.clearFocusOnTap(focusManager)
+            modifier = Modifier.clearFocusOnTap(focusManager),
+            fieldKey = "${tagFieldResetGeneration}-${seal.sealType}-tag",
         )
 
         // OLD TAG ID
@@ -248,7 +253,8 @@ fun SealCard(
                     )
                 },
                 onAlphaSelected = { viewModel.updateOldTagAlpha(seal.sealType, it) },
-                modifier = Modifier.clearFocusOnTap(focusManager)
+                modifier = Modifier.clearFocusOnTap(focusManager),
+                fieldKey = "${tagFieldResetGeneration}-${seal.sealType}-old-tag",
             )
         }
     }

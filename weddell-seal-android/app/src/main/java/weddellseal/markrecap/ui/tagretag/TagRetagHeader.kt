@@ -258,8 +258,7 @@ fun TagRetagHeader(
                 containerColor = MaterialTheme.colorScheme.secondary,
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 onClick = {
-                    // Blur + ViewModel handler so pending tag edits and WedCheck are resolved
-                    // before flag-for-review and persistence (see confirmAndSave).
+                    // Fix #3: blur before save; fix #1/#2: confirmAndSave in ViewModel.
                     focusManager.clearFocus()
                     viewModel.confirmAndSave(homeViewModel.getColonyLocation())
                 },

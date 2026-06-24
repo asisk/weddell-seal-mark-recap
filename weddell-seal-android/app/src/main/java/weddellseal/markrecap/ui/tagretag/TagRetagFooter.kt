@@ -106,8 +106,7 @@ fun TagRetagFooter(
 
                         if (uiState.isEditMode && !hasEdits) return@ExtendedFloatingActionButton
 
-                        // Blur commits the tag field; attemptSave commits pending tags and validates
-                        // using ViewModel state (not stale Compose snapshots).
+                        // Fix #3: blur commits the tag field; fix #1: attemptSave uses ViewModel state.
                         focusManager.clearFocus()
                         viewModel.attemptSave(homeViewModel.getColonyLocation())
                     },

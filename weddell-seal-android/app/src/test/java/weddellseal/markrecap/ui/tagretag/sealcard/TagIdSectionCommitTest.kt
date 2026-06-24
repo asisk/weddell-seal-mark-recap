@@ -100,6 +100,7 @@ class TagIdSectionCommitTest {
             TagIdSectionHost(
                 number = number.value,
                 recomposeKey = recomposeKey.intValue,
+                fieldKey = 0,
                 onNumberCommitted = {},
             )
         }
@@ -124,6 +125,7 @@ class TagIdSectionCommitTest {
             TagIdSectionHost(
                 number = number.value,
                 recomposeKey = 0,
+                fieldKey = 0,
                 onNumberCommitted = {},
             )
         }
@@ -133,12 +135,44 @@ class TagIdSectionCommitTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("123").assertIsDisplayed()
     }
+
+    /**
+     * Fix #3: after save the model clears and [TagIDOutlinedTextField]'s fieldKey increments.
+     * Local in-progress text must
+     * not carry over to the next entry even if the field never lost focus.
+     */
+    @Test
+    fun tagNumber_clearsLocalStateWhenFieldKeyChanges() {
+        val number = mutableStateOf("456")
+        val fieldKey = mutableIntStateOf(0)
+
+        composeRule.setContent {
+            TagIdSectionHost(
+                number = number.value,
+                recomposeKey = 0,
+                fieldKey = fieldKey.intValue,
+                onNumberCommitted = {},
+            )
+        }
+
+        composeRule.onNodeWithText("456").performClick()
+        composeRule.onNodeWithText("456").performTextReplacement("789")
+        composeRule.onNodeWithText("789").assertIsFocused()
+
+        number.value = ""
+        fieldKey.intValue = 1
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("789").assertDoesNotExist()
+        composeRule.onNodeWithText("456").assertDoesNotExist()
+    }
 }
 
 @Composable
 private fun TagIdSectionHost(
     number: String,
     recomposeKey: Int,
+    fieldKey: Any,
     onNumberCommitted: (String) -> Unit,
 ) {
     MaterialTheme {
@@ -152,6 +186,7 @@ private fun TagIdSectionHost(
                 onNumberCommitted = onNumberCommitted,
                 onAlphaSelected = {},
                 modifier = Modifier,
+                fieldKey = fieldKey,
             )
         }
     }
