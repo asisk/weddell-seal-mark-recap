@@ -286,6 +286,58 @@ class TagRetagViewModel(
         _uiState.update { it.copy(isSaveAttempted = true, isSaveEnabled = false) }
     }
 
+    private fun allSealsValid(
+        primary: Seal = _primarySeal.value,
+        pupOne: Seal = _pupOne.value,
+        pupTwo: Seal = _pupTwo.value,
+    ): Boolean =
+        primary.isValid &&
+            (!primary.hasPupOne || pupOne.isValid) &&
+            (!primary.hasPupTwo || pupTwo.isValid)
+
+    /**
+     * Save button handler: commits pending tag edits, then validates or persists using the
+     * committed seal state (not the pre-commit snapshot held by the UI).
+     */
+    fun attemptSave(currentLocation: GeoLocation?) {
+        commitPendingTagNumbers()
+        setIsSaving()
+
+        val primary = _primarySeal.value
+        val pupOne = _pupOne.value
+        val pupTwo = _pupTwo.value
+
+        if (allSealsValid(primary, pupOne, pupTwo)) {
+            writeObservationRecord(currentLocation)
+        } else {
+            checkNeedsConfirmation(
+                primary.validationErrors,
+                pupOne.validationErrors,
+                pupTwo.validationErrors,
+            )
+        }
+    }
+
+    fun confirmAndSave(currentLocation: GeoLocation?) {
+        commitPendingTagNumbers()
+
+        val primary = _primarySeal.value
+        val pupOne = _pupOne.value
+        val pupTwo = _pupTwo.value
+
+        if (!primary.isValid) {
+            flagSealForReview(primary.sealType)
+        }
+        if (!pupOne.isValid) {
+            flagSealForReview(pupOne.sealType)
+        }
+        if (!pupTwo.isValid) {
+            flagSealForReview(pupTwo.sealType)
+        }
+
+        writeObservationRecord(currentLocation)
+    }
+
     fun editAfterAttemptedSave() {
         _uiState.update {
             it.copy(

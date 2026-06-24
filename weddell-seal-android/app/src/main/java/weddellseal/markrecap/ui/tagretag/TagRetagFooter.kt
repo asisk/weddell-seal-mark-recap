@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -62,11 +63,8 @@ fun TagRetagFooter(
 
     val uiState by viewModel.uiState.collectAsState()
     val hasEdits by viewModel.hasEdits.collectAsState()
-
     val primarySeal by viewModel.primarySeal.collectAsState()
-    val pupOneSeal by viewModel.pupOne.collectAsState()
-    val pupTwoSeal by viewModel.pupTwo.collectAsState()
-
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) {
         uiEventFlow.collect { event ->
@@ -107,19 +105,8 @@ fun TagRetagFooter(
 
                         if (uiState.isEditMode && !hasEdits) return@ExtendedFloatingActionButton
 
-                        viewModel.setIsSaving()
-
-                        if (uiState.allSealsValid) {
-                            viewModel.writeObservationRecord(homeViewModel.getColonyLocation())
-                        } else {
-                            // Ensure that the validation error list is current
-                            // & mark as needsConfirmation if there are validation errors
-                            viewModel.checkNeedsConfirmation(
-                                primarySeal.validationErrors,
-                                pupOneSeal.validationErrors,
-                                pupTwoSeal.validationErrors
-                            )
-                        }
+                        focusManager.clearFocus()
+                        viewModel.attemptSave(homeViewModel.getColonyLocation())
                     },
                     icon = {
                         Icon(

@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,8 +38,7 @@ fun TagRetagHeader(
     val metadata by homeViewModel.metadata.collectAsState()
 
     val primarySeal by viewModel.primarySeal.collectAsState()
-    val pupOneSeal by viewModel.pupOne.collectAsState()
-    val pupTwoSeal by viewModel.pupTwo.collectAsState()
+    val focusManager = LocalFocusManager.current
 
     // CENSUS PREPOPULATE
     if (metadata.isCensusMode) {
@@ -258,18 +258,8 @@ fun TagRetagHeader(
                 containerColor = MaterialTheme.colorScheme.secondary,
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 onClick = {
-                    // flag seals for review
-                    if (!primarySeal.isValid) {
-                        viewModel.flagSealForReview(primarySeal.sealType)
-                    }
-                    if (!pupOneSeal.isValid) {
-                        viewModel.flagSealForReview(pupOneSeal.sealType)
-                    }
-                    if (!pupTwoSeal.isValid) {
-                        viewModel.flagSealForReview(pupTwoSeal.sealType)
-                    }
-
-                    viewModel.writeObservationRecord(homeViewModel.getColonyLocation())
+                    focusManager.clearFocus()
+                    viewModel.confirmAndSave(homeViewModel.getColonyLocation())
                 },
                 icon = {
                     Icon(
