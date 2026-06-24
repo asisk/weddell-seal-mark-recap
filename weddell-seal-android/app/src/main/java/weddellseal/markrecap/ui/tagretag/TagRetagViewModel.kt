@@ -603,8 +603,6 @@ class TagRetagViewModel(
             SealType.PUPTWO -> {
                 _pupTwo.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
             }
-
-            SealType.UNKNOWN -> Unit
         }
     }
 
@@ -630,8 +628,6 @@ class TagRetagViewModel(
             SealType.PUPTWO -> {
                 _pupTwo.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
             }
-
-            SealType.UNKNOWN -> Unit
         }
     }
 
