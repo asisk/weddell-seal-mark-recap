@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +15,11 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -331,5 +335,119 @@ class TagRetagViewModelTest {
         assertEquals(1, written.size)
         assertEquals("789A", written[0].tagIDOne)
         assertEquals("55", written[0].speno)
+    }
+
+    /**
+     * Fix #4: a WedCheck lookup started before [resetModelState] must not attach speno to the
+     * next blank entry.
+     */
+    @Test
+    fun findWedCheckMatch_ignoresStaleResultAfterFormReset() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+
+        val wedCheckFor456 = wedCheckRecord(speno = 99, tagId = "456A")
+        val allowStaleLookupToFinish = CompletableDeferred<Unit>()
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        coEvery { wedCheckRepo.findSealbyTagID("456A") } coAnswers {
+            allowStaleLookupToFinish.await()
+            wedCheckFor456
+        }
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+
+        vm.findWedCheckMatch(vm.primarySeal.value, "456A")
+        vm.resetModelState()
+        allowStaleLookupToFinish.complete(Unit)
+        yield()
+
+        assertFalse(vm.primarySeal.value.isEntryStarted)
+        assertNull(vm.primarySeal.value.wedCheckMatch)
+    }
+
+    /**
+     * Fix #4: when the tag changes while a lookup is in flight, only the latest lookup may apply.
+     */
+    @Test
+    fun findWedCheckMatch_ignoresSupersededLookupWhenTagChanges() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+
+        val wedCheckFor456 = wedCheckRecord(speno = 99, tagId = "456A")
+        val wedCheckFor789 = wedCheckRecord(speno = 42, tagId = "789A")
+        val allowStaleLookupToFinish = CompletableDeferred<Unit>()
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        coEvery { wedCheckRepo.findSealbyTagID("456A") } coAnswers {
+            allowStaleLookupToFinish.await()
+            wedCheckFor456
+        }
+        every { wedCheckRepo.findSealbyTagID("789A") } returns wedCheckFor789
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+
+        vm.findWedCheckMatch(vm.primarySeal.value, "456A")
+        vm.updateTagNumber(SealType.PRIMARY, "789")
+        // requestCurrentWedCheckMatch skips while the first lookup holds isSearching=true,
+        // so start the superseding lookup explicitly.
+        vm.findWedCheckMatch(vm.primarySeal.value, "789A")
+        vm.primarySeal.first { it.wedCheckMatch?.speNo == 42 }
+
+        allowStaleLookupToFinish.complete(Unit)
+        yield()
+
+        assertEquals("789", vm.primarySeal.value.tagNumber)
+        assertEquals(42, vm.primarySeal.value.wedCheckMatch?.speNo)
+    }
+
+    /**
+     * Fix #4: a failed lookup for the current tag clears any stale WedCheck match instead of
+     * leaving the previous tag's speno visible.
+     */
+    @Test
+    fun findWedCheckMatch_clearsMatchWhenLookupFailsForCurrentTag() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+
+        val wedCheckFor456 = wedCheckRecord(speno = 99, tagId = "456A")
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID("456A") } returns wedCheckFor456
+        every { wedCheckRepo.findSealbyTagID("789A") } throws NoSuchElementException()
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.findWedCheckMatch(vm.primarySeal.value, "456A")
+        vm.primarySeal.first { it.wedCheckMatch?.speNo == 99 }
+
+        vm.updateTagNumber(SealType.PRIMARY, "789")
+        vm.primarySeal.first { !it.hasWedCheckMatch }
+
+        assertEquals("789", vm.primarySeal.value.tagNumber)
+        assertNull(vm.primarySeal.value.wedCheckMatch)
     }
 }

@@ -72,7 +72,7 @@ class TagRetagViewModel(
         val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
 
         /** Incremented on [resetModelState] so tag text fields drop leftover local state (fix #3). */
-        val tagFieldResetGeneration: Int = 0,
+        val tagFieldResetCounter: Int = 0,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -108,6 +108,17 @@ class TagRetagViewModel(
     /** BUG FIX #1: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
     private val pendingTagNumbers = mutableMapOf<SealType, String>()
     private val pendingOldTagNumbers = mutableMapOf<SealType, String>()
+
+    /**
+     * Fix #4: Per-seal counter for async WedCheck lookups. Each new lookup bumps the
+     * counter so an older in-flight result cannot attach speno after the tag changes or the
+     * form resets.
+     */
+    private val wedCheckLookup = mutableMapOf(
+        SealType.PRIMARY to 0,
+        SealType.PUPONE to 0,
+        SealType.PUPTWO to 0,
+    )
 
     //    init {
 //        // Automatically update colonyLocation if it's set to ""
@@ -243,6 +254,9 @@ class TagRetagViewModel(
     // 2. when a save is successful
     // 3. when a record is selected for editing from the Tag/Retag screen
     fun resetModelState() {
+        // Invalidate any WedCheck lookups still in flight before clearing seal state (fix #4).
+        invalidateAllWedCheckLookups()
+
         _uiState.update {
             it.copy(
                 isSearching = false,
@@ -256,7 +270,7 @@ class TagRetagViewModel(
                 ineligibleForSaveReason = "",
                 validationFailureReason = "",
                 entryNeedsConfirmation = false,
-                tagFieldResetGeneration = it.tagFieldResetGeneration + 1,
+                tagFieldResetCounter = it.tagFieldResetCounter + 1,
             )
         }
 
@@ -520,8 +534,17 @@ class TagRetagViewModel(
         }
     }
 
+    /**
+     * Async WedCheck lookup used while the user edits a seal (fix #4).
+     *
+     * Each call bumps a per-seal counter before starting IO. When the lookup returns,
+     * [applyWedCheckLookupResult] or [clearWedCheckMatchIfLookupCurrent] only apply if that
+     * counter is still current and the seal still has the same search tag.
+     */
     fun findWedCheckMatch(seal: Seal, searchTagID: String) {
         if (searchTagID != "") {
+            // Fix #4: capture lookup counter before the async IO work so superseded lookups are ignored.
+            val lookupCounter = nextWedCheckLookup(seal.sealType)
             viewModelScope.launch {
                 _uiState.update { it.copy(isSearching = true) }
 
@@ -531,15 +554,54 @@ class TagRetagViewModel(
                     }
 
                     // Guard against stale results if the tag changed or the form was reset
-                    // while this lookup was in flight.
-                    applyWedCheckLookupResult(seal.sealType, searchTagID, sealFound)
+                    // while this lookup was in flight (fix #4).
+                    applyWedCheckLookupResult(
+                        seal.sealType,
+                        searchTagID,
+                        sealFound,
+                        lookupCounter,
+                    )
                 } catch (e: Exception) {
                     Log.e("SealLookup", "Error fetching seal: ${e.localizedMessage}", e)
+                    clearWedCheckMatchIfLookupCurrent(
+                        seal.sealType,
+                        searchTagID,
+                        lookupCounter,
+                    )
                 }
                 _uiState.update { it.copy(isSearching = false) }
             }
         }
     }
+
+    /**
+     * Fix #4: bumps the per-seal lookup counter and returns the new value.
+     *
+     * Each call to [findWedCheckMatch] gets a unique counter so only the latest in-flight
+     * lookup for that seal may update [Seal.wedCheckMatch].
+     */
+    private fun nextWedCheckLookup(sealType: SealType): Int {
+        val next = (wedCheckLookup[sealType] ?: 0) + 1
+        wedCheckLookup[sealType] = next
+        return next
+    }
+
+    /**
+     * Fix #4: invalidates all in-flight WedCheck lookups.
+     *
+     * Called from [resetModelState] so a slow lookup started before save cannot attach speno
+     * to the blank form shown for the next entry.
+     */
+    private fun invalidateAllWedCheckLookups() {
+        wedCheckLookup.keys.forEach { sealType ->
+            wedCheckLookup[sealType] =
+                (wedCheckLookup[sealType] ?: 0) + 1
+        }
+    }
+
+    /** Fix #4: true when [lookupCounter] is still the latest request for [sealType]. */
+    private fun isWedCheckLookupCurrent(sealType: SealType, lookupCounter: Int): Boolean =
+        wedCheckLookup[sealType] == lookupCounter
 
     /** Tag string used for WedCheck lookup: current tag ID (Marked/New) or old tag ID (Retag). */
     private fun wedCheckSearchTagFor(seal: Seal): String? = when {
@@ -576,39 +638,63 @@ class TagRetagViewModel(
     }
 
     /**
-     * Applies an async WedCheck lookup result only if the seal still has the same search tag.
+     * Applies an async WedCheck lookup result only if this request is still current (fix #4).
+     *
+     * Checks both the lookup counter and that the seal still has the same search tag.
      * Prevents a slow in-flight lookup from attaching speno to the wrong tag or to a reset form.
      */
     private fun applyWedCheckLookupResult(
         sealType: SealType,
         searchTagID: String,
         sealFound: WedCheckRecord,
+        lookupCounter: Int,
     ) {
+        if (!isWedCheckLookupCurrent(sealType, lookupCounter)) return
 
-        val currentSeal = when (sealType) {
-            SealType.PRIMARY -> _primarySeal.value
-            SealType.PUPONE -> _pupOne.value
-            SealType.PUPTWO -> _pupTwo.value
-            SealType.UNKNOWN -> return
-        }
+        val currentSeal = sealForType(sealType) ?: return
 
         val expectedTag = wedCheckSearchTagFor(currentSeal) ?: return
         if (expectedTag != searchTagID.trim()) return
 
+        updateSealWedCheckMatch(sealType, sealFound.toSeal())
+    }
+
+    /**
+     * Clears [Seal.wedCheckMatch] when an async lookup fails (fix #4).
+     *
+     * Only runs when the failed request is still current and the seal still expects
+     * [searchTagID], so a stale failure cannot clear a match from a newer lookup.
+     */
+    private fun clearWedCheckMatchIfLookupCurrent(
+        sealType: SealType,
+        searchTagID: String,
+        lookupCounter: Int,
+    ) {
+        if (!isWedCheckLookupCurrent(sealType, lookupCounter)) return
+
+        val currentSeal = sealForType(sealType) ?: return
+
+        val expectedTag = wedCheckSearchTagFor(currentSeal) ?: return
+        if (expectedTag != searchTagID.trim()) return
+
+        removeWedCheckMatch(sealType)
+    }
+
+    /** Returns the live [Seal] for [sealType], or null for [SealType.UNKNOWN]. */
+    private fun sealForType(sealType: SealType): Seal? = when (sealType) {
+        SealType.PRIMARY -> _primarySeal.value
+        SealType.PUPONE -> _pupOne.value
+        SealType.PUPTWO -> _pupTwo.value
+        SealType.UNKNOWN -> null
+    }
+
+    /** Writes [match] onto the seal identified by [sealType]. */
+    private fun updateSealWedCheckMatch(sealType: SealType, match: WedCheckSeal) {
         when (sealType) {
-            SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-            }
-
-            SealType.PUPONE -> {
-                _pupOne.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-            }
-
-            SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-            }
-
-            else -> {}
+            SealType.PRIMARY -> _primarySeal.update { it.copy(wedCheckMatch = match) }
+            SealType.PUPONE -> _pupOne.update { it.copy(wedCheckMatch = match) }
+            SealType.PUPTWO -> _pupTwo.update { it.copy(wedCheckMatch = match) }
+            SealType.UNKNOWN -> Unit
         }
     }
 
