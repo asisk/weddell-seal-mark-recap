@@ -19,6 +19,7 @@ import androidx.test.rule.GrantPermissionRule
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -329,6 +330,35 @@ class TagRetagSaveInstrumentedTest {
         )
     }
 
+    private fun waitUntilFormReset(tagRetagViewModel: TagRetagViewModel) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            var reset = false
+            composeRule.runOnUiThread {
+                val seal = tagRetagViewModel.primarySeal.value
+                reset = !seal.isEntryStarted && seal.tagNumber.isEmpty()
+            }
+            reset
+        }
+        composeRule.waitForIdle()
+    }
+
+    private fun assertTagNumberNotVisible(number: String) {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(tagNumberFieldMatcher(number), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
+    }
+
+    private fun assertSpenoNotDisplayed(speno: Int) {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                hasText("Speno: $speno", substring = true),
+                useUnmergedTree = true,
+            ).fetchSemanticsNodes().isEmpty()
+        }
+    }
+
     @Test
     fun saveTagRetag_persistsInProgressTagIdWithoutRequiringBlur() {
         clearAllObservations()
@@ -387,5 +417,41 @@ class TagRetagSaveInstrumentedTest {
         )
         assertNotEquals("0", saved.speno)
         assertTrue(saved.observerInitials.contains("TST"))
+    }
+
+    /**
+     * Fix #3 / #6: after save with the tag field still focused, the next entry must not show the
+     * previous tag number or WedCheck speno (PML "leftover tag/speno on next entry").
+     */
+    @Test
+    fun saveTagRetag_clearsTagFieldForNextEntryAfterSaveWithoutBlur() {
+        clearAllObservations()
+        seedWedCheckForMarkedSave()
+        setupTestObservers()
+
+        val homeViewModel = getHomeViewModel()
+        val tagRetagViewModel = getTagRetagViewModel(homeViewModel)
+        prefillSealAndCommitTag(tagRetagViewModel, TagEventType.MARKED)
+        navigateToTagRetag()
+
+        replaceTagNumberWithoutBlur(IN_PROGRESS_TAG_NUMBER)
+        waitUntilSaveEnabled(tagRetagViewModel)
+        tapSave()
+
+        val expectedTagId = "$IN_PROGRESS_TAG_NUMBER$TAG_ALPHA"
+        waitForObservation { it.tagIDOne == expectedTagId }
+        waitUntilFormReset(tagRetagViewModel)
+
+        scrollToTagIdSection()
+        assertTagNumberNotVisible(IN_PROGRESS_TAG_NUMBER)
+        assertTagNumberNotVisible(COMMITTED_TAG_NUMBER)
+        assertSpenoNotDisplayed(MARKED_IN_PROGRESS_SPENO)
+
+        composeRule.runOnUiThread {
+            val seal = tagRetagViewModel.primarySeal.value
+            assertFalse("Next entry should start with a blank seal", seal.isEntryStarted)
+            assertEquals("", seal.tagNumber)
+            assertFalse(seal.hasWedCheckMatch)
+        }
     }
 }
