@@ -140,7 +140,8 @@ fun buildObservationRecord(
     }
 
     val log = ObservationRecord(
-        id = 0, // passing zero, but Room entity will auto-populate the id
+        // Append-only history: edits create a new row instead of replacing the original row.
+        id = 0,
         deviceID = metadata.deviceID,
         season = metadata.currentSeason,
         speno = speNo,

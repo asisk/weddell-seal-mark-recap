@@ -1734,6 +1734,7 @@ class TagRetagViewModel(
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
                 // Await WedCheck so speno is populated before building the record (fix #2).
                 val sealForRecord = resolveWedCheckForSeal(seal)
+                // Fix #5: append-only edit history; each edit writes a new observation row.
                 val observationRecord = buildObservationRecord(
                     uiState.value.observationLocation,
                     sealForRecord,

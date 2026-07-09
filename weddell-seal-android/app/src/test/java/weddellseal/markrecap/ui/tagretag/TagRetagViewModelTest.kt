@@ -450,4 +450,39 @@ class TagRetagViewModelTest {
         assertEquals("789", vm.primarySeal.value.tagNumber)
         assertNull(vm.primarySeal.value.wedCheckMatch)
     }
+
+    /** Fix #5: editing an existing observation appends a new row for edit history. */
+    @Test
+    fun writeObservationRecord_appendsNewRowWhenEditing() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        val existing = TestFixtures.minimalObservationRecord().copy(
+            id = 42,
+            insertedAt = 1_000L,
+            tagEvent = TagEventType.NEW.alpha,
+            tagIDOne = "456B",
+            tagOneIndicator = "+",
+            sealCondition = SealCondition.GOOD.code,
+        )
+        vm.loadSealForEdit(DisplayObservation.Standalone(existing))
+        vm.updateCondition(SealType.PRIMARY, SealCondition.FAIR)
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(1, written.size)
+        assertEquals(0, written[0].id)
+        assertNull(written[0].updatedAt)
+        assertEquals(SealCondition.FAIR.code, written[0].sealCondition)
+    }
 }
