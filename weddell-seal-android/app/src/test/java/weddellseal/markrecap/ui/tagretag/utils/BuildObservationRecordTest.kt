@@ -255,12 +255,11 @@ class BuildObservationRecordTest {
             TestFixtures.sampleMetadata(),
         )
 
-        assertEquals(technicianNote, record.comments)
+        // Validation messages stay in comments with the technician note; confirmation goes to edt.
+        assertTrue(record.comments.contains(technicianNote))
+        assertTrue(record.comments.contains("Seal not in database"))
         assertFalse(record.comments.contains("technician confirmed"))
-        assertFalse(record.comments.contains("Seal not in database"))
-        assertTrue(record.flaggedEntry.contains("technician confirmed"))
-        assertTrue(record.flaggedEntry.contains("Seal not in database"))
-        assertFalse(record.flaggedEntry.contains("\n"))
+        assertEquals("technician confirmed", record.flaggedEntry)
     }
 
     /** Fix #5: edits are append-only and should create a new row. */
