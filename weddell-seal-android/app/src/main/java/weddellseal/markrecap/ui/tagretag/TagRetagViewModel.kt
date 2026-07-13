@@ -226,27 +226,31 @@ class TagRetagViewModel(
             }
         }
 
-        if (seal.wedCheckMatch?.tagIdOne == searchStr) {
+        // WedCheck CSV has tag1 and tag2; the UI only enters one tag, which may match either
+        // column. After a hit via tag2, tagIdOne on the match is still tag1 — check both so we
+        // do not clear a valid match and look it up again.
+        val currentMatch = seal.wedCheckMatch
+        if (currentMatch != null &&
+            (currentMatch.tagIdOne == searchStr || currentMatch.tagIdTwo == searchStr)
+        ) {
             Log.d(
                 "TagRetagModel",
-                "Seal with tag ID: $searchStr already has a current WedCheck match: ${seal.wedCheckMatch.tagIdOne}"
+                "Seal with tag ID: $searchStr already has a current WedCheck match"
             )
             return
         }
 
-        if (!uiState.value.isSearching) {
-            if (seal.wedCheckMatch != null) {
-                Log.d(
-                    "TagRetagModel",
-                    "removing current WedCheck match for seal with tag ID: $searchStr"
-                )
-                removeWedCheckMatch(seal.sealType)
-            }
-            Log.d("TagRetagModel", "looking up seal for $searchStr")
-            findWedCheckMatch(seal, searchStr)
-        } else {
-            Log.d("TagRetagModel", "ignoring requested lookup as search is already in progress")
+        // Always start the lookup. Fix #4's per-seal counter drops stale in-flight results;
+        // previously gating on isSearching skipped the latest tag and left speno blank.
+        if (seal.wedCheckMatch != null) {
+            Log.d(
+                "TagRetagModel",
+                "removing current WedCheck match for seal with tag ID: $searchStr"
+            )
+            removeWedCheckMatch(seal.sealType)
         }
+        Log.d("TagRetagModel", "looking up seal for $searchStr")
+        findWedCheckMatch(seal, searchStr)
     }
 
     // called:
@@ -955,21 +959,39 @@ class TagRetagViewModel(
     }
 
     fun updateTagAlpha(sealType: SealType, input: String) {
+        // Commit any in-progress tag number so WedCheck can run as soon as both parts exist
+        // (alpha tap clears focus, but pending may still be ahead of the committed model).
+        val pendingNumber = pendingTagNumbers.remove(sealType)
         when (sealType) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(tagAlpha = input) }
+                _primarySeal.update {
+                    it.copy(
+                        tagNumber = pendingNumber ?: it.tagNumber,
+                        tagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(primarySeal.value)
                 requestCurrentWedCheckMatch(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update { it.copy(tagAlpha = input) }
+                _pupOne.update {
+                    it.copy(
+                        tagNumber = pendingNumber ?: it.tagNumber,
+                        tagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupOne.value)
                 requestCurrentWedCheckMatch(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(tagAlpha = input) }
+                _pupTwo.update {
+                    it.copy(
+                        tagNumber = pendingNumber ?: it.tagNumber,
+                        tagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupTwo.value)
                 requestCurrentWedCheckMatch(pupTwo.value)
             }
@@ -1008,21 +1030,37 @@ class TagRetagViewModel(
     }
 
     fun updateOldTagAlpha(sealType: SealType, input: String) {
+        val pendingNumber = pendingOldTagNumbers.remove(sealType)
         when (sealType) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(oldTagAlpha = input) }
+                _primarySeal.update {
+                    it.copy(
+                        oldTagNumber = pendingNumber ?: it.oldTagNumber,
+                        oldTagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(primarySeal.value)
                 requestCurrentWedCheckMatch(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update { it.copy(oldTagAlpha = input) }
+                _pupOne.update {
+                    it.copy(
+                        oldTagNumber = pendingNumber ?: it.oldTagNumber,
+                        oldTagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupOne.value)
                 requestCurrentWedCheckMatch(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(oldTagAlpha = input) }
+                _pupTwo.update {
+                    it.copy(
+                        oldTagNumber = pendingNumber ?: it.oldTagNumber,
+                        oldTagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupTwo.value)
                 requestCurrentWedCheckMatch(pupTwo.value)
             }
@@ -1655,7 +1693,7 @@ class TagRetagViewModel(
     }
 
     fun flagSealForReview(type: SealType) {
-        // Confirmation text is written to the edt/flaggedEntry column on save,
+        // Confirmation text is written to the flaggedEntry column on save,
         // not appended to comments, so technician notes stay readable.
         when (type) {
             SealType.PRIMARY -> {

@@ -34,7 +34,10 @@ interface WedCheckDao {
     @Query("SELECT COUNT(*) FROM wedCheck")
     suspend fun getCount(): Int
 
-    @Query("SELECT * FROM wedCheck WHERE tagNumberOne = :lookupSealTagID OR tagNumberTwo = :lookupSealTagID")
+    // LIMIT 1: Room expects a single row for a non-List return type. Without it, duplicate
+    // tag matches (e.g. same ID on tag1 of one seal and tag2 of another) throw and the
+    // caller clears the WedCheck match, leaving SPENO blank.
+    @Query("SELECT * FROM wedCheck WHERE tagNumberOne = :lookupSealTagID OR tagNumberTwo = :lookupSealTagID LIMIT 1")
     fun lookupSealByTagID(lookupSealTagID: String): WedCheckRecord
 
     @Query("SELECT * FROM wedCheck WHERE speno = :speNo")
