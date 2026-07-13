@@ -136,7 +136,6 @@ fun buildObservationRecord(
 
     var flagged = ""
     if (seal.flaggedForReview) {
-        // edt/flagged_entry column only — validation text stays in comments
         flagged = "technician confirmed"
     }
 
