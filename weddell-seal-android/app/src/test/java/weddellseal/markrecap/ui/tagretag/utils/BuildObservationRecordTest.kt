@@ -237,6 +237,32 @@ class BuildObservationRecordTest {
         assertNull(record.updatedAt)
     }
 
+    @Test
+    fun flaggedForReviewPutsConfirmationInEdtNotComments() {
+        val technicianNote = "photo taken, tags look worn"
+        val seal = TestFixtures.completePrimaryMarkedSeal().copy(
+            flaggedForReview = true,
+            comment = technicianNote,
+        )
+        // No WedCheck match → validation mismatch on Marked seals.
+
+        val record = buildObservationRecord(
+            null,
+            seal,
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertEquals(technicianNote, record.comments)
+        assertFalse(record.comments.contains("technician confirmed"))
+        assertFalse(record.comments.contains("Seal not in database"))
+        assertTrue(record.flaggedEntry.contains("technician confirmed"))
+        assertTrue(record.flaggedEntry.contains("Seal not in database"))
+        assertFalse(record.flaggedEntry.contains("\n"))
+    }
+
     /** Fix #5: edits are append-only and should create a new row. */
     @Test
     fun editedObservationCreatesNewRow() {

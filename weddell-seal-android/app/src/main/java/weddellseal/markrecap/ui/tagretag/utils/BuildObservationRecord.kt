@@ -136,7 +136,8 @@ fun buildObservationRecord(
 
     var flagged = ""
     if (seal.flaggedForReview) {
-        flagged = "C"
+        // edt/flagged_entry column only — validation text stays in comments
+        flagged = "technician confirmed"
     }
 
     val log = ObservationRecord(

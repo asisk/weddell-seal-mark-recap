@@ -1655,21 +1655,19 @@ class TagRetagViewModel(
     }
 
     fun flagSealForReview(type: SealType) {
-        val confirmed = "technician confirmed"
+        // Confirmation text is written to the edt/flaggedEntry column on save,
+        // not appended to comments, so technician notes stay readable.
         when (type) {
             SealType.PRIMARY -> {
-                val updatedComment = _primarySeal.value.comment + confirmed
-                _primarySeal.update { it.copy(flaggedForReview = true, comment = updatedComment) }
+                _primarySeal.update { it.copy(flaggedForReview = true) }
             }
 
             SealType.PUPONE -> {
-                val updatedComment = _pupOne.value.comment + confirmed
-                _pupOne.update { it.copy(flaggedForReview = true, comment = updatedComment) }
+                _pupOne.update { it.copy(flaggedForReview = true) }
             }
 
             SealType.PUPTWO -> {
-                val updatedComment = _pupTwo.value.comment + confirmed
-                _pupTwo.update { it.copy(flaggedForReview = true, comment = updatedComment) }
+                _pupTwo.update { it.copy(flaggedForReview = true) }
             }
 
             SealType.UNKNOWN -> {
