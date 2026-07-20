@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import weddellseal.markrecap.R
 import androidx.compose.ui.focus.FocusManager
@@ -31,33 +32,53 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Semantics test tag for [CommentField], used by instrumented save-without-blur regressions.
+ *
+ * Unlike Tag ID, an empty Comments [OutlinedTextField] cannot be found reliably via
+ * `hasSetTextAction()` + label text: with `useUnmergedTree`, the "Comments" label and the
+ * editable node are siblings. Tag ID tests instead match the committed number or the field's
+ * label/placeholder on the same node as [androidx.compose.ui.test.hasSetTextAction].
+ */
+const val COMMENTS_FIELD_TEST_TAG = "CommentsField"
+
 @Composable
 fun CommentField(
     value: String,
     onClearValueDo: () -> Unit,
-    onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
+    onValueChange: (String) -> Unit = {},
+    onFocusChange: (Boolean, String) -> Unit, // Pass both focus state and latest value
+    // Changes when the form resets so local text/focus state is recreated (same as Tag ID).
+    fieldKey: Any = 0,
 ) {
     val scrollState = rememberScrollState()
 
     val focusManager: FocusManager = LocalFocusManager.current
-    var isFocused by remember { mutableStateOf(false) } // Track focus state
+    var isFocused by remember(fieldKey) { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
+    // Local buffer while typing; fieldKey reset recreates this from the cleared model value.
+    var text by remember(fieldKey) { mutableStateOf(value) }
 
-    LaunchedEffect(value) {
-        text = value
+    // Sync from the model only when not focused; otherwise recomposition can reset in-progress
+    // edits (pending comment) back to the last committed value.
+    LaunchedEffect(value, isFocused) {
+        if (!isFocused) {
+            text = value
+        }
     }
 
     OutlinedTextField(
         value = text,
         onValueChange = {
             val sanitized =
-                it.replace(Regex("[^A-Za-z0-9 ;:!,']"), "") // only allow certain characters
+                it.replace(Regex("[^A-Za-z0-9 ;:!,.']"), "") // only allow certain characters
             text = sanitized // don't trim here because the data entry will be affected
+            onValueChange(text)
         },
         label = { Text("Comments") },
         modifier = Modifier
+            .testTag(COMMENTS_FIELD_TEST_TAG)
             .fillMaxWidth()
             .height(80.dp)
             .verticalScroll(scrollState)
@@ -89,7 +110,7 @@ fun CommentField(
             }
         ),
         trailingIcon = {
-            if (value.isNotEmpty()) {
+            if (text.isNotEmpty()) {
                 Icon(
                     painter = painterResource(R.drawable.ic_clear),
                     contentDescription = "Clear text",

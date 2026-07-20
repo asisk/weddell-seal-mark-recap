@@ -6,6 +6,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -41,18 +42,20 @@ import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.ui.admin.FileType
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.tagretag.COMMENTS_FIELD_TEST_TAG
 import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
 import weddellseal.markrecap.ui.utils.getCurrentYear
 import weddellseal.markrecap.viewmodelfactories.HomeViewModelFactory
 import weddellseal.markrecap.viewmodelfactories.TagRetagViewModelFactory
 
 /**
- * Regression for pending Tag ID edits on save: after tag 456 is committed, the user re-types 789
- * in [TagIDOutlinedTextField] and taps Save without blurring. The saved observation must be 789A.
+ * Regression for pending field edits on save (Tag ID and Comments): the user types in a focused
+ * field and taps Save without blurring. The saved observation must include the in-progress text,
+ * and the next blank entry must not inherit it (including when a second seal is then saved).
  *
- * Blur/commit behavior is covered by JVM tests ([TagIdSectionCommitTest],
- * [TagRetagViewModelTest]). This test uses the ViewModel only for non-tag setup and the initial
- * committed tag number, then drives the in-progress edit and Save through public UI semantics.
+ * Blur/commit behavior is covered by JVM tests ([TagRetagViewModelTest]). This suite uses the
+ * ViewModel only for non-field setup and the initial committed tag number, then drives the
+ * in-progress edit and Save through public UI semantics.
  */
 @RunWith(AndroidJUnit4::class)
 class TagRetagSaveInstrumentedTest {
@@ -64,7 +67,12 @@ class TagRetagSaveInstrumentedTest {
         private const val TAG_ALPHA = "A"
         private const val COMMITTED_TAG_NUMBER = "456"
         private const val IN_PROGRESS_TAG_NUMBER = "789"
+        /** Unique NEW tags for comment tests — must not collide with WedCheck seeds (456A/789A). */
+        private const val COMMENT_TEST_TAG_NUMBER = "9911"
+        private const val SECOND_SEAL_TAG_NUMBER = "9912"
         private const val MARKED_IN_PROGRESS_SPENO = 42
+        private const val TISSUE_LABEL = "Tissue"
+        private const val IN_PROGRESS_COMMENT = "scar on left flipper"
     }
 
     private val composeRule = createAndroidComposeRule<MainActivity>()
@@ -94,7 +102,7 @@ class TagRetagSaveInstrumentedTest {
         )
 
     private fun openDrawer() {
-        composeRule.waitForComposeReady()
+        composeRule.waitForComposeReady(timeoutMillis = 45_000)
         composeRule.onNode(hasContentDescription("Toggle drawer"), useUnmergedTree = true)
             .performClick()
         composeRule.waitForIdle()
@@ -219,6 +227,7 @@ class TagRetagSaveInstrumentedTest {
     private fun prefillSealAndCommitTag(
         tagRetagViewModel: TagRetagViewModel,
         tagEventType: TagEventType = TagEventType.NEW,
+        tagNumber: String = COMMITTED_TAG_NUMBER,
     ) {
         composeRule.runOnUiThread {
             tagRetagViewModel.prefillSingleMale()
@@ -229,7 +238,7 @@ class TagRetagSaveInstrumentedTest {
             )
             tagRetagViewModel.updateNumTags(SealType.PRIMARY, "1")
             tagRetagViewModel.updateTagAlpha(SealType.PRIMARY, TAG_ALPHA)
-            tagRetagViewModel.updateTagNumber(SealType.PRIMARY, COMMITTED_TAG_NUMBER)
+            tagRetagViewModel.updateTagNumber(SealType.PRIMARY, tagNumber)
         }
         composeRule.waitForIdle()
     }
@@ -293,6 +302,54 @@ class TagRetagSaveInstrumentedTest {
         replaceTextWithRetry(tagNumberFieldMatcherResolved(), number)
     }
 
+    private fun commentFieldMatcher(): SemanticsMatcher =
+        hasTestTag(COMMENTS_FIELD_TEST_TAG)
+
+    private fun commentFieldMatcherWithText(text: String): SemanticsMatcher =
+        hasTestTag(COMMENTS_FIELD_TEST_TAG).and(hasText(text))
+
+    private fun scrollToCommentSection() {
+        // Tissue sits beside Comments near the bottom of the seal card; scroll it into view first.
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(hasText(TISSUE_LABEL, substring = true), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty() ||
+                composeRule.onAllNodes(commentFieldMatcher(), useUnmergedTree = true)
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
+        }
+        scrollIntoView(hasText(TISSUE_LABEL, substring = true))
+        scrollIntoView(commentFieldMatcher())
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(commentFieldMatcher(), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
+    /**
+     * Types a comment while leaving the field focused (no Done / clearFocus before Save).
+     * Mirrors [replaceTagNumberWithoutBlur] for the Comments regression.
+     */
+    private fun enterCommentWithoutBlur(comment: String) {
+        scrollToCommentSection()
+        composeRule.waitForIdle()
+        replaceTextWithRetry(commentFieldMatcher(), comment)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(commentFieldMatcherWithText(comment), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
+    private fun assertCommentNotVisible(comment: String) {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(commentFieldMatcherWithText(comment), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
+    }
+
     private fun waitUntilSaveEnabled(tagRetagViewModel: TagRetagViewModel) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             var enabled = false
@@ -315,18 +372,18 @@ class TagRetagSaveInstrumentedTest {
         predicate: (ObservationRecord) -> Boolean,
     ): ObservationRecord {
         val deadline = SystemClock.uptimeMillis() + timeoutMillis
-        var lastTagIds: List<String> = emptyList()
+        var lastSummaries: List<String> = emptyList()
         while (SystemClock.uptimeMillis() < deadline) {
             val records = runBlocking {
                 app.observationRepo.currentObservationsDescByID.first()
             }
-            lastTagIds = records.map { it.tagIDOne }
+            lastSummaries = records.map { "${it.tagIDOne} comments=${it.comments}" }
             records.firstOrNull(predicate)?.let { return it }
             Thread.sleep(250)
         }
         throw AssertionError(
             "No matching observation within ${timeoutMillis}ms. " +
-                "Saved tagIDOne values: $lastTagIds",
+                "Saved records: $lastSummaries",
         )
     }
 
@@ -453,5 +510,91 @@ class TagRetagSaveInstrumentedTest {
             assertEquals("", seal.tagNumber)
             assertFalse(seal.hasWedCheckMatch)
         }
+    }
+
+    /**
+     * Reported bug: type a comment on seal 1 and Save without leaving the field; the note was
+     * missing from seal 1 and appeared when entering / saving seal 2.
+     *
+     * Proves both sides: seal 1 persists the in-progress comment, and seal 2 is saved without it.
+     */
+    @Test
+    fun saveTagRetag_commentFromFirstSealDoesNotPersistOnSecondSeal() {
+        clearAllObservations()
+        // Reach a stable hierarchy before ViewModel setup; cold starts on tablets can exceed 20s.
+        composeRule.waitForComposeReady(timeoutMillis = 45_000)
+        setupTestObservers()
+
+        val homeViewModel = getHomeViewModel()
+        val tagRetagViewModel = getTagRetagViewModel(homeViewModel)
+
+        // --- Seal 1: comment typed, Save while Comments still focused ---
+        navigateToTagRetag()
+        prefillSealAndCommitTag(tagRetagViewModel, tagNumber = COMMENT_TEST_TAG_NUMBER)
+        composeRule.waitForIdle()
+        enterCommentWithoutBlur(IN_PROGRESS_COMMENT)
+
+        composeRule.runOnUiThread {
+            assertEquals(
+                "Comment must still be pending (not committed via blur) before Save",
+                "",
+                tagRetagViewModel.primarySeal.value.comment,
+            )
+        }
+
+        waitUntilSaveEnabled(tagRetagViewModel)
+        tapSave()
+
+        val firstTagId = "$COMMENT_TEST_TAG_NUMBER$TAG_ALPHA"
+        val firstSaved = waitForObservation {
+            it.tagIDOne == firstTagId && it.comments.contains(IN_PROGRESS_COMMENT)
+        }
+        assertEquals(TagEventType.NEW.alpha, firstSaved.tagEvent)
+        waitUntilFormReset(tagRetagViewModel)
+
+        scrollToCommentSection()
+        assertCommentNotVisible(IN_PROGRESS_COMMENT)
+        composeRule.runOnUiThread {
+            assertEquals(
+                "Blank next entry must not inherit the previous seal's comment",
+                "",
+                tagRetagViewModel.primarySeal.value.comment,
+            )
+        }
+
+        // --- Seal 2: new entry, no comment typed, then Save ---
+        // Drive save through the ViewModel: the seal-1 success snackbar can cover the Save FAB
+        // and does not reliably dismiss under instrumentation. The regression under test is that
+        // seal 1's in-progress comment must not be on the next seal's model when it is saved.
+        prefillSealAndCommitTag(tagRetagViewModel, tagNumber = SECOND_SEAL_TAG_NUMBER)
+        composeRule.waitForIdle()
+
+        scrollToCommentSection()
+        assertCommentNotVisible(IN_PROGRESS_COMMENT)
+        composeRule.runOnUiThread {
+            assertEquals("", tagRetagViewModel.primarySeal.value.comment)
+            assertEquals(SECOND_SEAL_TAG_NUMBER, tagRetagViewModel.primarySeal.value.tagNumber)
+        }
+
+        waitUntilSaveEnabled(tagRetagViewModel)
+        composeRule.runOnUiThread {
+            tagRetagViewModel.attemptSave(homeViewModel.getColonyLocation())
+        }
+        composeRule.waitForIdle()
+
+        val secondTagId = "$SECOND_SEAL_TAG_NUMBER$TAG_ALPHA"
+        val secondSaved = waitForObservation { it.tagIDOne == secondTagId }
+        assertFalse(
+            "Comment from the first seal must not be saved on the next seal. " +
+                "Second seal comments: ${secondSaved.comments}",
+            secondSaved.comments.contains(IN_PROGRESS_COMMENT),
+        )
+
+        // Seal 1 record must still own the comment (not moved/cleared by the second save).
+        val records = runBlocking {
+            app.observationRepo.currentObservationsDescByID.first()
+        }
+        val firstAfterSecondSave = records.first { it.tagIDOne == firstTagId }
+        assertTrue(firstAfterSecondSave.comments.contains(IN_PROGRESS_COMMENT))
     }
 }

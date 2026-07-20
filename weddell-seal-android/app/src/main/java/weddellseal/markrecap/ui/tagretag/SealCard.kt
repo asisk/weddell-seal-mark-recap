@@ -68,7 +68,7 @@ fun SealCard(
     }.collectAsStateWithLifecycle(false)
 
     val tagFieldResetCounter by remember {
-        viewModel.uiState.map { it.tagFieldResetCounter }
+        viewModel.uiState.map { it.fieldResetCounter }
     }.collectAsStateWithLifecycle(0)
 
     val autoDetectedColony by homeViewModel.autoDetectedColony.collectAsState()
@@ -341,10 +341,12 @@ fun SealCard(
         onClearComment = {
             viewModel.updateComment(seal.sealType, "")
         },
+        onCommentChanged = { viewModel.updatePendingComment(seal.sealType, it) },
         onCommentCommitted = {
-            viewModel.updateComment(seal.sealType, it)
+            viewModel.updateCommentIfCurrent(seal.sealType, it, tagFieldResetCounter)
         },
-        modifier = Modifier.clearFocusOnTap(focusManager)
+        modifier = Modifier.clearFocusOnTap(focusManager),
+        fieldKey = "${tagFieldResetCounter}-${seal.sealType}-comment",
     )
 
     // WEIGHT FOR PUPS ONLY

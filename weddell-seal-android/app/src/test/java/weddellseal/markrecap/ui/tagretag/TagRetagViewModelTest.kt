@@ -215,6 +215,111 @@ class TagRetagViewModelTest {
     }
 
     /**
+     * CommentField keeps text local until blur. Save without leaving the field must still
+     * persist the in-progress comment on the current observation (not the next blank seal).
+     */
+    @Test
+    fun writeObservationRecord_persistsPendingCommentWithoutRequiringBlur() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "B")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+
+        // Typed in the comment box but Save before blur, so seal.comment is still empty.
+        vm.updatePendingComment(SealType.PRIMARY, "scar on left flipper")
+        assertEquals("", vm.primarySeal.value.comment)
+
+        assertTrue(vm.uiState.value.isSaveEnabled)
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(1, written.size)
+        assertTrue(
+            "Save should persist the in-progress comment even when the field still has focus",
+            written[0].comments.contains("scar on left flipper"),
+        )
+        assertEquals(
+            "After save, the next seal entry must not inherit the previous comment",
+            "",
+            vm.primarySeal.value.comment,
+        )
+    }
+
+    @Test
+    fun attemptSave_persistsPendingCommentWithoutRequiringBlur() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        // NEW tags must not resolve a WedCheck match; a relaxed mock can return a non-null
+        // record asynchronously and send attemptSave down the confirmation path instead of write.
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "B")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.updatePendingComment(SealType.PRIMARY, "scar on left flipper")
+
+        assertTrue(vm.uiState.value.isSaveEnabled)
+        vm.attemptSave(TestFixtures.sampleGeoLocation())
+        yield()
+
+        assertEquals(1, written.size)
+        assertTrue(written[0].comments.contains("scar on left flipper"))
+        assertEquals("", vm.primarySeal.value.comment)
+    }
+
+    @Test
+    fun updateCommentIfCurrent_ignoresStaleBlurAfterFormReset() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val counterBeforeReset = vm.uiState.value.fieldResetCounter
+
+        vm.resetModelState()
+        assertTrue(vm.uiState.value.fieldResetCounter > counterBeforeReset)
+
+        // Deferred blur from the previous CommentField instance after save/reset.
+        vm.updateCommentIfCurrent(SealType.PRIMARY, "should not stick", counterBeforeReset)
+        assertEquals("", vm.primarySeal.value.comment)
+
+        vm.updateCommentIfCurrent(
+            SealType.PRIMARY,
+            "fresh note",
+            vm.uiState.value.fieldResetCounter,
+        )
+        assertEquals("fresh note", vm.primarySeal.value.comment)
+    }
+
+    /**
      * Fix #1: validation must use the committed tag (789A), not the pre-edit tag (456A) that
      * still had a WedCheck match when the user tapped Save without blurring the tag field.
      */

@@ -22,8 +22,10 @@ fun TissueCommentSection(
     seal: Seal,
     onSelectTissue: (Boolean) -> Unit,
     onClearComment: () -> Unit,
+    onCommentChanged: (String) -> Unit = {},
     onCommentCommitted: (String) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
+    fieldKey: Any = 0,
 ) {
     Row(
         modifier = Modifier
@@ -60,9 +62,11 @@ fun TissueCommentSection(
             CommentField(
                 value = seal.comment,
                 onClearValueDo = { onClearComment() },
+                onValueChange = onCommentChanged,
                 onFocusChange = { isFocused, lastValue ->
                     if (!isFocused) onCommentCommitted(lastValue.trim())
-                }
+                },
+                fieldKey = fieldKey,
             )
 
             Text(

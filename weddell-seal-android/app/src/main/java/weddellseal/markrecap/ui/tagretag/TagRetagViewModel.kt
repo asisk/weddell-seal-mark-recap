@@ -71,8 +71,8 @@ class TagRetagViewModel(
         val validationFailureReason: String = "", // reason for validation failure
         val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
 
-        /** Incremented on [resetModelState] so tag text fields drop leftover local state (fix #3). */
-        val tagFieldResetCounter: Int = 0,
+        /** Incremented on [resetModelState] so text fields drop leftover local state. */
+        val fieldResetCounter: Int = 0,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -108,6 +108,9 @@ class TagRetagViewModel(
     /** BUG FIX #1: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
     private val pendingTagNumbers = mutableMapOf<SealType, String>()
     private val pendingOldTagNumbers = mutableMapOf<SealType, String>()
+
+    /** Same pattern as tag numbers: [CommentField] keeps text local until blur. */
+    private val pendingComments = mutableMapOf<SealType, String>()
 
     /**
      * Fix #4: Per-seal counter for async WedCheck lookups. Each new lookup bumps the
@@ -274,7 +277,7 @@ class TagRetagViewModel(
                 ineligibleForSaveReason = "",
                 validationFailureReason = "",
                 entryNeedsConfirmation = false,
-                tagFieldResetCounter = it.tagFieldResetCounter + 1,
+                fieldResetCounter = it.fieldResetCounter + 1,
             )
         }
 
@@ -302,6 +305,7 @@ class TagRetagViewModel(
         originalPupTwo = null
         pendingTagNumbers.clear()
         pendingOldTagNumbers.clear()
+        pendingComments.clear()
     }
 
     fun setIsSaving() {
@@ -320,15 +324,15 @@ class TagRetagViewModel(
     /**
      * Save button entry point (fix #1 + #2).
      *
-     * Fix #1: [TagIDOutlinedTextField] keeps in-progress tag edits in [pendingTagNumbers] until
-     * blur. We must [commitPendingTagNumbers] before validating or writing, and read seal state
+     * Fix #1: [TagIDOutlinedTextField] / [CommentField] keep in-progress edits in pending maps until
+     * blur. We must [commitPendingFieldEdits] before validating or writing, and read seal state
      * from the ViewModel — not from a Compose snapshot captured at click time.
      *
      * Fix #2: After commit, [refreshAllWedCheckMatches] awaits WedCheck lookups so Marked/Retag
      * validation and speno assignment use the committed tag, not a stale or in-flight match.
      */
     fun attemptSave(currentLocation: GeoLocation?) {
-        commitPendingTagNumbers()
+        commitPendingFieldEdits()
         setIsSaving()
 
         viewModelScope.launch {
@@ -358,7 +362,7 @@ class TagRetagViewModel(
      * [setIsSaving] is not called here; [UiState.isSaveAttempted] is already true from the first Save tap.
      */
     fun confirmAndSave(currentLocation: GeoLocation?) {
-        commitPendingTagNumbers()
+        commitPendingFieldEdits()
 
         viewModelScope.launch {
             refreshAllWedCheckMatches()
@@ -914,13 +918,29 @@ class TagRetagViewModel(
         pendingOldTagNumbers[sealType] = input
     }
 
+    fun updatePendingComment(sealType: SealType, input: String) {
+        if (sealType == SealType.UNKNOWN) return
+        pendingComments[sealType] = input
+    }
+
+    private fun commitPendingFieldEdits() {
+        // Flush in-progress tag ID / comment edits from the UI before validation or persistence (Fix #1).
+        commitPendingTagNumbers()
+        commitPendingComments()
+    }
+
     private fun commitPendingTagNumbers() {
-        // Flush in-progress tag ID edits from the UI before validation or persistence (fix #1).
         pendingTagNumbers.toMap().forEach { (sealType, number) ->
             updateTagNumber(sealType, number)
         }
         pendingOldTagNumbers.toMap().forEach { (sealType, number) ->
             updateOldTagNumber(sealType, number)
+        }
+    }
+
+    private fun commitPendingComments() {
+        pendingComments.toMap().forEach { (sealType, comment) ->
+            updateComment(sealType, comment)
         }
     }
 
@@ -1220,6 +1240,18 @@ class TagRetagViewModel(
                 // No action needed for UNKNOWN
             }
         }
+        pendingComments.remove(sealName)
+    }
+
+    /**
+     * Commit a comment from [CommentField] blur only if this field instance is still current.
+     *
+     * After save, [resetModelState] bumps [UiState.fieldResetCounter]. A deferred blur from the
+     * previous field must not apply its text to the blank "next" seal (same class of bug as tags).
+     */
+    fun updateCommentIfCurrent(sealName: SealType, input: String, fieldResetCounter: Int) {
+        if (fieldResetCounter != _uiState.value.fieldResetCounter) return
+        updateComment(sealName, input)
     }
 
     fun updateWeight(sealType: SealType, number: Int) {
@@ -1718,7 +1750,7 @@ class TagRetagViewModel(
      * Persists observation record(s) to the database.
      *
      * Suspend so WedCheck can be resolved and writes can complete before [resetModelState].
-     * [commitPendingTagNumbers] is also called from [attemptSave] / [confirmAndSave]; kept here
+     * [commitPendingFieldEdits] is also called from [attemptSave] / [confirmAndSave]; kept here
      * as a safety net when this function is invoked directly (e.g. unit tests).
      */
     suspend fun writeObservationRecord(
@@ -1726,7 +1758,7 @@ class TagRetagViewModel(
     ) {
         Log.i("writeObservationRecord", "latitude at time of write: ${currentLocation?.coordinates?.latitude}")
 
-        commitPendingTagNumbers()
+        commitPendingFieldEdits()
 
         if (uiState.value.isEditMode) {
 

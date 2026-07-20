@@ -1,6 +1,25 @@
 # weddell-seal-mark-recap-app
 Next generation Android app to support data capture in the field
 
+## Testing
+
+Automated tests for the `:app` module. More detail (Android Studio, CI, filters) lives in
+[`app/src/test/resources/README_TESTING.md`](app/src/test/resources/README_TESTING.md).
+
+### Gradle (equivalent)
+
+```bash
+./gradlew :app:testDebugUnitTest
+./gradlew :app:connectedDebugAndroidTest
+```
+
+Reports:
+
+- Unit: `app/build/reports/tests/testDebugUnitTest/index.html`
+- Instrumented: `app/build/reports/androidTests/connected/index.html`
+
+---
+
 November 26, 2023
 Test Version: app-pup-entry-patch
 Home Screen
