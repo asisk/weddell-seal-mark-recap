@@ -110,6 +110,20 @@ class ObserversViewModel(
                 return@launch
             }
 
+            if (csvData.isEmpty()) {
+                val errMessage = "No data inserted"
+                setFileErrorStatus(errMessage)
+                filesRepository.updateFileUploadStatus(
+                    fileUploadId,
+                    FileStatus.ERROR,
+                    0,
+                    errMessage
+                )
+                return@launch
+            }
+
+            observersRepository.clearObserversData()
+
             // Insert the CSV data into the database
             val insertedCount = insertObserversData(fileUploadId, csvData)
             if (insertedCount > 0) {

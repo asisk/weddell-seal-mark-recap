@@ -108,6 +108,20 @@ class SealColoniesViewModel(
                 return@launch
             }
 
+            if (csvData.isEmpty()) {
+                val errMessage = "No data inserted"
+                setFileErrorStatus(errMessage)
+                filesRepository.updateFileUploadStatus(
+                    fileUploadId,
+                    FileStatus.ERROR,
+                    0,
+                    errMessage
+                )
+                return@launch
+            }
+
+            sealColonyRepository.clearColonyData()
+
             // Insert the CSV data into the database
             val insertedCount = insertColonyData(fileUploadId, csvData)
             if (insertedCount > 0) {
@@ -142,7 +156,7 @@ class SealColoniesViewModel(
         return filesRepository.insertFileUpload(
             FileUploadEntity(
                 id = 0,
-                fileType = FileType.OBSERVERS,
+                fileType = FileType.COLONIES,
                 fileAction = FileAction.UPLOAD.name,
                 filename = filename,
                 status = FileStatus.IDLE,
