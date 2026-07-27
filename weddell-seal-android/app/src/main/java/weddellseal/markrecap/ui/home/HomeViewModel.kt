@@ -290,13 +290,16 @@ class HomeViewModel(
     fun getColonyLocation(): GeoLocation? {
         val colony = metadata.value.selectedColony?.let {
             if (it.location == "Other") {
-                // Fixed: Changed from /1000.0 to /100000.0 to properly handle 5 decimal places
-                // Previously: -77 + 12345/1000 = -64.655 (wrong!)
-                // Now: -77 + 12345/100000 = -77.12345 (correct!)
-                val lat =
-                    uiState.value.latitudeDegrees + uiState.value.latitudeDecimals / 100000.0
-                val long =
-                    uiState.value.longitudeDegrees + uiState.value.longitudeDecimals / 100000.0
+                // Home UI shows "{degrees}." + up to 5 fractional digits (e.g. "-77." + "12345").
+                // For negative degrees, subtract the fraction: -77 + 0.12345 = -76.87655 (wrong).
+                val lat = composeManualCoordinate(
+                    uiState.value.latitudeDegrees,
+                    uiState.value.latitudeDecimals,
+                )
+                val long = composeManualCoordinate(
+                    uiState.value.longitudeDegrees,
+                    uiState.value.longitudeDecimals,
+                )
 
                 GeoLocation(Coordinates(lat, long))
             } else {
@@ -304,6 +307,16 @@ class HomeViewModel(
             }
         } ?: currentLocation.value
         return colony
+    }
+
+    /**
+     * Builds a coordinate from the fixed degree label and typed fractional digits on the home
+     * screen (max 5 digits → divide by 100000). Negative degrees must subtract the fraction so
+     * the stored value matches the displayed "-77.xxxxx".
+     */
+    private fun composeManualCoordinate(degrees: Int, decimals: Int): Double {
+        val fraction = decimals / 100000.0
+        return if (degrees < 0) degrees - fraction else degrees + fraction
     }
 
     // User Selections for Census
