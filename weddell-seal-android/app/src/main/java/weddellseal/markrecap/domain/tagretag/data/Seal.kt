@@ -139,6 +139,16 @@ data class Seal(
     val hasWedCheckMatch: Boolean
         get() = wedCheckMatch != null
 
+    /**
+     * Dummy field tag 0000D is entered when no real tag is available.
+     * Uses the WedCheck lookup tag: current tag ID for New/Marked, old tag ID for Retag.
+     */
+    val isDummyTag: Boolean
+        get() = when {
+            useOldTag -> isDummyTagId(oldTagNumber, oldTagAlpha)
+            else -> isDummyTagId(tagNumber, tagAlpha)
+        }
+
     val isValid: Boolean
         get() = isComplete && validationErrors.isEmpty()
 
@@ -153,6 +163,9 @@ data class Seal(
             if (isNoTag) return errors // early return, skip all validation checks when no tag is entered
 
             if (!isComplete) return errors // early return, skip validation checks when required fields are not completed
+
+            // Dummy 0000D: skip WedCheck / tag-number error checking (stakeholder exception).
+            if (isDummyTag) return errors
 
             // -----  The Seal has a tag number -----
 
@@ -287,3 +300,10 @@ data class Seal(
         return edits
     }
 }
+
+/** Dummy field tag used when no real tag is available (e.g. 0000D). */
+fun isDummyTagId(tagNumber: String, tagAlpha: String): Boolean =
+    tagNumber == "0000" && tagAlpha.equals("D", ignoreCase = true)
+
+fun isDummyTagId(tagId: String): Boolean =
+    tagId.equals("0000D", ignoreCase = true)

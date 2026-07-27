@@ -28,6 +28,7 @@ import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
+import weddellseal.markrecap.domain.tagretag.data.isDummyTagId
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observations.toSeal
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
@@ -227,6 +228,14 @@ class TagRetagViewModel(
                 Log.d("TagRetagModel", "Seal does not have a valid tag to use for WedCheck lookup")
                 return
             }
+        }
+
+        // Dummy 0000D is not a real WedCheck identity — skip lookup and clear any stale match.
+        if (isDummyTagId(searchStr)) {
+            if (seal.wedCheckMatch != null) {
+                removeWedCheckMatch(seal.sealType)
+            }
+            return
         }
 
         // WedCheck CSV has tag1 and tag2; the UI only enters one tag, which may match either
@@ -632,6 +641,9 @@ class TagRetagViewModel(
         }
 
         val searchTag = wedCheckSearchTagFor(seal) ?: return seal
+        if (isDummyTagId(searchTag)) {
+            return seal.copy(wedCheckMatch = null)
+        }
         if (seal.wedCheckMatch?.tagIdOne == searchTag) return seal
 
         return try {

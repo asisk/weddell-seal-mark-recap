@@ -107,6 +107,101 @@ class SealTest {
         val seal = Seal(sealType = SealType.PRIMARY)
         assertTrue(seal.completenessReasons.isEmpty())
     }
+
+    /**
+     * Stakeholder exception: dummy tag 0000D skips WedCheck / tag-number error checking so
+     * technicians are not prompted every time they enter it.
+     */
+    @Test
+    fun `marked dummy tag 0000D with no WedCheck match is not flagged`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.MARKED,
+            tagNumber = "0000",
+            tagAlpha = "D",
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            wedCheckMatch = null,
+        )
+
+        assertTrue(seal.isComplete)
+        assertTrue(seal.isDummyTag)
+        assertEquals(emptyList<String>(), seal.validationErrors)
+        assertTrue(seal.isValid)
+    }
+
+    @Test
+    fun `retag dummy old tag 0000D with no WedCheck match is not flagged`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.RETAG,
+            tagNumber = "123",
+            tagAlpha = "A",
+            oldTagNumber = "0000",
+            oldTagAlpha = "D",
+            numTags = "1",
+            reasonForRetag = RetagReason.OTHER,
+            condition = SealCondition.GOOD,
+            wedCheckMatch = null,
+        )
+
+        assertTrue(seal.isComplete)
+        assertTrue(seal.isDummyTag)
+        assertEquals(emptyList<String>(), seal.validationErrors)
+        assertTrue(seal.isValid)
+    }
+
+    @Test
+    fun `new dummy tag 0000D skips tag already used even when WedCheck match exists`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.NEW,
+            tagNumber = "0000",
+            tagAlpha = "D",
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            wedCheckMatch = WedCheckSeal(
+                speNo = 1,
+                tagIdOne = "0000D",
+                sex = SealSex.FEMALE,
+                ageClass = SealAgeClass.ADULT,
+                numTags = "1",
+                condition = SealCondition.GOOD,
+                lastSeenSeason = 2026,
+            ),
+        )
+
+        assertTrue(seal.isDummyTag)
+        assertEquals(emptyList<String>(), seal.validationErrors)
+    }
+
+    @Test
+    fun `marked non-dummy tag with no WedCheck match is still flagged`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.MARKED,
+            tagNumber = "1234",
+            tagAlpha = "A",
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            wedCheckMatch = null,
+        )
+
+        assertFalse(seal.isDummyTag)
+        assertTrue(seal.validationErrors.any { it.contains("Seal not in database") })
+    }
 }
 
 class SealConditionTest {

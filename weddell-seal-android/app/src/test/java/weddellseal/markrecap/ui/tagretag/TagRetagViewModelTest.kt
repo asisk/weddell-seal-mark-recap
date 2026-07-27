@@ -733,4 +733,41 @@ class TagRetagViewModelTest {
         assertNull(written[0].updatedAt)
         assertEquals(SealCondition.FAIR.code, written[0].sealCondition)
     }
+
+    /**
+     * Stakeholder exception: dummy tag 0000D skips WedCheck validation so Save does not
+     * require confirmation for "Seal not in database!".
+     */
+    @Test
+    fun attemptSave_markedDummyTag0000D_savesWithoutConfirmation() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "0000")
+        vm.updateTagAlpha(SealType.PRIMARY, "D")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+
+        assertTrue(vm.primarySeal.value.isDummyTag)
+        assertTrue(vm.uiState.value.isSaveEnabled)
+        vm.attemptSave(TestFixtures.sampleGeoLocation())
+        yield()
+
+        assertEquals(1, written.size)
+        assertFalse(vm.uiState.value.entryNeedsConfirmation)
+        assertEquals("", vm.uiState.value.validationFailureReason)
+        verify(exactly = 0) { wedCheckRepo.findSealbyTagID("0000D") }
+    }
 }
