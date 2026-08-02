@@ -99,12 +99,11 @@ fun LookupCard(
                         "Please take a photo of the tags and seal!",
                         style = MaterialTheme.typography.headlineSmall,
                     )
-                    DataDisplayRow("Population", seal.population)
                 }
             }
-        } else {
-            DataDisplayRow("Population", seal.population)
         }
+
+        DataDisplayRow("Population", seal.population)
 
         DataDisplayRow(
             "Lat",
