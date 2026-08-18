@@ -175,6 +175,48 @@ class BuildObservationRecordTest {
     }
 
     @Test
+    fun newEventWithOldTagMarksIncludesComment() {
+        val record = buildObservationRecord(
+            null,
+            TestFixtures.completePrimaryNewSeal().copy(oldTagMarks = true),
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertTrue(record.comments.contains("old tag marks; "))
+    }
+
+    @Test
+    fun retagEventWithOldTagMarksIncludesComment() {
+        val record = buildObservationRecord(
+            null,
+            retagSeal().copy(oldTagMarks = true),
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertTrue(record.comments.contains("old tag marks; "))
+    }
+
+    @Test
+    fun markedEventOmitsOldTagMarksFromCommentsEvenWhenFlagSet() {
+        val record = buildObservationRecord(
+            null,
+            TestFixtures.completePrimaryMarkedSeal().copy(oldTagMarks = true),
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertFalse(record.comments.contains("old tag marks"))
+    }
+
+    @Test
     fun nonRetagEventOmitsReasonFromCommentsEvenWhenReasonSet() {
         val seal = retagSeal(reasonForRetag = RetagReason.OTHER)
             .copy(tagEventType = TagEventType.NEW)

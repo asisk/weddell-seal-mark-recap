@@ -73,7 +73,7 @@ fun TagCountNoTagSection(
             )
         }
 
-        // OLD TAG MARKS, FOR NEW TAG EVENT ONLY
+        // OLD TAG MARKS, FOR NEW AND RETAG EVENTS
         if (showOldTagMarks) {
             Box(
                 modifier = Modifier.weight(1f), // take the remaining space

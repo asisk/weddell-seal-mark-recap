@@ -112,7 +112,11 @@ fun buildObservationRecord(
     if (seal.pupPeed) {
         sb.append("pup peed; ")
     }
-    if (seal.oldTagMarks) {
+    // Old Tag Marks is valid for New and Retag. Omit it for Marked so a leftover
+    // checkbox after leaving Retag cannot write a ghost comment.
+    if (seal.oldTagMarks &&
+        (seal.tagEventType == TagEventType.NEW || seal.tagEventType == TagEventType.RETAG)
+    ) {
         sb.append("old tag marks; ")
     }
     // if the tagEvent is retag and a reason is selected, add the retag reason to the comment

@@ -148,6 +148,104 @@ class TagRetagViewModelTest {
     }
 
     /**
+     * Reported sequence: Retag + Old Tag Marks, then switch to New or Marked.
+     * Matches SealCard: onRetagDeselection then updateTagEventType.
+     */
+    @Test
+    fun writeObservationRecord_omitsOldTagMarksCommentAfterSwitchingFromRetag() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        listOf(TagEventType.NEW, TagEventType.MARKED).forEach { correctedEvent ->
+            written.clear()
+
+            vm.prefillSingleMale()
+            vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+            vm.updateTagNumber(SealType.PRIMARY, "456")
+            vm.updateTagAlpha(SealType.PRIMARY, "B")
+            vm.updateNumTags(SealType.PRIMARY, "1")
+            vm.updateTagEventType(vm.primarySeal.value, TagEventType.RETAG)
+            vm.onRetagSelection(SealType.PRIMARY, "456", "B")
+            vm.updateOldTagMarks(SealType.PRIMARY, true)
+            assertTrue(vm.primarySeal.value.oldTagMarks)
+            assertEquals(TagEventType.RETAG, vm.primarySeal.value.tagEventType)
+
+            vm.onRetagDeselection(
+                SealType.PRIMARY,
+                vm.primarySeal.value.oldTagNumber,
+                vm.primarySeal.value.oldTagAlpha,
+            )
+            vm.updateTagEventType(vm.primarySeal.value, correctedEvent)
+            assertFalse(
+                "oldTagMarks should be cleared when switching from Retag to $correctedEvent",
+                vm.primarySeal.value.oldTagMarks,
+            )
+
+            vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+            assertEquals(1, written.size)
+            assertFalse(
+                "comments should not contain old tag marks after switching to $correctedEvent",
+                written[0].comments.contains("old tag marks"),
+            )
+        }
+    }
+
+    @Test
+    fun updateTagEventType_keepsOldTagMarksWhenSwitchingFromNewToRetag() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
+        vm.updateOldTagMarks(SealType.PRIMARY, true)
+
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.RETAG)
+        assertTrue(vm.primarySeal.value.oldTagMarks)
+    }
+
+    @Test
+    fun writeObservationRecord_includesOldTagMarksCommentForNewEvent() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
+        vm.updateOldTagMarks(SealType.PRIMARY, true)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "B")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(1, written.size)
+        assertTrue(written[0].comments.contains("old tag marks; "))
+    }
+
+    /**
      * Models: user entered tag 456B, moved to another field (committed), then returned to Tag ID,
      * changed it to 789B, and tapped Save without blurring the Tag ID field. The ViewModel still
      * holds 456B because [TagIdSection] only commits on focus loss.

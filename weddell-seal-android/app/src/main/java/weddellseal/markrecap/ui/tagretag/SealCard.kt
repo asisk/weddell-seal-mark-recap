@@ -275,7 +275,8 @@ fun SealCard(
         )
             viewModel.removeWedCheckMatch(seal.sealType)
         },
-        showOldTagMarks = (seal.tagEventType == TagEventType.NEW),
+        showOldTagMarks = seal.tagEventType == TagEventType.NEW ||
+            seal.tagEventType == TagEventType.RETAG,
         oldTagMarks = seal.oldTagMarks,
         onToggleOldTagMarks = { viewModel.updateOldTagMarks(seal.sealType, it) },
         modifier = Modifier.clearFocusOnTap(focusManager)

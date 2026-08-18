@@ -895,21 +895,30 @@ class TagRetagViewModel(
     }
 
     fun updateTagEventType(seal: Seal, input: TagEventType) {
+        // Old Tag Marks is valid for New and Retag. Leaving Retag for New/Marked
+        // must drop it (same leftover-field rule as Old Tag ID). New → Retag
+        // keeps it so changing event does not throw away the checkbox.
+        val applyTagEvent: (Seal) -> Seal = { current ->
+            current.copy(
+                tagEventType = input,
+                oldTagMarks = oldTagMarksAfterEventChange(current, input),
+            )
+        }
         when (seal.sealType) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(tagEventType = input) }
+                _primarySeal.update(applyTagEvent)
                 updateNotebookEntry(primarySeal.value)
                 requestCurrentWedCheckMatch(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update { it.copy(tagEventType = input) }
+                _pupOne.update(applyTagEvent)
                 updateNotebookEntry(pupOne.value)
                 requestCurrentWedCheckMatch(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(tagEventType = input) }
+                _pupTwo.update(applyTagEvent)
                 updateNotebookEntry(pupTwo.value)
                 requestCurrentWedCheckMatch(pupTwo.value)
             }
@@ -918,6 +927,15 @@ class TagRetagViewModel(
                 // No action needed for UNKNOWN
             }
         }
+    }
+
+    private fun oldTagMarksAfterEventChange(current: Seal, input: TagEventType): Boolean {
+        if (input == current.tagEventType) return current.oldTagMarks
+        // Leaving Retag for New or Marked: drop leftover Old Tag Marks.
+        if (current.tagEventType == TagEventType.RETAG) return false
+        // Hide-only events (Marked / Unknown) cannot keep the checkbox.
+        if (input != TagEventType.NEW && input != TagEventType.RETAG) return false
+        return current.oldTagMarks
     }
 
     fun updatePendingTagNumber(sealType: SealType, input: String) {
@@ -1413,6 +1431,9 @@ class TagRetagViewModel(
         updateTagAlpha(sealType, oldTagAlpha)
 
         clearOldTag(sealType)
+        // Same leftover rule as Old Tag ID: Retag + Old Tag Marks must not
+        // remain after the user switches to New or Marked.
+        updateOldTagMarks(sealType, false)
     }
 
     /* Notes on when to clear the WedCheck match */
