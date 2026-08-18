@@ -1790,8 +1790,21 @@ class TagRetagViewModel(
             }
 
             // filter for seals that are to be UPDATED
+            // Skip unused pup slots: they default to age P with empty tags, so an accidental
+            // hasEdits flag writes a ghost "P No Tag" row (dummy-tag 0000D mom/pup edit report).
             val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-                .filter { !it.markedRemoved && it.hasEdits }
+                .filter { seal ->
+                    !seal.markedRemoved &&
+                        seal.hasEdits &&
+                        seal.isEntryStarted &&
+                        seal.isComplete &&
+                        when (seal.sealType) {
+                            SealType.PRIMARY -> true
+                            SealType.PUPONE -> primarySeal.value.hasPupOne
+                            SealType.PUPTWO -> primarySeal.value.hasPupTwo
+                            SealType.UNKNOWN -> false
+                        }
+                }
 
             for (seal in sealToUpdate) {
                 val edits = when (seal.sealType) {

@@ -17,8 +17,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.files.data.FileState
-import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
-import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.ui.UiEvent
@@ -57,34 +55,7 @@ class RecentObservationsViewModel(
     // Used to display the observation records
     val displayObservations: StateFlow<List<DisplayObservation>> =
         observationRepo.currentObservationsDescByID
-            .map { current ->
-                current
-                    .filterNot { obs ->
-                        // display pups with a mom in a combined row
-                        val numRelatives = obs.numRelatives.toIntOrNull() ?: 0
-                        obs.ageClass == SealAgeClass.PUP.alpha && numRelatives > 0
-                    }
-                    .map { obs ->
-                        val numRelatives = obs.numRelatives.toIntOrNull() ?: 0
-                        // TODO, consider a calculated value on the record
-                        if (numRelatives > 0 && obs.ageClass == SealAgeClass.ADULT.alpha && obs.sex == SealSex.FEMALE.alpha) {
-                            // only adult females can have pups
-                            val pupOne = obs.relativeTagIDOne.takeIf { it.isNotEmpty() }
-                                ?.let { relativeId -> current.find { it.tagIDOne == relativeId } }
-
-                            val pupTwo = obs.relativeTagIDTwo.takeIf { it.isNotEmpty() }
-                                ?.let { relativeId -> current.find { it.tagIDOne == relativeId } }
-
-                            DisplayObservation.WithPups(
-                                primarySeal = obs,
-                                pupOne = pupOne,
-                                pupTwo = pupTwo
-                            )
-                        } else {
-                            DisplayObservation.Standalone(obs)
-                        }
-                    }
-            }
+            .map { observationsToDisplay(it) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val currentObservations: StateFlow<List<ObservationRecord>> =

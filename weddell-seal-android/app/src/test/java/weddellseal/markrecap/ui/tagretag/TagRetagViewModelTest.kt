@@ -29,7 +29,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import weddellseal.markrecap.TestFixtures
+import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
+import weddellseal.markrecap.domain.tagretag.data.SealRelatives
+import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
@@ -38,6 +41,8 @@ import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.recentobservations.DisplayObservation
+import weddellseal.markrecap.ui.recentobservations.observationsToDisplay
+import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
 import weddellseal.markrecap.ui.utils.getCurrentYear
 
 @RunWith(RobolectricTestRunner::class)
@@ -209,6 +214,7 @@ class TagRetagViewModelTest {
 
         assertTrue(vm.uiState.value.isSaveEnabled)
         vm.attemptSave(TestFixtures.sampleGeoLocation())
+        yield()
 
         assertEquals(1, written.size)
         assertEquals("789B", written[0].tagIDOne)
@@ -769,5 +775,284 @@ class TagRetagViewModelTest {
         assertFalse(vm.uiState.value.entryNeedsConfirmation)
         assertEquals("", vm.uiState.value.validationFailureReason)
         verify(exactly = 0) { wedCheckRepo.findSealbyTagID("0000D") }
+    }
+
+    /**
+     * Stakeholder report: editing a mom/pup pair where either animal is dummy tag 0000D
+     * creates an extra "P No Tag" pup with the original timestamp. First save is fine;
+     * the ghost appears only after edit, whether mom or pup is the dummy and whether
+     * mom or pup is the animal being edited.
+     */
+    @Test
+    fun writeObservationRecord_editMomWhenMomIsDummy0000D_doesNotCreateGhostNoTagPup() = runTest {
+        assertEditMomPupWithDummyDoesNotCreateGhostPup(
+            dummyOnMom = true,
+            editPup = false,
+        )
+    }
+
+    @Test
+    fun writeObservationRecord_editPupWhenMomIsDummy0000D_doesNotCreateGhostNoTagPup() = runTest {
+        assertEditMomPupWithDummyDoesNotCreateGhostPup(
+            dummyOnMom = true,
+            editPup = true,
+        )
+    }
+
+    @Test
+    fun writeObservationRecord_editMomWhenPupIsDummy0000D_doesNotCreateGhostNoTagPup() = runTest {
+        assertEditMomPupWithDummyDoesNotCreateGhostPup(
+            dummyOnMom = false,
+            editPup = false,
+        )
+    }
+
+    @Test
+    fun writeObservationRecord_editPupWhenPupIsDummy0000D_doesNotCreateGhostNoTagPup() = runTest {
+        assertEditMomPupWithDummyDoesNotCreateGhostPup(
+            dummyOnMom = false,
+            editPup = true,
+        )
+    }
+
+    /**
+     * Edit-save currently writes any seal with [weddellseal.markrecap.domain.tagretag.data.Seal.hasEdits],
+     * including the unused pup-two slot (age P, empty tags → displayed as "P No Tag").
+     */
+    @Test
+    fun writeObservationRecord_editDoesNotPersistUnusedPupTwoSlot() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        vm.enterMomAndPup(momTag = "1234" to "A", pupTag = "0000" to "D")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }.copy(id = 1)
+        val pup = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pup, pupTwo = null))
+        vm.updateCondition(SealType.PRIMARY, SealCondition.FAIR)
+        vm.updateCondition(SealType.PUPTWO, SealCondition.GOOD)
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertTrue(
+            "Edit wrote a ghost pup: ${written.map { notebookEntryValueObservation(it) }}",
+            written.none { it.isGhostNoTagPup() },
+        )
+        assertTrue(written.none { it.ageClass == SealAgeClass.PUP.alpha && it.id == 0 && it.tagIDOne.isBlank() })
+    }
+
+    /**
+     * Relatives are locked in the UI when a pup already exists, but the write path must still
+     * persist a complete pup two if number of relatives is raised to two during edit.
+     */
+    @Test
+    fun writeObservationRecord_addSecondPupDuringEdit_persistsPupTwo() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        vm.enterMomAndPup(momTag = "1234" to "A", pupTag = "5678" to "B")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }.copy(id = 1)
+        val pupOne = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pupOne, pupTwo = null))
+        vm.updateNumRelatives(SealRelatives.TWO)
+        vm.fillPup(
+            sealType = SealType.PUPTWO,
+            tag = "9012" to "C",
+        )
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertTrue(written.none { it.isGhostNoTagPup() })
+        val savedPupTwo = written.single { it.tagIDOne == "9012C" }
+        assertEquals(SealAgeClass.PUP.alpha, savedPupTwo.ageClass)
+        assertEquals("2", savedPupTwo.numRelatives)
+    }
+
+    /** A complete No Tag pup is a real relative, not the incomplete ghost "P No Tag" row. */
+    @Test
+    fun writeObservationRecord_editRealNoTagPup_persistsNoTagPup() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        vm.enterMomAndPup(momTag = "1234" to "A", pupTag = null, pupNoTag = true)
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }.copy(id = 1)
+        val pup = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        assertEquals("NoTag", pup.tagIDOne)
+        assertEquals(TagEventType.MARKED.alpha, pup.tagEvent)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pup, pupTwo = null))
+        assertTrue(vm.pupOne.value.isNoTag)
+        vm.updateCondition(SealType.PUPONE, SealCondition.FAIR)
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertTrue(written.none { it.isGhostNoTagPup() })
+        val savedPup = written.single { it.ageClass == SealAgeClass.PUP.alpha }
+        assertEquals("NoTag", savedPup.tagIDOne)
+        assertEquals(TagEventType.MARKED.alpha, savedPup.tagEvent)
+        assertEquals(SealCondition.FAIR.code, savedPup.sealCondition)
+        assertTrue(savedPup.sex.isNotBlank())
+    }
+
+    /**
+     * Recent Observations is newest-first. Grouping attaches the first 0000D pup in that list,
+     * so Edit opens whatever grouping selected — including a later dummy pup from another entry.
+     */
+    @Test
+    fun loadSealForEdit_momPup0000D_usesPupGroupingAttachedFromRecentObservations() = runTest {
+        val laterDummyPup = TestFixtures.minimalObservationRecord().copy(
+            id = 10,
+            ageClass = SealAgeClass.PUP.alpha,
+            sex = SealSex.UNKNOWN.alpha,
+            numRelatives = "1",
+            tagIDOne = "0000D",
+            relativeTagIDOne = "9999Z",
+        )
+        val pairPup = TestFixtures.minimalObservationRecord().copy(
+            id = 2,
+            ageClass = SealAgeClass.PUP.alpha,
+            sex = SealSex.UNKNOWN.alpha,
+            numRelatives = "1",
+            tagIDOne = "0000D",
+            relativeTagIDOne = "1234A",
+        )
+        val mom = TestFixtures.minimalObservationRecord().copy(
+            id = 1,
+            ageClass = SealAgeClass.ADULT.alpha,
+            sex = SealSex.FEMALE.alpha,
+            numRelatives = "1",
+            tagIDOne = "1234A",
+            relativeTagIDOne = "0000D",
+        )
+
+        val grouped = observationsToDisplay(listOf(laterDummyPup, pairPup, mom))
+        val row = grouped.filterIsInstance<DisplayObservation.WithPups>().single {
+            it.primarySeal.id == 1
+        }
+        assertEquals(
+            "Newest-first list attaches the later 0000D pup, not this mom's original pup",
+            10,
+            row.pupOne?.id,
+        )
+
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+        vm.loadSealForEdit(row)
+
+        assertEquals(10, vm.pupOne.value.observationID)
+        assertEquals("0000", vm.pupOne.value.tagNumber)
+        assertEquals("D", vm.pupOne.value.tagAlpha)
+        assertEquals("9999Z", laterDummyPup.relativeTagIDOne)
+    }
+
+    private suspend fun assertEditMomPupWithDummyDoesNotCreateGhostPup(
+        dummyOnMom: Boolean,
+        editPup: Boolean,
+    ) {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        val momTag = if (dummyOnMom) "0000" to "D" else "1234" to "A"
+        val pupTag = if (dummyOnMom) "5678" to "B" else "0000" to "D"
+        vm.enterMomAndPup(momTag = momTag, pupTag = pupTag)
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(2, written.size)
+        assertTrue(written.none { it.isGhostNoTagPup() })
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }.copy(id = 1)
+        val pup = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pup, pupTwo = null))
+        if (editPup) {
+            vm.updateCondition(SealType.PUPONE, SealCondition.FAIR)
+        } else {
+            vm.updateCondition(SealType.PRIMARY, SealCondition.FAIR)
+        }
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertTrue(
+            "Edit wrote a ghost pup: ${written.map { notebookEntryValueObservation(it) }}",
+            written.none { it.isGhostNoTagPup() },
+        )
+        assertTrue(written.any { it.ageClass == if (editPup) SealAgeClass.PUP.alpha else SealAgeClass.ADULT.alpha })
+    }
+
+    private fun tagRetagViewModel(
+        written: MutableList<ObservationRecord>,
+        wedCheckRepo: WedCheckRepository = mockk(relaxed = true),
+    ): TagRetagViewModel {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        coEvery { observationRepo.deleteObservation(any()) } returns Unit
+        return TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+    }
+
+    private fun TagRetagViewModel.enterMomAndPup(
+        momTag: Pair<String, String>,
+        pupTag: Pair<String, String>?,
+        pupNoTag: Boolean = false,
+    ) {
+        prefillMomAndPup()
+        updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        updateTagEventType(primarySeal.value, TagEventType.NEW)
+        updateTagNumber(SealType.PRIMARY, momTag.first)
+        updateTagAlpha(SealType.PRIMARY, momTag.second)
+        updateNumTags(SealType.PRIMARY, "1")
+
+        fillPup(SealType.PUPONE, tag = pupTag, noTag = pupNoTag)
+    }
+
+    private fun TagRetagViewModel.fillPup(
+        sealType: SealType,
+        tag: Pair<String, String>?,
+        noTag: Boolean = false,
+    ) {
+        val eventSeal = when (sealType) {
+            SealType.PUPONE -> pupOne.value
+            SealType.PUPTWO -> pupTwo.value
+            else -> primarySeal.value
+        }
+        updateSex(sealType, SealSex.UNKNOWN)
+        updateCondition(sealType, SealCondition.NEWBORN)
+        if (noTag) {
+            updateTagEventType(eventSeal, TagEventType.MARKED)
+            updateNoTag(sealType, true)
+        } else {
+            requireNotNull(tag)
+            updateTagEventType(eventSeal, TagEventType.NEW)
+            updateTagNumber(sealType, tag.first)
+            updateTagAlpha(sealType, tag.second)
+            updateNumTags(sealType, "1")
+        }
+    }
+
+    private fun ObservationRecord.isGhostNoTagPup(): Boolean {
+        if (ageClass != SealAgeClass.PUP.alpha) return false
+        val displayedTag = tagIDOne.ifEmpty { tagIDTwo }
+        val noRealTag = tagIDOne.isBlank() || tagIDOne == "NoTag"
+        val incomplete = sex.isBlank() || tagEvent.isBlank()
+        return noRealTag && incomplete && displayedTag.equals("NoTag", ignoreCase = true)
     }
 }
