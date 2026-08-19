@@ -29,9 +29,10 @@ import weddellseal.markrecap.viewmodelfactories.SealColoniesViewModelFactory
 import java.io.File
 
 /**
- * Regression for stakeholder report: colony and observer dropdowns were accumulating rows from
- * every CSV ever imported instead of reflecting only the most recent upload. Import now clears
- * prior rows before inserting a successful parse.
+ * Regression for Parker 2025 season recap: colony and observer dropdowns were accumulating
+ * rows from every CSV ever imported (misspelled names stayed next to the correction) instead
+ * of reflecting only the most recent upload. Import now clears prior rows before inserting
+ * a successful parse.
  */
 @RunWith(AndroidJUnit4::class)
 class ColonyObserverImportGhostDataInstrumentedTest {

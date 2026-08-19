@@ -126,6 +126,14 @@ fun buildObservationRecord(
 
     sb.append(seal.validationMessage)
 
+    var flagged = ""
+    if (seal.flaggedForReview) {
+        flagged = "technician confirmed"
+        // Parker 2025 season recap: confirmation showed on screen but was missing from the
+        // export comments (only the edt / flaggedEntry column). Proofing looks at comments.
+        sb.append("technician confirmed; ")
+    }
+
     var date = getCurrentDateFormatted()
     var time = getCurrentTimeFormatted()
 
@@ -137,11 +145,6 @@ fun buildObservationRecord(
     }
 
     val comment = sb.append(seal.comment).toString()
-
-    var flagged = ""
-    if (seal.flaggedForReview) {
-        flagged = "technician confirmed"
-    }
 
     val log = ObservationRecord(
         // Append-only history: edits create a new row instead of replacing the original row.

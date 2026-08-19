@@ -280,7 +280,9 @@ class BuildObservationRecordTest {
     }
 
     @Test
-    fun flaggedForReviewPutsConfirmationInEdtNotComments() {
+    fun flaggedForReviewPutsConfirmationInEdtAndComments() {
+        // Parker 2025 season recap: "technician confirmed" showed on screen but was missing
+        // from export comments (only flaggedEntry / edt). Proofing looks at comments.
         val technicianNote = "photo taken, tags look worn"
         val seal = TestFixtures.completePrimaryMarkedSeal().copy(
             flaggedForReview = true,
@@ -297,10 +299,11 @@ class BuildObservationRecordTest {
             TestFixtures.sampleMetadata(),
         )
 
-        // Validation messages stay in comments with the technician note; confirmation goes to edt.
+        // Validation messages stay in comments with the technician note; confirmation is
+        // also copied into comments so field proofing can see it without the edt column.
         assertTrue(record.comments.contains(technicianNote))
         assertTrue(record.comments.contains("Seal not in database"))
-        assertFalse(record.comments.contains("technician confirmed"))
+        assertTrue(record.comments.contains("technician confirmed"))
         assertEquals("technician confirmed", record.flaggedEntry)
     }
 

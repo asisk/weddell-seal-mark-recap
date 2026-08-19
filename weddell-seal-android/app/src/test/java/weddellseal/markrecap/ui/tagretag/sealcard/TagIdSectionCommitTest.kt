@@ -23,9 +23,12 @@ import org.robolectric.annotation.Config
 
 /**
  * Regression tests for tag ID commit and [TagIDOutlinedTextField] model sync:
- * - [TagIdSection] only calls [onNumberCommitted] on blur.
+ * - [TagIdSection] only calls [onNumberCommitted] on blur (3-digit tags).
  * - While focused, in-progress text must survive parent recomposition when the model
  *   still holds the last committed number ([TagIDOutlinedTextField] LaunchedEffect guard).
+ *
+ * Parker 2025 season recap: Speno did not refresh unless the tag field lost focus.
+ * 4-digit lookup is handled in [weddellseal.markrecap.ui.tagretag.TagRetagViewModel.updatePendingTagNumber].
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])

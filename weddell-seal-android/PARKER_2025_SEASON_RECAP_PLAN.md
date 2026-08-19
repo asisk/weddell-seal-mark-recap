@@ -10,45 +10,54 @@ Status key: `[ ]` not started · `[~]` in progress / has a test · `[x]` done
 
 ## P0 — Data integrity bugs
 
-### [~] Ghost data on observer / colony re-import
+### [x] Ghost data on observer / colony re-import
 
 Re-uploading an observer list (or colony locations) kept old rows. A misspelled name stayed next to the corrected one. The only field workaround was reinstalling the app.
 
-**Ask:** hard clear of prior rows on successful import, plus a way to correct lists in the UI (not only via reinstall).
+**Done:** Successful import now clears prior rows, then inserts. Covered by `ColonyObserverImportGhostDataInstrumentedTest` (observers, colonies, and after a fresh ViewModel). Failed parses leave the previous list (by design).
 
-**Started:** `ColonyObserverImportGhostDataInstrumentedTest` — import now clears prior rows before inserting a successful parse. Confirm this covers colonies and observers, and whether a user-facing “clear lists” control is still needed.
+A dedicated “clear lists” admin button was not added; re-import is the correction path.
 
-### [ ] Editing an entry creates fake untagged pups
+### [x] Editing an entry creates fake untagged pups
 
-After save, then edit, the app sometimes produced the real entry **plus** an extra untagged pup (and could repeat). Documented at least once. Deletion was backend-only.
+After save, then edit, the app sometimes produced the real entry **plus** an extra untagged pup.
 
-**Ask:** stop creating the phantom pup; consider in-app delete only if we still need a safety net.
+**Done:** Edit write skips unused pup slots unless `hasPupOne` / `hasPupTwo` and the slot is complete. Covered by `TagRetagViewModelTest` ghost/`0000D` cases.
 
-### [ ] Tag edit does not refresh Speeno unless you leave the field
+Edits still append a new row rather than updating in place — that is P1.
 
-Changing a tag number and saving without tapping out left Speeno stale. That produced duplicate entries that were not meant to be duplicates. Techs were told to tap out; not everyone did.
+### [x] Tag edit does not refresh Speno unless you leave the field
 
-**Ask:** trigger lookup when the tag has **4 digits**, or after a short idle, or both. Parker has not seen a 3-digit tag in ~2 years. Avoid a long timeout — edits are often save-within-a-second. She is open to always-on lookup if it does not jam other work; profiling first.
+Changing a tag number and saving without tapping out left Speno stale.
 
-### [ ] False sex-validation popups (~10 times)
+**Done:**
+- Save / Confirm & Save already commit pending tag text and await WedCheck before validating or writing.
+- Typing a **4-digit** tag now looks up Speno immediately (no blur). 3-digit tags still commit on blur or Save.
+- Validation banner is not shown until that save-path lookup finishes, so a stale match cannot flash a false sex warning.
 
-“Are you sure this is a male / confirmed male” appeared when the seal was already male. Could not be reproduced. The message showed on screen but was **not saved in the export**, so notebooks had confirmation notes with nothing to match.
+### [x] False sex-validation popups (~10 times)
 
-Suspected cause: tag/Speeno lookup if the tag was corrected quickly then saved.
+“Are you sure this is a male” appeared when the seal was already male. Confirmation showed on screen but was missing from comments (only the `edt` / `flaggedEntry` column).
 
-**Ask:** only show confirmation against the Speeno that will actually be saved; persist the confirmation in the export when it is shown.
+**Done:**
+- Skip sex check when WedCheck sex is blank (`NONE`) or `UNKNOWN`.
+- Message uses “Male” / “Female”, not the enum name.
+- “technician confirmed” is written to **both** `flaggedEntry` and comments.
+- Stale-Speno banner race on Save is fixed (see Speno item).
 
-### [ ] Missed validation (one known case)
+### [~] Missed validation (one known case)
 
-A female adult was entered as male with no confirmation comment and no recollection from the tech. Parker still has the record and can provide the full entry / tag number.
+A female adult was entered as male with no confirmation comment. Parker can still provide the full entry.
 
-**Ask:** get that record from Parker and add a regression. Possible that confirmation was dismissed too fast, or Speeno lookup did not run.
+**In code:** Marked + WedCheck female + entered male now flags “Sex doesn't match … Female”. Save waits for WedCheck before deciding. Still need Parker’s record if this happens again with a real tag.
 
-### [~] White Island population / highlight logic
+### [x] White Island population / highlight logic
 
-At White Island the app said “no population detected” (or similar). Seal lookup did not show last-seen population. GPS points were correct. Highlight logic (Erebus Bay vs other populations) seemed wrong for White Island. Parker emailed a write-up.
+At White Island the app hid last-seen population. Highlight compared colony *location* to population name, so Erebus Bay colonies never matched.
 
-**Started:** `LookupCardWhiteIslandPopulationTest` — Population row disappeared when device colony matched White Island; lookup still returned population. Confirm highlight logic vs “always show last-seen population,” and revisit with Parker’s emailed notes.
+**Done (lookup):** Population row always shows. Highlight when **GPS** has a colony and that colony’s population (White Island vs Erebus Bay) differs from last-seen. No highlight while GPS has not detected a colony. Manual colony override is ignored.
+
+**Not changed for recap (tag/retag):** Keep the existing White Island photo prompt when entering a White Island seal and GPS is not at White Island. Do not generalize lookup highlight onto the enter screen.
 
 ---
 
@@ -71,9 +80,9 @@ Extra backend work (old values in comments vs changing male → female). Parker 
 
 ### [ ] `0000` Delta placeholders throw errors
 
-Used for young pups and ~50–60 untagged adult moms this year. Not in the database / Speeno 0, so everyone got an error she told them to ignore. They will keep using this.
+Used for young pups and ~50–60 untagged adult moms this year. Not in the database / Speno 0, so everyone got an error she told them to ignore. They will keep using this.
 
-**Ask:** if tag is `0000` Delta, skip Speeno errors. Optional soft prompt: “Looks like this individual wasn’t tagged. Are you sure?” Never treat `0000` Delta as a real Speeno.
+**Ask:** if tag is `0000` Delta, skip Speno errors. Optional soft prompt: “Looks like this individual wasn’t tagged. Are you sure?” Never treat `0000` Delta as a real Speno.
 
 Related (maybe later): techs do not understand **no-tag female** vs **`0000` adult female**. They sometimes put `0000` Delta on both mom and pup when neither is tagged; Parker deletes those because they cannot be linked later. A placeholder button was discussed but she does not want to break the data book (`PHT` / similar). No clear UI solution yet.
 
@@ -219,9 +228,9 @@ Keep these stable unless a P0/P1 fix requires a change.
 
 ## Suggested order of work
 
-1. Finish / verify ghost import clear and White Island population display.
-2. Speeno-on-tag-edit + phantom untagged pups (likely the same edit path).
-3. Validation: false positives, the known miss (Parker’s record), persist confirmation in export.
+1. ~~Finish / verify ghost import clear and White Island population display.~~
+2. ~~Speno-on-tag-edit + phantom untagged pups.~~
+3. ~~Validation: false positives, persist confirmation in export.~~ Missed-validation: still collect Parker’s record if it happens again.
 4. `0000` Delta exception; retag reason in export; in-place edit vs duplicate records.
 5. Census prefill switch; tablet letter in filename; yellow contrast; tissue placement.
 6. GPS override / colony header sync.

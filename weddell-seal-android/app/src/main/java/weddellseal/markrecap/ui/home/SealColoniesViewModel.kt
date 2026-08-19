@@ -120,6 +120,8 @@ class SealColoniesViewModel(
                 return@launch
             }
 
+            // Parker 2025 season recap: re-uploading colony locations kept old rows (ghost
+            // colonies in the dropdown). Clear before insert so only the latest CSV is used.
             sealColonyRepository.clearColonyData()
 
             // Insert the CSV data into the database

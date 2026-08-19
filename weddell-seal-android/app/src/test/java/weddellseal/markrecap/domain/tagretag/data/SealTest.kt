@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import weddellseal.markrecap.ui.utils.getCurrentYear
 
 class SealTest {
 
@@ -109,8 +110,8 @@ class SealTest {
     }
 
     /**
-     * Stakeholder exception: dummy tag 0000D skips WedCheck / tag-number error checking so
-     * technicians are not prompted every time they enter it.
+     * Parker 2025 season recap: dummy 0000D skips WedCheck / tag-number error checking so
+     * technicians are not prompted every time they enter a placeholder for an untagged animal.
      */
     @Test
     fun `marked dummy tag 0000D with no WedCheck match is not flagged`() {
@@ -202,6 +203,67 @@ class SealTest {
         assertFalse(seal.isDummyTag)
         assertTrue(seal.validationErrors.any { it.contains("Seal not in database") })
     }
+
+    @Test
+    fun `marked adult sex mismatch against WedCheck is flagged with description`() {
+        // Parker 2025 season recap: one known miss (female adult entered as male with no
+        // confirmation). Marked + WedCheck Female + entered Male must flag sex mismatch.
+        val seal = markedAdultWithWedCheck(
+            enteredSex = SealSex.MALE,
+            wedCheckSex = SealSex.FEMALE,
+        )
+
+        assertTrue(
+            seal.validationErrors.any {
+                it.contains("Sex doesn't match") && it.contains("Female")
+            },
+        )
+    }
+
+    @Test
+    fun `marked adult matching WedCheck sex is not flagged for sex`() {
+        val seal = markedAdultWithWedCheck(
+            enteredSex = SealSex.MALE,
+            wedCheckSex = SealSex.MALE,
+        )
+
+        assertTrue(seal.validationErrors.none { it.contains("Sex doesn't match") })
+    }
+
+    @Test
+    fun `marked adult does not flag sex when WedCheck sex is missing`() {
+        // Parker 2025 season recap: false "are you sure this is a male" when WedCheck sex was blank.
+        val seal = markedAdultWithWedCheck(
+            enteredSex = SealSex.MALE,
+            wedCheckSex = SealSex.NONE,
+        )
+
+        assertTrue(seal.validationErrors.none { it.contains("Sex doesn't match") })
+    }
+
+    private fun markedAdultWithWedCheck(
+        enteredSex: SealSex,
+        wedCheckSex: SealSex,
+    ) = Seal(
+        sealType = SealType.PRIMARY,
+        ageClass = SealAgeClass.ADULT,
+        sex = enteredSex,
+        numRelatives = SealRelatives.ZERO,
+        tagEventType = TagEventType.MARKED,
+        tagNumber = "1234",
+        tagAlpha = "A",
+        numTags = "1",
+        condition = SealCondition.GOOD,
+        wedCheckMatch = WedCheckSeal(
+            speNo = 10,
+            tagIdOne = "1234A",
+            sex = wedCheckSex,
+            ageClass = SealAgeClass.ADULT,
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            lastSeenSeason = getCurrentYear(),
+        ),
+    )
 }
 
 class SealConditionTest {

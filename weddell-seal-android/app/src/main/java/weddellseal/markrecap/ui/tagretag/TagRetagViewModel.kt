@@ -339,13 +339,18 @@ class TagRetagViewModel(
      *
      * Fix #2: After commit, [refreshAllWedCheckMatches] awaits WedCheck lookups so Marked/Retag
      * validation and speno assignment use the committed tag, not a stale or in-flight match.
+     *
+     * Parker 2025 season recap: false sex-validation banners when a tag was edited quickly
+     * then saved. [setIsSaving] runs after the WedCheck refresh so the banner is not shown
+     * against a stale Speno.
      */
     fun attemptSave(currentLocation: GeoLocation?) {
         commitPendingFieldEdits()
-        setIsSaving()
+        _uiState.update { it.copy(isSaveEnabled = false) }
 
         viewModelScope.launch {
             refreshAllWedCheckMatches()
+            setIsSaving()
 
             val primary = _primarySeal.value
             val pupOne = _pupOne.value
@@ -941,6 +946,12 @@ class TagRetagViewModel(
     fun updatePendingTagNumber(sealType: SealType, input: String) {
         if (sealType == SealType.UNKNOWN) return
         pendingTagNumbers[sealType] = input
+        // Parker 2025 season recap: Speno did not refresh unless the tag field lost focus,
+        // which created duplicate / wrong-Speno entries. Look up at 4 digits while typing;
+        // 3-digit tags still commit on blur or Save (last seen ~2 years before 2025).
+        if (input.length >= 4) {
+            updateTagNumber(sealType, input)
+        }
     }
 
     fun updatePendingOldTagNumber(sealType: SealType, input: String) {
@@ -1810,9 +1821,9 @@ class TagRetagViewModel(
                 observationRepo.deleteObservation(primarySeal.value.observationID)
             }
 
-            // filter for seals that are to be UPDATED
-            // Skip unused pup slots: they default to age P with empty tags, so an accidental
-            // hasEdits flag writes a ghost "P No Tag" row (dummy-tag 0000D mom/pup edit report).
+            // Parker 2025 season recap: editing an entry created fake untagged pups. Unused pup
+            // slots default to age P with empty tags; an accidental hasEdits flag wrote a ghost
+            // "P No Tag" row. Skip those unless hasPupOne / hasPupTwo and the slot is complete.
             val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
                 .filter { seal ->
                     !seal.markedRemoved &&

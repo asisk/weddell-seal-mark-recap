@@ -122,6 +122,8 @@ class ObserversViewModel(
                 return@launch
             }
 
+            // Parker 2025 season recap: re-uploading observers kept old rows (misspelled names
+            // stayed next to the correction). Clear before insert so only the latest CSV is used.
             observersRepository.clearObserversData()
 
             // Insert the CSV data into the database

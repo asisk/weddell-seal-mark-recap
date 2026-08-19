@@ -249,6 +249,8 @@ class TagRetagViewModelTest {
      * Models: user entered tag 456B, moved to another field (committed), then returned to Tag ID,
      * changed it to 789B, and tapped Save without blurring the Tag ID field. The ViewModel still
      * holds 456B because [TagIdSection] only commits on focus loss.
+     *
+     * Parker 2025 season recap: Speno / tag did not refresh unless the field lost focus.
      */
     @Test
     fun writeObservationRecord_persistsReEditedTagNumberWithoutRequiringBlur() = runTest {
@@ -482,6 +484,120 @@ class TagRetagViewModelTest {
         assertTrue(written.isEmpty())
         assertTrue(vm.uiState.value.entryNeedsConfirmation)
         assertTrue(vm.uiState.value.validationFailureReason.contains("Seal not in database"))
+    }
+
+    /**
+     * Parker 2025 season recap: false "are you sure this is a male" flash when Save ran
+     * against a stale Speno before WedCheck finished. [isSaveAttempted] (which gates the
+     * validation banner) must stay false until the save-path lookup completes. After refresh
+     * the committed tag matches the entered sex, so the entry saves with no confirmation.
+     */
+    @Test
+    fun attemptSave_doesNotSetSaveAttemptedUntilWedCheckRefreshCompletes() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+
+        val staleFemaleMatch = wedCheckRecord(speno = 99, tagId = "456A", sex = "F")
+        val committedMaleMatch = wedCheckRecord(speno = 42, tagId = "789A", sex = "M")
+        val lookupStarted = CompletableDeferred<Unit>()
+        val allowLookupToFinish = CompletableDeferred<Unit>()
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID("456A") } returns staleFemaleMatch
+        coEvery { wedCheckRepo.findSealbyTagID("789A") } coAnswers {
+            lookupStarted.complete(Unit)
+            allowLookupToFinish.await()
+            committedMaleMatch
+        }
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.findWedCheckMatch(vm.primarySeal.value, "456A")
+        vm.primarySeal.first { it.hasWedCheckMatch }
+
+        assertTrue(
+            "Stale female WedCheck vs entered male should already be a sex mismatch",
+            vm.primarySeal.value.validationErrors.any { it.contains("Sex doesn't match") },
+        )
+
+        vm.updatePendingTagNumber(SealType.PRIMARY, "789")
+        vm.attemptSave(TestFixtures.sampleGeoLocation())
+        lookupStarted.await()
+
+        assertFalse(
+            "Validation banner is gated on isSaveAttempted; it must stay false while Speno refresh is in flight",
+            vm.uiState.value.isSaveAttempted,
+        )
+        assertTrue(written.isEmpty())
+        assertFalse(vm.uiState.value.entryNeedsConfirmation)
+
+        allowLookupToFinish.complete(Unit)
+        vm.primarySeal.first { !it.isEntryStarted }
+
+        assertEquals(1, written.size)
+        assertEquals("789A", written[0].tagIDOne)
+        assertEquals("42", written[0].speno)
+        assertFalse(vm.uiState.value.entryNeedsConfirmation)
+    }
+
+    /**
+     * Parker 2025 season recap: Speno did not refresh unless the tag field lost focus.
+     * 4-digit tag numbers look up Speno while typing.
+     */
+    @Test
+    fun updatePendingTagNumber_fourDigits_looksUpWedCheckWithoutBlur() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+
+        val wedCheckFor1234 = wedCheckRecord(speno = 42, tagId = "1234A")
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID("1234A") } returns wedCheckFor1234
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.updatePendingTagNumber(SealType.PRIMARY, "1234")
+
+        assertEquals("1234", vm.primarySeal.value.tagNumber)
+        vm.primarySeal.first { it.hasWedCheckMatch }
+        assertEquals(42, vm.primarySeal.value.wedCheckMatch?.speNo)
+    }
+
+    @Test
+    fun updatePendingTagNumber_threeDigits_doesNotCommitUntilBlurOrSave() = runTest {
+        // Parker 2025 season recap: 3-digit tags still commit on blur or Save (last seen ~2 years
+        // before 2025); only 4-digit tags look up Speno while typing.
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updatePendingTagNumber(SealType.PRIMARY, "789")
+
+        assertEquals("456", vm.primarySeal.value.tagNumber)
     }
 
     /**
@@ -839,7 +955,7 @@ class TagRetagViewModelTest {
     }
 
     /**
-     * Stakeholder exception: dummy tag 0000D skips WedCheck validation so Save does not
+     * Parker 2025 season recap: dummy 0000D skips WedCheck validation so Save does not
      * require confirmation for "Seal not in database!".
      */
     @Test
@@ -876,10 +992,10 @@ class TagRetagViewModelTest {
     }
 
     /**
-     * Stakeholder report: editing a mom/pup pair where either animal is dummy tag 0000D
-     * creates an extra "P No Tag" pup with the original timestamp. First save is fine;
-     * the ghost appears only after edit, whether mom or pup is the dummy and whether
-     * mom or pup is the animal being edited.
+     * Parker 2025 season recap: editing an entry created fake untagged pups. Dummy tag 0000D
+     * mom/pup pairs must not write a ghost "P No Tag" row. First save is fine; the ghost
+     * appeared only after edit, whether mom or pup is the dummy and whether mom or pup is
+     * the animal being edited.
      */
     @Test
     fun writeObservationRecord_editMomWhenMomIsDummy0000D_doesNotCreateGhostNoTagPup() = runTest {

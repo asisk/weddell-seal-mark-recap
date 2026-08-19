@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.map
+import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealRelatives
@@ -106,21 +107,27 @@ fun SealCard(
         ValidationBanner(seal)
     }
 
-    if (seal.colony == "White Island") {
-        if (autoDetectedColony?.location != seal.colony) {
-            // BANNER For White Island Seals that are observed outside of White Island colony
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFFFE0B2))
-                    .padding(14.dp),
-            ) {
-                Text("This seal was last seen at White Island. Current colony detected by device is ${autoDetectedColony?.location}.")
-                Text(
-                    "Please take a photo of the tags and seal!",
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-            }
+    // White Island photo prompt (pre-recap enter-screen behavior). Lookup highlight uses
+    // PopulationMismatchBanner; do not share that here.
+    if (ColonyPopulation.shouldPromptWhiteIslandPhotoOnEnter(
+            seal.colony,
+            autoDetectedColony?.location,
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFFFE0B2))
+                .padding(14.dp),
+        ) {
+            Text(
+                "This seal was last seen at ${seal.colony}. " +
+                    "Current colony detected by device is ${autoDetectedColony?.location}."
+            )
+            Text(
+                "Please take a photo of the tags and seal!",
+                style = MaterialTheme.typography.headlineSmall,
+            )
         }
     }
 
