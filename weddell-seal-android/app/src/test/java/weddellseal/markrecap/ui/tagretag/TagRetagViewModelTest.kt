@@ -300,7 +300,10 @@ class TagRetagViewModelTest {
         coEvery { observationRepo.writeObservation(any()) } answers {
             written.add(firstArg())
         }
-        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+        // NEW tags must not resolve a WedCheck match; a relaxed mock can return a non-null
+        // record asynchronously and send attemptSave down the confirmation path instead of write.
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
 
         val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
 
@@ -318,6 +321,7 @@ class TagRetagViewModelTest {
 
         assertEquals(1, written.size)
         assertEquals("789B", written[0].tagIDOne)
+        assertFalse(vm.uiState.value.entryNeedsConfirmation)
     }
 
     /**
