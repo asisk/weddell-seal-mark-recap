@@ -1,0 +1,11 @@
+#!/bin/sh
+# Compile app + unit tests + instrumented tests before pushing to GitHub.
+# Enable once per clone: git config core.hooksPath .githooks
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT/weddell-seal-android"
+
+export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
+
+./gradlew compileDebugSources compileDebugUnitTestSources compileDebugAndroidTestSources --stacktrace
