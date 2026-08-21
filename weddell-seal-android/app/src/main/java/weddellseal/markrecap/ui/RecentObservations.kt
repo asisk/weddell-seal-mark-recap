@@ -48,9 +48,8 @@ fun RecentObservations(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // display individual records for observations
-            // those with pups will be displayed in one row
-            // if they have no relatives they will have their own row
+            // Moms with matched pups share a row. Unmatched observations,
+            // including relative-pups that did not attach, have their own row.
             items(displayObservations) { displayObs ->
                 when (displayObs) {
                     is DisplayObservation.WithPups -> {

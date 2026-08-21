@@ -1126,8 +1126,8 @@ class TagRetagViewModelTest {
     }
 
     /**
-     * Recent Observations is newest-first. Grouping attaches the first 0000D pup in that list,
-     * so Edit opens whatever grouping selected — including a later dummy pup from another entry.
+     * Recent Observations is newest-first and dummy 0000D is reused. Grouping requires a
+     * reciprocal relative tag so Edit opens this mom's pup, not a later dummy pup.
      */
     @Test
     fun loadSealForEdit_momPup0000D_usesPupGroupingAttachedFromRecentObservations() = runTest {
@@ -1161,8 +1161,8 @@ class TagRetagViewModelTest {
             it.primarySeal.id == 1
         }
         assertEquals(
-            "Newest-first list attaches the later 0000D pup, not this mom's original pup",
-            10,
+            "Reciprocal relative tag attaches this mom's 0000D pup, not a later dummy pup",
+            2,
             row.pupOne?.id,
         )
 
@@ -1170,10 +1170,10 @@ class TagRetagViewModelTest {
         val vm = tagRetagViewModel(written)
         vm.loadSealForEdit(row)
 
-        assertEquals(10, vm.pupOne.value.observationID)
+        assertEquals(2, vm.pupOne.value.observationID)
         assertEquals("0000", vm.pupOne.value.tagNumber)
         assertEquals("D", vm.pupOne.value.tagAlpha)
-        assertEquals("9999Z", laterDummyPup.relativeTagIDOne)
+        assertEquals("1234A", pairPup.relativeTagIDOne)
     }
 
     private suspend fun assertEditMomPupWithDummyDoesNotCreateGhostPup(

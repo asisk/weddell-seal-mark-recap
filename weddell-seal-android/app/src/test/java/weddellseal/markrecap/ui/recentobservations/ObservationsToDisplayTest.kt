@@ -93,17 +93,54 @@ class ObservationsToDisplayTest {
     }
 
     @Test
-    fun twoDummyPupsAttachFirstMatchingPupInNewestFirstList() {
-        val laterDummyPup = pupRecord(id = 10, tag = "0000D", relative = "9999Z")
+    fun twoDummyPupsAttachThePupThatPointsBackAtMom() {
+        val unmatchedPup = pupRecord(id = 10, tag = "0000D", relative = "9999Z")
         val pairPup = pupRecord(id = 2, tag = "0000D", relative = "1234A")
         val mom = momRecord(id = 1, tag = "1234A", relativeOne = "0000D")
 
-        val grouped = observationsToDisplay(listOf(laterDummyPup, pairPup, mom))
+        val grouped = observationsToDisplay(listOf(unmatchedPup, pairPup, mom))
 
         val momRow = grouped.filterIsInstance<DisplayObservation.WithPups>().single {
             it.primarySeal.id == 1
         }
-        assertEquals(10, momRow.pupOne?.id)
+        assertEquals(2, momRow.pupOne?.id)
+        assertTrue(grouped.any { it is DisplayObservation.Standalone && it.primarySeal.id == 10 })
+        assertTrue(grouped.none { it is DisplayObservation.Standalone && it.primarySeal.id == 2 })
+    }
+
+    @Test
+    fun taggedMomWithTwoDummyPupsAttachesBothWithoutReuse() {
+        val pupTwo = pupRecord(id = 3, tag = "0000D", relative = "1234A")
+        val pupOne = pupRecord(id = 2, tag = "0000D", relative = "1234A")
+        val mom = momRecord(id = 1, tag = "1234A", relativeOne = "0000D", relativeTwo = "0000D")
+            .copy(numRelatives = "2")
+
+        val grouped = observationsToDisplay(listOf(pupTwo, pupOne, mom))
+
+        assertEquals(1, grouped.size)
+        val momRow = grouped.single() as DisplayObservation.WithPups
+        assertEquals(3, momRow.pupOne?.id)
+        assertEquals(2, momRow.pupTwo?.id)
+    }
+
+    @Test
+    fun twoDummyPupsAttachToTheMomTheyEachPointBackAt() {
+        val laterDummyPup = pupRecord(id = 10, tag = "0000D", relative = "9999Z")
+        val pairPup = pupRecord(id = 2, tag = "0000D", relative = "1234A")
+        val mom = momRecord(id = 1, tag = "1234A", relativeOne = "0000D")
+        val otherMom = momRecord(id = 11, tag = "9999Z", relativeOne = "0000D")
+
+        val grouped = observationsToDisplay(listOf(laterDummyPup, pairPup, mom, otherMom))
+
+        val momRow = grouped.filterIsInstance<DisplayObservation.WithPups>().single {
+            it.primarySeal.id == 1
+        }
+        val otherMomRow = grouped.filterIsInstance<DisplayObservation.WithPups>().single {
+            it.primarySeal.id == 11
+        }
+        assertEquals(2, momRow.pupOne?.id)
+        assertEquals(10, otherMomRow.pupOne?.id)
+        assertTrue(grouped.none { it is DisplayObservation.Standalone && it.primarySeal.ageClass == SealAgeClass.PUP.alpha })
     }
 
     private fun momRecord(
