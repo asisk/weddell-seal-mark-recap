@@ -28,6 +28,7 @@ class ColonyPopulationTest {
     fun unknownGpsDoesNotMapToAPopulation() {
         assertNull(ColonyPopulation.forLocation(null))
         assertNull(ColonyPopulation.forLocation(""))
+        assertNull(ColonyPopulation.forLocation(ColonyPopulation.NOT_DETECTED))
     }
 
     @Test
@@ -55,6 +56,12 @@ class ColonyPopulationTest {
         assertFalse(
             ColonyPopulation.shouldHighlightMismatch("White Island", null),
         )
+        assertFalse(
+            ColonyPopulation.shouldHighlightMismatch(
+                "White Island",
+                ColonyPopulation.NOT_DETECTED,
+            ),
+        )
     }
 
     @Test
@@ -64,6 +71,12 @@ class ColonyPopulationTest {
         )
         assertTrue(
             ColonyPopulation.shouldPromptWhiteIslandPhotoOnEnter("White Island", null),
+        )
+        assertTrue(
+            ColonyPopulation.shouldPromptWhiteIslandPhotoOnEnter(
+                "White Island",
+                ColonyPopulation.NOT_DETECTED,
+            ),
         )
         assertFalse(
             ColonyPopulation.shouldPromptWhiteIslandPhotoOnEnter("White Island", "White Island"),

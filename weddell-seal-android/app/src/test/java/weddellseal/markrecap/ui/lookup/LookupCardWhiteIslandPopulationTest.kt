@@ -24,6 +24,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import weddellseal.markrecap.TestFixtures
+import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
@@ -129,6 +130,29 @@ class LookupCardWhiteIslandPopulationTest {
 
         assertPopulationRowDisplayed()
         composeRule.onNodeWithText("White Island").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Please take a photo of the tags and seal!").assertDoesNotExist()
+    }
+
+    @Test
+    fun whiteIslandSeal_whenGpsReportsNoColony_showsPopulationWithoutWarning() {
+        // HomeViewModel uses this sentinel after a GPS fix with no colony match — not null.
+        homeViewModel.setAutoDetectedColony(
+            TestFixtures.sampleColony(location = ColonyPopulation.NOT_DETECTED),
+        )
+
+        setLookupCardContent(
+            WedCheckSeal(
+                speNo = 42,
+                tagIdOne = "100A",
+                population = "White Island",
+            ),
+        )
+
+        assertPopulationRowDisplayed()
+        composeRule.onNodeWithText("White Island").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "This seal was last seen at White Island. Current colony detected by device is ${ColonyPopulation.NOT_DETECTED}.",
+        ).assertDoesNotExist()
         composeRule.onNodeWithText("Please take a photo of the tags and seal!").assertDoesNotExist()
     }
 

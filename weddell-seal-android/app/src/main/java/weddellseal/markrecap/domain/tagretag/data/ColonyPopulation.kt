@@ -12,8 +12,13 @@ object ColonyPopulation {
     const val WHITE_ISLAND = "White Island"
     const val EREBUS_BAY = "Erebus Bay"
 
+    /** Location string used when GPS has a fix but no colony matches. */
+    const val NOT_DETECTED = "Seal colony not detected"
+
     fun forLocation(location: String?): String? {
-        if (location.isNullOrBlank()) return null
+        if (location.isNullOrBlank() || location.equals(NOT_DETECTED, ignoreCase = true)) {
+            return null
+        }
         return if (location.equals(WHITE_ISLAND, ignoreCase = true)) WHITE_ISLAND else EREBUS_BAY
     }
 

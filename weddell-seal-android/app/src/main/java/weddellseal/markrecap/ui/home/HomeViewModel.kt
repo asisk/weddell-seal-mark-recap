@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
@@ -254,7 +255,7 @@ class HomeViewModel(
         val colony = findColony(geoLocation.coordinates) ?: SealColony(
             colonyId = 0,
             inOut = "none",
-            location = "Seal colony not detected",
+            location = ColonyPopulation.NOT_DETECTED,
             nLimit = 0.0,
             sLimit = 0.0,
             wLimit = 0.0,
