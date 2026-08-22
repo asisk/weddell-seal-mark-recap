@@ -64,6 +64,7 @@ class TagRetagViewModel(
 
         val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
         val isSaveEnabled: Boolean = false, // indicator for save button
+        val isSaveInProgress: Boolean = false, // persist in flight; blocks repeat Save / Confirm & Save taps
 
         val ineligibleForSaveReason: String = "", // reasons save button is disabled
 
@@ -283,6 +284,7 @@ class TagRetagViewModel(
                 observationLocation = null,
                 isSaveAttempted = false,
                 isSaveEnabled = false,
+                isSaveInProgress = false,
                 ineligibleForSaveReason = "",
                 validationFailureReason = "",
                 entryNeedsConfirmation = false,
@@ -321,6 +323,17 @@ class TagRetagViewModel(
         _uiState.update { it.copy(isSaveAttempted = true, isSaveEnabled = false) }
     }
 
+    /** Returns false if a save or confirm-save persist is already running. */
+    private fun tryBeginSave(): Boolean {
+        if (_uiState.value.isSaveInProgress) return false
+        _uiState.update { it.copy(isSaveInProgress = true, isSaveEnabled = false) }
+        return true
+    }
+
+    private fun clearSaveInProgress() {
+        _uiState.update { it.copy(isSaveInProgress = false) }
+    }
+
     private fun allSealsValid(
         primary: Seal = _primarySeal.value,
         pupOne: Seal = _pupOne.value,
@@ -346,24 +359,31 @@ class TagRetagViewModel(
      */
     fun attemptSave(currentLocation: GeoLocation?) {
         commitPendingFieldEdits()
-        _uiState.update { it.copy(isSaveEnabled = false) }
+        if (!tryBeginSave()) return
 
         viewModelScope.launch {
-            refreshAllWedCheckMatches()
-            setIsSaving()
+            try {
+                refreshAllWedCheckMatches()
+                setIsSaving()
 
-            val primary = _primarySeal.value
-            val pupOne = _pupOne.value
-            val pupTwo = _pupTwo.value
+                val primary = _primarySeal.value
+                val pupOne = _pupOne.value
+                val pupTwo = _pupTwo.value
 
-            if (allSealsValid(primary, pupOne, pupTwo)) {
-                writeObservationRecord(currentLocation)
-            } else {
-                checkNeedsConfirmation(
-                    primary.validationErrors,
-                    pupOne.validationErrors,
-                    pupTwo.validationErrors,
-                )
+                if (allSealsValid(primary, pupOne, pupTwo)) {
+                    writeObservationRecord(currentLocation)
+                } else {
+                    checkNeedsConfirmation(
+                        primary.validationErrors,
+                        pupOne.validationErrors,
+                        pupTwo.validationErrors,
+                    )
+                    // Allow Confirm & Save; persist has not started yet.
+                    clearSaveInProgress()
+                }
+            } catch (e: Exception) {
+                clearSaveInProgress()
+                throw e
             }
         }
     }
@@ -374,32 +394,42 @@ class TagRetagViewModel(
      * Runs in the ViewModel so flag-for-review and persistence use committed tag values and
      * resolved WedCheck matches (same fix #1 / #2 requirements as [attemptSave]).
      * [setIsSaving] is not called here; [UiState.isSaveAttempted] is already true from the first Save tap.
+     *
+     * Sets [UiState.isSaveInProgress] before launching so a second Confirm & Save tap cannot
+     * start another persist while WedCheck refresh is still suspended.
      */
     fun confirmAndSave(currentLocation: GeoLocation?) {
         commitPendingFieldEdits()
+        if (!tryBeginSave()) return
 
         viewModelScope.launch {
-            refreshAllWedCheckMatches()
+            try {
+                refreshAllWedCheckMatches()
 
-            val primary = _primarySeal.value
-            val pupOne = _pupOne.value
-            val pupTwo = _pupTwo.value
+                val primary = _primarySeal.value
+                val pupOne = _pupOne.value
+                val pupTwo = _pupTwo.value
 
-            if (!primary.isValid) {
-                flagSealForReview(primary.sealType)
-            }
-            if (!pupOne.isValid) {
-                flagSealForReview(pupOne.sealType)
-            }
-            if (!pupTwo.isValid) {
-                flagSealForReview(pupTwo.sealType)
-            }
+                if (!primary.isValid) {
+                    flagSealForReview(primary.sealType)
+                }
+                if (!pupOne.isValid) {
+                    flagSealForReview(pupOne.sealType)
+                }
+                if (!pupTwo.isValid) {
+                    flagSealForReview(pupTwo.sealType)
+                }
 
-            writeObservationRecord(currentLocation)
+                writeObservationRecord(currentLocation)
+            } catch (e: Exception) {
+                clearSaveInProgress()
+                throw e
+            }
         }
     }
 
     fun editAfterAttemptedSave() {
+        if (_uiState.value.isSaveInProgress) return
         _uiState.update {
             it.copy(
                 isSaveAttempted = false,
@@ -458,7 +488,7 @@ class TagRetagViewModel(
                 }.collectLatest { (_, reasons, allSealsValid) ->
                     _uiState.update {
                         it.copy(
-                            isSaveEnabled = reasons.isEmpty(),
+                            isSaveEnabled = reasons.isEmpty() && !it.isSaveInProgress,
                             ineligibleForSaveReason = reasons.joinToString("\n"),
                             allSealsValid = allSealsValid
                         )

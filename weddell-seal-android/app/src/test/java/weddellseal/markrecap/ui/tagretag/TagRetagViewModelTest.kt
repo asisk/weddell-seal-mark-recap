@@ -488,6 +488,10 @@ class TagRetagViewModelTest {
         assertTrue(written.isEmpty())
         assertTrue(vm.uiState.value.entryNeedsConfirmation)
         assertTrue(vm.uiState.value.validationFailureReason.contains("Seal not in database"))
+        assertFalse(
+            "Confirm & Save must be allowed after validation; persist has not started",
+            vm.uiState.value.isSaveInProgress,
+        )
     }
 
     /**
@@ -674,6 +678,61 @@ class TagRetagViewModelTest {
         assertEquals(1, written.size)
         assertEquals("789A", written[0].tagIDOne)
         assertEquals("55", written[0].speno)
+        assertFalse(vm.uiState.value.isSaveInProgress)
+    }
+
+    /** Repeat Confirm & Save taps must not persist the same observation twice. */
+    @Test
+    fun confirmAndSave_ignoresRepeatedTapsWhilePersistInFlight() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+
+        val lookupStarted = CompletableDeferred<Unit>()
+        val allowLookupToFinish = CompletableDeferred<Unit>()
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        coEvery { wedCheckRepo.findSealbyTagID("456A") } coAnswers {
+            lookupStarted.complete(Unit)
+            allowLookupToFinish.await()
+            throw NoSuchElementException()
+        }
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.MARKED)
+        vm.updateTagNumber(SealType.PRIMARY, "456")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.setIsSaving()
+
+        vm.confirmAndSave(TestFixtures.sampleGeoLocation())
+        lookupStarted.await()
+
+        assertTrue(vm.uiState.value.isSaveInProgress)
+        assertFalse(vm.uiState.value.isSaveEnabled)
+
+        vm.confirmAndSave(TestFixtures.sampleGeoLocation())
+        vm.editAfterAttemptedSave()
+
+        assertTrue(
+            "Edit must not re-enable the form while Confirm & Save is persisting",
+            vm.uiState.value.isSaveAttempted,
+        )
+        assertTrue(vm.uiState.value.isSaveInProgress)
+
+        allowLookupToFinish.complete(Unit)
+        vm.primarySeal.first { !it.isEntryStarted }
+
+        assertEquals(1, written.size)
+        assertEquals("456A", written[0].tagIDOne)
+        assertFalse(vm.uiState.value.isSaveInProgress)
     }
 
     /**

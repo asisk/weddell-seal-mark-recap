@@ -102,7 +102,7 @@ fun TagRetagFooter(
                     ) else FloatingActionButtonDefaults.elevation(8.dp),
                     containerColor = if (!uiState.isSaveEnabled || uiState.entryNeedsConfirmation || (uiState.isEditMode && !hasEdits)) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary,
                     onClick = {
-                        if (!uiState.isSaveEnabled) return@ExtendedFloatingActionButton  // guard early exit
+                        if (!uiState.isSaveEnabled || uiState.isSaveInProgress) return@ExtendedFloatingActionButton  // guard early exit
 
                         if (uiState.isEditMode && !hasEdits) return@ExtendedFloatingActionButton
 

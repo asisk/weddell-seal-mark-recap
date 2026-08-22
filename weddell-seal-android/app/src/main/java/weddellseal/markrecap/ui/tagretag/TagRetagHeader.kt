@@ -252,12 +252,29 @@ fun TagRetagHeader(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
 
+            val confirmActionsEnabled = !uiState.isSaveInProgress
+            val confirmActionColor = if (confirmActionsEnabled) {
+                MaterialTheme.colorScheme.secondary
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+            val confirmActionContentColor = if (confirmActionsEnabled) {
+                MaterialTheme.colorScheme.onSecondary
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+
             // VALIDATION - CONFIRM AND SAVE BUTTON
             ExtendedFloatingActionButton(
                 modifier = Modifier.padding(start = 10.dp),
-                containerColor = MaterialTheme.colorScheme.secondary,
-                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                containerColor = confirmActionColor,
+                elevation = if (confirmActionsEnabled) {
+                    FloatingActionButtonDefaults.elevation(8.dp)
+                } else {
+                    FloatingActionButtonDefaults.elevation(2.dp)
+                },
                 onClick = {
+                    if (!confirmActionsEnabled) return@ExtendedFloatingActionButton
                     // Fix #3: blur before save; fix #1/#2: confirmAndSave in ViewModel.
                     focusManager.clearFocus()
                     viewModel.confirmAndSave(homeViewModel.getColonyLocation())
@@ -267,11 +284,13 @@ fun TagRetagHeader(
                         painter = painterResource(R.drawable.ic_save),
                         contentDescription = "Confirm & Save",
                         modifier = Modifier.size(36.dp),
+                        tint = confirmActionContentColor,
                     )
                 },
                 text = {
                     Text(
                         text = "Confirm & Save",
+                        color = confirmActionContentColor,
                         style = MaterialTheme.typography.titleLarge,
                     )
                 }
@@ -280,10 +299,14 @@ fun TagRetagHeader(
             // VALIDATION - EDIT BUTTON ON VALIDATION ERROR
             ExtendedFloatingActionButton(
                 modifier = Modifier.padding(start = 10.dp),
-                containerColor = MaterialTheme.colorScheme.secondary,
-                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                containerColor = confirmActionColor,
+                elevation = if (confirmActionsEnabled) {
+                    FloatingActionButtonDefaults.elevation(8.dp)
+                } else {
+                    FloatingActionButtonDefaults.elevation(2.dp)
+                },
                 onClick = {
-                    // enable edit
+                    if (!confirmActionsEnabled) return@ExtendedFloatingActionButton
                     viewModel.editAfterAttemptedSave()
                 },
                 icon = {
@@ -291,11 +314,13 @@ fun TagRetagHeader(
                         painter = painterResource(R.drawable.ic_save),
                         contentDescription = "Edit",
                         modifier = Modifier.size(36.dp),
+                        tint = confirmActionContentColor,
                     )
                 },
                 text = {
                     Text(
                         text = "Edit",
+                        color = confirmActionContentColor,
                         style = MaterialTheme.typography.titleLarge,
                     )
                 }
