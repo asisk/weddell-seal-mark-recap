@@ -25,6 +25,13 @@ interface SealColoniesDao {
         return insertedCount
     }
 
+    // Clear and insert in one transaction so a failed import keeps the last valid list.
+    @Transaction
+    suspend fun replaceColonyRecords(fileUploadId: Long, sealColonies: List<SealColony>): Int {
+        clearColoniesTable()
+        return insertColonyRecords(fileUploadId, sealColonies)
+    }
+
     @Query("SELECT COUNT(*) FROM sealColonies")
     suspend fun getCount(): Int
 

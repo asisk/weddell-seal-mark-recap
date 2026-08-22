@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -121,6 +122,50 @@ class AppDatabaseTest {
 
         sealColonyDao.clearColoniesTable()
         assertEquals(0, sealColonyDao.getCount())
+    }
+
+    @Test
+    fun testReplaceColonyRecordsRollsBackOnInsertFailure() = runBlocking {
+        val fileUploadId = fileUploadDao.insertFileUpload(
+            FileUploadEntity(
+                fileType = FileType.OBSERVERS,
+                fileAction = FileAction.UPLOAD.name,
+                filename = "testfile.csv",
+                status = FileStatus.IDLE,
+                statusMessage = null,
+                recordCount = 0
+            )
+        )
+        val existing = SealColony(
+            inOut = "in",
+            location = "Existing Location",
+            nLimit = 45.0,
+            sLimit = 40.0,
+            wLimit = 30.0,
+            eLimit = 35.0,
+            adjLat = 42.0,
+            adjLong = 32.0,
+            fileUploadId = fileUploadId
+        )
+        sealColonyDao.insertColonyRecords(fileUploadId, listOf(existing))
+
+        val invalidReplacement = existing.copy(
+            colonyId = 0,
+            location = "Replacement Location",
+            fileUploadId = 9999
+        )
+        try {
+            sealColonyDao.replaceColonyRecords(9999, listOf(invalidReplacement))
+            fail("Expected foreign key failure to abort the replacement")
+        } catch (_: SQLiteConstraintException) {
+            // expected: insert fails after the table was cleared inside the transaction
+        }
+
+        assertEquals(1, sealColonyDao.getCount())
+        assertEquals(
+            "Existing Location",
+            sealColonyDao.getRecordsByFileUploadId(fileUploadId).single().location
+        )
     }
 
     @Test

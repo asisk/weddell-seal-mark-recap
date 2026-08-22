@@ -123,10 +123,8 @@ class ObserversViewModel(
             }
 
             // Parker 2025 season recap: re-uploading observers kept old rows (misspelled names
-            // stayed next to the correction). Clear before insert so only the latest CSV is used.
-            observersRepository.clearObserversData()
-
-            // Insert the CSV data into the database
+            // stayed next to the correction). Replace in one transaction so only the latest CSV
+            // is used and a failed insert keeps the last valid list.
             val insertedCount = insertObserversData(fileUploadId, csvData)
             if (insertedCount > 0) {
                 updateFileStatus(insertedCount)
@@ -179,7 +177,7 @@ class ObserversViewModel(
     }
 
     private suspend fun insertObserversData(fileUploadId: Long, csvData: List<Observers>): Int {
-        return observersRepository.insertObserversData(fileUploadId, csvData)
+        return observersRepository.replaceObserversData(fileUploadId, csvData)
     }
 
     private fun readObserverCsvData(

@@ -97,6 +97,26 @@ class RepositoryRoundTripTest {
     }
 
     @Test
+    fun sealColonyRepositoryReplaceKeepsOnlyLatest() = runBlocking {
+        val firstFileId = insertFileUpload("colonies_one.csv")
+        val secondFileId = insertFileUpload("colonies_two.csv")
+        sealColonyRepository.insertColoniesData(
+            firstFileId,
+            listOf(colony(location = "OldColony", fileUploadId = firstFileId))
+        )
+
+        val replaced = sealColonyRepository.replaceColoniesData(
+            secondFileId,
+            listOf(colony(location = "NewColony", fileUploadId = secondFileId))
+        )
+
+        assertEquals(1, replaced)
+        assertEquals(1, db.sealColoniesDao().getCount())
+        assertEquals("NewColony", sealColonyRepository.findColonyByName("NewColony")?.location)
+        assertEquals(null, sealColonyRepository.findColonyByName("OldColony"))
+    }
+
+    @Test
     fun observersRepositoryInsertAndFlow() = runBlocking {
         val fileId = db.fileUploadDao().insertFileUpload(
             FileUploadEntity(
@@ -115,6 +135,50 @@ class RepositoryRoundTripTest {
         val initials = observersRepository.observersList.first()
         assertTrue(initials.contains("ZZ"))
     }
+
+    @Test
+    fun observersRepositoryReplaceKeepsOnlyLatest() = runBlocking {
+        val firstFileId = insertFileUpload("observers_one.csv")
+        val secondFileId = insertFileUpload("observers_two.csv")
+        observersRepository.insertObserversData(
+            firstFileId,
+            listOf(Observers(initials = "OLD", fileUploadId = firstFileId))
+        )
+
+        val replaced = observersRepository.replaceObserversData(
+            secondFileId,
+            listOf(Observers(initials = "NEW", fileUploadId = secondFileId))
+        )
+
+        assertEquals(1, replaced)
+        val initials = observersRepository.observersList.first()
+        assertEquals(setOf("NEW"), initials.toSet())
+    }
+
+    private suspend fun insertFileUpload(filename: String): Long {
+        return db.fileUploadDao().insertFileUpload(
+            FileUploadEntity(
+                fileType = FileType.OBSERVERS,
+                fileAction = FileAction.UPLOAD.name,
+                filename = filename,
+                status = FileStatus.IDLE,
+                statusMessage = null,
+                recordCount = 0
+            )
+        )
+    }
+
+    private fun colony(location: String, fileUploadId: Long) = SealColony(
+        inOut = "in",
+        location = location,
+        nLimit = 1.0,
+        sLimit = -1.0,
+        wLimit = 1.0,
+        eLimit = 2.0,
+        adjLat = 0.5,
+        adjLong = 1.5,
+        fileUploadId = fileUploadId
+    )
 
     @Test
     fun wedCheckRepositoryInsertCsvData() = runBlocking {

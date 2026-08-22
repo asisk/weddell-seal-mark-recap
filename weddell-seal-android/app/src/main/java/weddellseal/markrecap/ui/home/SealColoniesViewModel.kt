@@ -121,10 +121,8 @@ class SealColoniesViewModel(
             }
 
             // Parker 2025 season recap: re-uploading colony locations kept old rows (ghost
-            // colonies in the dropdown). Clear before insert so only the latest CSV is used.
-            sealColonyRepository.clearColonyData()
-
-            // Insert the CSV data into the database
+            // colonies in the dropdown). Replace in one transaction so only the latest CSV
+            // is used and a failed insert keeps the last valid list.
             val insertedCount = insertColonyData(fileUploadId, csvData)
             if (insertedCount > 0) {
                 updateFileStatus(insertedCount)
@@ -178,7 +176,7 @@ class SealColoniesViewModel(
     }
 
     private suspend fun insertColonyData(fileUploadId: Long, csvData: List<SealColony>): Int {
-        return sealColonyRepository.insertColoniesData(fileUploadId, csvData)
+        return sealColonyRepository.replaceColoniesData(fileUploadId, csvData)
     }
 
     private fun readSealColoniesCsvData(
