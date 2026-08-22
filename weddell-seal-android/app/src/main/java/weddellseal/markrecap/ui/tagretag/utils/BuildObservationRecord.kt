@@ -124,7 +124,10 @@ fun buildObservationRecord(
         sb.append("Reason for Retag: ${seal.reasonForRetag.description}; ")
     }
 
-    sb.append(seal.validationMessage)
+    if (seal.validationMessage.isNotBlank()) {
+        sb.append(seal.validationMessage.trimEnd())
+        sb.append("; ")
+    }
 
     var flagged = ""
     if (seal.flaggedForReview) {

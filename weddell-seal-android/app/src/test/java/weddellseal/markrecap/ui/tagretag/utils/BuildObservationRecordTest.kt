@@ -301,10 +301,35 @@ class BuildObservationRecordTest {
 
         // Validation messages stay in comments with the technician note; confirmation is
         // also copied into comments so field proofing can see it without the edt column.
-        assertTrue(record.comments.contains(technicianNote))
+        // A trailing "; " after validation keeps later fragments from running together.
+        assertTrue(
+            record.comments.contains(
+                "Please take a photo and add a comment.; technician confirmed; $technicianNote",
+            ),
+        )
         assertTrue(record.comments.contains("Seal not in database"))
-        assertTrue(record.comments.contains("technician confirmed"))
         assertEquals("technician confirmed", record.flaggedEntry)
+    }
+
+    @Test
+    fun validationMessageIsDelimitedFromUserCommentWhenNotFlagged() {
+        val technicianNote = "photo taken, tags look worn"
+        val seal = TestFixtures.completePrimaryMarkedSeal().copy(comment = technicianNote)
+
+        val record = buildObservationRecord(
+            null,
+            seal,
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata(),
+        )
+
+        assertTrue(
+            record.comments.contains("Please take a photo and add a comment.; $technicianNote"),
+        )
+        assertFalse(record.comments.contains("technician confirmed"))
+        assertEquals("", record.flaggedEntry)
     }
 
     /** Fix #5: edits are append-only and should create a new row. */
