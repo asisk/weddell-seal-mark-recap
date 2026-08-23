@@ -609,6 +609,53 @@ class TagRetagViewModelTest {
     }
 
     /**
+     * Retag looks up WedCheck by old tag. Typing a 4-digit old tag with alpha already
+     * selected should refresh Speno without waiting for blur.
+     */
+    @Test
+    fun updatePendingOldTagNumber_fourDigits_looksUpWedCheckWithoutBlur() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+
+        val wedCheckFor1234 = wedCheckRecord(speno = 42, tagId = "1234A")
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID("1234A") } returns wedCheckFor1234
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.RETAG)
+        vm.updateOldTagAlpha(SealType.PRIMARY, "A")
+        vm.updatePendingOldTagNumber(SealType.PRIMARY, "1234")
+
+        assertEquals("1234", vm.primarySeal.value.oldTagNumber)
+        vm.primarySeal.first { it.hasWedCheckMatch }
+        assertEquals(42, vm.primarySeal.value.wedCheckMatch?.speNo)
+    }
+
+    @Test
+    fun updatePendingOldTagNumber_threeDigits_doesNotCommitUntilBlurOrSave() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        vm.prefillSingleMale()
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.RETAG)
+        vm.updateOldTagNumber(SealType.PRIMARY, "456")
+        vm.updateOldTagAlpha(SealType.PRIMARY, "A")
+        vm.updatePendingOldTagNumber(SealType.PRIMARY, "789")
+
+        assertEquals("456", vm.primarySeal.value.oldTagNumber)
+    }
+
+    /**
      * Fix #2: Marked save awaits WedCheck for the committed tag so speno is not "0" when the
      * user edits the tag number without blurring before Save.
      */

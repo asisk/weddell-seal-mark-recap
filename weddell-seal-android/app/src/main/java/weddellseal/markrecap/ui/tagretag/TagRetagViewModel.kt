@@ -987,6 +987,11 @@ class TagRetagViewModel(
     fun updatePendingOldTagNumber(sealType: SealType, input: String) {
         if (sealType == SealType.UNKNOWN) return
         pendingOldTagNumbers[sealType] = input
+        // Retag WedCheck uses the old tag. Mirror the 4-digit live lookup so an
+        // already-alpha-selected old tag does not keep a stale Speno until blur or Save.
+        if (input.length >= 4) {
+            updateOldTagNumber(sealType, input)
+        }
     }
 
     fun updatePendingComment(sealType: SealType, input: String) {
