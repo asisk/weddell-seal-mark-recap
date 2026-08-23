@@ -23,7 +23,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -76,10 +76,13 @@ fun TabbedCards(
         )
     }
 
-    // Keep the selected index valid when pups are added/removed (tab count changes).
-    LaunchedEffect(tabItems.size) {
-        if (selectedTabIndex >= tabItems.size) {
-            selectedTabIndex = tabItems.lastIndex.coerceAtLeast(0)
+    // After save, resetModelState() drops pup tabs in the same frame the user may still
+    // have a pup selected. Clamp here — LaunchedEffect runs after composition, which is
+    // too late for tabItems[selectedTabIndex] and crashes with IndexOutOfBoundsException.
+    val safeTabIndex = selectedTabIndex.coerceIn(0, tabItems.lastIndex.coerceAtLeast(0))
+    SideEffect {
+        if (selectedTabIndex != safeTabIndex) {
+            selectedTabIndex = safeTabIndex
         }
     }
 
@@ -91,13 +94,13 @@ fun TabbedCards(
         // props, not tabItems[i].seal alone — that snapshot can lag behind ViewModel updates
         // even when remember() rebuilds tabs. Resolve which seal is selected by type, then
         // read from primarySeal / pupOneSeal / pupTwoSeal.
-        val selectedSeal = when (tabItems.getOrNull(selectedTabIndex)?.seal?.sealType) {
+        val selectedSeal = when (tabItems.getOrNull(safeTabIndex)?.seal?.sealType) {
             SealType.PUPONE -> pupOneSeal
             SealType.PUPTWO -> pupTwoSeal
             else -> primarySeal
         }
 
-        PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
+        PrimaryTabRow(selectedTabIndex = safeTabIndex) {
             tabItems.forEachIndexed { index, tabItem ->
                 Tab(
                     text = {
@@ -121,7 +124,7 @@ fun TabbedCards(
                             }
                         }
                     },
-                    selected = selectedTabIndex == index,
+                    selected = safeTabIndex == index,
                     onClick = { selectedTabIndex = index }
                 )
             }
@@ -228,7 +231,7 @@ fun TabbedCards(
 
                 // CONTENT
                 if (tabItems.isNotEmpty()) {
-                    tabItems[selectedTabIndex].content()
+                    tabItems[safeTabIndex].content()
                 }
 
                 // DELETE DIALOG
