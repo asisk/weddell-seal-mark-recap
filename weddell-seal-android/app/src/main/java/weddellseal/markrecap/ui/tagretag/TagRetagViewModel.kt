@@ -107,6 +107,14 @@ class TagRetagViewModel(
     private var originalPupOne: Seal? = null
     private var originalPupTwo: Seal? = null
 
+    /** Pre-edit snapshot for [sealType], used to recompute diffs at save (collector may not have run yet). */
+    private fun originalSealFor(sealType: SealType): Seal? = when (sealType) {
+        SealType.PRIMARY -> originalPrimarySeal
+        SealType.PUPONE -> originalPupOne
+        SealType.PUPTWO -> originalPupTwo
+        SealType.UNKNOWN -> null
+    }
+
     /** BUG FIX #1: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
     private val pendingTagNumbers = mutableMapOf<SealType, String>()
     private val pendingOldTagNumbers = mutableMapOf<SealType, String>()
@@ -506,39 +514,42 @@ class TagRetagViewModel(
             ) { currentPrimary, currentPupOne, currentPupTwo, editMode ->
 
                 if (!editMode) return@combine Triple(
-                    emptyList<String>(),
-                    emptyList<String>(),
-                    emptyList<String>()
+                    false to emptyList<String>(),
+                    false to emptyList(),
+                    false to emptyList(),
                 )
 
-                // Check if edits have been made
-                val primarySealEdits = currentPrimary.edits(originalPrimarySeal)
-                val pupOneSealEdits = currentPupOne.edits(originalPupOne)
-                val pupTwoSealEdits = currentPupTwo.edits(originalPupTwo)
+                Triple(
+                    currentPrimary.hasChangesFrom(originalPrimarySeal) to
+                        currentPrimary.edits(originalPrimarySeal),
+                    currentPupOne.hasChangesFrom(originalPupOne) to
+                        currentPupOne.edits(originalPupOne),
+                    currentPupTwo.hasChangesFrom(originalPupTwo) to
+                        currentPupTwo.edits(originalPupTwo),
+                )
 
-                // emit a Triple that can be unpacked in `collect`
-                Triple(primarySealEdits, pupOneSealEdits, pupTwoSealEdits)
+            }.collectLatest { (primaryChange, pupOneChange, pupTwoChange) ->
+                val (primaryChanged, primarySealEdits) = primaryChange
+                val (pupOneChanged, pupOneSealEdits) = pupOneChange
+                val (pupTwoChanged, pupTwoSealEdits) = pupTwoChange
 
-            }.collectLatest { (primarySealEdits, pupOneSealEdits, pupTwoSealEdits) ->
-                var edits = emptyList<String>()
-
-                if (primarySealEdits.isNotEmpty()) {
-                    edits = edits.plus(primarySealEdits)
+                // Use hasChangesFrom, not edits.isNotEmpty(): comment-only changes still
+                // enable Save, but are omitted from the Edited was/now trail.
+                if (primaryChanged) {
                     _primarySealEdits.update { primarySealEdits }
                     _primarySeal.update { it.copy(hasEdits = true) }
                 }
-                if (pupOneSealEdits.isNotEmpty()) {
-                    edits = edits.plus(pupOneSealEdits)
+                if (pupOneChanged) {
                     _pupOneEdits.update { pupOneSealEdits }
                     _pupOne.update { it.copy(hasEdits = true) }
                 }
-                if (pupTwoSealEdits.isNotEmpty()) {
-                    edits = edits.plus(pupTwoSealEdits)
+                if (pupTwoChanged) {
                     _pupTwoEdits.update { pupTwoSealEdits }
                     _pupTwo.update { it.copy(hasEdits = true) }
                 }
 
-                if (edits.isNotEmpty()) {
+                // Any seal change (including comment-only) marks the observation as edited.
+                if (primaryChanged || pupOneChanged || pupTwoChanged) {
                     _hasEdits.value = true
                 }
             }
@@ -1862,7 +1873,7 @@ class TagRetagViewModel(
             val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
                 .filter { seal ->
                     !seal.markedRemoved &&
-                        seal.hasEdits &&
+                        seal.hasChangesFrom(originalSealFor(seal.sealType)) &&
                         seal.isEntryStarted &&
                         seal.isComplete &&
                         when (seal.sealType) {
@@ -1874,26 +1885,15 @@ class TagRetagViewModel(
                 }
 
             for (seal in sealToUpdate) {
-                val edits = when (seal.sealType) {
-                    SealType.PRIMARY -> {
-                        primarySealEdits.value.joinToString("; ")
-                    }
-
-                    SealType.PUPONE -> {
-                        pupOneEdits.value.joinToString("; ")
-                    }
-
-                    SealType.PUPTWO -> {
-                        pupTwoEdits.value.joinToString("; ")
-                    }
-
-                    SealType.UNKNOWN -> ""
-                }
+                // Recompute after pending comment/tag flush; the collector may not have run yet.
+                val edits = seal.edits(originalSealFor(seal.sealType)).joinToString("; ")
 
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
                 // Await WedCheck so speno is populated before building the record (fix #2).
-                val sealForRecord = resolveWedCheckForSeal(seal)
+                // Force hasEdits so comment assembly skips first-save prefixes even when the
+                // collector has not yet flagged a comment-only change.
+                val sealForRecord = resolveWedCheckForSeal(seal).copy(hasEdits = true)
                 // Fix #5: append-only edit history; each edit writes a new observation row.
                 val observationRecord = buildObservationRecord(
                     uiState.value.observationLocation,

@@ -22,7 +22,8 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColonyRow(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val metadata by viewModel.metadata.collectAsState()
@@ -31,7 +32,7 @@ fun ColonyRow(
     val coloniesList by viewModel.coloniesList.collectAsState()
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -45,8 +46,7 @@ fun ColonyRow(
         // OVERRIDE CHECKBOX
         // Allows a technician to manually select a seal colony
         Column(
-            Modifier
-                .padding(horizontal = 18.dp),
+            Modifier.padding(horizontal = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -79,7 +79,8 @@ fun ColonyRow(
                     selectedOption = metadata.selectedColony?.location ?: "",
                     onValueChange = { valueSelected ->
                         viewModel.updateSelectedColony(valueSelected)
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
                 if (metadata.selectedColony != null && metadata.selectedColony?.location != "Other") {
                     Text(

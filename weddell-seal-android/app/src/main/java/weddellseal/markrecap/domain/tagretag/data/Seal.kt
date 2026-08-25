@@ -261,6 +261,17 @@ data class Seal(
             return errors
         }
 
+    fun hasChangesFrom(original: Seal?): Boolean {
+        if (original == null) return false
+        return comment != original.comment || edits(original).isNotEmpty()
+    }
+
+    /**
+     * Field-level was/now strings for the Edited comment trail.
+     *
+     * Comment text is omitted on purpose: the comment field *is* the comment. Recording
+     * "comment was: X now: Y" and then appending Y duplicates adding/changing a comment.
+     */
     fun edits(original: Seal?): List<String> {
         if (original == null) return emptyList()
 
@@ -268,8 +279,6 @@ data class Seal(
 
         if (ageClass != original.ageClass)
             edits.add("ageClass" + " was: ${original.ageClass} now: $ageClass")
-        if (comment != original.comment)
-            edits.add("comment" + " was: ${original.comment} now: $comment")
         if (condition != original.condition)
             edits.add("condition" + " was: ${original.condition} now: $condition")
         if (isNoTag != original.isNoTag)

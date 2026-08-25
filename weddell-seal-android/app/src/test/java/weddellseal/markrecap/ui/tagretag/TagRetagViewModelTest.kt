@@ -1065,6 +1065,80 @@ class TagRetagViewModelTest {
     }
 
     /**
+     * Changing the comment on edit must not also record "comment was: … now: …".
+     * The comment field is the comment; duplicating it made adding a comment appear twice.
+     */
+    @Test
+    fun writeObservationRecord_editCommentDoesNotDuplicateAddingAComment() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        val existing = TestFixtures.minimalObservationRecord().copy(
+            id = 42,
+            insertedAt = 1_000L,
+            tagEvent = TagEventType.NEW.alpha,
+            tagIDOne = "456B",
+            tagOneIndicator = "+",
+            sealCondition = SealCondition.GOOD.code,
+            comments = "scar",
+        )
+        vm.loadSealForEdit(DisplayObservation.Standalone(existing))
+        vm.updateComment(SealType.PRIMARY, "scar on left")
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(1, written.size)
+        val comments = written[0].comments
+        assertEquals("scar on left", comments)
+        assertFalse(comments.contains("comment was:"))
+        assertFalse(comments.contains("Edited"))
+    }
+
+    @Test
+    fun writeObservationRecord_editPendingCommentWithoutBlurDoesNotDuplicate() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val written = mutableListOf<ObservationRecord>()
+        val observationRepo = mockk<ObservationRepository>()
+        coEvery { observationRepo.writeObservation(any()) } answers {
+            written.add(firstArg())
+        }
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        val existing = TestFixtures.minimalObservationRecord().copy(
+            id = 42,
+            insertedAt = 1_000L,
+            tagEvent = TagEventType.NEW.alpha,
+            tagIDOne = "456B",
+            tagOneIndicator = "+",
+            sealCondition = SealCondition.GOOD.code,
+            comments = "scar",
+        )
+        vm.loadSealForEdit(DisplayObservation.Standalone(existing))
+        vm.updatePendingComment(SealType.PRIMARY, "scar on left")
+        assertEquals("scar", vm.primarySeal.value.comment)
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(1, written.size)
+        assertEquals("scar on left", written[0].comments)
+        assertFalse(written[0].comments.contains("comment was:"))
+    }
+
+    /**
      * Parker 2025 season recap: dummy 0000D skips WedCheck validation so Save does not
      * require confirmation for "Seal not in database!".
      */
@@ -1229,6 +1303,43 @@ class TagRetagViewModelTest {
         assertEquals(TagEventType.MARKED.alpha, savedPup.tagEvent)
         assertEquals(SealCondition.FAIR.code, savedPup.sealCondition)
         assertTrue(savedPup.sex.isNotBlank())
+    }
+
+    /**
+     * When the parent is unchanged and only the pup is edited, write the pup with an
+     * Edited was/now trail and do not rewrite the parent.
+     */
+    @Test
+    fun writeObservationRecord_editPupOnly_doesNotRewriteUnchangedParent() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        vm.enterMomAndPup(momTag = "1234" to "A", pupTag = "5678" to "B")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }.copy(id = 1)
+        val pup = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        assertEquals(SealCondition.GOOD.code, mom.sealCondition)
+        assertEquals(SealCondition.NEWBORN.code, pup.sealCondition)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pup, pupTwo = null))
+        vm.updateCondition(SealType.PUPONE, SealCondition.FAIR)
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(
+            "Unchanged parent must not be rewritten when only the pup was edited: ${written.map { notebookEntryValueObservation(it) }}",
+            1,
+            written.size,
+        )
+        val savedPup = written.single()
+        assertEquals(SealAgeClass.PUP.alpha, savedPup.ageClass)
+        assertEquals("5678B", savedPup.tagIDOne)
+        assertEquals(SealCondition.FAIR.code, savedPup.sealCondition)
+        assertTrue(savedPup.comments.contains("Edited"))
+        assertTrue(savedPup.comments.contains("condition"))
     }
 
     /**

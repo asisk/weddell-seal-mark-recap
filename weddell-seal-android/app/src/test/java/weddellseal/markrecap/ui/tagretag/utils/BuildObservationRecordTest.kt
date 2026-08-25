@@ -356,6 +356,61 @@ class BuildObservationRecordTest {
         assertTrue(record.comments.contains("Edited"))
     }
 
+    @Test
+    fun editCommentOnlyDoesNotDuplicateCommentOrRebuildPrefixes() {
+        val reason = "Reason for Retag: ${RetagReason.OTHER.description}"
+        val seal = retagSeal(reasonForRetag = RetagReason.OTHER).copy(
+            hasEdits = true,
+            comment = "$reason; updated note",
+            observationID = 42,
+        )
+        val record = buildObservationRecord(
+            null,
+            seal,
+            "",
+            "",
+            "",
+            TestFixtures.sampleMetadata().copy(
+                originalDate = "2024-06-01",
+                originalTimestamp = "08:00:00",
+            ),
+        )
+
+        assertEquals("$reason; updated note", record.comments)
+        assertEquals(1, record.comments.split("updated note").size - 1)
+        assertEquals(1, record.comments.split("Reason for Retag").size - 1)
+        assertFalse(record.comments.contains("comment was:"))
+        assertFalse(record.comments.contains("Edited"))
+    }
+
+    @Test
+    fun editAppendsFieldTrailAfterExistingCommentWithoutDuplicatingPrefixes() {
+        val reason = "Reason for Retag: ${RetagReason.ONE_OF_FOUR.description}"
+        val seal = retagSeal().copy(
+            hasEdits = true,
+            comment = "$reason; field note",
+            observationID = 42,
+        )
+        val record = buildObservationRecord(
+            null,
+            seal,
+            "condition was: 3 now: 2",
+            "",
+            "",
+            TestFixtures.sampleMetadata().copy(
+                originalDate = "2024-06-01",
+                originalTimestamp = "08:00:00",
+            ),
+        )
+
+        assertEquals(1, record.comments.split("Reason for Retag").size - 1)
+        assertTrue(record.comments.contains("field note"))
+        assertTrue(record.comments.contains("Edited"))
+        assertTrue(record.comments.contains("condition was: 3 now: 2"))
+        assertTrue(record.comments.indexOf("field note") < record.comments.indexOf("Edited"))
+        assertFalse(record.comments.contains("comment was:"))
+    }
+
     private fun retagSeal(
         reasonForRetag: RetagReason = RetagReason.ONE_OF_FOUR,
     ) = Seal(

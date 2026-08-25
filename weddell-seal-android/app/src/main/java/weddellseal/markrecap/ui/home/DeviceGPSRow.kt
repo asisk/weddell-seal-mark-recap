@@ -1,11 +1,11 @@
 package weddellseal.markrecap.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
 import weddellseal.markrecap.domain.location.data.toLocationString
@@ -27,13 +28,27 @@ import weddellseal.markrecap.domain.location.data.toLocationString
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeviceGPSRow(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    locationGranted: Boolean,
+    onEnableLocation: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val location by viewModel.currentLocation.collectAsState()
+    val hasFix = location?.coordinates?.longitude != null && location?.coordinates?.latitude != null
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 48.dp, end = 30.dp),
-        horizontalArrangement = Arrangement.Center,
+        modifier = modifier.then(
+            if (!locationGranted) {
+                Modifier.clickable(
+                    role = Role.Button,
+                    onClickLabel = "Enable location",
+                    onClick = onEnableLocation,
+                )
+            } else {
+                Modifier
+            }
+        ),
+        horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
@@ -46,7 +61,7 @@ fun DeviceGPSRow(
         Spacer(modifier = Modifier.width(40.dp))
 
         Column {
-            if (location?.coordinates?.longitude != null && location?.coordinates?.latitude != null) {
+            if (hasFix) {
                 Icon(
                     painter = painterResource(R.drawable.ic_location_on),
                     contentDescription = null,
@@ -58,7 +73,7 @@ fun DeviceGPSRow(
             } else {
                 Icon(
                     painter = painterResource(R.drawable.ic_location_off),
-                    contentDescription = null,
+                    contentDescription = if (locationGranted) null else "Location off",
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
                     modifier = Modifier
                         .padding(end = 8.dp)
@@ -72,7 +87,11 @@ fun DeviceGPSRow(
         ) {
             Column {
                 Text(
-                    text = location?.toLocationString() ?: "Locating...",
+                    text = when {
+                        !locationGranted -> "Location off"
+                        hasFix -> location!!.toLocationString()
+                        else -> "Locating..."
+                    },
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Black
                 )

@@ -309,4 +309,32 @@ class SealConditionTest {
         assertEquals(SealCondition.NONE, SealCondition.fromLabel("None"))
         assertEquals(SealCondition.NONE, SealCondition.fromLabel("Invalid - 9"))
     }
+
+    @Test
+    fun `comment-only change is an edit but is omitted from the was-now trail`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            comment = "scar",
+            condition = SealCondition.GOOD,
+        )
+        val updated = original.copy(comment = "scar on left")
+
+        assertTrue(updated.hasChangesFrom(original))
+        assertTrue(updated.edits(original).isEmpty())
+    }
+
+    @Test
+    fun `field edits are recorded even when the comment also changes`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            comment = "scar",
+            condition = SealCondition.GOOD,
+        )
+        val updated = original.copy(comment = "scar on left", condition = SealCondition.FAIR)
+
+        assertTrue(updated.hasChangesFrom(original))
+        val edits = updated.edits(original)
+        assertTrue(edits.any { it.contains("condition") })
+        assertTrue(edits.none { it.startsWith("comment") })
+    }
 }
