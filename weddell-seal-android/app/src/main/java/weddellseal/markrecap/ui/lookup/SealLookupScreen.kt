@@ -43,6 +43,7 @@ import weddellseal.markrecap.ui.AppBar
 import weddellseal.markrecap.ui.NavMenu
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,8 +91,8 @@ fun SealLookupScreen(
             ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .padding(innerPadding)
                     .fillMaxSize()
+                    .scaffoldContentInsets(innerPadding)
             ) {
                 Card(
                     elevation = CardDefaults.cardElevation(

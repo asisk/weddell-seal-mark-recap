@@ -10,11 +10,12 @@ java {
 }
 android {
     namespace = "weddellseal.markrecap"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "weddellseal.markrecap"
         minSdk = 29
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -60,6 +61,10 @@ android {
     }
 
     packaging {
+        // Uncompressed native libs so AGP 16 KB-aligns them for Play (Play Services Location).
+        jniLibs {
+            useLegacyPackaging = false
+        }
         resources {
             excludes += "META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/LICENSE.md"

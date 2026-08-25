@@ -41,6 +41,7 @@ import weddellseal.markrecap.Screens
 import weddellseal.markrecap.ui.CenteredAppBar
 import weddellseal.markrecap.ui.NavMenu
 import weddellseal.markrecap.ui.permissions.locationPermissionsGranted
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,7 +119,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding),
+                        .scaffoldContentInsets(innerPadding),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {

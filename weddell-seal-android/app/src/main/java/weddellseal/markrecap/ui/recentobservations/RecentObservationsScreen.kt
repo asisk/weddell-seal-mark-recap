@@ -40,6 +40,7 @@ import weddellseal.markrecap.ui.RecentObservations
 import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.UiEvent.ShowEditDialog
 import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,8 +98,8 @@ fun RecentObservationsScreen(
         ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .scaffoldContentInsets(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(

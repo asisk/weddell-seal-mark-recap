@@ -20,12 +20,13 @@
         android:roundIcon="@mipmap/ic_mom_pup_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WeddellSealMarkRecap"
-        tools:targetApi="31">
+        tools:targetApi="36">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.WeddellSealMarkRecap">
+            android:theme="@style/Theme.WeddellSealMarkRecap"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
