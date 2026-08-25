@@ -106,8 +106,17 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
+          # Default AVD is 320x640; this app is tablet-first and LookupCard is unusable at that size.
+          profile: Nexus 6
           disable-animations: true
+          # Hardware keyboard keeps the IME from covering Search / Save on the emulator.
+          enable-hw-keyboard: true
+          ram-size: 2048M
           working-directory: weddell-seal-android
+          # Profile is ignored by some emulator builds; pin a tablet-like panel explicitly.
+          pre-emulator-launch-script: |
+            CONFIG="${HOME}/.android/avd/test.avd/config.ini"
+            printf '%s\n' 'hw.lcd.width=1280' 'hw.lcd.height=800' 'hw.lcd.density=240' 'hw.keyboard=yes' >> "$CONFIG"
           script: ./gradlew connectedDebugAndroidTest --stacktrace
 
       - name: Upload instrumented test reports

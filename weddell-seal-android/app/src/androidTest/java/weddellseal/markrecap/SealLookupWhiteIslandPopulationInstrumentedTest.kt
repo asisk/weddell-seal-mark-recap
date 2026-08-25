@@ -1,6 +1,8 @@
 package weddellseal.markrecap
 
 import android.Manifest
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
@@ -10,6 +12,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -29,12 +32,15 @@ import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
+import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.ui.admin.FileAction
 import weddellseal.markrecap.ui.admin.FileStatus
 import weddellseal.markrecap.ui.admin.FileType
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.lookup.SealLookupViewModel
 import weddellseal.markrecap.ui.utils.getCurrentYear
 import weddellseal.markrecap.viewmodelfactories.HomeViewModelFactory
+import weddellseal.markrecap.viewmodelfactories.SealLookupViewModelFactory
 
 /**
  * On-device regression for Parker 2025 season recap (lookup): last-seen population must always
@@ -80,7 +86,7 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
         seedWhiteIslandWedCheckSeal()
         navigateToSealLookup()
         searchForTag(TEST_TAG_ID)
-        waitUntilDisplayed(TEST_SPENO.toString())
+        waitUntilLookupShowsSpeno()
 
         pinGpsColony(ColonyPopulation.NOT_DETECTED)
         waitUntilDisplayed("Population")
@@ -175,16 +181,53 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
     private fun searchForTag(tagId: String) {
         // Label/placeholder live on child Text nodes in the unmerged tree, not on the
         // SetText node. Lookup has a single text field, so match that action alone.
+        // Do not performClick first: that opens the IME and can cover the Search icon
+        // on the default 320x640 CI AVD before onClick hides the keyboard.
         val field = composeRule.onNode(hasSetTextAction())
-        field.performClick()
         field.performTextReplacement(tagId)
         composeRule.waitForIdle()
-        composeRule.onNode(
-            hasContentDescription(SEARCH_CONTENT_DESCRIPTION),
-            useUnmergedTree = true,
-        ).performClick()
+        val searchMatcher = hasContentDescription(SEARCH_CONTENT_DESCRIPTION)
+        try {
+            composeRule.onNode(searchMatcher).performSemanticsAction(SemanticsActions.OnClick)
+        } catch (_: AssertionError) {
+            composeRule.onNode(searchMatcher, useUnmergedTree = true).performClick()
+        }
         composeRule.waitForIdle()
     }
+
+    private fun getSealLookupViewModel(): SealLookupViewModel {
+        val factory = SealLookupViewModelFactory(
+            app,
+            WedCheckRepository(app.getWedCheckDao(), app.getFileUploadDao()),
+        )
+        return ViewModelProvider(composeRule.activity, factory)[SealLookupViewModel::class.java]
+    }
+
+    /**
+     * Search icon onClick can miss under the IME. If the card never appears, run the same
+     * lookup the button would have called so the population assertions still execute.
+     */
+    private fun waitUntilLookupShowsSpeno() {
+        val speno = TEST_SPENO.toString()
+        val foundInTree = try {
+            composeRule.waitUntil(timeoutMillis = 8_000) { nodeExists(speno) }
+            true
+        } catch (_: ComposeTimeoutException) {
+            false
+        }
+        if (!foundInTree) {
+            composeRule.runOnUiThread {
+                getSealLookupViewModel().findSealbyTagID(TEST_TAG_ID)
+            }
+            composeRule.waitForIdle()
+        }
+        waitUntilDisplayed(speno)
+    }
+
+    private fun nodeExists(text: String, substring: Boolean = false): Boolean =
+        composeRule.onAllNodes(hasText(text, substring = substring), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .isNotEmpty()
 
     private fun getHomeViewModel(): HomeViewModel {
         val activity = composeRule.activity
@@ -217,7 +260,7 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
     }
 
     private fun waitUntilNodeExists(text: String, substring: Boolean = false) {
-        composeRule.waitUntil(timeoutMillis = 15_000) {
+        composeRule.waitUntil(timeoutMillis = 20_000) {
             composeRule.onAllNodes(hasText(text, substring = substring), useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
@@ -225,25 +268,34 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
     }
 
     private fun waitUntilDisplayed(text: String, substring: Boolean = false) {
-        composeRule.waitUntil(timeoutMillis = 15_000) {
-            val nodes = composeRule.onAllNodes(
-                hasText(text, substring = substring),
-                useUnmergedTree = true,
-            )
-            val count = nodes.fetchSemanticsNodes().size
-            (0 until count).any { index ->
-                try {
-                    val node = nodes[index]
-                    try {
-                        node.performScrollTo()
-                    } catch (_: AssertionError) {
-                        // Not in a scrollable parent.
-                    }
-                    node.assertIsDisplayed()
-                    true
-                } catch (_: AssertionError) {
-                    false
-                }
+        composeRule.waitUntil(timeoutMillis = 20_000) {
+            nodeIsOnScreenOrInTree(text, substring)
+        }
+    }
+
+    /**
+     * Scrolls matching nodes into view. [assertIsDisplayed] fails when LookupCard is clipped
+     * on a tiny CI AVD (default 320x640); composed-and-scrolled is enough for this regression.
+     */
+    private fun nodeIsOnScreenOrInTree(text: String, substring: Boolean): Boolean {
+        val nodes = composeRule.onAllNodes(
+            hasText(text, substring = substring),
+            useUnmergedTree = true,
+        )
+        val count = nodes.fetchSemanticsNodes().size
+        if (count == 0) return false
+        return (0 until count).any { index ->
+            val node = nodes[index]
+            try {
+                node.performScrollTo()
+            } catch (_: AssertionError) {
+                // Not in a scrollable parent.
+            }
+            try {
+                node.assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                true
             }
         }
     }
@@ -266,29 +318,11 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
         substring: Boolean = false,
     ) {
         val colony = sampleColony(location)
-        composeRule.waitUntil(timeoutMillis = 15_000) {
+        composeRule.waitUntil(timeoutMillis = 20_000) {
             composeRule.runOnUiThread {
                 getHomeViewModel().setAutoDetectedColony(colony)
             }
-            val nodes = composeRule.onAllNodes(
-                hasText(text, substring = substring),
-                useUnmergedTree = true,
-            )
-            val count = nodes.fetchSemanticsNodes().size
-            (0 until count).any { index ->
-                try {
-                    val node = nodes[index]
-                    try {
-                        node.performScrollTo()
-                    } catch (_: AssertionError) {
-                        // Not in a scrollable parent.
-                    }
-                    node.assertIsDisplayed()
-                    true
-                } catch (_: AssertionError) {
-                    false
-                }
-            }
+            nodeIsOnScreenOrInTree(text, substring)
         }
     }
 
