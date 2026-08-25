@@ -1,11 +1,11 @@
 package weddellseal.markrecap.ui.permissions
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -29,10 +29,18 @@ class LocationPermissionViewTest {
         }
 
         composeRule.onNodeWithText(LOCATION_DISCLOSURE_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(LOCATION_DISCLOSURE_INTRO, substring = true).assertIsDisplayed()
-        composeRule.onNodeWithText(LOCATION_DISCLOSURE_STAMP, substring = true).assertIsDisplayed()
-        composeRule.onNodeWithText(LOCATION_DISCLOSURE_COLONY, substring = true).assertIsDisplayed()
-        composeRule.onNodeWithText(LOCATION_DISCLOSURE_RETENTION, substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText(LOCATION_DISCLOSURE_INTRO, substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(LOCATION_DISCLOSURE_STAMP, substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(LOCATION_DISCLOSURE_COLONY, substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(LOCATION_DISCLOSURE_RETENTION, substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
         composeRule.onNodeWithText("Continue").assertIsDisplayed()
         composeRule.onNodeWithText("Not now").assertIsDisplayed()
         composeRule.onNodeWithText("Open Settings").assertDoesNotExist()
