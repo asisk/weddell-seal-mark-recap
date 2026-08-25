@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -148,6 +149,8 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
                     longitude = 167.288,
                 ),
             )
+            val seeded = app.getWedCheckDao().lookupSealByTagID(TEST_TAG_ID)
+            assertEquals(TEST_SPENO, seeded.speno)
         }
     }
 
@@ -172,7 +175,9 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
     private fun searchForTag(tagId: String) {
         // Label/placeholder live on child Text nodes in the unmerged tree, not on the
         // SetText node. Lookup has a single text field, so match that action alone.
-        composeRule.onNode(hasSetTextAction()).performTextReplacement(tagId)
+        val field = composeRule.onNode(hasSetTextAction())
+        field.performClick()
+        field.performTextReplacement(tagId)
         composeRule.waitForIdle()
         composeRule.onNode(
             hasContentDescription(SEARCH_CONTENT_DESCRIPTION),
@@ -221,17 +226,24 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
 
     private fun waitUntilDisplayed(text: String, substring: Boolean = false) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
-            try {
-                val node = composeRule.onNodeWithText(text, substring = substring, useUnmergedTree = true)
+            val nodes = composeRule.onAllNodes(
+                hasText(text, substring = substring),
+                useUnmergedTree = true,
+            )
+            val count = nodes.fetchSemanticsNodes().size
+            (0 until count).any { index ->
                 try {
-                    node.performScrollTo()
+                    val node = nodes[index]
+                    try {
+                        node.performScrollTo()
+                    } catch (_: AssertionError) {
+                        // Not in a scrollable parent.
+                    }
+                    node.assertIsDisplayed()
+                    true
                 } catch (_: AssertionError) {
-                    // Not in a scrollable parent.
+                    false
                 }
-                node.assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
             }
         }
     }
@@ -258,21 +270,24 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
             composeRule.runOnUiThread {
                 getHomeViewModel().setAutoDetectedColony(colony)
             }
-            try {
-                val node = composeRule.onNodeWithText(
-                    text,
-                    substring = substring,
-                    useUnmergedTree = true,
-                )
+            val nodes = composeRule.onAllNodes(
+                hasText(text, substring = substring),
+                useUnmergedTree = true,
+            )
+            val count = nodes.fetchSemanticsNodes().size
+            (0 until count).any { index ->
                 try {
-                    node.performScrollTo()
+                    val node = nodes[index]
+                    try {
+                        node.performScrollTo()
+                    } catch (_: AssertionError) {
+                        // Not in a scrollable parent.
+                    }
+                    node.assertIsDisplayed()
+                    true
                 } catch (_: AssertionError) {
-                    // Not in a scrollable parent.
+                    false
                 }
-                node.assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
             }
         }
     }

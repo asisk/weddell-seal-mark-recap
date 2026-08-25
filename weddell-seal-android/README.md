@@ -1,6 +1,12 @@
 # weddell-seal-mark-recap-app
 Next generation Android app to support data capture in the field
 
+## Database
+
+Room schema version **19** is the Play 1.0 baseline. How to bump the version,
+write a migration, and export JSON is in
+[`app/schemas/README.md`](app/schemas/README.md).
+
 ## Testing
 
 Automated tests for the `:app` module. More detail (Android Studio, CI, filters) lives in

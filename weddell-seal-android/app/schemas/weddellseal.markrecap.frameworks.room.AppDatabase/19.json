@@ -1,0 +1,653 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 19,
+    "identityHash": "49da499bc9c6fdd5c87472f5dc2916e1",
+    "entities": [
+      {
+        "tableName": "observationLogs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `device_id` TEXT NOT NULL, `season` TEXT NOT NULL, `speno` TEXT NOT NULL, `date` TEXT NOT NULL, `time` TEXT NOT NULL, `census_id` TEXT NOT NULL, `latitude` TEXT NOT NULL, `longitude` TEXT NOT NULL, `age_class` TEXT NOT NULL, `sex` TEXT NOT NULL, `num_relatives` TEXT NOT NULL, `old_tag_id_one` TEXT NOT NULL, `old_tag_id_two` TEXT NOT NULL, `tag_id_one` TEXT NOT NULL, `tag_one_indicator` TEXT NOT NULL, `tag_id_two` TEXT NOT NULL, `tag_two_indicator` TEXT NOT NULL, `rel_tag_id_one` TEXT NOT NULL, `rel_tag_id_two` TEXT NOT NULL, `seal_condition` TEXT NOT NULL, `observer_initials` TEXT NOT NULL, `flagged_entry` TEXT NOT NULL, `tag_event` TEXT NOT NULL, `weight` TEXT NOT NULL, `tissue_sampled` TEXT NOT NULL, `comments` TEXT NOT NULL, `colony` TEXT NOT NULL, `retag_reason` TEXT NOT NULL, `insertedAt` INTEGER NOT NULL, `updatedAt` INTEGER, `deletedAt` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceID",
+            "columnName": "device_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "season",
+            "columnName": "season",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speno",
+            "columnName": "speno",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "censusID",
+            "columnName": "census_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ageClass",
+            "columnName": "age_class",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sex",
+            "columnName": "sex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "numRelatives",
+            "columnName": "num_relatives",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oldTagIDOne",
+            "columnName": "old_tag_id_one",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oldTagIDTwo",
+            "columnName": "old_tag_id_two",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagIDOne",
+            "columnName": "tag_id_one",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagOneIndicator",
+            "columnName": "tag_one_indicator",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagIDTwo",
+            "columnName": "tag_id_two",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagTwoIndicator",
+            "columnName": "tag_two_indicator",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relativeTagIDOne",
+            "columnName": "rel_tag_id_one",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relativeTagIDTwo",
+            "columnName": "rel_tag_id_two",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sealCondition",
+            "columnName": "seal_condition",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observerInitials",
+            "columnName": "observer_initials",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "flaggedEntry",
+            "columnName": "flagged_entry",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagEvent",
+            "columnName": "tag_event",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weight",
+            "columnName": "weight",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tissueSampled",
+            "columnName": "tissue_sampled",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "comments",
+            "columnName": "comments",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colony",
+            "columnName": "colony",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "retagReason",
+            "columnName": "retag_reason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "insertedAt",
+            "columnName": "insertedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_observationLogs_speno",
+            "unique": false,
+            "columnNames": [
+              "speno"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_observationLogs_speno` ON `${TABLE_NAME}` (`speno`)"
+          },
+          {
+            "name": "index_observationLogs_tag_id_one",
+            "unique": false,
+            "columnNames": [
+              "tag_id_one"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_observationLogs_tag_id_one` ON `${TABLE_NAME}` (`tag_id_one`)"
+          }
+        ]
+      },
+      {
+        "tableName": "wedCheck",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`speno` INTEGER NOT NULL, `lastSeenSeason` INTEGER NOT NULL, `lastObservedAgeClass` TEXT NOT NULL, `sex` TEXT NOT NULL, `tagNumberOne` TEXT NOT NULL, `tagNumberTwo` TEXT NOT NULL, `comments` TEXT NOT NULL, `ageYears` INTEGER NOT NULL, `tissue` TEXT NOT NULL, `pupinMassStudy` TEXT NOT NULL, `numPreviousPups` TEXT NOT NULL, `pupinTTStudy` TEXT NOT NULL, `momMassMeasurements` TEXT NOT NULL, `condition` TEXT NOT NULL, `lastPhysio` TEXT NOT NULL, `population` TEXT NOT NULL, `fileUploadId` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, PRIMARY KEY(`speno`), FOREIGN KEY(`fileUploadId`) REFERENCES `fileUploads`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "speno",
+            "columnName": "speno",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "season",
+            "columnName": "lastSeenSeason",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ageClass",
+            "columnName": "lastObservedAgeClass",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sex",
+            "columnName": "sex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagIdOne",
+            "columnName": "tagNumberOne",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagIdTwo",
+            "columnName": "tagNumberTwo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "comments",
+            "columnName": "comments",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ageYears",
+            "columnName": "ageYears",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tissueSampled",
+            "columnName": "tissue",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pupinMassStudy",
+            "columnName": "pupinMassStudy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "numPreviousPups",
+            "columnName": "numPreviousPups",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pupinTTStudy",
+            "columnName": "pupinTTStudy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "momMassMeasurements",
+            "columnName": "momMassMeasurements",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "condition",
+            "columnName": "condition",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastPhysio",
+            "columnName": "lastPhysio",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "population",
+            "columnName": "population",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileUploadId",
+            "columnName": "fileUploadId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "speno"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_wedCheck_fileUploadId",
+            "unique": false,
+            "columnNames": [
+              "fileUploadId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_wedCheck_fileUploadId` ON `${TABLE_NAME}` (`fileUploadId`)"
+          },
+          {
+            "name": "index_wedCheck_speno",
+            "unique": true,
+            "columnNames": [
+              "speno"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_wedCheck_speno` ON `${TABLE_NAME}` (`speno`)"
+          },
+          {
+            "name": "index_wedCheck_tagNumberOne",
+            "unique": false,
+            "columnNames": [
+              "tagNumberOne"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_wedCheck_tagNumberOne` ON `${TABLE_NAME}` (`tagNumberOne`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "fileUploads",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "fileUploadId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sealColonies",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`colonyId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `inOut` TEXT NOT NULL, `location` TEXT NOT NULL, `nLimit` REAL NOT NULL, `sLimit` REAL NOT NULL, `wLimit` REAL NOT NULL, `eLimit` REAL NOT NULL, `adjLat` REAL NOT NULL, `adjLong` REAL NOT NULL, `fileUploadId` INTEGER NOT NULL, FOREIGN KEY(`fileUploadId`) REFERENCES `fileUploads`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "colonyId",
+            "columnName": "colonyId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inOut",
+            "columnName": "inOut",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nLimit",
+            "columnName": "nLimit",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sLimit",
+            "columnName": "sLimit",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wLimit",
+            "columnName": "wLimit",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eLimit",
+            "columnName": "eLimit",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adjLat",
+            "columnName": "adjLat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adjLong",
+            "columnName": "adjLong",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileUploadId",
+            "columnName": "fileUploadId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "colonyId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sealColonies_fileUploadId",
+            "unique": false,
+            "columnNames": [
+              "fileUploadId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sealColonies_fileUploadId` ON `${TABLE_NAME}` (`fileUploadId`)"
+          },
+          {
+            "name": "index_sealColonies_location",
+            "unique": true,
+            "columnNames": [
+              "location"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sealColonies_location` ON `${TABLE_NAME}` (`location`)"
+          },
+          {
+            "name": "index_sealColonies_sLimit_nLimit_wLimit_eLimit",
+            "unique": false,
+            "columnNames": [
+              "sLimit",
+              "nLimit",
+              "wLimit",
+              "eLimit"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sealColonies_sLimit_nLimit_wLimit_eLimit` ON `${TABLE_NAME}` (`sLimit`, `nLimit`, `wLimit`, `eLimit`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "fileUploads",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "fileUploadId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "observers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`observerId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `initials` TEXT NOT NULL, `fileUploadId` INTEGER NOT NULL, FOREIGN KEY(`fileUploadId`) REFERENCES `fileUploads`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "observerId",
+            "columnName": "observerId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "initials",
+            "columnName": "initials",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileUploadId",
+            "columnName": "fileUploadId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "observerId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_observers_initials",
+            "unique": true,
+            "columnNames": [
+              "initials"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_observers_initials` ON `${TABLE_NAME}` (`initials`)"
+          },
+          {
+            "name": "index_observers_fileUploadId",
+            "unique": false,
+            "columnNames": [
+              "fileUploadId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_observers_fileUploadId` ON `${TABLE_NAME}` (`fileUploadId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "fileUploads",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "fileUploadId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "fileUploads",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fileType` TEXT NOT NULL, `fileAction` TEXT NOT NULL, `filename` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `status` TEXT NOT NULL, `statusMessage` TEXT, `recordCount` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileType",
+            "columnName": "fileType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileAction",
+            "columnName": "fileAction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filename",
+            "columnName": "filename",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "statusMessage",
+            "columnName": "statusMessage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "recordCount",
+            "columnName": "recordCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_fileUploads_filename",
+            "unique": false,
+            "columnNames": [
+              "filename"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_fileUploads_filename` ON `${TABLE_NAME}` (`filename`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '49da499bc9c6fdd5c87472f5dc2916e1')"
+    ]
+  }
+}

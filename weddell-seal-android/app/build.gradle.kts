@@ -19,14 +19,6 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += mapOf(
-                    "room.schemaLocation" to "$projectDir/schemas",
-                    "room.incremental" to "true"
-                )
-            }
-        }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
@@ -74,6 +66,15 @@ android {
             excludes += "META-INF/LICENSE-notice.md"
         }
     }
+
+    // MigrationTestHelper reads committed Room JSON from here.
+    sourceSets {
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 kotlin {

@@ -29,7 +29,7 @@ import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRecord
 @Database(
     entities = [ObservationRecord::class, WedCheckRecord::class, SealColony::class, Observers::class, FileUploadEntity::class],
     version = 19,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(FileStatusConverter::class, FileTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -55,7 +55,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "observations_database"
                 ).fallbackToDestructiveMigration().build()
-                //TODO remove the destructive mode once schema stable
+                // Keep destructive fallback for 1.0 so pre-19 sideloads still open.
+                // Remove it on the first Play update after 1.0 and addMigrations() instead.
                 INSTANCE = instance
                 // return instance
                 instance
