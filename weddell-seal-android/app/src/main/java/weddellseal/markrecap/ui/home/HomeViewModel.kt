@@ -27,7 +27,6 @@ import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
-import weddellseal.markrecap.logDebug
 import weddellseal.markrecap.ui.utils.getCurrentYear
 import weddellseal.markrecap.ui.utils.getDeviceName
 import weddellseal.markrecap.ui.utils.mutableJobSet
@@ -90,10 +89,9 @@ class HomeViewModel(
     // JOBS
     override fun onCleared() {
         super.onCleared()
-        viewModelScope.launch {
-            Log.i(TAG, "onCleared: stopping location updates")
-            locationSource.stopLocationUpdates()
-        }
+        // viewModelScope is already cancelled here; stop GPS on this thread.
+        Log.i(TAG, "onCleared: stopping location updates")
+        locationSource.stopLocationUpdates()
         jobs.clear()
         isLocationCollectionActive = false
     }
@@ -103,26 +101,18 @@ class HomeViewModel(
 
         if (!granted) {
             Log.e(TAG, "Location permissions denied!")
-            viewModelScope.launch {
-                locationSource.stopLocationUpdates()
-                applyLocationFollowing(false)
-            }.storeIn(jobs)
+            locationSource.stopLocationUpdates()
+            applyLocationFollowing(false)
             return
         }
 
         Log.i(TAG, "Location permissions granted, starting location updates")
         Log.i(TAG, "Current permissions status - Fine: ${hasPreciseLocation(context)}")
 
-        viewModelScope.launch {
-            Log.i(TAG, "Starting location service sequence...")
-            applyLocationFollowing(true)
-            Log.i(TAG, "Calling locationSource.startLocationUpdates()...")
-            locationSource.startLocationUpdates()
-            Log.i(TAG, "Calling configureLocationFollow()...")
-            // Start location collection after location updates are started
-            configureLocationFollow()
-            Log.i(TAG, "Location updates initiated")
-        }.storeIn(jobs)
+        applyLocationFollowing(true)
+        locationSource.startLocationUpdates()
+        configureLocationFollow()
+        Log.i(TAG, "Location updates initiated")
     }
 
     private fun configureLocationFollow() {
@@ -136,9 +126,6 @@ class HomeViewModel(
         viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
             try {
                 locationSource.locationUpdates().collect { geoLocation ->
-                    logDebug(TAG) {
-                        "location ${geoLocation.coordinates.latitude}, ${geoLocation.coordinates.longitude}"
-                    }
                     // Update UI state with new coordinates (StateFlow updates are thread-safe)
                     _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
                     _currentLocation.value = geoLocation

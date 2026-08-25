@@ -6,12 +6,21 @@ import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.GeoLocation
 
 class FakeLocationSource : LocationSource {
+    var startCount = 0
+        private set
+    var stopCount = 0
+        private set
+
     override suspend fun requestSingleUpdate(): Result<GeoLocation> =
         Result.failure(IllegalStateException("not used in test"))
 
     override suspend fun locationUpdates(): Flow<GeoLocation> = emptyFlow()
 
-    override suspend fun startLocationUpdates() {}
+    override fun startLocationUpdates() {
+        startCount++
+    }
 
-    override suspend fun stopLocationUpdates() {}
+    override fun stopLocationUpdates() {
+        stopCount++
+    }
 }

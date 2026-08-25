@@ -2,6 +2,9 @@ package weddellseal.markrecap.ui.home
 
 import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -115,5 +118,59 @@ class HomeViewModelTest {
             "Latitude must stay in the -77 range shown on the home screen, was ${loc.coordinates.latitude}",
             loc.coordinates.latitude <= -77.0,
         )
+    }
+
+    @Test
+    fun onCleared_stopsLocationUpdates() {
+        val locationSource = FakeLocationSource()
+        val store = ViewModelStore()
+        ViewModelProvider(store, homeViewModelFactory(locationSource))[HomeViewModel::class.java]
+        assertEquals(0, locationSource.stopCount)
+
+        store.clear()
+        assertEquals(1, locationSource.stopCount)
+    }
+
+    @Test
+    fun onPermissionsResult_startsAndStopsLocationUpdates() {
+        val locationSource = FakeLocationSource()
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            mockSealColonyRepository(),
+            mockObserversRepository(),
+        )
+
+        vm.onPermissionsResult(granted = true)
+        assertEquals(1, locationSource.startCount)
+        assertEquals(0, locationSource.stopCount)
+
+        vm.onPermissionsResult(granted = false)
+        assertEquals(1, locationSource.startCount)
+        assertEquals(1, locationSource.stopCount)
+    }
+
+    private fun mockSealColonyRepository(): SealColonyRepository {
+        val sealRepo = mockk<SealColonyRepository>()
+        every { sealRepo.coloniesList } returns flowOf(emptyList())
+        return sealRepo
+    }
+
+    private fun mockObserversRepository(): ObserversRepository {
+        val observersRepo = mockk<ObserversRepository>()
+        every { observersRepo.observersList } returns flowOf(emptyList())
+        return observersRepo
+    }
+
+    private fun homeViewModelFactory(locationSource: FakeLocationSource): ViewModelProvider.Factory {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val sealRepo = mockSealColonyRepository()
+        val observersRepo = mockObserversRepository()
+        return object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return HomeViewModel(app, locationSource, sealRepo, observersRepo) as T
+            }
+        }
     }
 }
