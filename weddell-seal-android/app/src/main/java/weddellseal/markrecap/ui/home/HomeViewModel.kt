@@ -27,6 +27,7 @@ import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
+import weddellseal.markrecap.logDebug
 import weddellseal.markrecap.ui.utils.getCurrentYear
 import weddellseal.markrecap.ui.utils.getDeviceName
 import weddellseal.markrecap.ui.utils.mutableJobSet
@@ -133,38 +134,20 @@ class HomeViewModel(
         
         isLocationCollectionActive = true
         viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
-            Log.i(TAG, "configureLocationFollow: Starting to observe location updates")
-
             try {
-                Log.i(TAG, "About to call locationSource.locationUpdates().collect...")
-                // Add timeout to detect if location updates are being received
-                val startTime = System.currentTimeMillis()
-                
-                // Launch a separate coroutine to log periodic status
-                launch {
-                    while (isLocationCollectionActive) {
-                        delay(10000) // Log every 10 seconds
-                        val elapsedTime = System.currentTimeMillis() - startTime
-                        Log.i(TAG, "configureLocationFollow: Still waiting for location updates after ${elapsedTime}ms")
-                    }
-                }
-                
                 locationSource.locationUpdates().collect { geoLocation ->
-                    val elapsedTime = System.currentTimeMillis() - startTime
-                    Log.i(TAG, "configureLocationFollow: Received location update after ${elapsedTime}ms")
-                    // Added longitude logging for better debugging of location updates
-                    Log.i(TAG, "configureLocationFollow: new latitude ${geoLocation.coordinates.latitude}, longitude ${geoLocation.coordinates.longitude}")
+                    logDebug(TAG) {
+                        "location ${geoLocation.coordinates.latitude}, ${geoLocation.coordinates.longitude}"
+                    }
                     // Update UI state with new coordinates (StateFlow updates are thread-safe)
                     _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
                     _currentLocation.value = geoLocation
-                    Log.d(TAG, "configureLocationFollow: Successfully updated location")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "configureLocationFollow: Error in location collection", e)
                 isLocationCollectionActive = false
                 // Restart location collection after a delay
                 delay(2000)
-                Log.i(TAG, "configureLocationFollow: Restarting location collection")
                 configureLocationFollow() // Recursive restart
             }
         }.storeIn(jobs)

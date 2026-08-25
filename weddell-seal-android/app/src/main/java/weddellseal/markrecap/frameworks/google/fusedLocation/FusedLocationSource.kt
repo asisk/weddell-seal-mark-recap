@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.frameworks.google.fusedLocation.types.fromFusedLocation
+import weddellseal.markrecap.logDebug
 import weddellseal.markrecap.ui.permissions.locationPermissionsGranted
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
@@ -73,8 +74,7 @@ class FusedLocationSource(
                 // Only consider locations "different" if they're more than 0.5 meters apart
                 val distance = old.coordinates.distanceTo(new.coordinates)
                 val isSame = distance < 0.5
-                // Added debugging to track why location updates might be filtered out
-                Log.d(TAG, "distinctUntilChanged: distance=${distance}m, isSame=$isSame")
+                logDebug(TAG) { "distinctUntilChanged: distance=${distance}m, isSame=$isSame" }
                 isSame
             }
             .sample(2000L) // Reduced from 5000L to 2000L for faster UI updates
@@ -119,7 +119,9 @@ class FusedLocationSource(
     }
 
     override fun onLocationChanged(update: Location) {
-        Log.d(TAG, "onLocationChanged received: lat=${update.latitude}, lng=${update.longitude}, accuracy=${update.accuracy}m")
+        logDebug(TAG) {
+            "onLocationChanged: lat=${update.latitude}, lng=${update.longitude}, accuracy=${update.accuracy}m"
+        }
         CoroutineScope(Dispatchers.Default).launch {
             try {
                 val geoLocation = GeoLocation.Companion.fromFusedLocation(update)

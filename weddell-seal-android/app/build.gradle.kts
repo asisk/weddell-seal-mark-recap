@@ -33,7 +33,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -50,6 +50,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -137,10 +138,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     // Compose UI tests on JVM (Robolectric), e.g. TagIdSectionCommitTest
     testImplementation(libs.compose.ui.test.junit4)
-
-    implementation(libs.androidx.test.runner)
-    implementation(libs.androidx.test.core)
-    implementation(libs.androidx.test.ext.junit)
 
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.runner)

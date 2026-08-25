@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.logDebug
 import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
@@ -1891,7 +1892,9 @@ class TagRetagViewModel(
     suspend fun writeObservationRecord(
         currentLocation: GeoLocation?,
     ) {
-        Log.i("writeObservationRecord", "latitude at time of write: ${currentLocation?.coordinates?.latitude}")
+        logDebug("writeObservationRecord") {
+            "latitude at time of write: ${currentLocation?.coordinates?.latitude}"
+        }
 
         commitPendingFieldEdits()
 
@@ -1960,7 +1963,9 @@ class TagRetagViewModel(
                 .filter { it.isComplete && !it.markedRemoved && !it.hasEdits }
 
             for (seal in sealsComplete) {
-                Log.i(TAG, "current location at the time of save ${currentLocation?.coordinates?.latitude}")
+                logDebug(TAG) {
+                    "current location at the time of save ${currentLocation?.coordinates?.latitude}"
+                }
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
                 // Await WedCheck so speno is populated before building the record (fix #2).
