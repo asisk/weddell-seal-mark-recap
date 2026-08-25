@@ -164,14 +164,15 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
         }
         drawerItem.performClick()
         composeRule.waitForIdle()
-        waitUntilDisplayed("Seal Lookup")
+        // Do not wait for "Seal Lookup": that string is both the drawer label and the app bar
+        // title, and the closed drawer stays composed, so onNodeWithText never matches one node.
+        waitUntilNodeExists(SEARCH_FIELD_LABEL, substring = true)
     }
 
     private fun searchForTag(tagId: String) {
-        composeRule.onNode(
-            hasSetTextAction().and(hasText(SEARCH_FIELD_LABEL, substring = true)),
-            useUnmergedTree = true,
-        ).performTextReplacement(tagId)
+        // Label/placeholder live on child Text nodes in the unmerged tree, not on the
+        // SetText node. Lookup has a single text field, so match that action alone.
+        composeRule.onNode(hasSetTextAction()).performTextReplacement(tagId)
         composeRule.waitForIdle()
         composeRule.onNode(
             hasContentDescription(SEARCH_CONTENT_DESCRIPTION),
@@ -210,10 +211,18 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
         composeRule.waitForIdle()
     }
 
+    private fun waitUntilNodeExists(text: String, substring: Boolean = false) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(hasText(text, substring = substring), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
     private fun waitUntilDisplayed(text: String, substring: Boolean = false) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             try {
-                val node = composeRule.onNodeWithText(text, substring = substring)
+                val node = composeRule.onNodeWithText(text, substring = substring, useUnmergedTree = true)
                 try {
                     node.performScrollTo()
                 } catch (_: AssertionError) {
@@ -229,7 +238,7 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
 
     private fun waitUntilDoesNotExist(text: String, substring: Boolean = false) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
-            composeRule.onAllNodesWithText(text, substring = substring)
+            composeRule.onAllNodesWithText(text, substring = substring, useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .isEmpty()
         }
@@ -250,7 +259,11 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
                 getHomeViewModel().setAutoDetectedColony(colony)
             }
             try {
-                val node = composeRule.onNodeWithText(text, substring = substring)
+                val node = composeRule.onNodeWithText(
+                    text,
+                    substring = substring,
+                    useUnmergedTree = true,
+                )
                 try {
                     node.performScrollTo()
                 } catch (_: AssertionError) {
@@ -274,7 +287,7 @@ class SealLookupWhiteIslandPopulationInstrumentedTest {
             composeRule.runOnUiThread {
                 getHomeViewModel().setAutoDetectedColony(colony)
             }
-            composeRule.onAllNodesWithText(text, substring = substring)
+            composeRule.onAllNodesWithText(text, substring = substring, useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .isEmpty()
         }
