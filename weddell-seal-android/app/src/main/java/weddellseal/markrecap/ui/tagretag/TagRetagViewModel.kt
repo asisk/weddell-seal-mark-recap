@@ -43,6 +43,13 @@ import weddellseal.markrecap.ui.tagretag.utils.buildObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.getCurrentYear
 
+/** Census header shortcuts that fill age, sex, and relatives. */
+enum class CensusPrefill {
+    MOM_AND_PUP,
+    SINGLE_FEMALE,
+    SINGLE_MALE,
+}
+
 class TagRetagViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
@@ -57,6 +64,7 @@ class TagRetagViewModel(
         val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
 
         val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
+        val appliedCensusPrefill: CensusPrefill? = null, // last census shortcut applied; used to no-op a repeat tap
 
         val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
         val observationTimestamp: String = "", // UI display value in Tag/Retag screen header, values originally saved for the observation
@@ -183,37 +191,73 @@ class TagRetagViewModel(
     }
 
     fun prefillSingleMale() {
-        _primarySeal.update {
-            it.copy(
-                ageClass = SealAgeClass.ADULT,
-                sex = SealSex.MALE,
-                numRelatives = SealRelatives.ZERO
-            )
-        }
-        _uiState.update { it.copy(isPrefilled = true) }
+        applyCensusPrefill(CensusPrefill.SINGLE_MALE)
     }
 
     fun prefillSingleFemale() {
-        _primarySeal.update {
-            it.copy(
-                ageClass = SealAgeClass.ADULT,
-                sex = SealSex.FEMALE,
-                numRelatives = SealRelatives.ZERO
-            )
-        }
-        _uiState.update { it.copy(isPrefilled = true) }
+        applyCensusPrefill(CensusPrefill.SINGLE_FEMALE)
     }
 
     fun prefillMomAndPup() {
-        _primarySeal.update {
-            it.copy(
-                ageClass = SealAgeClass.ADULT,
-                sex = SealSex.FEMALE,
-                numRelatives = SealRelatives.ONE
-            )
+        applyCensusPrefill(CensusPrefill.MOM_AND_PUP)
+    }
+
+    /**
+     * Applies [prefill] immediately on a blank form. No-ops when [prefill] is already applied.
+     * @return true if the current entry must be discarded first (caller shows a confirm dialog).
+     */
+    fun requestCensusPrefill(prefill: CensusPrefill): Boolean {
+        if (_uiState.value.isEditMode) return false
+        if (_uiState.value.appliedCensusPrefill == prefill && _primarySeal.value.isEntryStarted) {
+            return false
         }
-        _pupOne.update { it.copy(numRelatives = SealRelatives.ONE) }
-        _uiState.update { it.copy(isPrefilled = true) }
+        if (_primarySeal.value.isEntryStarted || _uiState.value.isPrefilled) {
+            return true
+        }
+        applyCensusPrefill(prefill)
+        return false
+    }
+
+    /** Discard the current entry, then apply [prefill]. Caller must have confirmed. */
+    fun confirmCensusPrefill(prefill: CensusPrefill) {
+        resetModelState()
+        applyCensusPrefill(prefill)
+    }
+
+    private fun applyCensusPrefill(prefill: CensusPrefill) {
+        when (prefill) {
+            CensusPrefill.MOM_AND_PUP -> {
+                _primarySeal.update {
+                    it.copy(
+                        ageClass = SealAgeClass.ADULT,
+                        sex = SealSex.FEMALE,
+                        numRelatives = SealRelatives.ONE
+                    )
+                }
+                _pupOne.update { it.copy(numRelatives = SealRelatives.ONE) }
+            }
+
+            CensusPrefill.SINGLE_FEMALE -> {
+                _primarySeal.update {
+                    it.copy(
+                        ageClass = SealAgeClass.ADULT,
+                        sex = SealSex.FEMALE,
+                        numRelatives = SealRelatives.ZERO
+                    )
+                }
+            }
+
+            CensusPrefill.SINGLE_MALE -> {
+                _primarySeal.update {
+                    it.copy(
+                        ageClass = SealAgeClass.ADULT,
+                        sex = SealSex.MALE,
+                        numRelatives = SealRelatives.ZERO
+                    )
+                }
+            }
+        }
+        _uiState.update { it.copy(isPrefilled = true, appliedCensusPrefill = prefill) }
     }
 
     // This function is used to ensure that each seal has it’s own WedCheck match & associated speno.
@@ -286,6 +330,7 @@ class TagRetagViewModel(
             it.copy(
                 isSearching = false,
                 isPrefilled = false,
+                appliedCensusPrefill = null,
                 isEditMode = false,
                 observationTimestamp = "",
                 originalMetadata = ObservationMetadata(selectedColony = null),

@@ -430,6 +430,67 @@ class TagRetagViewModelTest {
     }
 
     /**
+     * Parker 2025 season recap: census prefill buttons could not be switched after the first tap.
+     */
+    @Test
+    fun requestCensusPrefill_onBlankForm_appliesWithoutConfirm() = runTest {
+        val vm = tagRetagViewModel(mutableListOf())
+        val counter = vm.uiState.value.fieldResetCounter
+
+        assertFalse(vm.requestCensusPrefill(CensusPrefill.MOM_AND_PUP))
+
+        assertEquals(SealAgeClass.ADULT, vm.primarySeal.value.ageClass)
+        assertEquals(SealSex.FEMALE, vm.primarySeal.value.sex)
+        assertEquals(SealRelatives.ONE, vm.primarySeal.value.numRelatives)
+        assertEquals(SealRelatives.ONE, vm.pupOne.value.numRelatives)
+        assertTrue(vm.uiState.value.isPrefilled)
+        assertEquals(CensusPrefill.MOM_AND_PUP, vm.uiState.value.appliedCensusPrefill)
+        assertEquals(counter, vm.uiState.value.fieldResetCounter)
+    }
+
+    @Test
+    fun requestCensusPrefill_samePrefill_isNoOp() = runTest {
+        val vm = tagRetagViewModel(mutableListOf())
+        assertFalse(vm.requestCensusPrefill(CensusPrefill.SINGLE_FEMALE))
+        vm.updateTagNumber(SealType.PRIMARY, "1234")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+
+        assertFalse(vm.requestCensusPrefill(CensusPrefill.SINGLE_FEMALE))
+        assertEquals("1234", vm.primarySeal.value.tagNumber)
+        assertEquals(SealSex.FEMALE, vm.primarySeal.value.sex)
+    }
+
+    @Test
+    fun confirmCensusPrefill_switchesFromMomAndPupToSingleMale() = runTest {
+        val vm = tagRetagViewModel(mutableListOf())
+        assertFalse(vm.requestCensusPrefill(CensusPrefill.MOM_AND_PUP))
+        vm.updateTagNumber(SealType.PRIMARY, "1234")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateCondition(SealType.PUPONE, SealCondition.NEWBORN)
+
+        assertTrue(
+            "Switching prefills after an entry is started should require confirmation",
+            vm.requestCensusPrefill(CensusPrefill.SINGLE_MALE),
+        )
+        assertEquals(SealSex.FEMALE, vm.primarySeal.value.sex)
+        assertEquals("1234", vm.primarySeal.value.tagNumber)
+
+        val counterBefore = vm.uiState.value.fieldResetCounter
+        vm.confirmCensusPrefill(CensusPrefill.SINGLE_MALE)
+
+        assertTrue(vm.uiState.value.fieldResetCounter > counterBefore)
+        assertEquals(SealAgeClass.ADULT, vm.primarySeal.value.ageClass)
+        assertEquals(SealSex.MALE, vm.primarySeal.value.sex)
+        assertEquals(SealRelatives.ZERO, vm.primarySeal.value.numRelatives)
+        assertEquals("", vm.primarySeal.value.tagNumber)
+        assertEquals("", vm.primarySeal.value.tagAlpha)
+        assertEquals(SealRelatives.UNKNOWN, vm.pupOne.value.numRelatives)
+        assertEquals(SealCondition.UNKNOWN, vm.pupOne.value.condition)
+        assertEquals(CensusPrefill.SINGLE_MALE, vm.uiState.value.appliedCensusPrefill)
+        assertTrue(vm.uiState.value.isPrefilled)
+    }
+
+    /**
      * Fix #1: validation must use the committed tag (789A), not the pre-edit tag (456A) that
      * still had a WedCheck match when the user tapped Save without blurring the tag field.
      */

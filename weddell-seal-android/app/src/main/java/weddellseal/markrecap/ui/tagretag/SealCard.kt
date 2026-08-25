@@ -77,12 +77,12 @@ fun SealCard(
     val focusManager = LocalFocusManager.current
 
     // local values used to prevent a user from changing model values if the selection is invalid based on other field values
-    var ageSelected by remember { mutableStateOf(seal.ageClass) }
-    var sexSelected by remember { mutableStateOf(seal.sex) }
-    var numRelsSelected by remember { mutableStateOf(seal.numRelatives) }
+    var ageSelected by remember(tagFieldResetCounter) { mutableStateOf(seal.ageClass) }
+    var sexSelected by remember(tagFieldResetCounter) { mutableStateOf(seal.sex) }
+    var numRelsSelected by remember(tagFieldResetCounter) { mutableStateOf(seal.numRelatives) }
 
-    val promptForDeleteRelatives = remember { mutableStateOf("") }
-    val showDeleteRelativesDialog = remember { mutableStateOf(false) }
+    val promptForDeleteRelatives = remember(tagFieldResetCounter) { mutableStateOf("") }
+    val showDeleteRelativesDialog = remember(tagFieldResetCounter) { mutableStateOf(false) }
 
     LaunchedEffect(seal.ageClass, seal.sex, seal.numRelatives) {
         if (isPrefilled

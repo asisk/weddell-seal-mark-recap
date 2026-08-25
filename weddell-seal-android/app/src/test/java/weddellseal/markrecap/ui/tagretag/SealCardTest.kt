@@ -6,8 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
@@ -155,6 +159,37 @@ class SealCardTest {
 
         composeRule.onNodeWithText("Sex doesn't match", substring = true)
             .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun ageSexRelatives_followFieldResetCounterAfterCensusPrefillSwitch() {
+        tagRetagViewModel.prefillMomAndPup()
+        composeRule.setContent {
+            val seal by tagRetagViewModel.primarySeal.collectAsState()
+            MaterialTheme {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    SealCard(
+                        viewModel = tagRetagViewModel,
+                        homeViewModel = homeViewModel,
+                        seal = seal,
+                    )
+                }
+            }
+        }
+        composeRule.waitForIdle()
+
+        composeRule.onNode(hasText("Female") and hasContentDescription("Selected"))
+            .assertIsDisplayed()
+
+        composeRule.runOnIdle {
+            tagRetagViewModel.confirmCensusPrefill(CensusPrefill.SINGLE_MALE)
+        }
+        composeRule.waitForIdle()
+
+        composeRule.onNode(hasText("Female") and hasContentDescription("Selected"))
+            .assertDoesNotExist()
+        composeRule.onNode(hasText("Male") and hasContentDescription("Selected"))
             .assertIsDisplayed()
     }
 

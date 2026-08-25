@@ -18,6 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,8 +29,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
-import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
 @Composable
 fun TagRetagHeader(
@@ -37,11 +40,17 @@ fun TagRetagHeader(
     val uiState by viewModel.uiState.collectAsState()
     val metadata by homeViewModel.metadata.collectAsState()
 
-    val primarySeal by viewModel.primarySeal.collectAsState()
     val focusManager = LocalFocusManager.current
+    var pendingCensusPrefill by remember { mutableStateOf<CensusPrefill?>(null) }
+
+    fun onCensusPrefillSelected(prefill: CensusPrefill) {
+        if (viewModel.requestCensusPrefill(prefill)) {
+            pendingCensusPrefill = prefill
+        }
+    }
 
     // CENSUS PREPOPULATE
-    if (metadata.isCensusMode) {
+    if (metadata.isCensusMode && !uiState.isEditMode) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -64,12 +73,7 @@ fun TagRetagHeader(
                         style = MaterialTheme.typography.headlineSmall,
                     )
                 },
-                onClick = {
-                    // update viewModel with prefilled fields
-                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
-                        viewModel.prefillMomAndPup()
-                    }
-                },
+                onClick = { onCensusPrefillSelected(CensusPrefill.MOM_AND_PUP) },
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 containerColor = MaterialTheme.colorScheme.secondary,
             )
@@ -89,12 +93,7 @@ fun TagRetagHeader(
                         style = MaterialTheme.typography.headlineSmall,
                     )
                 },
-                onClick = {
-                    // update viewModel with prefilled fields
-                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
-                        viewModel.prefillSingleFemale()
-                    }
-                },
+                onClick = { onCensusPrefillSelected(CensusPrefill.SINGLE_FEMALE) },
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 containerColor = MaterialTheme.colorScheme.secondary,
             )
@@ -114,14 +113,22 @@ fun TagRetagHeader(
                         style = MaterialTheme.typography.headlineSmall
                     )
                 },
-                onClick = {
-                    // update viewModel with prefilled fields
-                    if (primarySeal.ageClass == SealAgeClass.UNKNOWN) {
-                        viewModel.prefillSingleMale()
-                    }
-                },
+                onClick = { onCensusPrefillSelected(CensusPrefill.SINGLE_MALE) },
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
                 containerColor = MaterialTheme.colorScheme.secondary,
+            )
+        }
+
+        val prefillToApply = pendingCensusPrefill
+        if (prefillToApply != null) {
+            RemoveDialog(
+                onDismissRequest = { pendingCensusPrefill = null },
+                onConfirmation = {
+                    viewModel.confirmCensusPrefill(prefillToApply)
+                    pendingCensusPrefill = null
+                },
+                text = "Are you sure you want to start your entry over?",
+                buttonText = "Start over",
             )
         }
     }
