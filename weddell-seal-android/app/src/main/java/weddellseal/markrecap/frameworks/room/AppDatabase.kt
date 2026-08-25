@@ -54,9 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "observations_database"
-                ).fallbackToDestructiveMigration().build()
-                // Keep destructive fallback for 1.0 so pre-19 sideloads still open.
-                // Remove it on the first Play update after 1.0 and addMigrations() instead.
+                ).configureAppMigrations().build()
                 INSTANCE = instance
                 // return instance
                 instance
