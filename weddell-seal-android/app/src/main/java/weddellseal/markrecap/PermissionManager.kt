@@ -7,8 +7,6 @@ the permissions associated with the application.
 */
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.Manifest.permission.CAMERA
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,33 +18,22 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class PermissionManager(private val context: Context) {
     companion object {
-        val REQUIRED_PERMISSIONS_PRE_T = arrayOf(
-            READ_EXTERNAL_STORAGE,
-            CAMERA,
-            ACCESS_FINE_LOCATION,
-            ACCESS_COARSE_LOCATION
-        )
-        val REQUIRED_PERMISSIONS_POST_T = arrayOf(
-            CAMERA,
+        val REQUIRED_PERMISSIONS = arrayOf(
             ACCESS_FINE_LOCATION,
             ACCESS_COARSE_LOCATION
         )
     }
 
     data class State(
-        val hasStorageAccess: Boolean,
-        val hasCameraAccess: Boolean,
         val hasLocationAccess: Boolean
     ) {
         val hasAllAccess: Boolean
-            get() = hasStorageAccess && hasCameraAccess && hasLocationAccess
+            get() = hasLocationAccess
     }
 
     private val _state = MutableStateFlow(
         State(
-            hasStorageAccess = hasAccess(READ_EXTERNAL_STORAGE),
-            hasCameraAccess = hasAccess(CAMERA),
-            hasLocationAccess = hasAccess(listOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION)),
+            hasLocationAccess = hasLocationAccess(),
         )
     )
     val state = _state.asStateFlow()
@@ -60,29 +47,20 @@ class PermissionManager(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun hasAccess(permissions: List<String>): Boolean {
-        return permissions.all(::hasAccess)
+    private fun hasLocationAccess(): Boolean {
+        return hasAccess(ACCESS_FINE_LOCATION) && hasAccess(ACCESS_COARSE_LOCATION)
     }
 
     fun onPermissionChange(permissions: Map<String, Boolean>) {
-        val hasLocationAccess = hasAccess(ACCESS_FINE_LOCATION) && hasAccess(ACCESS_COARSE_LOCATION)
-        val hasStorageAccess = hasAccess(READ_EXTERNAL_STORAGE)
-
+        val hasFine = permissions[ACCESS_FINE_LOCATION] ?: hasAccess(ACCESS_FINE_LOCATION)
+        val hasCoarse = permissions[ACCESS_COARSE_LOCATION] ?: hasAccess(ACCESS_COARSE_LOCATION)
         _state.value = State(
-            hasStorageAccess = hasStorageAccess,
-            hasCameraAccess = permissions[CAMERA] ?: _state.value.hasCameraAccess,
-            hasLocationAccess = hasLocationAccess
+            hasLocationAccess = hasFine && hasCoarse
         )
     }
 
     suspend fun checkPermissions() {
-        val newState = State(
-            hasStorageAccess = hasAccess(READ_EXTERNAL_STORAGE),
-            hasCameraAccess = hasAccess(CAMERA),
-            hasLocationAccess = hasAccess(ACCESS_FINE_LOCATION) && hasAccess(ACCESS_COARSE_LOCATION)
-        )
-
-        _state.emit(newState)
+        _state.emit(State(hasLocationAccess = hasLocationAccess()))
     }
 
     fun createSettingsIntent(): Intent {

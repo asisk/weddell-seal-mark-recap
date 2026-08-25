@@ -139,6 +139,19 @@ data class Seal(
     val hasWedCheckMatch: Boolean
         get() = wedCheckMatch != null
 
+    /**
+     * Dummy field tag 0000D is entered when no real tag is available.
+     * Uses the WedCheck lookup tag: current tag ID for New/Marked, old tag ID for Retag.
+     *
+     * Parker 2025 season recap: used as a placeholder for untagged moms and young pups (~50–60
+     * adult moms that season). Not in WedCheck, so Speno lookup would error every time.
+     */
+    val isDummyTag: Boolean
+        get() = when {
+            useOldTag -> isDummyTagId(oldTagNumber, oldTagAlpha)
+            else -> isDummyTagId(tagNumber, tagAlpha)
+        }
+
     val isValid: Boolean
         get() = isComplete && validationErrors.isEmpty()
 
@@ -153,6 +166,10 @@ data class Seal(
             if (isNoTag) return errors // early return, skip all validation checks when no tag is entered
 
             if (!isComplete) return errors // early return, skip validation checks when required fields are not completed
+
+            // Parker 2025 season recap: dummy 0000D placeholders (untagged moms/pups) are not
+            // in WedCheck; skip Speno / tag-number errors so techs are not told to ignore them.
+            if (isDummyTag) return errors
 
             // -----  The Seal has a tag number -----
 
@@ -177,10 +194,16 @@ data class Seal(
             // ----- A WedCheck record is present, so validate Seal against it -----
             wedCheckMatch.let { record ->
 
-                if (sex != SealSex.UNKNOWN && sex != record.sex) {
-                    // ----- Validation Rule -----
-                    // Sex entered must match WedCheck entry unless the entered seal sex is "Unknown"
-                    errors += "Sex doesn't match. WedCheck record has sex recorded as ${record.sex}."
+                if (
+                    sex != SealSex.UNKNOWN &&
+                    record.sex != SealSex.UNKNOWN &&
+                    record.sex != SealSex.NONE &&
+                    sex != record.sex
+                ) {
+                    // Parker 2025 season recap: false "are you sure this is a male" popups (~10
+                    // times) when WedCheck sex was blank (NONE) or Speno was stale. Skip when
+                    // WedCheck has no sex; use Male/Female in the message, not the enum name.
+                    errors += "Sex doesn't match. WedCheck record has sex recorded as ${record.sex.description}."
                 }
 
                 // We don't need any validation on the number of tags during a retag event (since that's typically why we are retagging them).
@@ -238,6 +261,17 @@ data class Seal(
             return errors
         }
 
+    fun hasChangesFrom(original: Seal?): Boolean {
+        if (original == null) return false
+        return comment != original.comment || edits(original).isNotEmpty()
+    }
+
+    /**
+     * Field-level was/now strings for the Edited comment trail.
+     *
+     * Comment text is omitted on purpose: the comment field *is* the comment. Recording
+     * "comment was: X now: Y" and then appending Y duplicates adding/changing a comment.
+     */
     fun edits(original: Seal?): List<String> {
         if (original == null) return emptyList()
 
@@ -245,8 +279,6 @@ data class Seal(
 
         if (ageClass != original.ageClass)
             edits.add("ageClass" + " was: ${original.ageClass} now: $ageClass")
-        if (comment != original.comment)
-            edits.add("comment" + " was: ${original.comment} now: $comment")
         if (condition != original.condition)
             edits.add("condition" + " was: ${original.condition} now: $condition")
         if (isNoTag != original.isNoTag)
@@ -287,3 +319,10 @@ data class Seal(
         return edits
     }
 }
+
+/** Dummy field tag used when no real tag is available (e.g. 0000D). Parker 2025 season recap. */
+fun isDummyTagId(tagNumber: String, tagAlpha: String): Boolean =
+    tagNumber == "0000" && tagAlpha.equals("D", ignoreCase = true)
+
+fun isDummyTagId(tagId: String): Boolean =
+    tagId.equals("0000D", ignoreCase = true)

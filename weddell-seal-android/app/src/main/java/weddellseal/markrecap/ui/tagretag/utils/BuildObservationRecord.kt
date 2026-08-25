@@ -107,40 +107,32 @@ fun buildObservationRecord(
         pupWeight = seal.weight.toString()
     }
 
-    // build the comment
-    val sb = StringBuilder()
-    if (seal.pupPeed) {
-        sb.append("pup peed; ")
+    // flaggedEntry column only. Comment text is added on first save in
+    // buildNewObservationComments — do not append it here on edits (it would duplicate).
+    var flagged = ""
+    if (seal.flaggedForReview) {
+        flagged = "technician confirmed"
     }
-    if (seal.oldTagMarks) {
-        sb.append("old tag marks; ")
-    }
-    // if the tagEvent is retag and a reason is selected, add the retag reason to the comment
-    if (seal.tagEventType == TagEventType.RETAG && (seal.reasonForRetag != RetagReason.NONE && seal.reasonForRetag != RetagReason.UNKNOWN)) {
-        sb.append("Reason for Retag: ${seal.reasonForRetag.description}; ")
-    }
-
-    sb.append(seal.validationMessage)
 
     var date = getCurrentDateFormatted()
     var time = getCurrentTimeFormatted()
 
-    // TODO, test when a parent seal has no changes but the pup does not
-    if (seal.hasEdits) {
-        sb.append("Edited $date at $time: $edits; ") // date that the record was edited + the edits made
-        date = metadata.originalDate // for edited records, the original date should be retained
-        time = metadata.originalTimestamp // for edited records, the original time should be retained
-    }
-
-    val comment = sb.append(seal.comment).toString()
-
-    var flagged = ""
-    if (seal.flaggedForReview) {
-        flagged = "C"
+    val comment = if (seal.hasEdits) {
+        // Reload puts the previous comments blob on seal.comment (prefixes + user note).
+        // Do not rebuild pup-peed / retag / flagged / validation, and do not record
+        // "comment was/now" — that duplicates adding a comment. Append only field edits.
+        val editDate = date
+        val editTime = time
+        date = metadata.originalDate
+        time = metadata.originalTimestamp
+        appendEditedFieldTrail(seal.comment, edits, editDate, editTime)
+    } else {
+        buildNewObservationComments(seal, flagged)
     }
 
     val log = ObservationRecord(
-        id = 0, // passing zero, but Room entity will auto-populate the id
+        // Append-only history: edits create a new row instead of replacing the original row.
+        id = 0,
         deviceID = metadata.deviceID,
         season = metadata.currentSeason,
         speno = speNo,
@@ -171,4 +163,57 @@ fun buildObservationRecord(
         colony = metadataColony,
     )
     return log
+}
+
+/** First save: generated prefixes (pup peed, retag, validation, flagged) then the user note. */
+private fun buildNewObservationComments(seal: Seal, flagged: String): String {
+    val sb = StringBuilder()
+    if (seal.pupPeed) {
+        sb.append("pup peed; ")
+    }
+    // Old Tag Marks is valid for New and Retag. Omit it for Marked so a leftover
+    // checkbox after leaving Retag cannot write a ghost comment.
+    if (seal.oldTagMarks &&
+        (seal.tagEventType == TagEventType.NEW || seal.tagEventType == TagEventType.RETAG)
+    ) {
+        sb.append("old tag marks; ")
+    }
+    // if the tagEvent is retag and a reason is selected, add the retag reason to the comment
+    if (seal.tagEventType == TagEventType.RETAG && (seal.reasonForRetag != RetagReason.NONE && seal.reasonForRetag != RetagReason.UNKNOWN)) {
+        sb.append("Reason for Retag: ${seal.reasonForRetag.description}; ")
+    }
+
+    if (seal.validationMessage.isNotBlank()) {
+        sb.append(seal.validationMessage.trimEnd())
+        sb.append("; ")
+    }
+
+    if (flagged.isNotBlank()) {
+        // Parker 2025 season recap: confirmation showed on screen but was missing from the
+        // export comments (only the edt / flaggedEntry column). Proofing looks at comments.
+        sb.append("technician confirmed; ")
+    }
+
+    sb.append(seal.comment)
+    return sb.toString()
+}
+
+/**
+ * Edit save: the comment field already holds the previous comments blob. Append an Edited
+ * trail only when other fields changed — not when the technician only added/changed a comment.
+ */
+private fun appendEditedFieldTrail(
+    existingComment: String,
+    fieldEdits: String,
+    date: String,
+    time: String,
+): String {
+    if (fieldEdits.isBlank()) return existingComment
+    val prefix = existingComment.trimEnd()
+    val separator = when {
+        prefix.isEmpty() -> ""
+        prefix.endsWith(";") -> " "
+        else -> "; "
+    }
+    return "$prefix${separator}Edited $date at $time: $fieldEdits"
 }

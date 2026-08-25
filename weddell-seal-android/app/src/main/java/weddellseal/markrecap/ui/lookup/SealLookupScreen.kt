@@ -2,6 +2,7 @@ package weddellseal.markrecap.ui.lookup
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +44,7 @@ import weddellseal.markrecap.ui.AppBar
 import weddellseal.markrecap.ui.NavMenu
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,8 +92,8 @@ fun SealLookupScreen(
             ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .padding(innerPadding)
                     .fillMaxSize()
+                    .scaffoldContentInsets(innerPadding)
             ) {
                 Card(
                     elevation = CardDefaults.cardElevation(
@@ -102,7 +104,7 @@ fun SealLookupScreen(
                     ),
                     modifier = Modifier
                         .padding(20.dp)
-                        .fillMaxWidth()
+                        .fillMaxSize()
                 ) {
                     // SEAL LOOKUP
                     Column(
@@ -160,7 +162,15 @@ fun SealLookupScreen(
                             }
                         }
                     }
-                    LookupCard(viewModel.lookupSeal.collectAsState().value, homeViewModel)
+                    // Remaining height after the search row, so results stay on-screen
+                    // (including on phone-sized CI emulators with the keyboard IME inset).
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    ) {
+                        LookupCard(viewModel.lookupSeal.collectAsState().value, homeViewModel)
+                    }
                 }
             }
         }

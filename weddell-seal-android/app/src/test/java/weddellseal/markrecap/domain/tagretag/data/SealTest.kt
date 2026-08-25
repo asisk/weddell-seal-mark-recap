@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import weddellseal.markrecap.ui.utils.getCurrentYear
 
 class SealTest {
 
@@ -107,6 +108,162 @@ class SealTest {
         val seal = Seal(sealType = SealType.PRIMARY)
         assertTrue(seal.completenessReasons.isEmpty())
     }
+
+    /**
+     * Parker 2025 season recap: dummy 0000D skips WedCheck / tag-number error checking so
+     * technicians are not prompted every time they enter a placeholder for an untagged animal.
+     */
+    @Test
+    fun `marked dummy tag 0000D with no WedCheck match is not flagged`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.MARKED,
+            tagNumber = "0000",
+            tagAlpha = "D",
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            wedCheckMatch = null,
+        )
+
+        assertTrue(seal.isComplete)
+        assertTrue(seal.isDummyTag)
+        assertEquals(emptyList<String>(), seal.validationErrors)
+        assertTrue(seal.isValid)
+    }
+
+    @Test
+    fun `retag dummy old tag 0000D with no WedCheck match is not flagged`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.RETAG,
+            tagNumber = "123",
+            tagAlpha = "A",
+            oldTagNumber = "0000",
+            oldTagAlpha = "D",
+            numTags = "1",
+            reasonForRetag = RetagReason.OTHER,
+            condition = SealCondition.GOOD,
+            wedCheckMatch = null,
+        )
+
+        assertTrue(seal.isComplete)
+        assertTrue(seal.isDummyTag)
+        assertEquals(emptyList<String>(), seal.validationErrors)
+        assertTrue(seal.isValid)
+    }
+
+    @Test
+    fun `new dummy tag 0000D skips tag already used even when WedCheck match exists`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.NEW,
+            tagNumber = "0000",
+            tagAlpha = "D",
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            wedCheckMatch = WedCheckSeal(
+                speNo = 1,
+                tagIdOne = "0000D",
+                sex = SealSex.FEMALE,
+                ageClass = SealAgeClass.ADULT,
+                numTags = "1",
+                condition = SealCondition.GOOD,
+                lastSeenSeason = 2026,
+            ),
+        )
+
+        assertTrue(seal.isDummyTag)
+        assertEquals(emptyList<String>(), seal.validationErrors)
+    }
+
+    @Test
+    fun `marked non-dummy tag with no WedCheck match is still flagged`() {
+        val seal = Seal(
+            sealType = SealType.PRIMARY,
+            ageClass = SealAgeClass.ADULT,
+            sex = SealSex.FEMALE,
+            numRelatives = SealRelatives.ZERO,
+            tagEventType = TagEventType.MARKED,
+            tagNumber = "1234",
+            tagAlpha = "A",
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            wedCheckMatch = null,
+        )
+
+        assertFalse(seal.isDummyTag)
+        assertTrue(seal.validationErrors.any { it.contains("Seal not in database") })
+    }
+
+    @Test
+    fun `marked adult sex mismatch against WedCheck is flagged with description`() {
+        // Parker 2025 season recap: one known miss (female adult entered as male with no
+        // confirmation). Marked + WedCheck Female + entered Male must flag sex mismatch.
+        val seal = markedAdultWithWedCheck(
+            enteredSex = SealSex.MALE,
+            wedCheckSex = SealSex.FEMALE,
+        )
+
+        assertTrue(
+            seal.validationErrors.any {
+                it.contains("Sex doesn't match") && it.contains("Female")
+            },
+        )
+    }
+
+    @Test
+    fun `marked adult matching WedCheck sex is not flagged for sex`() {
+        val seal = markedAdultWithWedCheck(
+            enteredSex = SealSex.MALE,
+            wedCheckSex = SealSex.MALE,
+        )
+
+        assertTrue(seal.validationErrors.none { it.contains("Sex doesn't match") })
+    }
+
+    @Test
+    fun `marked adult does not flag sex when WedCheck sex is missing`() {
+        // Parker 2025 season recap: false "are you sure this is a male" when WedCheck sex was blank.
+        val seal = markedAdultWithWedCheck(
+            enteredSex = SealSex.MALE,
+            wedCheckSex = SealSex.NONE,
+        )
+
+        assertTrue(seal.validationErrors.none { it.contains("Sex doesn't match") })
+    }
+
+    private fun markedAdultWithWedCheck(
+        enteredSex: SealSex,
+        wedCheckSex: SealSex,
+    ) = Seal(
+        sealType = SealType.PRIMARY,
+        ageClass = SealAgeClass.ADULT,
+        sex = enteredSex,
+        numRelatives = SealRelatives.ZERO,
+        tagEventType = TagEventType.MARKED,
+        tagNumber = "1234",
+        tagAlpha = "A",
+        numTags = "1",
+        condition = SealCondition.GOOD,
+        wedCheckMatch = WedCheckSeal(
+            speNo = 10,
+            tagIdOne = "1234A",
+            sex = wedCheckSex,
+            ageClass = SealAgeClass.ADULT,
+            numTags = "1",
+            condition = SealCondition.GOOD,
+            lastSeenSeason = getCurrentYear(),
+        ),
+    )
 }
 
 class SealConditionTest {
@@ -151,5 +308,33 @@ class SealConditionTest {
         assertEquals(SealCondition.NEWBORN, SealCondition.fromLabel("Newborn - 4"))
         assertEquals(SealCondition.NONE, SealCondition.fromLabel("None"))
         assertEquals(SealCondition.NONE, SealCondition.fromLabel("Invalid - 9"))
+    }
+
+    @Test
+    fun `comment-only change is an edit but is omitted from the was-now trail`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            comment = "scar",
+            condition = SealCondition.GOOD,
+        )
+        val updated = original.copy(comment = "scar on left")
+
+        assertTrue(updated.hasChangesFrom(original))
+        assertTrue(updated.edits(original).isEmpty())
+    }
+
+    @Test
+    fun `field edits are recorded even when the comment also changes`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            comment = "scar",
+            condition = SealCondition.GOOD,
+        )
+        val updated = original.copy(comment = "scar on left", condition = SealCondition.FAIR)
+
+        assertTrue(updated.hasChangesFrom(original))
+        val edits = updated.edits(original)
+        assertTrue(edits.any { it.contains("condition") })
+        assertTrue(edits.none { it.startsWith("comment") })
     }
 }

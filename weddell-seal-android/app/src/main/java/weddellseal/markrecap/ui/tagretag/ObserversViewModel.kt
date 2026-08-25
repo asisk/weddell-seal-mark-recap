@@ -110,7 +110,21 @@ class ObserversViewModel(
                 return@launch
             }
 
-            // Insert the CSV data into the database
+            if (csvData.isEmpty()) {
+                val errMessage = "No data inserted"
+                setFileErrorStatus(errMessage)
+                filesRepository.updateFileUploadStatus(
+                    fileUploadId,
+                    FileStatus.ERROR,
+                    0,
+                    errMessage
+                )
+                return@launch
+            }
+
+            // Parker 2025 season recap: re-uploading observers kept old rows (misspelled names
+            // stayed next to the correction). Replace in one transaction so only the latest CSV
+            // is used and a failed insert keeps the last valid list.
             val insertedCount = insertObserversData(fileUploadId, csvData)
             if (insertedCount > 0) {
                 updateFileStatus(insertedCount)
@@ -163,7 +177,7 @@ class ObserversViewModel(
     }
 
     private suspend fun insertObserversData(fileUploadId: Long, csvData: List<Observers>): Int {
-        return observersRepository.insertObserversData(fileUploadId, csvData)
+        return observersRepository.replaceObserversData(fileUploadId, csvData)
     }
 
     private fun readObserverCsvData(

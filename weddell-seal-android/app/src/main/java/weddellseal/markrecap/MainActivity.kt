@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -39,6 +40,7 @@ import weddellseal.markrecap.ui.admin.AdminScreen
 import weddellseal.markrecap.ui.census.CensusScreen
 import weddellseal.markrecap.ui.home.HomeScreen
 import weddellseal.markrecap.ui.permissions.LocationPermissionView
+import weddellseal.markrecap.ui.permissions.locationPermissionsGranted
 import weddellseal.markrecap.ui.recentobservations.ObservationViewer
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsScreen
 import weddellseal.markrecap.ui.lookup.SealLookupScreen
@@ -122,12 +124,17 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    val startNavigation = Screens.Home.route
+                    val startNavigation = if (locationPermissionsGranted()) {
+                        Screens.Home.route
+                    } else {
+                        Screens.LocationPermissions.route
+                    }
                     NavHost(navController = navController, startDestination = startNavigation) {
                         composable(Screens.LocationPermissions.route) {
-                            LocationPermissionView(onNextClick = {
-                                navController.navigate(Screens.Home.route)
-                            })
+                            LocationPermissionView(
+                                onLocationGranted = { navController.leaveLocationDisclosure() },
+                                onSkip = { navController.leaveLocationDisclosure() },
+                            )
                         }
                         composable(Screens.Home.route) {
                             HomeScreen(
@@ -184,6 +191,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+
+private fun NavHostController.leaveLocationDisclosure() {
+    navigate(Screens.Home.route) {
+        popUpTo(graph.startDestinationId) { inclusive = true }
+        launchSingleTop = true
     }
 }
 

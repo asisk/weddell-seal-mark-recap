@@ -89,6 +89,21 @@ If you do not see **resources** under `(test)`, switch the project tree to **Pro
 | `app/src/test/java/...` | JVM unit tests (domain, ViewModels with fakes/MockK, Robolectric + Room, etc.) |
 | `app/src/androidTest/java/...` | Instrumented tests (`AndroidJUnit4`, Compose UI tests, device-backed checks) |
 
+## Compile check (app + tests, no device)
+
+Compiles main sources, JVM unit tests, and instrumented tests without running them or needing an emulator:
+
+```bash
+cd weddell-seal-android
+./gradlew compileDebugSources compileDebugUnitTestSources compileDebugAndroidTestSources
+```
+
+CI runs this on every pull request and push to `main`. To run the same check locally on `git push`, from the repo root:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## CI / headless
 
 For CI, use the same Gradle tasks on a machine (or container) with the Android SDK; instrumented tests typically need an **emulator** (e.g. Gradle Managed Device, Firebase Test Lab, or a self-hosted AVD).

@@ -30,7 +30,8 @@ private val TAG_ALPHAS = listOf("A", "C", "D")
     onNumberChanged: (String) -> Unit = {},
     onNumberCommitted: (String) -> Unit,
     onAlphaSelected: (String) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
+    fieldKey: Any = 0,
 ) {
     Row(
         modifier = Modifier
@@ -61,7 +62,8 @@ private val TAG_ALPHAS = listOf("A", "C", "D")
                     onValueChange = onNumberChanged,
                     onFocusChange = { isFocused, lastValue ->
                         if (!isFocused) onNumberCommitted(lastValue)
-                    }
+                    },
+                    fieldKey = fieldKey,
                 )
             }
         }
@@ -77,8 +79,10 @@ private val TAG_ALPHAS = listOf("A", "C", "D")
             ) {
                 SingleSelectTagAlphaButtonGroup(
                     TAG_ALPHAS,
-                    alpha
-                ) { onAlphaSelected(it) }
+                    alpha,
+                    onValChangeDo = { onAlphaSelected(it) },
+                    fieldKey = fieldKey,
+                )
             }
         }
     }

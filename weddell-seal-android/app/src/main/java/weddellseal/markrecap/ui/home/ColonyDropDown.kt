@@ -33,7 +33,8 @@ fun ColonyDropDown(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it }
+        onExpandedChange = { expanded = it },
+        modifier = modifier,
     ) {
         TextField(
             readOnly = true,
@@ -50,7 +51,8 @@ fun ColonyDropDown(
                     modifier = Modifier.size(36.dp)
                 )
             },
-            modifier = modifier
+            modifier = Modifier
+                .fillMaxWidth()
                 .menuAnchor(MenuAnchorType.PrimaryEditable, true),
             textStyle = MaterialTheme.typography.headlineSmall.copy(
                 textAlign = TextAlign.Center

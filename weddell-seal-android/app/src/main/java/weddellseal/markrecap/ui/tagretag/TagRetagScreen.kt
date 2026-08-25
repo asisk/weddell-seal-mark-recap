@@ -6,8 +6,8 @@ package weddellseal.markrecap.ui.tagretag
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
@@ -22,15 +22,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.ui.NavMenu
 import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
+
+/** Semantics test tag for the Tag/Retag scroll container; used to assert scroll-to-top after save. */
+const val TAG_RETAG_SCROLL_TEST_TAG = "tag_retag_scroll"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +58,22 @@ fun TagRetagScreen(
     val primarySeal by viewModel.primarySeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
     val pupTwoSeal by viewModel.pupTwo.collectAsState()
+    val fieldResetCounter by remember {
+        viewModel.uiState.map { it.fieldResetCounter }
+    }.collectAsState(initial = viewModel.uiState.value.fieldResetCounter)
+    val scrollState = rememberScrollState()
+    var isInitialScrollEffect by remember { mutableStateOf(true) }
+
+    // After save (and any other resetModelState), return to the top so the next
+    // seal starts at Age / Tag Event instead of remaining scrolled to Save.
+    // Skip the first run so a configuration change does not jump to the top.
+    LaunchedEffect(fieldResetCounter) {
+        if (isInitialScrollEffect) {
+            isInitialScrollEffect = false
+            return@LaunchedEffect
+        }
+        scrollState.scrollTo(0)
+    }
 
     // TODO, remove once location testing is complete
 //    LaunchedEffect(location) {
@@ -95,8 +119,8 @@ fun TagRetagScreen(
         ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .scaffoldContentInsets(innerPadding)
             ) {
 
                 // This row stays fixed, not scrollable
@@ -104,8 +128,10 @@ fun TagRetagScreen(
 
                 Column(
                     modifier = Modifier
+                        .weight(1f)
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(scrollState)
+                        .testTag(TAG_RETAG_SCROLL_TEST_TAG)
                 ) {
                     // SEAL CARDS
                     Box(modifier = Modifier.fillMaxWidth()) {

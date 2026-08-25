@@ -121,6 +121,7 @@ fun SealSearchField(
         IconButton(
             onClick = {
                 focusManager.clearFocus()
+                keyboardController?.hide()
                 val possiblySpeno = searchString.toIntOrNull()
                 if (possiblySpeno != null) {
                     viewModel.findSealbySpeno(possiblySpeno)

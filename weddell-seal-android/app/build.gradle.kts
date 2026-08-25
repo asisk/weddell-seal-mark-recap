@@ -10,22 +10,15 @@ java {
 }
 android {
     namespace = "weddellseal.markrecap"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "weddellseal.markrecap"
         minSdk = 29
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += mapOf(
-                    "room.schemaLocation" to "$projectDir/schemas",
-                    "room.incremental" to "true"
-                )
-            }
-        }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
@@ -40,7 +33,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,9 +50,14 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
+        // Uncompressed native libs so AGP 16 KB-aligns them for Play (Play Services Location).
+        jniLibs {
+            useLegacyPackaging = false
+        }
         resources {
             excludes += "META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/LICENSE.md"
@@ -69,6 +67,15 @@ android {
             excludes += "META-INF/LICENSE-notice.md"
         }
     }
+
+    // MigrationTestHelper reads committed Room JSON from here.
+    sourceSets {
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 kotlin {
@@ -83,10 +90,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.core.ktx)
-
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
 
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
@@ -136,10 +139,7 @@ dependencies {
     // Compose UI tests on JVM (Robolectric), e.g. TagIdSectionCommitTest
     testImplementation(libs.compose.ui.test.junit4)
 
-    implementation(libs.androidx.test.runner)
-    implementation(libs.androidx.test.core)
-    implementation(libs.androidx.test.ext.junit)
-
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.ext.junit)

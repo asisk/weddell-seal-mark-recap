@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.logDebug
 import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
@@ -28,6 +29,7 @@ import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
+import weddellseal.markrecap.domain.tagretag.data.isDummyTagId
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observations.toSeal
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
@@ -41,6 +43,13 @@ import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 import weddellseal.markrecap.ui.tagretag.utils.buildObservationRecord
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueSeal
 import weddellseal.markrecap.ui.utils.getCurrentYear
+
+/** Census header shortcuts that fill age, sex, and relatives. */
+enum class CensusPrefill {
+    MOM_AND_PUP,
+    SINGLE_FEMALE,
+    SINGLE_MALE,
+}
 
 class TagRetagViewModel(
     application: Application,
@@ -56,6 +65,7 @@ class TagRetagViewModel(
         val isSearching: Boolean = false, // indicator for when searching a wedcheck seal
 
         val isPrefilled: Boolean = false, // indicator for pre-filled form for Census
+        val appliedCensusPrefill: CensusPrefill? = null, // last census shortcut applied; used to no-op a repeat tap
 
         val isEditMode: Boolean = false, // indicator that an existing record (WedCheck or Observation) is being edited
         val observationTimestamp: String = "", // UI display value in Tag/Retag screen header, values originally saved for the observation
@@ -63,6 +73,7 @@ class TagRetagViewModel(
 
         val isSaveAttempted: Boolean = false, // indicator that user is attempting to save the record
         val isSaveEnabled: Boolean = false, // indicator for save button
+        val isSaveInProgress: Boolean = false, // persist in flight; blocks repeat Save / Confirm & Save taps
 
         val ineligibleForSaveReason: String = "", // reasons save button is disabled
 
@@ -70,6 +81,9 @@ class TagRetagViewModel(
 
         val validationFailureReason: String = "", // reason for validation failure
         val entryNeedsConfirmation: Boolean = false, // indicator that the user needs to confirm the entry
+
+        /** Incremented on [resetModelState] so text fields drop leftover local state. */
+        val fieldResetCounter: Int = 0,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -102,9 +116,31 @@ class TagRetagViewModel(
     private var originalPupOne: Seal? = null
     private var originalPupTwo: Seal? = null
 
-    /** BUG FIX: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
+    /** Pre-edit snapshot for [sealType], used to recompute diffs at save (collector may not have run yet). */
+    private fun originalSealFor(sealType: SealType): Seal? = when (sealType) {
+        SealType.PRIMARY -> originalPrimarySeal
+        SealType.PUPONE -> originalPupOne
+        SealType.PUPTWO -> originalPupTwo
+        SealType.UNKNOWN -> null
+    }
+
+    /** BUG FIX #1: In-progress tag numbers from [TagIDOutlinedTextField] before blur commits to the seal model. */
     private val pendingTagNumbers = mutableMapOf<SealType, String>()
     private val pendingOldTagNumbers = mutableMapOf<SealType, String>()
+
+    /** Same pattern as tag numbers: [CommentField] keeps text local until blur. */
+    private val pendingComments = mutableMapOf<SealType, String>()
+
+    /**
+     * Fix #4: Per-seal counter for async WedCheck lookups. Each new lookup bumps the
+     * counter so an older in-flight result cannot attach speno after the tag changes or the
+     * form resets.
+     */
+    private val wedCheckLookup = mutableMapOf(
+        SealType.PRIMARY to 0,
+        SealType.PUPONE to 0,
+        SealType.PUPTWO to 0,
+    )
 
     //    init {
 //        // Automatically update colonyLocation if it's set to ""
@@ -156,37 +192,73 @@ class TagRetagViewModel(
     }
 
     fun prefillSingleMale() {
-        _primarySeal.update {
-            it.copy(
-                ageClass = SealAgeClass.ADULT,
-                sex = SealSex.MALE,
-                numRelatives = SealRelatives.ZERO
-            )
-        }
-        _uiState.update { it.copy(isPrefilled = true) }
+        applyCensusPrefill(CensusPrefill.SINGLE_MALE)
     }
 
     fun prefillSingleFemale() {
-        _primarySeal.update {
-            it.copy(
-                ageClass = SealAgeClass.ADULT,
-                sex = SealSex.FEMALE,
-                numRelatives = SealRelatives.ZERO
-            )
-        }
-        _uiState.update { it.copy(isPrefilled = true) }
+        applyCensusPrefill(CensusPrefill.SINGLE_FEMALE)
     }
 
     fun prefillMomAndPup() {
-        _primarySeal.update {
-            it.copy(
-                ageClass = SealAgeClass.ADULT,
-                sex = SealSex.FEMALE,
-                numRelatives = SealRelatives.ONE
-            )
+        applyCensusPrefill(CensusPrefill.MOM_AND_PUP)
+    }
+
+    /**
+     * Applies [prefill] immediately on a blank form. No-ops when [prefill] is already applied.
+     * @return true if the current entry must be discarded first (caller shows a confirm dialog).
+     */
+    fun requestCensusPrefill(prefill: CensusPrefill): Boolean {
+        if (_uiState.value.isEditMode) return false
+        if (_uiState.value.appliedCensusPrefill == prefill && _primarySeal.value.isEntryStarted) {
+            return false
         }
-        _pupOne.update { it.copy(numRelatives = SealRelatives.ONE) }
-        _uiState.update { it.copy(isPrefilled = true) }
+        if (_primarySeal.value.isEntryStarted || _uiState.value.isPrefilled) {
+            return true
+        }
+        applyCensusPrefill(prefill)
+        return false
+    }
+
+    /** Discard the current entry, then apply [prefill]. Caller must have confirmed. */
+    fun confirmCensusPrefill(prefill: CensusPrefill) {
+        resetModelState()
+        applyCensusPrefill(prefill)
+    }
+
+    private fun applyCensusPrefill(prefill: CensusPrefill) {
+        when (prefill) {
+            CensusPrefill.MOM_AND_PUP -> {
+                _primarySeal.update {
+                    it.copy(
+                        ageClass = SealAgeClass.ADULT,
+                        sex = SealSex.FEMALE,
+                        numRelatives = SealRelatives.ONE
+                    )
+                }
+                _pupOne.update { it.copy(numRelatives = SealRelatives.ONE) }
+            }
+
+            CensusPrefill.SINGLE_FEMALE -> {
+                _primarySeal.update {
+                    it.copy(
+                        ageClass = SealAgeClass.ADULT,
+                        sex = SealSex.FEMALE,
+                        numRelatives = SealRelatives.ZERO
+                    )
+                }
+            }
+
+            CensusPrefill.SINGLE_MALE -> {
+                _primarySeal.update {
+                    it.copy(
+                        ageClass = SealAgeClass.ADULT,
+                        sex = SealSex.MALE,
+                        numRelatives = SealRelatives.ZERO
+                    )
+                }
+            }
+        }
+        _uiState.update { it.copy(isPrefilled = true, appliedCensusPrefill = prefill) }
     }
 
     // This function is used to ensure that each seal has it’s own WedCheck match & associated speno.
@@ -212,27 +284,39 @@ class TagRetagViewModel(
             }
         }
 
-        if (seal.wedCheckMatch?.tagIdOne == searchStr) {
+        // Dummy 0000D is not a real WedCheck identity — skip lookup and clear any stale match.
+        if (isDummyTagId(searchStr)) {
+            if (seal.wedCheckMatch != null) {
+                removeWedCheckMatch(seal.sealType)
+            }
+            return
+        }
+
+        // WedCheck CSV has tag1 and tag2; the UI only enters one tag, which may match either
+        // column. After a hit via tag2, tagIdOne on the match is still tag1 — check both so we
+        // do not clear a valid match and look it up again.
+        val currentMatch = seal.wedCheckMatch
+        if (currentMatch != null &&
+            (currentMatch.tagIdOne == searchStr || currentMatch.tagIdTwo == searchStr)
+        ) {
             Log.d(
                 "TagRetagModel",
-                "Seal with tag ID: $searchStr already has a current WedCheck match: ${seal.wedCheckMatch.tagIdOne}"
+                "Seal with tag ID: $searchStr already has a current WedCheck match"
             )
             return
         }
 
-        if (!uiState.value.isSearching) {
-            if (seal.wedCheckMatch != null) {
-                Log.d(
-                    "TagRetagModel",
-                    "removing current WedCheck match for seal with tag ID: $searchStr"
-                )
-                removeWedCheckMatch(seal.sealType)
-            }
-            Log.d("TagRetagModel", "looking up seal for $searchStr")
-            findWedCheckMatch(seal, searchStr)
-        } else {
-            Log.d("TagRetagModel", "ignoring requested lookup as search is already in progress")
+        // Always start the lookup. Fix #4's per-seal counter drops stale in-flight results;
+        // previously gating on isSearching skipped the latest tag and left speno blank.
+        if (seal.wedCheckMatch != null) {
+            Log.d(
+                "TagRetagModel",
+                "removing current WedCheck match for seal with tag ID: $searchStr"
+            )
+            removeWedCheckMatch(seal.sealType)
         }
+        Log.d("TagRetagModel", "looking up seal for $searchStr")
+        findWedCheckMatch(seal, searchStr)
     }
 
     // called:
@@ -240,19 +324,25 @@ class TagRetagViewModel(
     // 2. when a save is successful
     // 3. when a record is selected for editing from the Tag/Retag screen
     fun resetModelState() {
+        // Invalidate any WedCheck lookups still in flight before clearing seal state (fix #4).
+        invalidateAllWedCheckLookups()
+
         _uiState.update {
             it.copy(
                 isSearching = false,
                 isPrefilled = false,
+                appliedCensusPrefill = null,
                 isEditMode = false,
                 observationTimestamp = "",
                 originalMetadata = ObservationMetadata(selectedColony = null),
                 observationLocation = null,
                 isSaveAttempted = false,
                 isSaveEnabled = false,
+                isSaveInProgress = false,
                 ineligibleForSaveReason = "",
                 validationFailureReason = "",
                 entryNeedsConfirmation = false,
+                fieldResetCounter = it.fieldResetCounter + 1,
             )
         }
 
@@ -280,13 +370,120 @@ class TagRetagViewModel(
         originalPupTwo = null
         pendingTagNumbers.clear()
         pendingOldTagNumbers.clear()
+        pendingComments.clear()
     }
 
     fun setIsSaving() {
         _uiState.update { it.copy(isSaveAttempted = true, isSaveEnabled = false) }
     }
 
+    /** Returns false if a save or confirm-save persist is already running. */
+    private fun tryBeginSave(): Boolean {
+        if (_uiState.value.isSaveInProgress) return false
+        _uiState.update { it.copy(isSaveInProgress = true, isSaveEnabled = false) }
+        return true
+    }
+
+    private fun clearSaveInProgress() {
+        _uiState.update { it.copy(isSaveInProgress = false) }
+    }
+
+    private fun allSealsValid(
+        primary: Seal = _primarySeal.value,
+        pupOne: Seal = _pupOne.value,
+        pupTwo: Seal = _pupTwo.value,
+    ): Boolean =
+        primary.isValid &&
+            (!primary.hasPupOne || pupOne.isValid) &&
+            (!primary.hasPupTwo || pupTwo.isValid)
+
+    /**
+     * Save button entry point (fix #1 + #2).
+     *
+     * Fix #1: [TagIDOutlinedTextField] / [CommentField] keep in-progress edits in pending maps until
+     * blur. We must [commitPendingFieldEdits] before validating or writing, and read seal state
+     * from the ViewModel — not from a Compose snapshot captured at click time.
+     *
+     * Fix #2: After commit, [refreshAllWedCheckMatches] awaits WedCheck lookups so Marked/Retag
+     * validation and speno assignment use the committed tag, not a stale or in-flight match.
+     *
+     * Parker 2025 season recap: false sex-validation banners when a tag was edited quickly
+     * then saved. [setIsSaving] runs after the WedCheck refresh so the banner is not shown
+     * against a stale Speno.
+     */
+    fun attemptSave(currentLocation: GeoLocation?) {
+        commitPendingFieldEdits()
+        if (!tryBeginSave()) return
+
+        viewModelScope.launch {
+            try {
+                refreshAllWedCheckMatches()
+                setIsSaving()
+
+                val primary = _primarySeal.value
+                val pupOne = _pupOne.value
+                val pupTwo = _pupTwo.value
+
+                if (allSealsValid(primary, pupOne, pupTwo)) {
+                    writeObservationRecord(currentLocation)
+                } else {
+                    checkNeedsConfirmation(
+                        primary.validationErrors,
+                        pupOne.validationErrors,
+                        pupTwo.validationErrors,
+                    )
+                    // Allow Confirm & Save; persist has not started yet.
+                    clearSaveInProgress()
+                }
+            } catch (e: Exception) {
+                clearSaveInProgress()
+                throw e
+            }
+        }
+    }
+
+    /**
+     * Confirm & Save entry point after the validation banner is shown.
+     *
+     * Runs in the ViewModel so flag-for-review and persistence use committed tag values and
+     * resolved WedCheck matches (same fix #1 / #2 requirements as [attemptSave]).
+     * [setIsSaving] is not called here; [UiState.isSaveAttempted] is already true from the first Save tap.
+     *
+     * Sets [UiState.isSaveInProgress] before launching so a second Confirm & Save tap cannot
+     * start another persist while WedCheck refresh is still suspended.
+     */
+    fun confirmAndSave(currentLocation: GeoLocation?) {
+        commitPendingFieldEdits()
+        if (!tryBeginSave()) return
+
+        viewModelScope.launch {
+            try {
+                refreshAllWedCheckMatches()
+
+                val primary = _primarySeal.value
+                val pupOne = _pupOne.value
+                val pupTwo = _pupTwo.value
+
+                if (!primary.isValid) {
+                    flagSealForReview(primary.sealType)
+                }
+                if (!pupOne.isValid) {
+                    flagSealForReview(pupOne.sealType)
+                }
+                if (!pupTwo.isValid) {
+                    flagSealForReview(pupTwo.sealType)
+                }
+
+                writeObservationRecord(currentLocation)
+            } catch (e: Exception) {
+                clearSaveInProgress()
+                throw e
+            }
+        }
+    }
+
     fun editAfterAttemptedSave() {
+        if (_uiState.value.isSaveInProgress) return
         _uiState.update {
             it.copy(
                 isSaveAttempted = false,
@@ -345,7 +542,7 @@ class TagRetagViewModel(
                 }.collectLatest { (_, reasons, allSealsValid) ->
                     _uiState.update {
                         it.copy(
-                            isSaveEnabled = reasons.isEmpty(),
+                            isSaveEnabled = reasons.isEmpty() && !it.isSaveInProgress,
                             ineligibleForSaveReason = reasons.joinToString("\n"),
                             allSealsValid = allSealsValid
                         )
@@ -363,39 +560,42 @@ class TagRetagViewModel(
             ) { currentPrimary, currentPupOne, currentPupTwo, editMode ->
 
                 if (!editMode) return@combine Triple(
-                    emptyList<String>(),
-                    emptyList<String>(),
-                    emptyList<String>()
+                    false to emptyList<String>(),
+                    false to emptyList(),
+                    false to emptyList(),
                 )
 
-                // Check if edits have been made
-                val primarySealEdits = currentPrimary.edits(originalPrimarySeal)
-                val pupOneSealEdits = currentPupOne.edits(originalPupOne)
-                val pupTwoSealEdits = currentPupTwo.edits(originalPupTwo)
+                Triple(
+                    currentPrimary.hasChangesFrom(originalPrimarySeal) to
+                        currentPrimary.edits(originalPrimarySeal),
+                    currentPupOne.hasChangesFrom(originalPupOne) to
+                        currentPupOne.edits(originalPupOne),
+                    currentPupTwo.hasChangesFrom(originalPupTwo) to
+                        currentPupTwo.edits(originalPupTwo),
+                )
 
-                // emit a Triple that can be unpacked in `collect`
-                Triple(primarySealEdits, pupOneSealEdits, pupTwoSealEdits)
+            }.collectLatest { (primaryChange, pupOneChange, pupTwoChange) ->
+                val (primaryChanged, primarySealEdits) = primaryChange
+                val (pupOneChanged, pupOneSealEdits) = pupOneChange
+                val (pupTwoChanged, pupTwoSealEdits) = pupTwoChange
 
-            }.collectLatest { (primarySealEdits, pupOneSealEdits, pupTwoSealEdits) ->
-                var edits = emptyList<String>()
-
-                if (primarySealEdits.isNotEmpty()) {
-                    edits = edits.plus(primarySealEdits)
+                // Use hasChangesFrom, not edits.isNotEmpty(): comment-only changes still
+                // enable Save, but are omitted from the Edited was/now trail.
+                if (primaryChanged) {
                     _primarySealEdits.update { primarySealEdits }
                     _primarySeal.update { it.copy(hasEdits = true) }
                 }
-                if (pupOneSealEdits.isNotEmpty()) {
-                    edits = edits.plus(pupOneSealEdits)
+                if (pupOneChanged) {
                     _pupOneEdits.update { pupOneSealEdits }
                     _pupOne.update { it.copy(hasEdits = true) }
                 }
-                if (pupTwoSealEdits.isNotEmpty()) {
-                    edits = edits.plus(pupTwoSealEdits)
+                if (pupTwoChanged) {
                     _pupTwoEdits.update { pupTwoSealEdits }
                     _pupTwo.update { it.copy(hasEdits = true) }
                 }
 
-                if (edits.isNotEmpty()) {
+                // Any seal change (including comment-only) marks the observation as edited.
+                if (primaryChanged || pupOneChanged || pupTwoChanged) {
                     _hasEdits.value = true
                 }
             }
@@ -443,41 +643,205 @@ class TagRetagViewModel(
         }
     }
 
+    /**
+     * Async WedCheck lookup used while the user edits a seal (fix #4).
+     *
+     * Each call bumps a per-seal counter before starting IO. When the lookup returns,
+     * [applyWedCheckLookupResult] or [clearWedCheckMatchIfLookupCurrent] only apply if that
+     * counter is still current and the seal still has the same search tag.
+     */
     fun findWedCheckMatch(seal: Seal, searchTagID: String) {
         if (searchTagID != "") {
+            // Fix #4: capture lookup counter before the async IO work so superseded lookups are ignored.
+            val lookupCounter = nextWedCheckLookup(seal.sealType)
             viewModelScope.launch {
                 _uiState.update { it.copy(isSearching = true) }
 
                 try {
-                    val sealFound: WedCheckRecord? = withContext(Dispatchers.IO) {
+                    val sealFound = withContext(Dispatchers.IO) {
                         wedCheckRepo.findSealbyTagID(searchTagID.trim())
                     }
 
-                    if (sealFound != null) {
-                        when (seal.sealType) {
-                            SealType.PRIMARY -> {
-                                _primarySeal.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-                            }
-
-                            SealType.PUPONE -> {
-                                _pupOne.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-                            }
-
-                            SealType.PUPTWO -> {
-                                _pupTwo.update { it.copy(wedCheckMatch = sealFound.toSeal()) }
-                            }
-
-                            SealType.UNKNOWN -> {
-                                // No action needed for UNKNOWN
-                            }
-                        }
-                    }
+                    // Guard against stale results if the tag changed or the form was reset
+                    // while this lookup was in flight (fix #4).
+                    applyWedCheckLookupResult(
+                        seal.sealType,
+                        searchTagID,
+                        sealFound,
+                        lookupCounter,
+                    )
                 } catch (e: Exception) {
                     Log.e("SealLookup", "Error fetching seal: ${e.localizedMessage}", e)
+                    clearWedCheckMatchIfLookupCurrent(
+                        seal.sealType,
+                        searchTagID,
+                        lookupCounter,
+                    )
                 }
                 _uiState.update { it.copy(isSearching = false) }
             }
         }
+    }
+
+    /**
+     * Fix #4: bumps the per-seal lookup counter and returns the new value.
+     *
+     * Each call to [findWedCheckMatch] gets a unique counter so only the latest in-flight
+     * lookup for that seal may update [Seal.wedCheckMatch].
+     */
+    private fun nextWedCheckLookup(sealType: SealType): Int {
+        val next = (wedCheckLookup[sealType] ?: 0) + 1
+        wedCheckLookup[sealType] = next
+        return next
+    }
+
+    /**
+     * Fix #4: invalidates all in-flight WedCheck lookups.
+     *
+     * Called from [resetModelState] so a slow lookup started before save cannot attach speno
+     * to the blank form shown for the next entry.
+     */
+    private fun invalidateAllWedCheckLookups() {
+        wedCheckLookup.keys.forEach { sealType ->
+            wedCheckLookup[sealType] =
+                (wedCheckLookup[sealType] ?: 0) + 1
+        }
+    }
+
+    /** Fix #4: true when [lookupCounter] is still the latest request for [sealType]. */
+    private fun isWedCheckLookupCurrent(sealType: SealType, lookupCounter: Int): Boolean =
+        wedCheckLookup[sealType] == lookupCounter
+
+    /** Tag string used for WedCheck lookup: current tag ID (Marked/New) or old tag ID (Retag). */
+    private fun wedCheckSearchTagFor(seal: Seal): String? = when {
+        seal.useTagID && seal.isTagIDValid -> seal.tagNumber + seal.tagAlpha
+        seal.useOldTag && seal.isOldTagValid -> seal.oldTagNumber + seal.oldTagAlpha
+        else -> null
+    }
+
+    /**
+     * Blocking WedCheck lookup for the save path (fix #2).
+     *
+     * [requestCurrentWedCheckMatch] / [findWedCheckMatch] are async; if we build the observation
+     * record before they finish, Marked/Retag entries are saved with speno "0" even when the tag
+     * exists in WedCheck. Only Marked and Retag need a match for speno; New tags intentionally skip.
+     */
+    private suspend fun resolveWedCheckForSeal(seal: Seal): Seal {
+        if (seal.isNoTag) return seal
+        if (seal.tagEventType != TagEventType.MARKED && seal.tagEventType != TagEventType.RETAG) {
+            return seal
+        }
+
+        val searchTag = wedCheckSearchTagFor(seal) ?: return seal
+        if (isDummyTagId(searchTag)) {
+            return seal.copy(wedCheckMatch = null)
+        }
+        if (seal.wedCheckMatch?.tagIdOne == searchTag) return seal
+
+        return try {
+            val record = withContext(Dispatchers.IO) {
+                wedCheckRepo.findSealbyTagID(searchTag.trim())
+            }
+            seal.copy(wedCheckMatch = record.toSeal())
+        } catch (e: Exception) {
+            Log.e("SealLookup", "Error fetching seal for save: ${e.localizedMessage}", e)
+            seal.copy(wedCheckMatch = null)
+        }
+    }
+
+    /**
+     * Applies an async WedCheck lookup result only if this request is still current (fix #4).
+     *
+     * Checks both the lookup counter and that the seal still has the same search tag.
+     * Prevents a slow in-flight lookup from attaching speno to the wrong tag or to a reset form.
+     */
+    private fun applyWedCheckLookupResult(
+        sealType: SealType,
+        searchTagID: String,
+        sealFound: WedCheckRecord,
+        lookupCounter: Int,
+    ) {
+        if (!isWedCheckLookupCurrent(sealType, lookupCounter)) return
+
+        val currentSeal = sealForType(sealType) ?: return
+
+        val expectedTag = wedCheckSearchTagFor(currentSeal) ?: return
+        if (expectedTag != searchTagID.trim()) return
+
+        updateSealWedCheckMatch(sealType, sealFound.toSeal())
+    }
+
+    /**
+     * Clears [Seal.wedCheckMatch] when an async lookup fails (fix #4).
+     *
+     * Only runs when the failed request is still current and the seal still expects
+     * [searchTagID], so a stale failure cannot clear a match from a newer lookup.
+     */
+    private fun clearWedCheckMatchIfLookupCurrent(
+        sealType: SealType,
+        searchTagID: String,
+        lookupCounter: Int,
+    ) {
+        if (!isWedCheckLookupCurrent(sealType, lookupCounter)) return
+
+        val currentSeal = sealForType(sealType) ?: return
+
+        val expectedTag = wedCheckSearchTagFor(currentSeal) ?: return
+        if (expectedTag != searchTagID.trim()) return
+
+        removeWedCheckMatch(sealType)
+    }
+
+    /** Returns the live [Seal] for [sealType], or null for [SealType.UNKNOWN]. */
+    private fun sealForType(sealType: SealType): Seal? = when (sealType) {
+        SealType.PRIMARY -> _primarySeal.value
+        SealType.PUPONE -> _pupOne.value
+        SealType.PUPTWO -> _pupTwo.value
+        SealType.UNKNOWN -> null
+    }
+
+    /** Writes [match] onto the seal identified by [sealType]. */
+    private fun updateSealWedCheckMatch(sealType: SealType, match: WedCheckSeal) {
+        when (sealType) {
+            SealType.PRIMARY -> _primarySeal.update { it.copy(wedCheckMatch = match) }
+            SealType.PUPONE -> _pupOne.update { it.copy(wedCheckMatch = match) }
+            SealType.PUPTWO -> _pupTwo.update { it.copy(wedCheckMatch = match) }
+            SealType.UNKNOWN -> Unit
+        }
+    }
+
+    private suspend fun refreshWedCheckMatchFor(sealType: SealType) {
+        val seal = when (sealType) {
+            SealType.PRIMARY -> _primarySeal.value
+            SealType.PUPONE -> _pupOne.value
+            SealType.PUPTWO -> _pupTwo.value
+            SealType.UNKNOWN -> return
+        }
+        if (!seal.isEntryStarted) return
+
+        val resolved = resolveWedCheckForSeal(seal)
+        when (sealType) {
+            SealType.PRIMARY -> {
+                _primarySeal.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
+            }
+
+            SealType.PUPONE -> {
+                _pupOne.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
+            }
+
+            SealType.PUPTWO -> {
+                _pupTwo.update { it.copy(wedCheckMatch = resolved.wedCheckMatch) }
+            }
+
+            else -> {}
+        }
+    }
+
+    /** Updates seal state with awaited WedCheck results before save validation or persistence. */
+    private suspend fun refreshAllWedCheckMatches() {
+        refreshWedCheckMatchFor(SealType.PRIMARY)
+        refreshWedCheckMatchFor(SealType.PUPONE)
+        refreshWedCheckMatchFor(SealType.PUPTWO)
     }
 
     fun getPupOneNotebookString(): String {
@@ -623,21 +987,30 @@ class TagRetagViewModel(
     }
 
     fun updateTagEventType(seal: Seal, input: TagEventType) {
+        // Old Tag Marks is valid for New and Retag. Leaving Retag for New/Marked
+        // must drop it (same leftover-field rule as Old Tag ID). New → Retag
+        // keeps it so changing event does not throw away the checkbox.
+        val applyTagEvent: (Seal) -> Seal = { current ->
+            current.copy(
+                tagEventType = input,
+                oldTagMarks = oldTagMarksAfterEventChange(current, input),
+            )
+        }
         when (seal.sealType) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(tagEventType = input) }
+                _primarySeal.update(applyTagEvent)
                 updateNotebookEntry(primarySeal.value)
                 requestCurrentWedCheckMatch(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update { it.copy(tagEventType = input) }
+                _pupOne.update(applyTagEvent)
                 updateNotebookEntry(pupOne.value)
                 requestCurrentWedCheckMatch(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(tagEventType = input) }
+                _pupTwo.update(applyTagEvent)
                 updateNotebookEntry(pupTwo.value)
                 requestCurrentWedCheckMatch(pupTwo.value)
             }
@@ -648,14 +1021,45 @@ class TagRetagViewModel(
         }
     }
 
+    private fun oldTagMarksAfterEventChange(current: Seal, input: TagEventType): Boolean {
+        if (input == current.tagEventType) return current.oldTagMarks
+        // Leaving Retag for New or Marked: drop leftover Old Tag Marks.
+        if (current.tagEventType == TagEventType.RETAG) return false
+        // Hide-only events (Marked / Unknown) cannot keep the checkbox.
+        if (input != TagEventType.NEW && input != TagEventType.RETAG) return false
+        return current.oldTagMarks
+    }
+
     fun updatePendingTagNumber(sealType: SealType, input: String) {
         if (sealType == SealType.UNKNOWN) return
         pendingTagNumbers[sealType] = input
+        // Parker 2025 season recap: Speno did not refresh unless the tag field lost focus,
+        // which created duplicate / wrong-Speno entries. Look up at 4 digits while typing;
+        // 3-digit tags still commit on blur or Save (last seen ~2 years before 2025).
+        if (input.length >= 4) {
+            updateTagNumber(sealType, input)
+        }
     }
 
     fun updatePendingOldTagNumber(sealType: SealType, input: String) {
         if (sealType == SealType.UNKNOWN) return
         pendingOldTagNumbers[sealType] = input
+        // Retag WedCheck uses the old tag. Mirror the 4-digit live lookup so an
+        // already-alpha-selected old tag does not keep a stale Speno until blur or Save.
+        if (input.length >= 4) {
+            updateOldTagNumber(sealType, input)
+        }
+    }
+
+    fun updatePendingComment(sealType: SealType, input: String) {
+        if (sealType == SealType.UNKNOWN) return
+        pendingComments[sealType] = input
+    }
+
+    private fun commitPendingFieldEdits() {
+        // Flush in-progress tag ID / comment edits from the UI before validation or persistence (Fix #1).
+        commitPendingTagNumbers()
+        commitPendingComments()
     }
 
     private fun commitPendingTagNumbers() {
@@ -664,6 +1068,12 @@ class TagRetagViewModel(
         }
         pendingOldTagNumbers.toMap().forEach { (sealType, number) ->
             updateOldTagNumber(sealType, number)
+        }
+    }
+
+    private fun commitPendingComments() {
+        pendingComments.toMap().forEach { (sealType, comment) ->
+            updateComment(sealType, comment)
         }
     }
 
@@ -702,21 +1112,39 @@ class TagRetagViewModel(
     }
 
     fun updateTagAlpha(sealType: SealType, input: String) {
+        // Commit any in-progress tag number so WedCheck can run as soon as both parts exist
+        // (alpha tap clears focus, but pending may still be ahead of the committed model).
+        val pendingNumber = pendingTagNumbers.remove(sealType)
         when (sealType) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(tagAlpha = input) }
+                _primarySeal.update {
+                    it.copy(
+                        tagNumber = pendingNumber ?: it.tagNumber,
+                        tagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(primarySeal.value)
                 requestCurrentWedCheckMatch(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update { it.copy(tagAlpha = input) }
+                _pupOne.update {
+                    it.copy(
+                        tagNumber = pendingNumber ?: it.tagNumber,
+                        tagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupOne.value)
                 requestCurrentWedCheckMatch(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(tagAlpha = input) }
+                _pupTwo.update {
+                    it.copy(
+                        tagNumber = pendingNumber ?: it.tagNumber,
+                        tagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupTwo.value)
                 requestCurrentWedCheckMatch(pupTwo.value)
             }
@@ -755,21 +1183,37 @@ class TagRetagViewModel(
     }
 
     fun updateOldTagAlpha(sealType: SealType, input: String) {
+        val pendingNumber = pendingOldTagNumbers.remove(sealType)
         when (sealType) {
             SealType.PRIMARY -> {
-                _primarySeal.update { it.copy(oldTagAlpha = input) }
+                _primarySeal.update {
+                    it.copy(
+                        oldTagNumber = pendingNumber ?: it.oldTagNumber,
+                        oldTagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(primarySeal.value)
                 requestCurrentWedCheckMatch(primarySeal.value)
             }
 
             SealType.PUPONE -> {
-                _pupOne.update { it.copy(oldTagAlpha = input) }
+                _pupOne.update {
+                    it.copy(
+                        oldTagNumber = pendingNumber ?: it.oldTagNumber,
+                        oldTagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupOne.value)
                 requestCurrentWedCheckMatch(pupOne.value)
             }
 
             SealType.PUPTWO -> {
-                _pupTwo.update { it.copy(oldTagAlpha = input) }
+                _pupTwo.update {
+                    it.copy(
+                        oldTagNumber = pendingNumber ?: it.oldTagNumber,
+                        oldTagAlpha = input,
+                    )
+                }
                 updateNotebookEntry(pupTwo.value)
                 requestCurrentWedCheckMatch(pupTwo.value)
             }
@@ -929,6 +1373,18 @@ class TagRetagViewModel(
                 // No action needed for UNKNOWN
             }
         }
+        pendingComments.remove(sealName)
+    }
+
+    /**
+     * Commit a comment from [CommentField] blur only if this field instance is still current.
+     *
+     * After save, [resetModelState] bumps [UiState.fieldResetCounter]. A deferred blur from the
+     * previous field must not apply its text to the blank "next" seal (same class of bug as tags).
+     */
+    fun updateCommentIfCurrent(sealName: SealType, input: String, fieldResetCounter: Int) {
+        if (fieldResetCounter != _uiState.value.fieldResetCounter) return
+        updateComment(sealName, input)
     }
 
     fun updateWeight(sealType: SealType, number: Int) {
@@ -1078,6 +1534,9 @@ class TagRetagViewModel(
         updateTagAlpha(sealType, oldTagAlpha)
 
         clearOldTag(sealType)
+        // Same leftover rule as Old Tag ID: Retag + Old Tag Marks must not
+        // remain after the user switches to New or Marked.
+        updateOldTagMarks(sealType, false)
     }
 
     /* Notes on when to clear the WedCheck match */
@@ -1402,21 +1861,19 @@ class TagRetagViewModel(
     }
 
     fun flagSealForReview(type: SealType) {
-        val confirmed = "technician confirmed"
+        // Confirmation text is written to the flaggedEntry column on save,
+        // not appended to comments, so technician notes stay readable.
         when (type) {
             SealType.PRIMARY -> {
-                val updatedComment = _primarySeal.value.comment + confirmed
-                _primarySeal.update { it.copy(flaggedForReview = true, comment = updatedComment) }
+                _primarySeal.update { it.copy(flaggedForReview = true) }
             }
 
             SealType.PUPONE -> {
-                val updatedComment = _pupOne.value.comment + confirmed
-                _pupOne.update { it.copy(flaggedForReview = true, comment = updatedComment) }
+                _pupOne.update { it.copy(flaggedForReview = true) }
             }
 
             SealType.PUPTWO -> {
-                val updatedComment = _pupTwo.value.comment + confirmed
-                _pupTwo.update { it.copy(flaggedForReview = true, comment = updatedComment) }
+                _pupTwo.update { it.copy(flaggedForReview = true) }
             }
 
             SealType.UNKNOWN -> {
@@ -1425,12 +1882,21 @@ class TagRetagViewModel(
         }
     }
 
-    fun writeObservationRecord(
+    /**
+     * Persists observation record(s) to the database.
+     *
+     * Suspend so WedCheck can be resolved and writes can complete before [resetModelState].
+     * [commitPendingFieldEdits] is also called from [attemptSave] / [confirmAndSave]; kept here
+     * as a safety net when this function is invoked directly (e.g. unit tests).
+     */
+    suspend fun writeObservationRecord(
         currentLocation: GeoLocation?,
     ) {
-        Log.i("writeObservationRecord", "latitude at time of write: ${currentLocation?.coordinates?.latitude}")
+        logDebug("writeObservationRecord") {
+            "latitude at time of write: ${currentLocation?.coordinates?.latitude}"
+        }
 
-        commitPendingTagNumbers()
+        commitPendingFieldEdits()
 
         if (uiState.value.isEditMode) {
 
@@ -1440,46 +1906,46 @@ class TagRetagViewModel(
                 .filter { it.markedRemoved }
 
             for (seal in sealsToRemove) {
-                // remove entry from the database for each seal
-                viewModelScope.launch {
-                    observationRepo.deleteObservation(seal.observationID)
-                }
+                observationRepo.deleteObservation(seal.observationID)
             }
 
             if (primarySeal.value.pupAdded) { // TODO TEST, be wary of race condition
                 // remove the primary record and add a new observation records for mom with the pup
                 // this action supports ordering the mom and pup together
-                viewModelScope.launch {
-                    observationRepo.deleteObservation(primarySeal.value.observationID)
-                }
+                observationRepo.deleteObservation(primarySeal.value.observationID)
             }
 
-            // filter for seals that are to be UPDATED
+            // Parker 2025 season recap: editing an entry created fake untagged pups. Unused pup
+            // slots default to age P with empty tags; an accidental hasEdits flag wrote a ghost
+            // "P No Tag" row. Skip those unless hasPupOne / hasPupTwo and the slot is complete.
             val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-                .filter { !it.markedRemoved && it.hasEdits }
+                .filter { seal ->
+                    !seal.markedRemoved &&
+                        seal.hasChangesFrom(originalSealFor(seal.sealType)) &&
+                        seal.isEntryStarted &&
+                        seal.isComplete &&
+                        when (seal.sealType) {
+                            SealType.PRIMARY -> true
+                            SealType.PUPONE -> primarySeal.value.hasPupOne
+                            SealType.PUPTWO -> primarySeal.value.hasPupTwo
+                            SealType.UNKNOWN -> false
+                        }
+                }
 
             for (seal in sealToUpdate) {
-                val edits = when (seal.sealType) {
-                    SealType.PRIMARY -> {
-                        primarySealEdits.value.joinToString("; ")
-                    }
-
-                    SealType.PUPONE -> {
-                        pupOneEdits.value.joinToString("; ")
-                    }
-
-                    SealType.PUPTWO -> {
-                        pupTwoEdits.value.joinToString("; ")
-                    }
-
-                    SealType.UNKNOWN -> ""
-                }
+                // Recompute after pending comment/tag flush; the collector may not have run yet.
+                val edits = seal.edits(originalSealFor(seal.sealType)).joinToString("; ")
 
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
+                // Await WedCheck so speno is populated before building the record (fix #2).
+                // Force hasEdits so comment assembly skips first-save prefixes even when the
+                // collector has not yet flagged a comment-only change.
+                val sealForRecord = resolveWedCheckForSeal(seal).copy(hasEdits = true)
+                // Fix #5: append-only edit history; each edit writes a new observation row.
                 val observationRecord = buildObservationRecord(
                     uiState.value.observationLocation,
-                    seal,
+                    sealForRecord,
                     edits,
                     relOneTag,
                     relTwoTag,
@@ -1487,9 +1953,7 @@ class TagRetagViewModel(
                 )
 
                 // write an entry to the database for each seal
-                viewModelScope.launch {
-                    observationRepo.writeObservation(observationRecord)
-                }
+                observationRepo.writeObservation(observationRecord)
             }
 
         } else {
@@ -1499,13 +1963,16 @@ class TagRetagViewModel(
                 .filter { it.isComplete && !it.markedRemoved && !it.hasEdits }
 
             for (seal in sealsComplete) {
-                Log.i(TAG, "current location at the time of save ${currentLocation?.coordinates?.latitude}")
+                logDebug(TAG) {
+                    "current location at the time of save ${currentLocation?.coordinates?.latitude}"
+                }
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
-                // TODO, consider a function on the Observation, toObservationRecord(), to replace buildObservationRecord
+                // Await WedCheck so speno is populated before building the record (fix #2).
+                val sealForRecord = resolveWedCheckForSeal(seal)
                 val observationRecord = buildObservationRecord(
                     currentLocation,
-                    seal,
+                    sealForRecord,
                     "",
                     relOneTag,
                     relTwoTag,
@@ -1513,18 +1980,15 @@ class TagRetagViewModel(
                 )
 
                 // write an entry to the database for each seal
-                viewModelScope.launch {
-                    observationRepo.writeObservation(observationRecord)
-                }
+                observationRepo.writeObservation(observationRecord)
             }
 
-            viewModelScope.launch {
-                _uiEvent.emit(
-                    UiEvent.ShowSavedToast("Record for ${primarySeal.value.notebookDataString} saved!")
-                )
-            }
+            _uiEvent.emit(
+                UiEvent.ShowSavedToast("Record for ${primarySeal.value.notebookDataString} saved!")
+            )
         }
 
+        // Safe to reset only after awaited WedCheck resolution and DB writes complete.
         resetModelState()
     }
 

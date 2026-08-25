@@ -2,7 +2,6 @@ package weddellseal.markrecap.ui.recentobservations
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
 import weddellseal.markrecap.ui.tagretag.TagRetagViewModel
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,8 +58,8 @@ fun ObservationViewer(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
+                .scaffoldContentInsets(innerPadding)
         ) {
             ObservationTabbedCards(tagRetagViewModel)
         }

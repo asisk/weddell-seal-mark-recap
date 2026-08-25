@@ -17,6 +17,12 @@ class ObserversRepository(
         }
     }
 
+    suspend fun replaceObserversData(fileUploadId: Long, csvData: List<Observers>): Int {
+        return withContext(Dispatchers.IO) {
+            observersDao.replaceObserversRecords(fileUploadId, csvData)
+        }
+    }
+
     suspend fun deleteObserversByFileUpload(fileUploadId: Long) {
         withContext(Dispatchers.IO) {
             observersDao.deleteById(fileUploadId)

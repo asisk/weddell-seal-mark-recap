@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.home
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
@@ -27,7 +28,8 @@ fun ObserversDropDown(
     label: String,
     allOptions: List<String>,
     selectedOptions: List<String>,
-    onSelectionChanged: (List<String>) -> Unit
+    onSelectionChanged: (List<String>) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -37,7 +39,8 @@ fun ObserversDropDown(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it }
+        onExpandedChange = { expanded = it },
+        modifier = modifier,
     ) {
         TextField(
             readOnly = true,
@@ -55,6 +58,7 @@ fun ObserversDropDown(
                 )
             },
             modifier = Modifier
+                .fillMaxWidth()
                 .menuAnchor(MenuAnchorType.PrimaryEditable, true),
             textStyle = MaterialTheme.typography.headlineSmall.copy(
                 textAlign = TextAlign.Center

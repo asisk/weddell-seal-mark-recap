@@ -40,6 +40,7 @@ import weddellseal.markrecap.ui.CenteredAppBar
 import weddellseal.markrecap.ui.NavMenu
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.utils.cancelAllAndClear
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 
 @Composable
 fun CensusScreen(
@@ -91,7 +92,7 @@ fun CensusScreen(
 
                 // Main Content
                 Column(
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.scaffoldContentInsets(innerPadding),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {

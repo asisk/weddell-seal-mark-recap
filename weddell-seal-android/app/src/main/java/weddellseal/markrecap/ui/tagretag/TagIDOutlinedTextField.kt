@@ -34,17 +34,20 @@ fun TagIDOutlinedTextField(
     keyboardType: KeyboardType,
     onClearValueDo: () -> Unit,
     onValueChange: (String) -> Unit = {},
-    onFocusChange: (Boolean, String) -> Unit // Pass both focus state and latest value
+    onFocusChange: (Boolean, String) -> Unit, // Pass both focus state and latest value
+    // Changes when the form resets so local text/focus state is recreated (fix #3).
+    fieldKey: Any = 0,
 ) {
     val focusManager =
         LocalFocusManager.current // State to manage whether the text field should lose focus
     val focusRequester =
         remember { FocusRequester() } // FocusRequester to manage focus programmatically
-    var isFocused by remember { mutableStateOf(false) } // Track focus state
+    var isFocused by remember(fieldKey) { mutableStateOf(false) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var text by remember { mutableStateOf(value) } //used to prevent the model update until the user is done typing
+    // Local buffer while typing; fieldKey reset recreates this from the cleared model value.
+    var text by remember(fieldKey) { mutableStateOf(value) }
 
     // Sync from the model only when not focused; otherwise recomposition can reset in-progress
     // edits (pending tag number) back to the last committed value.

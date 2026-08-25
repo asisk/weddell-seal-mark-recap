@@ -23,7 +23,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -41,7 +41,6 @@ import androidx.compose.ui.zIndex
 import weddellseal.markrecap.R
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealType
-import weddellseal.markrecap.domain.tagretag.data.TagEventType
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
@@ -62,35 +61,28 @@ fun TabbedCards(
 
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    var tabItems by remember {
-        mutableStateOf(
-            createTabItems(
-                viewModel,
-                homeViewModel,
-                primarySeal,
-                pupOneSeal,
-                pupTwoSeal,
-            )
-        )
-    }
 
-    // Update the tab items when the seals change
-    LaunchedEffect(
-        primarySeal,
-        pupOneSeal,
-        pupTwoSeal
-    ) {
-        tabItems = createTabItems(
+    // Build tabItems during composition from the current seal props.
+    // Previously this used mutableState + LaunchedEffect(primarySeal, …), which updated
+    // tabItems only after composition — so the header could still show a seal without
+    // wedCheckMatch (blank SPENO) for a frame or longer after the lookup returned.
+    val tabItems = remember(primarySeal, pupOneSeal, pupTwoSeal) {
+        createTabItems(
             viewModel,
             homeViewModel,
             primarySeal,
             pupOneSeal,
-            pupTwoSeal
+            pupTwoSeal,
         )
+    }
 
-        // Ensure selectedTabIndex is within bounds after updating the list
-        if (selectedTabIndex >= tabItems.size) {
-            selectedTabIndex = tabItems.lastIndex.coerceAtLeast(0)
+    // After save, resetModelState() drops pup tabs in the same frame the user may still
+    // have a pup selected. Clamp here — LaunchedEffect runs after composition, which is
+    // too late for tabItems[selectedTabIndex] and crashes with IndexOutOfBoundsException.
+    val safeTabIndex = selectedTabIndex.coerceIn(0, tabItems.lastIndex.coerceAtLeast(0))
+    SideEffect {
+        if (selectedTabIndex != safeTabIndex) {
+            selectedTabIndex = safeTabIndex
         }
     }
 
@@ -98,9 +90,17 @@ fun TabbedCards(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        val selectedSeal = tabItems[selectedTabIndex].seal
+        // Header fields (notebook string, SPENO, WedCheck comment) must use the live seal
+        // props, not tabItems[i].seal alone — that snapshot can lag behind ViewModel updates
+        // even when remember() rebuilds tabs. Resolve which seal is selected by type, then
+        // read from primarySeal / pupOneSeal / pupTwoSeal.
+        val selectedSeal = when (tabItems.getOrNull(safeTabIndex)?.seal?.sealType) {
+            SealType.PUPONE -> pupOneSeal
+            SealType.PUPTWO -> pupTwoSeal
+            else -> primarySeal
+        }
 
-        PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
+        PrimaryTabRow(selectedTabIndex = safeTabIndex) {
             tabItems.forEachIndexed { index, tabItem ->
                 Tab(
                     text = {
@@ -124,7 +124,7 @@ fun TabbedCards(
                             }
                         }
                     },
-                    selected = selectedTabIndex == index,
+                    selected = safeTabIndex == index,
                     onClick = { selectedTabIndex = index }
                 )
             }
@@ -173,19 +173,13 @@ fun TabbedCards(
                         modifier = Modifier.padding(start = 20.dp, top = 10.dp),
                     )
 
-                    // SPENO
-                    // If the Tag Event Type is New, we don't display the Speno until the validation step
-                    val shouldShowSpeno =
-                        if (selectedSeal.tagEventType == TagEventType.NEW && !uiState.isSaveAttempted) false else true
-                    val spenoText = if (selectedSeal.hasWedCheckMatch) {
-                        "Speno: ${selectedSeal.wedCheckMatch?.speNo}"
-                    } else {
-                        ""
-                    }
-
-                    if (shouldShowSpeno) {
+                    // SPENO: show whenever WedCheck returned a match for the current tag ID.
+                    // Do not hide for Tag Event = New — seeing an existing SPENO early warns
+                    // that the tag is already in WedCheck before the technician hits Save.
+                    // (Previously New hid SPENO until isSaveAttempted.)
+                    if (selectedSeal.hasWedCheckMatch) {
                         Text(
-                            text = spenoText,
+                            text = "Speno: ${selectedSeal.wedCheckMatch?.speNo}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(top = 10.dp),
@@ -237,7 +231,7 @@ fun TabbedCards(
 
                 // CONTENT
                 if (tabItems.isNotEmpty()) {
-                    tabItems[selectedTabIndex].content()
+                    tabItems[safeTabIndex].content()
                 }
 
                 // DELETE DIALOG

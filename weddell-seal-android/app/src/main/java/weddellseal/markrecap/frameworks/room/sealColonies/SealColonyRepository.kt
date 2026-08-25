@@ -19,6 +19,12 @@ class SealColonyRepository(
         }
     }
 
+    suspend fun replaceColoniesData(fileUploadId: Long, csvData: List<SealColony>): Int {
+        return withContext(Dispatchers.IO) {
+            sealColoniesDao.replaceColonyRecords(fileUploadId, csvData)
+        }
+    }
+
     // used to search for a seal colony by passing in the device latitude and longitude
     suspend fun findColony(searchLatitude: Double, searchLongitude: Double): SealColony? {
         return sealColoniesDao.findColonyByLatLong(searchLatitude,searchLongitude)

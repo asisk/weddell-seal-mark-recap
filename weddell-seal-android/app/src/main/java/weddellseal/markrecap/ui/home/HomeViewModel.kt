@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
@@ -88,10 +89,9 @@ class HomeViewModel(
     // JOBS
     override fun onCleared() {
         super.onCleared()
-        viewModelScope.launch {
-            Log.i(TAG, "onCleared: stopping location updates")
-            locationSource.stopLocationUpdates()
-        }
+        // viewModelScope is already cancelled here; stop GPS on this thread.
+        Log.i(TAG, "onCleared: stopping location updates")
+        locationSource.stopLocationUpdates()
         jobs.clear()
         isLocationCollectionActive = false
     }
@@ -101,26 +101,18 @@ class HomeViewModel(
 
         if (!granted) {
             Log.e(TAG, "Location permissions denied!")
-            viewModelScope.launch {
-                locationSource.stopLocationUpdates()
-                applyLocationFollowing(false)
-            }.storeIn(jobs)
+            locationSource.stopLocationUpdates()
+            applyLocationFollowing(false)
             return
         }
 
         Log.i(TAG, "Location permissions granted, starting location updates")
         Log.i(TAG, "Current permissions status - Fine: ${hasPreciseLocation(context)}")
 
-        viewModelScope.launch {
-            Log.i(TAG, "Starting location service sequence...")
-            applyLocationFollowing(true)
-            Log.i(TAG, "Calling locationSource.startLocationUpdates()...")
-            locationSource.startLocationUpdates()
-            Log.i(TAG, "Calling configureLocationFollow()...")
-            // Start location collection after location updates are started
-            configureLocationFollow()
-            Log.i(TAG, "Location updates initiated")
-        }.storeIn(jobs)
+        applyLocationFollowing(true)
+        locationSource.startLocationUpdates()
+        configureLocationFollow()
+        Log.i(TAG, "Location updates initiated")
     }
 
     private fun configureLocationFollow() {
@@ -132,38 +124,17 @@ class HomeViewModel(
         
         isLocationCollectionActive = true
         viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
-            Log.i(TAG, "configureLocationFollow: Starting to observe location updates")
-
             try {
-                Log.i(TAG, "About to call locationSource.locationUpdates().collect...")
-                // Add timeout to detect if location updates are being received
-                val startTime = System.currentTimeMillis()
-                
-                // Launch a separate coroutine to log periodic status
-                launch {
-                    while (isLocationCollectionActive) {
-                        delay(10000) // Log every 10 seconds
-                        val elapsedTime = System.currentTimeMillis() - startTime
-                        Log.i(TAG, "configureLocationFollow: Still waiting for location updates after ${elapsedTime}ms")
-                    }
-                }
-                
                 locationSource.locationUpdates().collect { geoLocation ->
-                    val elapsedTime = System.currentTimeMillis() - startTime
-                    Log.i(TAG, "configureLocationFollow: Received location update after ${elapsedTime}ms")
-                    // Added longitude logging for better debugging of location updates
-                    Log.i(TAG, "configureLocationFollow: new latitude ${geoLocation.coordinates.latitude}, longitude ${geoLocation.coordinates.longitude}")
                     // Update UI state with new coordinates (StateFlow updates are thread-safe)
                     _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
                     _currentLocation.value = geoLocation
-                    Log.d(TAG, "configureLocationFollow: Successfully updated location")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "configureLocationFollow: Error in location collection", e)
                 isLocationCollectionActive = false
                 // Restart location collection after a delay
                 delay(2000)
-                Log.i(TAG, "configureLocationFollow: Restarting location collection")
                 configureLocationFollow() // Recursive restart
             }
         }.storeIn(jobs)
@@ -254,7 +225,7 @@ class HomeViewModel(
         val colony = findColony(geoLocation.coordinates) ?: SealColony(
             colonyId = 0,
             inOut = "none",
-            location = "Seal colony not detected",
+            location = ColonyPopulation.NOT_DETECTED,
             nLimit = 0.0,
             sLimit = 0.0,
             wLimit = 0.0,
@@ -290,13 +261,16 @@ class HomeViewModel(
     fun getColonyLocation(): GeoLocation? {
         val colony = metadata.value.selectedColony?.let {
             if (it.location == "Other") {
-                // Fixed: Changed from /1000.0 to /100000.0 to properly handle 5 decimal places
-                // Previously: -77 + 12345/1000 = -64.655 (wrong!)
-                // Now: -77 + 12345/100000 = -77.12345 (correct!)
-                val lat =
-                    uiState.value.latitudeDegrees + uiState.value.latitudeDecimals / 100000.0
-                val long =
-                    uiState.value.longitudeDegrees + uiState.value.longitudeDecimals / 100000.0
+                // Home UI shows "{degrees}." + up to 5 fractional digits (e.g. "-77." + "12345").
+                // For negative degrees, subtract the fraction: -77 + 0.12345 = -76.87655 (wrong).
+                val lat = composeManualCoordinate(
+                    uiState.value.latitudeDegrees,
+                    uiState.value.latitudeDecimals,
+                )
+                val long = composeManualCoordinate(
+                    uiState.value.longitudeDegrees,
+                    uiState.value.longitudeDecimals,
+                )
 
                 GeoLocation(Coordinates(lat, long))
             } else {
@@ -304,6 +278,16 @@ class HomeViewModel(
             }
         } ?: currentLocation.value
         return colony
+    }
+
+    /**
+     * Builds a coordinate from the fixed degree label and typed fractional digits on the home
+     * screen (max 5 digits → divide by 100000). Negative degrees must subtract the fraction so
+     * the stored value matches the displayed "-77.xxxxx".
+     */
+    private fun composeManualCoordinate(degrees: Int, decimals: Int): Double {
+        val fraction = decimals / 100000.0
+        return if (degrees < 0) degrees - fraction else degrees + fraction
     }
 
     // User Selections for Census

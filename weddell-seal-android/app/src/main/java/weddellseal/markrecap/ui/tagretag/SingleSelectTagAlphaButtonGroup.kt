@@ -25,9 +25,10 @@ import androidx.compose.ui.unit.sp
 fun SingleSelectTagAlphaButtonGroup(
     txtOptions: List<String>,
     valueInModel: String,
-    onValChangeDo: (String) -> Unit
+    onValChangeDo: (String) -> Unit,
+    fieldKey: Any = 0,
 ) {
-    var selectedButton by remember { mutableStateOf(valueInModel) }
+    var selectedButton by remember(fieldKey) { mutableStateOf(valueInModel) }
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(valueInModel) {

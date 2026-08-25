@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +35,7 @@ import weddellseal.markrecap.ui.admin.import.FileImport
 import weddellseal.markrecap.ui.home.SealColoniesViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.tagretag.ObserversViewModel
+import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +72,7 @@ fun AdminScreen(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding(),
+                .scaffoldContentInsets(innerPadding),
         ) {
             NavigationRail(
                 modifier = Modifier
@@ -133,7 +133,6 @@ fun AdminScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
                         .padding(10.dp),
                 ) {
                     when (selectedItem) {

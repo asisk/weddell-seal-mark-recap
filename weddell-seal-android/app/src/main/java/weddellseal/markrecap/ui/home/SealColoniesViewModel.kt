@@ -108,7 +108,21 @@ class SealColoniesViewModel(
                 return@launch
             }
 
-            // Insert the CSV data into the database
+            if (csvData.isEmpty()) {
+                val errMessage = "No data inserted"
+                setFileErrorStatus(errMessage)
+                filesRepository.updateFileUploadStatus(
+                    fileUploadId,
+                    FileStatus.ERROR,
+                    0,
+                    errMessage
+                )
+                return@launch
+            }
+
+            // Parker 2025 season recap: re-uploading colony locations kept old rows (ghost
+            // colonies in the dropdown). Replace in one transaction so only the latest CSV
+            // is used and a failed insert keeps the last valid list.
             val insertedCount = insertColonyData(fileUploadId, csvData)
             if (insertedCount > 0) {
                 updateFileStatus(insertedCount)
@@ -142,7 +156,7 @@ class SealColoniesViewModel(
         return filesRepository.insertFileUpload(
             FileUploadEntity(
                 id = 0,
-                fileType = FileType.OBSERVERS,
+                fileType = FileType.COLONIES,
                 fileAction = FileAction.UPLOAD.name,
                 filename = filename,
                 status = FileStatus.IDLE,
@@ -162,7 +176,7 @@ class SealColoniesViewModel(
     }
 
     private suspend fun insertColonyData(fileUploadId: Long, csvData: List<SealColony>): Int {
-        return sealColonyRepository.insertColoniesData(fileUploadId, csvData)
+        return sealColonyRepository.replaceColoniesData(fileUploadId, csvData)
     }
 
     private fun readSealColoniesCsvData(

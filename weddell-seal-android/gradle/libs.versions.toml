@@ -13,7 +13,6 @@ compose-runtime = "1.11.2"
 activity = "1.10.1"
 core-ktx = "1.15.0"
 core-ktx-feature = "1.9.0"
-camera = "1.4.1"
 fragment = "1.8.6"
 play-services-location = "21.3.0"
 opencsv = "5.8"
@@ -55,9 +54,6 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 androidx-core-ktx-feature = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx-feature" }
-androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camera" }
-androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camera" }
-androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camera" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragment" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "play-services-location" }
 opencsv = { group = "com.opencsv", name = "opencsv", version.ref = "opencsv" }

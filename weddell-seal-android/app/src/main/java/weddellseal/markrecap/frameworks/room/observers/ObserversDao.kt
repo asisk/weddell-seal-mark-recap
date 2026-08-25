@@ -25,6 +25,13 @@ interface ObserversDao {
         return insertedCount
     }
 
+    // Clear and insert in one transaction so a failed import keeps the last valid list.
+    @Transaction
+    suspend fun replaceObserversRecords(fileUploadId: Long, observers: List<Observers>): Int {
+        clearObserversTable()
+        return insertObserversRecords(fileUploadId, observers)
+    }
+
     @Query("SELECT COUNT(*) FROM observers")
     suspend fun getCount(): Int
 

@@ -18,13 +18,13 @@ interface LocationSource {
     suspend fun locationUpdates(): Flow<GeoLocation>
 
     /**
-     * Start location updates.
+     * Start location updates. Not suspending so it can run during ViewModel teardown.
      */
-    suspend fun startLocationUpdates()
+    fun startLocationUpdates()
 
     /**
-     * Stop location updates.
+     * Stop location updates and release listeners and worker threads.
      */
-    suspend fun stopLocationUpdates()
+    fun stopLocationUpdates()
 }
 

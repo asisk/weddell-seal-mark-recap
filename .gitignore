@@ -6,6 +6,8 @@
 # Gradle
 .gradle/
 **/.gradle/
+.gradle-tmp/
+**/.gradle-tmp/
 **/build/
 !**/src/**/build/
 **/out/
