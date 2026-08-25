@@ -163,9 +163,10 @@ class ColonyObserverImportGhostDataInstrumentedTest {
     ) {
         val uri = writeCsvToCache(filename, observersCsv(initials))
         composeRule.runOnUiThread {
+            viewModel.resetFileState()
             viewModel.loadObserversFile(uri, filename)
         }
-        waitForImportSuccess(viewModel)
+        waitForImportSuccess(viewModel, expectedRecordCount = initials.size)
     }
 
     private fun importColonies(
@@ -175,27 +176,36 @@ class ColonyObserverImportGhostDataInstrumentedTest {
     ) {
         val uri = writeCsvToCache(filename, colonyCsv(locations))
         composeRule.runOnUiThread {
+            viewModel.resetFileState()
             viewModel.loadSealColoniesFile(uri, filename)
         }
-        waitForImportSuccess(viewModel)
+        waitForImportSuccess(viewModel, expectedRecordCount = locations.size)
     }
 
-    private fun waitForImportSuccess(viewModel: ObserversViewModel) {
+    /**
+     * Match [FileState.recordCount], not SUCCESS alone. After the first CSV, status is already
+     * SUCCESS, so a second import would otherwise return immediately and assert stale rows.
+     */
+    private fun waitForImportSuccess(viewModel: ObserversViewModel, expectedRecordCount: Int) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             var success = false
             composeRule.runOnUiThread {
-                success = viewModel.fileState.value.status == FileStatus.SUCCESS
+                val state = viewModel.fileState.value
+                success = state.status == FileStatus.SUCCESS &&
+                    state.recordCount == expectedRecordCount
             }
             success
         }
         composeRule.waitForIdle()
     }
 
-    private fun waitForImportSuccess(viewModel: SealColoniesViewModel) {
+    private fun waitForImportSuccess(viewModel: SealColoniesViewModel, expectedRecordCount: Int) {
         composeRule.waitUntil(timeoutMillis = 15_000) {
             var success = false
             composeRule.runOnUiThread {
-                success = viewModel.fileState.value.status == FileStatus.SUCCESS
+                val state = viewModel.fileState.value
+                success = state.status == FileStatus.SUCCESS &&
+                    state.recordCount == expectedRecordCount
             }
             success
         }
@@ -203,12 +213,20 @@ class ColonyObserverImportGhostDataInstrumentedTest {
     }
 
     private fun assertObserverInitials(expected: Set<String>, message: String) {
-        val actual = runBlocking { observersRepository.observersList.first().toSet() }
+        var actual = emptySet<String>()
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            actual = runBlocking { observersRepository.observersList.first().toSet() }
+            actual == expected
+        }
         assertEquals(message, expected, actual)
     }
 
     private fun assertColonyLocations(expected: Set<String>, message: String) {
-        val actual = runBlocking { sealColonyRepository.coloniesList.first().toSet() }
+        var actual = emptySet<String>()
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            actual = runBlocking { sealColonyRepository.coloniesList.first().toSet() }
+            actual == expected
+        }
         assertEquals(message, expected, actual)
     }
 
