@@ -2,6 +2,7 @@ package weddellseal.markrecap
 
 import android.Manifest
 import android.os.SystemClock
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -65,12 +67,16 @@ class TagRetagSaveInstrumentedTest {
         private const val TAG_NUMBER_LABEL = "3 or 4 Digit Tag Number"
         private const val TAG_NUMBER_PLACEHOLDER = "Enter Tag Number"
         private const val TAG_ALPHA = "A"
-        private const val COMMITTED_TAG_NUMBER = "456"
-        private const val IN_PROGRESS_TAG_NUMBER = "789"
-        /** Unique NEW tags for comment tests — must not collide with WedCheck seeds (456A/789A). */
+        /**
+         * 4-digit NEW tags for comment tests. Auto-committed at 4 digits (live lookup); that is
+         * fine here because the regression is the comment field, not pending tag numbers.
+         * Must not collide with 3-digit tags used by the save-without-blur Tag ID tests.
+         */
         private const val COMMENT_TEST_TAG_NUMBER = "9911"
         private const val SECOND_SEAL_TAG_NUMBER = "9912"
-        private const val MARKED_IN_PROGRESS_SPENO = 42
+        /** High speno unlikely to collide with a real census row on a field tablet. */
+        private const val MARKED_IN_PROGRESS_SPENO = 39992
+        private const val MARKED_COMMITTED_SPENO = 39991
         private const val TISSUE_LABEL = "Tissue"
         private const val IN_PROGRESS_COMMENT = "scar on left flipper"
     }
@@ -142,10 +148,45 @@ class TagRetagSaveInstrumentedTest {
     }
 
     /**
-     * Seeds WedCheck rows for the Marked save-without-blur path (fix #6).
-     * The in-progress tag 789A must resolve to a non-zero speno at persistence time.
+     * 3-digit Tag IDs that are not in WedCheck. Required so:
+     * - NEW save does not take the "tag already used" confirmation path (empty records).
+     * - MARKED lookup `LIMIT 1` cannot return a leftover census row for 456A/789A.
+     * 3-digit on purpose: 4-digit input auto-commits while typing, which would not exercise
+     * the pending-tag Save path.
      */
-    private fun seedWedCheckForMarkedSave() {
+    private fun findUnusedTagNumbers(count: Int): List<String> {
+        val unused = mutableListOf<String>()
+        for (n in 700..999) {
+            if (unused.size >= count) break
+            val number = n.toString()
+            if (!tagExistsInWedCheck("$number$TAG_ALPHA")) {
+                unused.add(number)
+            }
+        }
+        check(unused.size == count) {
+            "Could not find $count unused 3-digit Tag IDs (${TAG_ALPHA}) in 700–999"
+        }
+        return unused
+    }
+
+    private fun tagExistsInWedCheck(tagId: String): Boolean = runBlocking {
+        try {
+            app.getWedCheckDao().lookupSealByTagID(tagId)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Seeds WedCheck rows for the Marked save-without-blur path (fix #6).
+     * The in-progress tag must resolve to [inProgressSpeno] at persistence time.
+     */
+    private fun seedWedCheckForMarkedSave(
+        committedNumber: String,
+        inProgressNumber: String,
+        inProgressSpeno: Int = MARKED_IN_PROGRESS_SPENO,
+    ) {
         runBlocking {
             val fileUploadId = app.getFileUploadDao().insertFileUpload(
                 FileUploadEntity(
@@ -180,10 +221,10 @@ class TagRetagSaveInstrumentedTest {
                 longitude = 166.0,
             )
             app.getWedCheckDao().insertWedCheckRecord(
-                wedCheckRow(99, "$COMMITTED_TAG_NUMBER$TAG_ALPHA"),
+                wedCheckRow(MARKED_COMMITTED_SPENO, "$committedNumber$TAG_ALPHA"),
             )
             app.getWedCheckDao().insertWedCheckRecord(
-                wedCheckRow(MARKED_IN_PROGRESS_SPENO, "$IN_PROGRESS_TAG_NUMBER$TAG_ALPHA"),
+                wedCheckRow(inProgressSpeno, "$inProgressNumber$TAG_ALPHA"),
             )
         }
     }
@@ -227,7 +268,7 @@ class TagRetagSaveInstrumentedTest {
     private fun prefillSealAndCommitTag(
         tagRetagViewModel: TagRetagViewModel,
         tagEventType: TagEventType = TagEventType.NEW,
-        tagNumber: String = COMMITTED_TAG_NUMBER,
+        tagNumber: String,
     ) {
         composeRule.runOnUiThread {
             tagRetagViewModel.prefillSingleMale()
@@ -263,13 +304,13 @@ class TagRetagSaveInstrumentedTest {
         }
     }
 
-    private fun tagNumberFieldMatcherResolved(): SemanticsMatcher =
+    private fun tagNumberFieldMatcherResolved(displayedNumber: String): SemanticsMatcher =
         if (composeRule.onAllNodes(
-                tagNumberFieldMatcher(COMMITTED_TAG_NUMBER),
+                tagNumberFieldMatcher(displayedNumber),
                 useUnmergedTree = true,
             ).fetchSemanticsNodes().isNotEmpty()
         ) {
-            tagNumberFieldMatcher(COMMITTED_TAG_NUMBER)
+            tagNumberFieldMatcher(displayedNumber)
         } else {
             tagNumberFieldMatcherFallback()
         }
@@ -295,11 +336,12 @@ class TagRetagSaveInstrumentedTest {
         throw lastError!!
     }
 
-    private fun replaceTagNumberWithoutBlur(number: String) {
+    private fun replaceTagNumberWithoutBlur(committedNumber: String, inProgressNumber: String) {
         scrollToTagIdSection()
-        waitUntilTagNumberFieldShows(COMMITTED_TAG_NUMBER)
+        waitUntilTagNumberFieldShows(committedNumber)
         composeRule.waitForIdle()
-        replaceTextWithRetry(tagNumberFieldMatcherResolved(), number)
+        replaceTextWithRetry(tagNumberFieldMatcherResolved(committedNumber), inProgressNumber)
+        waitUntilTagNumberFieldShows(inProgressNumber)
     }
 
     private fun commentFieldMatcher(): SemanticsMatcher =
@@ -361,14 +403,35 @@ class TagRetagSaveInstrumentedTest {
     }
 
     private fun tapSave() {
-        scrollIntoView(hasContentDescription("Save Seal"))
-        composeRule.onNode(hasContentDescription("Save Seal"), useUnmergedTree = true)
-            .performClick()
+        val saveMatcher = hasContentDescription("Save Seal")
+        scrollIntoView(saveMatcher)
         composeRule.waitForIdle()
+        // Invoke the FAB onClick via semantics so a covering IME cannot swallow a coordinate click.
+        try {
+            composeRule.onNode(saveMatcher).performSemanticsAction(SemanticsActions.OnClick)
+        } catch (_: AssertionError) {
+            composeRule.onNode(saveMatcher, useUnmergedTree = true).performClick()
+        }
+        composeRule.waitForIdle()
+    }
+
+    private fun saveDiagnostic(tagRetagViewModel: TagRetagViewModel): String {
+        var text = ""
+        composeRule.runOnUiThread {
+            val ui = tagRetagViewModel.uiState.value
+            val seal = tagRetagViewModel.primarySeal.value
+            text = "confirmation=${ui.entryNeedsConfirmation} " +
+                "saveAttempted=${ui.isSaveAttempted} " +
+                "saveEnabled=${ui.isSaveEnabled} " +
+                "tag=${seal.tagNumber}${seal.tagAlpha} " +
+                "errors=${seal.validationErrors}"
+        }
+        return text
     }
 
     private fun waitForObservation(
         timeoutMillis: Long = 20_000,
+        diagnostic: () -> String = { "" },
         predicate: (ObservationRecord) -> Boolean,
     ): ObservationRecord {
         val deadline = SystemClock.uptimeMillis() + timeoutMillis
@@ -381,9 +444,11 @@ class TagRetagSaveInstrumentedTest {
             records.firstOrNull(predicate)?.let { return it }
             Thread.sleep(250)
         }
+        val extra = diagnostic().ifBlank { "" }
         throw AssertionError(
             "No matching observation within ${timeoutMillis}ms. " +
-                "Saved records: $lastSummaries",
+                "Saved records: $lastSummaries" +
+                if (extra.isNotEmpty()) ". $extra" else "",
         )
     }
 
@@ -419,19 +484,23 @@ class TagRetagSaveInstrumentedTest {
     @Test
     fun saveTagRetag_persistsInProgressTagIdWithoutRequiringBlur() {
         clearAllObservations()
+        composeRule.waitForComposeReady(timeoutMillis = 45_000)
+        val (committedNumber, inProgressNumber) = findUnusedTagNumbers(2)
         setupTestObservers()
 
         val homeViewModel = getHomeViewModel()
         val tagRetagViewModel = getTagRetagViewModel(homeViewModel)
-        prefillSealAndCommitTag(tagRetagViewModel)
+        prefillSealAndCommitTag(tagRetagViewModel, tagNumber = committedNumber)
         navigateToTagRetag()
 
-        replaceTagNumberWithoutBlur(IN_PROGRESS_TAG_NUMBER)
+        replaceTagNumberWithoutBlur(committedNumber, inProgressNumber)
         waitUntilSaveEnabled(tagRetagViewModel)
         tapSave()
 
-        val expectedTagId = "$IN_PROGRESS_TAG_NUMBER$TAG_ALPHA"
-        val saved = waitForObservation { it.tagIDOne == expectedTagId }
+        val expectedTagId = "$inProgressNumber$TAG_ALPHA"
+        val saved = waitForObservation(
+            diagnostic = { saveDiagnostic(tagRetagViewModel) },
+        ) { it.tagIDOne == expectedTagId }
         assertEquals(
             "Save should persist the in-progress Tag ID edit even when the field still has focus",
             expectedTagId,
@@ -443,25 +512,33 @@ class TagRetagSaveInstrumentedTest {
 
     /**
      * Fix #6: Marked save without blur must persist both the committed in-progress tag and speno
-     * from WedCheck (PML scenario: tag 456A -> 789A, save while tag field still focused).
+     * from WedCheck (PML scenario: retag ID edited, save while tag field still focused).
      */
     @Test
     fun saveTagRetag_persistsSpenoForMarkedSealWithoutRequiringBlur() {
         clearAllObservations()
-        seedWedCheckForMarkedSave()
+        composeRule.waitForComposeReady(timeoutMillis = 45_000)
+        val (committedNumber, inProgressNumber) = findUnusedTagNumbers(2)
+        seedWedCheckForMarkedSave(committedNumber, inProgressNumber)
         setupTestObservers()
 
         val homeViewModel = getHomeViewModel()
         val tagRetagViewModel = getTagRetagViewModel(homeViewModel)
-        prefillSealAndCommitTag(tagRetagViewModel, TagEventType.MARKED)
+        prefillSealAndCommitTag(
+            tagRetagViewModel,
+            TagEventType.MARKED,
+            tagNumber = committedNumber,
+        )
         navigateToTagRetag()
 
-        replaceTagNumberWithoutBlur(IN_PROGRESS_TAG_NUMBER)
+        replaceTagNumberWithoutBlur(committedNumber, inProgressNumber)
         waitUntilSaveEnabled(tagRetagViewModel)
         tapSave()
 
-        val expectedTagId = "$IN_PROGRESS_TAG_NUMBER$TAG_ALPHA"
-        val saved = waitForObservation { it.tagIDOne == expectedTagId }
+        val expectedTagId = "$inProgressNumber$TAG_ALPHA"
+        val saved = waitForObservation(
+            diagnostic = { saveDiagnostic(tagRetagViewModel) },
+        ) { it.tagIDOne == expectedTagId }
         assertEquals(
             "Save should persist the in-progress Tag ID edit even when the field still has focus",
             expectedTagId,
@@ -483,25 +560,33 @@ class TagRetagSaveInstrumentedTest {
     @Test
     fun saveTagRetag_clearsTagFieldForNextEntryAfterSaveWithoutBlur() {
         clearAllObservations()
-        seedWedCheckForMarkedSave()
+        composeRule.waitForComposeReady(timeoutMillis = 45_000)
+        val (committedNumber, inProgressNumber) = findUnusedTagNumbers(2)
+        seedWedCheckForMarkedSave(committedNumber, inProgressNumber)
         setupTestObservers()
 
         val homeViewModel = getHomeViewModel()
         val tagRetagViewModel = getTagRetagViewModel(homeViewModel)
-        prefillSealAndCommitTag(tagRetagViewModel, TagEventType.MARKED)
+        prefillSealAndCommitTag(
+            tagRetagViewModel,
+            TagEventType.MARKED,
+            tagNumber = committedNumber,
+        )
         navigateToTagRetag()
 
-        replaceTagNumberWithoutBlur(IN_PROGRESS_TAG_NUMBER)
+        replaceTagNumberWithoutBlur(committedNumber, inProgressNumber)
         waitUntilSaveEnabled(tagRetagViewModel)
         tapSave()
 
-        val expectedTagId = "$IN_PROGRESS_TAG_NUMBER$TAG_ALPHA"
-        waitForObservation { it.tagIDOne == expectedTagId }
+        val expectedTagId = "$inProgressNumber$TAG_ALPHA"
+        waitForObservation(
+            diagnostic = { saveDiagnostic(tagRetagViewModel) },
+        ) { it.tagIDOne == expectedTagId }
         waitUntilFormReset(tagRetagViewModel)
 
         scrollToTagIdSection()
-        assertTagNumberNotVisible(IN_PROGRESS_TAG_NUMBER)
-        assertTagNumberNotVisible(COMMITTED_TAG_NUMBER)
+        assertTagNumberNotVisible(inProgressNumber)
+        assertTagNumberNotVisible(committedNumber)
         assertSpenoNotDisplayed(MARKED_IN_PROGRESS_SPENO)
 
         composeRule.runOnUiThread {
