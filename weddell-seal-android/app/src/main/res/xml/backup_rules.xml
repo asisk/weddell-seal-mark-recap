@@ -1,13 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older that API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto Backup rules for Android 11 (API 30) and lower.
+  allowBackup is false, so these rules are unused unless that flag is turned
+  back on. They still exclude the census database as defense in depth.
+
+  See https://developer.android.com/guide/topics/data/autobackup
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="database" path="observations_database" />
+    <exclude domain="database" path="observations_database-journal" />
+    <exclude domain="database" path="observations_database-shm" />
+    <exclude domain="database" path="observations_database-wal" />
 </full-backup-content>
