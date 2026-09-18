@@ -5,13 +5,19 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptionsBuilder
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +34,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import weddellseal.markrecap.Screens
 import weddellseal.markrecap.TestFixtures
+import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
@@ -85,6 +93,9 @@ class TagRetagScreenTest {
         )
         recentObsViewModel = RecentObservationsViewModel(app, observationRepo)
         navController = mockk(relaxed = true)
+        val destination = mockk<NavDestination>()
+        every { destination.route } returns Screens.TagRetag.route
+        every { navController.currentDestination } returns destination
     }
 
     @After
@@ -126,6 +137,57 @@ class TagRetagScreenTest {
             verticalScrollValue(),
             0.5f,
         )
+    }
+
+    @Test
+    fun editDialog_staysSingleWhenScrollingAndDoesNotNavigateIfAlreadyOnTagRetag() {
+        composeRule.setContent {
+            MaterialTheme {
+                TagRetagScreen(
+                    navController = navController,
+                    viewModel = tagRetagViewModel,
+                    homeViewModel = homeViewModel,
+                    recentObsViewModel = recentObsViewModel,
+                )
+            }
+        }
+        composeRule.waitForIdle()
+
+        composeRule.runOnIdle {
+            tagRetagViewModel.onEditAttempt(
+                DisplayObservation.Standalone(
+                    TestFixtures.minimalObservationRecord().copy(id = 42, tagIDOne = "456B"),
+                ),
+            )
+        }
+        composeRule.waitForIdle()
+
+        assertEquals(
+            1,
+            composeRule.onAllNodesWithText("Yes, edit entry", useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .size,
+        )
+
+        composeRule.onNodeWithContentDescription("Save Seal", useUnmergedTree = true)
+            .performScrollTo()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Age").performScrollTo()
+        composeRule.waitForIdle()
+
+        assertEquals(
+            "Scrolling the enter page must not open a second edit-confirm dialog",
+            1,
+            composeRule.onAllNodesWithText("Yes, edit entry", useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .size,
+        )
+
+        composeRule.onNodeWithText("Yes, edit entry", useUnmergedTree = true).performClick()
+        composeRule.waitForIdle()
+
+        assertTrue(tagRetagViewModel.uiState.value.isEditMode)
+        verify(exactly = 0) { navController.navigate(any<String>(), any<NavOptionsBuilder.() -> Unit>()) }
     }
 
     private fun verticalScrollValue(): Float {

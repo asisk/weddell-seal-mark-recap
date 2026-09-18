@@ -337,4 +337,37 @@ class SealConditionTest {
         assertTrue(edits.any { it.contains("condition") })
         assertTrue(edits.none { it.startsWith("comment") })
     }
+
+    @Test
+    fun `sex change on a saved record requires confirmation`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            observationID = 42,
+            sex = SealSex.FEMALE,
+        )
+        val updated = original.copy(sex = SealSex.MALE)
+
+        assertTrue(updated.requiresSexChangeConfirmation(original))
+    }
+
+    @Test
+    fun `filling in sex on a new pup during edit does not require confirmation`() {
+        val original = Seal(sealType = SealType.PUPONE, observationID = 0, sex = SealSex.NONE)
+        val updated = original.copy(sex = SealSex.UNKNOWN)
+
+        assertFalse(updated.requiresSexChangeConfirmation(original))
+    }
+
+    @Test
+    fun `unchanged sex on a saved record does not require confirmation`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            observationID = 42,
+            sex = SealSex.FEMALE,
+        )
+
+        assertFalse(original.requiresSexChangeConfirmation(original))
+        assertFalse(original.copy(condition = SealCondition.FAIR)
+            .requiresSexChangeConfirmation(original))
+    }
 }

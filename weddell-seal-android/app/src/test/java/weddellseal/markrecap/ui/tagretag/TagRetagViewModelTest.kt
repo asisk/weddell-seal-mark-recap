@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -20,6 +21,7 @@ import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -29,6 +31,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import weddellseal.markrecap.TestFixtures
+import weddellseal.markrecap.domain.tagretag.data.SEX_CHANGE_ON_EDIT_CONFIRMATION_MESSAGE
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.SealRelatives
@@ -115,6 +118,29 @@ class TagRetagViewModelTest {
         vm.onViewAttempt(displayObs)
 
         assertEquals(displayObs, vm.selectedRecentObservation.value)
+    }
+
+    @Test
+    fun confirmEditSelectedObservation_loadsTheChosenRecord() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
+        val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
+        val observationRepo = mockk<ObservationRepository>(relaxed = true)
+        val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
+        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+
+        val existing = TestFixtures.minimalObservationRecord().copy(
+            id = 42,
+            tagIDOne = "456B",
+            tagEvent = TagEventType.NEW.alpha,
+        )
+        vm.onEditAttempt(DisplayObservation.Standalone(existing))
+        vm.confirmEditSelectedObservation()
+
+        assertTrue(vm.uiState.value.isEditMode)
+        assertEquals(42, vm.primarySeal.value.observationID)
+        assertEquals("456", vm.primarySeal.value.tagNumber)
+        assertEquals("B", vm.primarySeal.value.tagAlpha)
     }
 
     @Test
@@ -1090,9 +1116,9 @@ class TagRetagViewModelTest {
         assertNull(vm.primarySeal.value.wedCheckMatch)
     }
 
-    /** Fix #5: editing an existing observation appends a new row for edit history. */
+    /** Editing an existing observation updates that row in place. */
     @Test
-    fun writeObservationRecord_appendsNewRowWhenEditing() = runTest {
+    fun writeObservationRecord_updatesExistingRowWhenEditing() = runTest {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val metadata = MutableStateFlow(TestFixtures.sampleMetadata())
         val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
@@ -1120,9 +1146,11 @@ class TagRetagViewModelTest {
         vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
 
         assertEquals(1, written.size)
-        assertEquals(0, written[0].id)
-        assertNull(written[0].updatedAt)
+        assertEquals(42, written[0].id)
+        assertEquals(1_000L, written[0].insertedAt)
+        assertNotNull(written[0].updatedAt)
         assertEquals(SealCondition.FAIR.code, written[0].sealCondition)
+        coVerify(exactly = 0) { observationRepo.deleteObservation(any()) }
     }
 
     /**
@@ -1160,6 +1188,7 @@ class TagRetagViewModelTest {
 
         assertEquals(1, written.size)
         val comments = written[0].comments
+        assertEquals(42, written[0].id)
         assertEquals("scar on left", comments)
         assertFalse(comments.contains("comment was:"))
         assertFalse(comments.contains("Edited"))
@@ -1195,6 +1224,7 @@ class TagRetagViewModelTest {
         vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
 
         assertEquals(1, written.size)
+        assertEquals(42, written[0].id)
         assertEquals("scar on left", written[0].comments)
         assertFalse(written[0].comments.contains("comment was:"))
     }
@@ -1331,9 +1361,13 @@ class TagRetagViewModelTest {
         vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
 
         assertTrue(written.none { it.isGhostNoTagPup() })
+        val savedMom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }
         val savedPupTwo = written.single { it.tagIDOne == "9012C" }
+        assertEquals(1, savedMom.id)
+        assertEquals(0, savedPupTwo.id)
         assertEquals(SealAgeClass.PUP.alpha, savedPupTwo.ageClass)
         assertEquals("2", savedPupTwo.numRelatives)
+        assertFalse(savedPupTwo.comments.contains("Edited"))
     }
 
     /** A complete No Tag pup is a real relative, not the incomplete ghost "P No Tag" row. */
@@ -1396,11 +1430,151 @@ class TagRetagViewModelTest {
             written.size,
         )
         val savedPup = written.single()
+        assertEquals(2, savedPup.id)
+        assertNotNull(savedPup.updatedAt)
         assertEquals(SealAgeClass.PUP.alpha, savedPup.ageClass)
         assertEquals("5678B", savedPup.tagIDOne)
         assertEquals(SealCondition.FAIR.code, savedPup.sealCondition)
         assertTrue(savedPup.comments.contains("Edited"))
         assertTrue(savedPup.comments.contains("condition"))
+    }
+
+    @Test
+    fun writeObservationRecord_addPupDuringEdit_keepsMomIdAndInsertsPup() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val deleted = mutableListOf<Int>()
+        val vm = tagRetagViewModel(written, deleted)
+
+        vm.prefillSingleFemale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
+        vm.updateTagNumber(SealType.PRIMARY, "1234")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single().copy(id = 7, insertedAt = 1_000L)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.Standalone(mom))
+        vm.updateNumRelatives(SealRelatives.ONE)
+        vm.fillPup(SealType.PUPONE, tag = "5678" to "B")
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val savedMom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }
+        val savedPup = written.single { it.ageClass == SealAgeClass.PUP.alpha }
+        assertEquals(7, savedMom.id)
+        assertEquals(1_000L, savedMom.insertedAt)
+        assertNotNull(savedMom.updatedAt)
+        assertEquals("1", savedMom.numRelatives)
+        assertEquals("5678B", savedMom.relativeTagIDOne)
+        assertEquals(0, savedPup.id)
+        assertNull(savedPup.updatedAt)
+        assertEquals("5678B", savedPup.tagIDOne)
+        assertFalse(savedPup.comments.contains("Edited"))
+        assertEquals(emptyList<Int>(), deleted)
+    }
+
+    @Test
+    fun writeObservationRecord_removePupDuringEdit_deletesPupAndUpdatesMom() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val deleted = mutableListOf<Int>()
+        val vm = tagRetagViewModel(written, deleted)
+
+        vm.enterMomAndPup(momTag = "1234" to "A", pupTag = "5678" to "B")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }
+            .copy(id = 1, insertedAt = 1_000L)
+        val pup = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pup, pupTwo = null))
+        vm.markPupRemoved(SealType.PUPONE)
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        assertEquals(listOf(2), deleted)
+        val savedMom = written.single()
+        assertEquals(1, savedMom.id)
+        assertEquals(1_000L, savedMom.insertedAt)
+        assertNotNull(savedMom.updatedAt)
+        assertEquals("0", savedMom.numRelatives)
+        assertEquals("", savedMom.relativeTagIDOne)
+        assertTrue(written.none { it.ageClass == SealAgeClass.PUP.alpha })
+    }
+
+    @Test
+    fun attemptSave_sexChangeOnEdit_requiresConfirmationAndDoesNotFlag() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        val existing = TestFixtures.minimalObservationRecord().copy(
+            id = 42,
+            insertedAt = 1_000L,
+            tagEvent = TagEventType.NEW.alpha,
+            tagIDOne = "456B",
+            tagOneIndicator = "+",
+            sex = SealSex.FEMALE.alpha,
+            sealCondition = SealCondition.GOOD.code,
+        )
+        vm.loadSealForEdit(DisplayObservation.Standalone(existing))
+        vm.updateSex(SealType.PRIMARY, SealSex.MALE)
+        vm.hasEdits.first { it }
+
+        vm.attemptSave(TestFixtures.sampleGeoLocation())
+        vm.uiState.first { it.entryNeedsConfirmation }
+
+        assertTrue(written.isEmpty())
+        assertTrue(
+            vm.uiState.value.validationFailureReason.contains(
+                SEX_CHANGE_ON_EDIT_CONFIRMATION_MESSAGE,
+            ),
+        )
+
+        vm.confirmAndSave(TestFixtures.sampleGeoLocation())
+        yield()
+
+        assertEquals(1, written.size)
+        assertEquals(42, written[0].id)
+        assertEquals(SealSex.MALE.alpha, written[0].sex)
+        assertEquals("", written[0].flaggedEntry)
+        assertTrue(written[0].comments.contains("Edited"))
+        assertTrue(written[0].comments.contains("sex"))
+    }
+
+    @Test
+    fun attemptSave_addPupDuringEdit_doesNotRequireSexConfirmation() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val wedCheckRepo = mockk<WedCheckRepository>()
+        every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
+        val vm = tagRetagViewModel(written, wedCheckRepo = wedCheckRepo)
+
+        vm.prefillSingleFemale()
+        vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
+        vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
+        vm.updateTagNumber(SealType.PRIMARY, "1234")
+        vm.updateTagAlpha(SealType.PRIMARY, "A")
+        vm.updateNumTags(SealType.PRIMARY, "1")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single().copy(id = 7)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.Standalone(mom))
+        vm.updateNumRelatives(SealRelatives.ONE)
+        vm.fillPup(SealType.PUPONE, tag = "5678" to "B")
+        vm.hasEdits.first { it }
+
+        vm.attemptSave(TestFixtures.sampleGeoLocation())
+        yield()
+
+        assertFalse(vm.uiState.value.entryNeedsConfirmation)
+        assertTrue(written.any { it.ageClass == SealAgeClass.PUP.alpha && it.id == 0 })
+        assertTrue(written.any { it.ageClass == SealAgeClass.ADULT.alpha && it.id == 7 })
     }
 
     /**
@@ -1492,6 +1666,7 @@ class TagRetagViewModelTest {
 
     private fun tagRetagViewModel(
         written: MutableList<ObservationRecord>,
+        deleted: MutableList<Int> = mutableListOf(),
         wedCheckRepo: WedCheckRepository = mockk(relaxed = true),
     ): TagRetagViewModel {
         val app = ApplicationProvider.getApplicationContext<Application>()
@@ -1501,7 +1676,9 @@ class TagRetagViewModelTest {
         coEvery { observationRepo.writeObservation(any()) } answers {
             written.add(firstArg())
         }
-        coEvery { observationRepo.deleteObservation(any()) } returns Unit
+        coEvery { observationRepo.deleteObservation(any()) } answers {
+            deleted.add(firstArg())
+        }
         return TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
     }
 

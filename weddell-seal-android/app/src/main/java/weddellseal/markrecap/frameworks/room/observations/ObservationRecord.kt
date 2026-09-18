@@ -77,6 +77,7 @@ fun ObservationRecord.toSeal(): Seal {
 
     return Seal(
         observationID = id,
+        insertedAt = insertedAt,
         observationRecordSpeno = speno.toInt(),
         ageClass = SealAgeClass.fromAlpha(ageClass), // expecting to advance the seal age based on the last season seen
         sex = SealSex.fromAlpha(sex),

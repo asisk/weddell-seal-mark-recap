@@ -117,6 +117,7 @@ fun buildObservationRecord(
     var date = getCurrentDateFormatted()
     var time = getCurrentTimeFormatted()
 
+    val isUpdatingExisting = seal.hasEdits && seal.observationID != 0
     val comment = if (seal.hasEdits) {
         // Reload puts the previous comments blob on seal.comment (prefixes + user note).
         // Do not rebuild pup-peed / retag / flagged / validation, and do not record
@@ -131,8 +132,8 @@ fun buildObservationRecord(
     }
 
     val log = ObservationRecord(
-        // Append-only history: edits create a new row instead of replacing the original row.
-        id = 0,
+        // Edit an existing row in place. New saves (and a pup added during edit) use id = 0.
+        id = if (isUpdatingExisting) seal.observationID else 0,
         deviceID = metadata.deviceID,
         season = metadata.currentSeason,
         speno = speNo,
@@ -161,6 +162,8 @@ fun buildObservationRecord(
         comments = comment,
         retagReason = seal.reasonForRetag.description,
         colony = metadataColony,
+        insertedAt = if (seal.insertedAt != 0L) seal.insertedAt else System.currentTimeMillis(),
+        updatedAt = if (isUpdatingExisting) System.currentTimeMillis() else null,
     )
     return log
 }

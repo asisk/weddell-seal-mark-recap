@@ -251,6 +251,16 @@ fun TagRetagHeader(
                 style = MaterialTheme.typography.titleMedium,
             )
         }
+        if (uiState.validationFailureReason.isNotBlank()) {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+                text = uiState.validationFailureReason,
+                color = Color(0xFF5D4037),
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()

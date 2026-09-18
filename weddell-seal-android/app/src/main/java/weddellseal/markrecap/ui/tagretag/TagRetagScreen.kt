@@ -4,6 +4,7 @@ package weddellseal.markrecap.ui.tagretag
  * Main screen for entering seal data
  */
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,10 +28,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import weddellseal.markrecap.Screens
+import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.NavMenu
 import weddellseal.markrecap.ui.UiEvent
 import weddellseal.markrecap.ui.home.HomeViewModel
@@ -48,12 +52,14 @@ fun TagRetagScreen(
     homeViewModel: HomeViewModel,
     recentObsViewModel: RecentObservationsViewModel
 ) {
+    val context = LocalContext.current
     val uiEventFlow = viewModel.uiEvent
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     val snackBarHostState = remember { SnackbarHostState() }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     val primarySeal by viewModel.primarySeal.collectAsState()
     val pupOneSeal by viewModel.pupOne.collectAsState()
@@ -80,7 +86,9 @@ fun TagRetagScreen(
 //        Log.d("UI", "Observed location: $location")
 //    }
 
-    // SAVE SUCCESS
+    // SAVE SUCCESS / EDIT CONFIRM
+    // Host the edit dialog here, not in the scrollable footer: composing it inside
+    // Recent Observations caused a second "Yes, edit entry" when scrolling to the top.
     LaunchedEffect(Unit) {
         uiEventFlow.collect { event ->
             when (event) {
@@ -89,6 +97,14 @@ fun TagRetagScreen(
                         event.message,
                         duration = SnackbarDuration.Long
                     )
+                }
+
+                is UiEvent.ShowEditToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+
+                is UiEvent.ShowEditDialog -> {
+                    showEditDialog = true
                 }
 
                 else -> Unit // ignore all other events
@@ -142,6 +158,21 @@ fun TagRetagScreen(
                 }
             }
         }
+    }
+
+    if (showEditDialog) {
+        ConfirmEditDialog(
+            onDismissRequest = { showEditDialog = false },
+            onConfirmation = {
+                showEditDialog = false
+                viewModel.confirmEditSelectedObservation()
+                if (navController.currentDestination?.route != Screens.TagRetag.route) {
+                    navController.navigate(Screens.TagRetag.route) {
+                        launchSingleTop = true
+                    }
+                }
+            },
+        )
     }
 }
 

@@ -1,6 +1,5 @@
 package weddellseal.markrecap.ui.tagretag
 
-import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +22,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,17 +30,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import weddellseal.markrecap.R
-import weddellseal.markrecap.Screens
-import weddellseal.markrecap.ui.ConfirmEditDialog
 import weddellseal.markrecap.ui.RecentObservations
-import weddellseal.markrecap.ui.UiEvent
-import weddellseal.markrecap.ui.UiEvent.ShowEditDialog
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 
@@ -53,35 +46,11 @@ fun TagRetagFooter(
     recentObsViewModel: RecentObservationsViewModel,
     navController: NavHostController,
 ) {
-    val context = LocalContext.current
-    context.contentResolver
-
-    val uiEventFlow = viewModel.uiEvent
-
-    val selectedObservation by viewModel.selectedRecentObservation.collectAsState()
-    var showEditDialog by remember { mutableStateOf(false) }
-
     val uiState by viewModel.uiState.collectAsState()
     val hasEdits by viewModel.hasEdits.collectAsState()
     // primarySeal still needed for the "missing required fields" banner below.
     val primarySeal by viewModel.primarySeal.collectAsState()
     val focusManager = LocalFocusManager.current
-
-    LaunchedEffect(Unit) {
-        uiEventFlow.collect { event ->
-            when (event) {
-                is UiEvent.ShowEditToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
-                }
-
-                is ShowEditDialog -> {
-                    showEditDialog = true
-                }
-
-                else -> Unit // ignore all other events
-            }
-        }
-    }
 
     Row(
         modifier = Modifier.fillMaxWidth()
@@ -223,24 +192,5 @@ fun TagRetagFooter(
             .border(4.dp, Color.LightGray)
     ) {
         RecentObservations(viewModel, recentObsViewModel, navController)
-    }
-
-    // CONFIRM EDIT DIALOG
-    if (showEditDialog) {
-        ConfirmEditDialog(
-            onDismissRequest = {
-                showEditDialog = false
-            },
-            onConfirmation = {
-                showEditDialog = false
-
-                // Determine which seals are present and load them in the Tag/Retag Screen for Editing
-                selectedObservation?.let { record ->
-                    viewModel.resetModelState()
-                    viewModel.loadSealForEdit(record)
-                    navController.navigate(Screens.TagRetag.route)
-                }
-            },
-        )
     }
 }
