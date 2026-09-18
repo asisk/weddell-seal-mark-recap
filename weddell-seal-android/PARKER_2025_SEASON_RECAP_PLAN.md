@@ -233,11 +233,13 @@ Sometimes 8 digits, sometimes 4. She rounded to ~5. Not a blocker.
 
 ## P3 — UI / field usability
 
-### [ ] Yellow highlights are hard to see
+### [x] Yellow highlights are hard to see
 
 Lookup comments/notes (and similar yellow) fail in the field.
 
 **Ask:** dark background + white text, matching tag/retag highlighting.
+
+**Done:** Lookup notes, tissue Need, Dead, and tag/retag WedCheck comments use black background and white text (`FieldHighlight`), matching selected tag/retag buttons. Covered by `LookupCardHighlightTest`, `TabbedCardsTest`, `SealLookupHighlightInstrumentedTest`, and `TagRetagWedCheckCommentHighlightInstrumentedTest`. Population mismatch / White Island photo / save-validation banners are still the old yellow (different warning treatment).
 
 ### [ ] Tissue control is too easy to hit
 
@@ -329,7 +331,7 @@ Keep these stable unless a P0/P1 fix requires a change.
 2. ~~Speno-on-tag-edit + phantom untagged pups.~~
 3. ~~Validation: false positives, persist confirmation in export.~~ Missed-validation: still collect Parker’s record if it happens again.
 4. ~~`0000` Delta exception; retag reason in export.~~ ~~In-place edit vs duplicate records.~~
-5. ~~Census prefill switch.~~ ~~Tablet letter in filename;~~ yellow contrast; tissue placement.
+5. ~~Census prefill switch.~~ ~~Tablet letter in filename;~~ ~~yellow contrast;~~ tissue placement.
 6. GPS cold start (start earlier, acquiring copy) + quieter override with confirm; colony header follows live GPS.
 7. File history, photo linking, confirmation banner copy.
 8. Map / tracks / handover docs if time remains before the 2027 season.
