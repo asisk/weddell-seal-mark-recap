@@ -126,7 +126,7 @@ Once you pick mom/pup (or similar), you cannot pick another (e.g. single) withou
 
 Covered by `TagRetagViewModelTest` (blank form, same-prefill no-op, mom/pup → single male after confirm), `TagRetagHeaderTest` (dialog copy / confirm / cancel), and `SealCardTest` (`fieldResetCounter` remounts local age/sex/relatives).
 
-### [ ] Export filename is `observations`, not tablet letter
+### [x] Export filename is `observations`, not tablet letter
 
 Parker typed the tablet name (e.g. **H** from the home screen) by hand every day.
 
@@ -144,6 +144,8 @@ Implementation:
 Files: `DateFormatting.kt` (or a tiny `ExportFileNames.kt`), `ExportObservations.kt`, unit test for the helper (spaces, punctuation, empty, `allRecords`).
 
 Do not change archive filenames or import filename checks (`observers`, `Colony_Locations`, `WedCheck`).
+
+**Done:** CreateDocument now suggests `observations_<device>_<yyyyMMdd_HHmmss>.csv` (and `all_observations_…` for export all). Device name comes from `getDeviceName()` (home-screen tablet letter). Empty / `Unknown Device` / punctuation-only names fall back to `tablet`. Covered by `ExportFileNamesTest`. Archive and import filenames are unchanged.
 
 ---
 
@@ -327,7 +329,7 @@ Keep these stable unless a P0/P1 fix requires a change.
 2. ~~Speno-on-tag-edit + phantom untagged pups.~~
 3. ~~Validation: false positives, persist confirmation in export.~~ Missed-validation: still collect Parker’s record if it happens again.
 4. ~~`0000` Delta exception; retag reason in export.~~ ~~In-place edit vs duplicate records.~~
-5. ~~Census prefill switch.~~ Tablet letter in filename; yellow contrast; tissue placement.
+5. ~~Census prefill switch.~~ ~~Tablet letter in filename;~~ yellow contrast; tissue placement.
 6. GPS cold start (start earlier, acquiring copy) + quieter override with confirm; colony header follows live GPS.
 7. File history, photo linking, confirmation banner copy.
 8. Map / tracks / handover docs if time remains before the 2027 season.
