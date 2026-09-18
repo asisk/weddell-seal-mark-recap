@@ -90,7 +90,11 @@ class TagRetagViewModel(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    // extraBufferCapacity = 1 so a follow-up event is not dropped while a collector is busy.
+    // Default capacity 0 + replay 0 means emit() suspends until collect() is ready; after save,
+    // ShowSavedToast used to block that collector on snackbar duration, so ShowEditDialog never
+    // arrived until the snackbar finished (edit confirm timed out in instrumented tests).
+    private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
 
     private val _primarySeal = MutableStateFlow(Seal(sealType = SealType.PRIMARY))

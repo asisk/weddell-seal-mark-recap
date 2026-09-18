@@ -2,6 +2,7 @@ package weddellseal.markrecap.ui.tagretag
 
 import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -11,6 +12,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -56,16 +58,25 @@ class TagRetagViewModelTest {
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val createdViewModels = mutableListOf<TagRetagViewModel>()
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(UnconfinedTestDispatcher())
     }
 
     @After
     fun tearDown() {
+        // combine collectors in viewModelScope yield on Main. Resetting Main while they
+        // are mid-yield throws "Dispatchers.Main is used concurrently with setting it".
+        createdViewModels.forEach { it.viewModelScope.cancel() }
+        createdViewModels.clear()
         Dispatchers.resetMain()
+    }
+
+    private fun track(vm: TagRetagViewModel): TagRetagViewModel {
+        createdViewModels += vm
+        return vm
     }
 
     private fun wedCheckRecord(
@@ -110,7 +121,7 @@ class TagRetagViewModelTest {
         val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
         val observationRepo = mockk<ObservationRepository>(relaxed = true)
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         val record = TestFixtures.minimalObservationRecord()
         val displayObs = DisplayObservation.Standalone(record)
@@ -127,7 +138,7 @@ class TagRetagViewModelTest {
         val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
         val observationRepo = mockk<ObservationRepository>(relaxed = true)
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         val existing = TestFixtures.minimalObservationRecord().copy(
             id = 42,
@@ -155,7 +166,7 @@ class TagRetagViewModelTest {
         }
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -189,7 +200,7 @@ class TagRetagViewModelTest {
         }
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         listOf(TagEventType.NEW, TagEventType.MARKED).forEach { correctedEvent ->
             written.clear()
@@ -233,7 +244,7 @@ class TagRetagViewModelTest {
         val homeUi = MutableStateFlow(HomeViewModel.UiState(overrideColony = false))
         val observationRepo = mockk<ObservationRepository>(relaxed = true)
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateTagEventType(vm.primarySeal.value, TagEventType.NEW)
@@ -255,7 +266,7 @@ class TagRetagViewModelTest {
         }
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -290,7 +301,7 @@ class TagRetagViewModelTest {
         }
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -331,7 +342,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -367,7 +378,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -410,7 +421,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -437,7 +448,7 @@ class TagRetagViewModelTest {
         val observationRepo = mockk<ObservationRepository>(relaxed = true)
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
         val counterBeforeReset = vm.uiState.value.fieldResetCounter
 
         vm.resetModelState()
@@ -556,7 +567,7 @@ class TagRetagViewModelTest {
         every { wedCheckRepo.findSealbyTagID("456A") } returns wedCheckFor456
         every { wedCheckRepo.findSealbyTagID("789A") } throws NoSuchElementException()
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -610,7 +621,7 @@ class TagRetagViewModelTest {
             committedMaleMatch
         }
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -661,7 +672,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID("1234A") } returns wedCheckFor1234
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -685,7 +696,7 @@ class TagRetagViewModelTest {
         val observationRepo = mockk<ObservationRepository>(relaxed = true)
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateTagNumber(SealType.PRIMARY, "456")
@@ -710,7 +721,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID("1234A") } returns wedCheckFor1234
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -731,7 +742,7 @@ class TagRetagViewModelTest {
         val observationRepo = mockk<ObservationRepository>(relaxed = true)
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateTagEventType(vm.primarySeal.value, TagEventType.RETAG)
@@ -761,7 +772,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID("789A") } returns wedCheckFor789
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -795,7 +806,7 @@ class TagRetagViewModelTest {
         every { wedCheckRepo.findSealbyTagID("789A") } returns wedCheckFor789
         every { wedCheckRepo.findSealbyTagID("456A") } returns wedCheckRecord(speno = 99, tagId = "456A")
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -836,7 +847,7 @@ class TagRetagViewModelTest {
             throw NoSuchElementException()
         }
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -888,7 +899,7 @@ class TagRetagViewModelTest {
             wedCheckFor456
         }
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -926,7 +937,7 @@ class TagRetagViewModelTest {
         }
         every { wedCheckRepo.findSealbyTagID("789A") } returns wedCheckFor789
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -969,7 +980,7 @@ class TagRetagViewModelTest {
         }
         every { wedCheckRepo.findSealbyTagID("456C") } returns wedCheckFor456C
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -1005,7 +1016,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID("789A") } returns wedCheckFor789
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -1058,7 +1069,7 @@ class TagRetagViewModelTest {
         every { wedCheckRepo.findSealbyTagID("658A") } returns wedCheckSpeno6419
         every { wedCheckRepo.findSealbyTagID("657A") } returns wedCheckSpeno6419
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -1098,7 +1109,7 @@ class TagRetagViewModelTest {
         every { wedCheckRepo.findSealbyTagID("456A") } returns wedCheckFor456
         every { wedCheckRepo.findSealbyTagID("789A") } throws NoSuchElementException()
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -1129,7 +1140,7 @@ class TagRetagViewModelTest {
         }
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         val existing = TestFixtures.minimalObservationRecord().copy(
             id = 42,
@@ -1169,7 +1180,7 @@ class TagRetagViewModelTest {
         }
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         val existing = TestFixtures.minimalObservationRecord().copy(
             id = 42,
@@ -1206,7 +1217,7 @@ class TagRetagViewModelTest {
         }
         val wedCheckRepo = mockk<WedCheckRepository>(relaxed = true)
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         val existing = TestFixtures.minimalObservationRecord().copy(
             id = 42,
@@ -1246,7 +1257,7 @@ class TagRetagViewModelTest {
         val wedCheckRepo = mockk<WedCheckRepository>()
         every { wedCheckRepo.findSealbyTagID(any()) } throws NoSuchElementException()
 
-        val vm = TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        val vm = track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
 
         vm.prefillSingleMale()
         vm.updateCondition(SealType.PRIMARY, SealCondition.GOOD)
@@ -1679,7 +1690,7 @@ class TagRetagViewModelTest {
         coEvery { observationRepo.deleteObservation(any()) } answers {
             deleted.add(firstArg())
         }
-        return TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi)
+        return track(TagRetagViewModel(app, observationRepo, wedCheckRepo, metadata, homeUi))
     }
 
     private fun TagRetagViewModel.enterMomAndPup(

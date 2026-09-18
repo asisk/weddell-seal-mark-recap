@@ -93,10 +93,14 @@ fun TagRetagScreen(
         uiEventFlow.collect { event ->
             when (event) {
                 is UiEvent.ShowSavedToast -> {
-                    snackBarHostState.showSnackbar(
-                        event.message,
-                        duration = SnackbarDuration.Long
-                    )
+                    // Do not block this collector on the snackbar. showSnackbar suspends for
+                    // SnackbarDuration.Long (~10s), which delayed ShowEditDialog after a save.
+                    scope.launch {
+                        snackBarHostState.showSnackbar(
+                            event.message,
+                            duration = SnackbarDuration.Long
+                        )
+                    }
                 }
 
                 is UiEvent.ShowEditToast -> {
