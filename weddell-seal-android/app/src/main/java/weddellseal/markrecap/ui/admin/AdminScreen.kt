@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -58,14 +59,14 @@ fun AdminScreen(
         R.drawable.ic_dashboard,
         R.drawable.ic_upload_file_filled,
         R.drawable.ic_file_download,
-        R.drawable.ic_archive,
+        R.drawable.archived_filled,
     )
     val unselectedIconRes = listOf(
         R.drawable.ic_home_outlined,
         R.drawable.ic_dashboard_outlined,
         R.drawable.ic_upload_file_outlined,
         R.drawable.ic_file_download_outlined,
-        R.drawable.ic_archive_outlined,
+        R.drawable.archive_outline,
     )
 
     Scaffold { innerPadding ->
@@ -88,7 +89,8 @@ fun AdminScreen(
                                 ),
                                 contentDescription = item,
                                 modifier = Modifier.size(48.dp),
-                            )
+                                tint = Color.Unspecified,
+                                )
                         },
                         label = {
                             Text(

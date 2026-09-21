@@ -20,7 +20,7 @@ fun fileHistoryAppearance(fileAction: String): FileHistoryAppearance = when (fil
         contentDescription = "Exported",
     )
     FileAction.ARCHIVE.name -> FileHistoryAppearance(
-        iconRes = R.drawable.ic_archive_outlined,
+        iconRes = R.drawable.archive_outline,
         contentDescription = "Archived",
     )
     else -> FileHistoryAppearance(

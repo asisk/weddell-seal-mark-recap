@@ -17,7 +17,7 @@ class FileHistoryAppearanceTest {
     @Test
     fun archiveUsesTheArchiveIcon() {
         val appearance = fileHistoryAppearance(FileAction.ARCHIVE.name)
-        assertEquals(R.drawable.ic_archive_outlined, appearance.iconRes)
+        assertEquals(R.drawable.archive_outline, appearance.iconRes)
         assertEquals("Archived", appearance.contentDescription)
     }
 

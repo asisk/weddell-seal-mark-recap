@@ -11,11 +11,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.ui.admin.AdminViewModel
 
 @Composable
 fun DashboardScreen(
     adminViewModel: AdminViewModel,
+) {
+    DashboardScreen(
+        recentFiles = adminViewModel.successfulUploads.collectAsState().value,
+    )
+}
+
+@Composable
+fun DashboardScreen(
+    recentFiles: List<FileUploadEntity>,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -29,5 +39,5 @@ fun DashboardScreen(
         )
     }
 
-    RecentFilesCard(adminViewModel.successfulUploads.collectAsState().value)
+    RecentFilesCard(recentFiles)
 }

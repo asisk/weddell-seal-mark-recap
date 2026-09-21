@@ -1,0 +1,59 @@
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="344"
+    android:viewportHeight="300">
+
+    <!-- Filled folders -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="
+            M62,80
+            V59
+            H207
+            L229,39
+            H268
+            V59
+            H282
+            V80
+            Z
+
+            M43,101
+            L62,80
+            H282
+            L301,101
+            Z
+
+            M25,123
+            L43,101
+            H301
+            L319,123
+            Z" />
+
+    <!-- Filled archive box with transparent label and keyhole -->
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="
+            M25,123
+            H319
+            V274
+            H25
+            Z
+
+            M135,157
+            H219
+            V190
+            H135
+            Z
+
+            M177,207
+            a12,12 0,0 0,-6 22
+            l-6,24
+            h24
+            l-6,-24
+            a12,12 0,0 0,-6 -22
+            Z" />
+
+</vector>
