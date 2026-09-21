@@ -8,7 +8,6 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,10 +18,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import weddellseal.markrecap.domain.location.LocationSource
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.location.isAccurateEnoughForColonyMiss
+import weddellseal.markrecap.domain.location.shouldUseIncomingLocation
 import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
@@ -123,12 +123,10 @@ class HomeViewModel(
         }
         
         isLocationCollectionActive = true
-        viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
+        viewModelScope.launch {
             try {
                 locationSource.locationUpdates().collect { geoLocation ->
-                    // Update UI state with new coordinates (StateFlow updates are thread-safe)
-                    _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
-                    _currentLocation.value = geoLocation
+                    applyIncomingLocation(geoLocation)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "configureLocationFollow: Error in location collection", e)
@@ -140,8 +138,17 @@ class HomeViewModel(
         }.storeIn(jobs)
     }
 
+    private fun applyIncomingLocation(geoLocation: GeoLocation) {
+        val currentIsLive = _currentLocation.value?.isLiveFix == true
+        if (!shouldUseIncomingLocation(currentIsLive, geoLocation.isLiveFix)) {
+            return
+        }
+        _uiState.update { it.copy(lastKnownCoordinates = geoLocation.coordinates) }
+        _currentLocation.value = geoLocation
+    }
+
     private fun observeColonyUpdates() {
-        viewModelScope.launch(Dispatchers.IO) { // Move to IO thread
+        viewModelScope.launch {
             currentLocation
                 .filterNotNull()
                 .collect { geoLocation ->
@@ -222,37 +229,46 @@ class HomeViewModel(
     }
 
     private suspend fun updateColonyForLocation(geoLocation: GeoLocation) {
-        val colony = findColony(geoLocation.coordinates) ?: SealColony(
-            colonyId = 0,
-            inOut = "none",
-            location = ColonyPopulation.NOT_DETECTED,
-            nLimit = 0.0,
-            sLimit = 0.0,
-            wLimit = 0.0,
-            eLimit = 0.0,
-            adjLong = 0.0,
-            adjLat = 0.0,
-            fileUploadId = 0
-        )
+        if (!geoLocation.isLiveFix) return
 
-        setAutoDetectedColony(colony)
+        val matched = findColony(geoLocation.coordinates)
+        if (matched != null) {
+            setAutoDetectedColony(matched)
+            return
+        }
+
+        // A poor first fix that misses every box is still "waiting", not "not detected".
+        if (!isAccurateEnoughForColonyMiss(geoLocation.accuracyMeters)) {
+            return
+        }
+
+        setAutoDetectedColony(
+            SealColony(
+                colonyId = 0,
+                inOut = "none",
+                location = ColonyPopulation.NOT_DETECTED,
+                nLimit = 0.0,
+                sLimit = 0.0,
+                wLimit = 0.0,
+                eLimit = 0.0,
+                adjLong = 0.0,
+                adjLat = 0.0,
+                fileUploadId = 0
+            )
+        )
     }
 
     // get the colony by coordinates
     suspend fun findColony(coordinates: Coordinates): SealColony? {
-        return withContext(Dispatchers.IO) {
-            sealColonyRepository.findColony(
-                coordinates.latitude,
-                coordinates.longitude
-            )
-        }
+        return sealColonyRepository.findColony(
+            coordinates.latitude,
+            coordinates.longitude
+        )
     }
 
     // get the colony by name
     suspend fun findColonyByName(colonyName: String): SealColony? {
-        return withContext(Dispatchers.IO) {
-            sealColonyRepository.findColonyByName(colonyName)
-        }
+        return sealColonyRepository.findColonyByName(colonyName)
     }
 
     // This uses coordinates from the auto-detected colony or
@@ -276,7 +292,7 @@ class HomeViewModel(
             } else {
                 GeoLocation(Coordinates(it.adjLat, it.adjLong))
             }
-        } ?: currentLocation.value
+        } ?: currentLocation.value?.takeIf { it.isLiveFix }
         return colony
     }
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +20,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -27,6 +29,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import weddellseal.markrecap.TestFixtures
+import weddellseal.markrecap.domain.location.data.Coordinates
+import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.testsupport.FakeLocationSource
@@ -148,6 +153,160 @@ class HomeViewModelTest {
         vm.onPermissionsResult(granted = false)
         assertEquals(1, locationSource.startCount)
         assertEquals(1, locationSource.stopCount)
+    }
+
+    @Test
+    fun cachedLocation_doesNotDetectColonyOrSave() {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        val cached = GeoLocation(
+            coordinates = Coordinates(-77.5, 166.5),
+            isLiveFix = false,
+        )
+        locationSource.emit(cached)
+
+        assertEquals(cached, vm.currentLocation.value)
+        assertNull(vm.autoDetectedColony.value)
+        assertNull(vm.getColonyLocation())
+        coVerify(exactly = 0) { sealRepo.findColony(any(), any()) }
+    }
+
+    @Test
+    fun liveLocation_detectsColonyAndIsUsedForSave() {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        val colony = TestFixtures.sampleColony(location = "Hutton Cliffs")
+        coEvery { sealRepo.findColony(-77.5, 166.5) } returns colony
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        val live = GeoLocation(
+            coordinates = Coordinates(-77.5, 166.5),
+            accuracyMeters = 12f,
+            isLiveFix = true,
+        )
+        locationSource.emit(live)
+
+        assertEquals("Hutton Cliffs", vm.autoDetectedColony.value?.location)
+        assertEquals(live, vm.getColonyLocation())
+    }
+
+    @Test
+    fun inaccurateLiveMiss_staysWaiting() {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        coEvery { sealRepo.findColony(any(), any()) } returns null
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        val live = GeoLocation(
+            coordinates = Coordinates(-77.1, 166.1),
+            accuracyMeters = 180f,
+            isLiveFix = true,
+        )
+        locationSource.emit(live)
+
+        assertNull(vm.autoDetectedColony.value)
+        assertEquals(live, vm.getColonyLocation())
+    }
+
+    @Test
+    fun accurateLiveMiss_setsNotDetected() {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        coEvery { sealRepo.findColony(any(), any()) } returns null
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        val live = GeoLocation(
+            coordinates = Coordinates(-77.1, 166.1),
+            accuracyMeters = 15f,
+            isLiveFix = true,
+        )
+        locationSource.emit(live)
+
+        assertEquals(ColonyPopulation.NOT_DETECTED, vm.autoDetectedColony.value?.location)
+        assertEquals(live, vm.getColonyLocation())
+    }
+
+    @Test
+    fun inaccurateLiveHit_stillDetectsColony() {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        val colony = TestFixtures.sampleColony(location = "Turtle Rock")
+        coEvery { sealRepo.findColony(any(), any()) } returns colony
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        locationSource.emit(
+            GeoLocation(
+                coordinates = Coordinates(-77.2, 166.2),
+                accuracyMeters = 200f,
+                isLiveFix = true,
+            )
+        )
+
+        assertEquals("Turtle Rock", vm.autoDetectedColony.value?.location)
+    }
+
+    @Test
+    fun cachedAfterLive_doesNotReplaceLiveForSave() {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        val colony = TestFixtures.sampleColony(location = "Hutton Cliffs")
+        coEvery { sealRepo.findColony(any(), any()) } returns colony
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        val live = GeoLocation(
+            coordinates = Coordinates(-77.5, 166.5),
+            accuracyMeters = 10f,
+            isLiveFix = true,
+        )
+        locationSource.emit(live)
+        locationSource.emit(
+            GeoLocation(
+                coordinates = Coordinates(-77.0, 166.0),
+                isLiveFix = false,
+            )
+        )
+
+        assertEquals(live, vm.currentLocation.value)
+        assertEquals(live, vm.getColonyLocation())
+        assertEquals("Hutton Cliffs", vm.autoDetectedColony.value?.location)
     }
 
     private fun mockSealColonyRepository(): SealColonyRepository {

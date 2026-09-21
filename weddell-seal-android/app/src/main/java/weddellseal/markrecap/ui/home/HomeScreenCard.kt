@@ -46,7 +46,7 @@ fun HomeScreenCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (isLandscape) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = 18.dp,
                     end = 18.dp,

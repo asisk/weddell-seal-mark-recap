@@ -4,7 +4,10 @@ data class GeoLocation(
     val coordinates: Coordinates,
     val altitude: Double? = null,
     val bearing: Double? = null,
-    val updatedDate : String? = null
+    val updatedDate: String? = null,
+    val accuracyMeters: Float? = null,
+    /** False for Fused Location last-known; never use those coordinates to detect or save colony. */
+    val isLiveFix: Boolean = true,
 ) {
     companion object {
     }

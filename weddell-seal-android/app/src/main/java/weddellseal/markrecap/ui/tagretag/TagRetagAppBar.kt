@@ -13,19 +13,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import weddellseal.markrecap.R
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
+import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
+import weddellseal.markrecap.ui.home.ColonyGpsUi
 import weddellseal.markrecap.ui.home.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,15 +33,7 @@ fun TagRetagAppBar(
 ) {
     val metadata by homeViewModel.metadata.collectAsState()
     val uiState by homeViewModel.uiState.collectAsState()
-
-    val currentLocation = homeViewModel.currentLocation
-    var colony by remember { mutableStateOf<SealColony?>(null) }
-
-    LaunchedEffect(currentLocation) {
-        if (currentLocation.value != null) {
-            colony = homeViewModel.findColony(currentLocation.value!!.coordinates)
-        }
-    }
+    val autoDetectedColony by homeViewModel.autoDetectedColony.collectAsState()
 
     TopAppBar(
         title = {
@@ -80,19 +69,25 @@ fun TagRetagAppBar(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-
                 val colonyLocationName =
                     if (uiState.overrideColony) {
                         metadata.selectedColony?.location ?: "Colony missing"
                     } else {
-                        colony?.location ?: "Colony missing"
+                        when (val detected = autoDetectedColony?.location) {
+                            null -> ColonyGpsUi.WAITING_FOR_GPS_SHORT
+                            else -> detected
+                        }
                     }
+                val colonyIsMissing = colonyLocationName == "Colony missing" ||
+                    colonyLocationName == ColonyPopulation.NOT_DETECTED
 
                 Text(
                     text = colonyLocationName,
-                    color = if (colonyLocationName == "Colony missing") MaterialTheme.colorScheme.error.copy(
-                        alpha = 0.9f
-                    ) else MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = if (colonyIsMissing) {
+                        errorColor
+                    } else {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    },
                     style = MaterialTheme.typography.titleLarge
                 )
             }

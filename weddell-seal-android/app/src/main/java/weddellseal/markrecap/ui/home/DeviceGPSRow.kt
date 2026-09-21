@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.location.data.toLocationString
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +35,23 @@ fun DeviceGPSRow(
     modifier: Modifier = Modifier,
 ) {
     val location by viewModel.currentLocation.collectAsState()
-    val hasFix = location?.coordinates?.longitude != null && location?.coordinates?.latitude != null
+    DeviceGPSRowContent(
+        locationGranted = locationGranted,
+        location = location,
+        onEnableLocation = onEnableLocation,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun DeviceGPSRowContent(
+    locationGranted: Boolean,
+    location: GeoLocation?,
+    onEnableLocation: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val hasCoords = location != null
+    val isLiveFix = location?.isLiveFix == true
 
     Row(
         modifier = modifier.then(
@@ -61,40 +78,60 @@ fun DeviceGPSRow(
         Spacer(modifier = Modifier.width(40.dp))
 
         Column {
-            if (hasFix) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_location_on),
-                    contentDescription = null,
-                    tint = Color(0xFF1D9C06),
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(36.dp),
-                )
-            } else {
-                Icon(
-                    painter = painterResource(R.drawable.ic_location_off),
-                    contentDescription = if (locationGranted) null else "Location off",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(36.dp),
-                )
+            when {
+                isLiveFix -> {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location_on),
+                        contentDescription = null,
+                        tint = Color(0xFF1D9C06),
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(36.dp),
+                    )
+                }
+                hasCoords -> {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location_off),
+                        contentDescription = ColonyGpsUi.LAST_KNOWN_LABEL,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(36.dp),
+                    )
+                }
+                else -> {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location_off),
+                        contentDescription = if (locationGranted) null else "Location off",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(36.dp),
+                    )
+                }
             }
         }
 
         Box(
-            modifier = Modifier.weight(1f)  // take the remaining space
+            modifier = Modifier.weight(1f)
         ) {
             Column {
                 Text(
                     text = when {
                         !locationGranted -> "Location off"
-                        hasFix -> location!!.toLocationString()
+                        hasCoords -> location!!.toLocationString()
                         else -> "Locating..."
                     },
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Black
                 )
+                if (hasCoords && !isLiveFix) {
+                    Text(
+                        text = ColonyGpsUi.LAST_KNOWN_LABEL,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 location?.updatedDate?.let {
                     Text(
                         text = it,
@@ -104,11 +141,5 @@ fun DeviceGPSRow(
                 }
             }
         }
-//                                Text(
-//                                    text = if (viewModel.hasPreciseLocation(context))
-//                                        "Using precise location"
-//                                    else
-//                                        "Using approximate location"
-//                                )
     }
 }
