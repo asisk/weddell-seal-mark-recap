@@ -82,7 +82,7 @@ class DeviceGPSRowTest {
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText(ColonyGpsUi.LAST_KNOWN_LABEL).assertIsDisplayed()
-        composeRule.onNodeWithText("-77.5    166.5").assertIsDisplayed()
+        composeRule.onNodeWithText("-77.50000    166.50000").assertIsDisplayed()
     }
 
     @Test
@@ -115,6 +115,6 @@ class DeviceGPSRowTest {
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText(ColonyGpsUi.LAST_KNOWN_LABEL).assertDoesNotExist()
-        composeRule.onNodeWithText("-77.5    166.5").assertIsDisplayed()
+        composeRule.onNodeWithText("-77.50000    166.50000").assertIsDisplayed()
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.domain.location.data.toCoordinateString
 import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 
@@ -69,7 +70,7 @@ fun ColonyRow(
                     if (metadata.selectedColony != null && metadata.selectedColony?.location != "Other") {
                         Text(
                             text = metadata.selectedColony?.let {
-                                "${metadata.selectedColony?.adjLat}" + "    " + "${metadata.selectedColony?.adjLong}"
+                                "${it.adjLat.toCoordinateString()}    ${it.adjLong.toCoordinateString()}"
                             } ?: "",
                             style = MaterialTheme.typography.titleMedium
                         )
@@ -127,7 +128,8 @@ internal fun ColonyAutoDetectColumn(
     )
     if (!waiting && !notDetected) {
         Text(
-            text = "${autoDetectedColony?.adjLat}    ${autoDetectedColony?.adjLong}",
+            text = "${autoDetectedColony!!.adjLat.toCoordinateString()}    " +
+                "${autoDetectedColony.adjLong.toCoordinateString()}",
             style = MaterialTheme.typography.titleMedium
         )
     }

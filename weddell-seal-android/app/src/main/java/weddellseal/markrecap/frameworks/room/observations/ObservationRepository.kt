@@ -7,6 +7,7 @@ Provide access to observations database and csv files.
 import android.util.Log
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.flow.Flow
+import weddellseal.markrecap.domain.location.data.toCoordinateDisplayString
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
@@ -32,8 +33,8 @@ class ObservationRepository(private val observationDao: ObservationDao) {
                     obs.date,
                     obs.time,
                     obs.censusID,
-                    obs.latitude,
-                    obs.longitude,
+                    obs.latitude.toCoordinateDisplayString(),
+                    obs.longitude.toCoordinateDisplayString(),
                     obs.ageClass,
                     obs.sex,
                     obs.numRelatives,

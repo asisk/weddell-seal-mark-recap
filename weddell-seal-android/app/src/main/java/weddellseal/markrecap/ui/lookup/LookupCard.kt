@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.domain.location.data.toCoordinateString
 import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
@@ -90,12 +91,12 @@ fun LookupCard(
 
         DataDisplayRow(
             "Lat",
-            if (seal.latitude == 0.0) "" else seal.latitude.toString()
+            if (seal.latitude == 0.0) "" else seal.latitude.toCoordinateString()
         )
 
         DataDisplayRow(
             "Long",
-            if (seal.longitude == 0.0) "" else seal.longitude.toString()
+            if (seal.longitude == 0.0) "" else seal.longitude.toCoordinateString()
         )
 
         DataDisplayRow("Previous Pups", seal.numPreviousPups)

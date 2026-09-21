@@ -223,11 +223,13 @@ On the enter screen, the top still showed the previous colony (e.g. Hutton Cliff
 
 **Plan:** Folded into the GPS cold-start / override item (step 5). Header collects live `autoDetectedColony` (or override selection). Do not add tap-to-refresh or in-header observer/colony edit in this drop.
 
-### [ ] Inconsistent lat/long precision
+### [x] Inconsistent lat/long precision
 
 Sometimes 8 digits, sometimes 4. She rounded to ~5. Not a blocker.
 
 **Ask:** consistent display precision (e.g. 5 decimal places) unless more is needed scientifically.
+
+**Done:** Device GPS, colony coordinates, lookup lat/long, the edit header, recent observations, saved records, and CSV export all use five decimal places (~1 m). Extra GPS digits are rounded. Blank or non-numeric stored values are left as-is.
 
 ---
 

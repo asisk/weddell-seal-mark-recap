@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.location.data.toDisplayString
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
@@ -183,8 +184,7 @@ fun TagRetagHeader(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         val editModeLocation =
-                            "${uiState.observationLocation?.coordinates?.latitude}    " +
-                                    "${uiState.observationLocation?.coordinates?.longitude}"
+                            uiState.observationLocation?.coordinates?.toDisplayString().orEmpty()
 
                         Text(
                             text = editModeLocation,

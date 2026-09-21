@@ -22,6 +22,4 @@ val GeoLocation.Companion.bozeman: GeoLocation
         bearing = 0.0,
     )
 
-fun GeoLocation.toLocationString(): String {
-    return "${this.coordinates.latitude}    " + "${this.coordinates.longitude}"
-}
+fun GeoLocation.toLocationString(): String = coordinates.toDisplayString()

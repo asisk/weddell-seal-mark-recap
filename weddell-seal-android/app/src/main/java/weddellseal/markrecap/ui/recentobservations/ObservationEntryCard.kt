@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.domain.location.data.toCoordinateDisplayString
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.ui.DataDisplayRow
 import weddellseal.markrecap.ui.tagretag.utils.notebookEntryValueObservation
@@ -42,9 +43,9 @@ fun ObservationEntryCard(
 
         DataDisplayRow("Census", observation.censusID)
 
-        DataDisplayRow("Latitude", observation.latitude)
+        DataDisplayRow("Latitude", observation.latitude.toCoordinateDisplayString())
 
-        DataDisplayRow("Longitude", observation.longitude)
+        DataDisplayRow("Longitude", observation.longitude.toCoordinateDisplayString())
 
         DataDisplayRow("Age Class", observation.ageClass)
 

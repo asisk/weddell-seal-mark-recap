@@ -1,6 +1,7 @@
 package weddellseal.markrecap.ui.tagretag.utils
 
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.location.data.toCoordinateString
 import weddellseal.markrecap.domain.tagretag.data.RetagReason
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
@@ -140,8 +141,8 @@ fun buildObservationRecord(
         date = date, // date format: yyyy-MM-dd
         time = time, // time format: hh:mm:ss
         censusID = censusNumber,
-        latitude = location?.coordinates?.latitude.toString(),  // example -77.73004, could also be 4 decimal precision
-        longitude = location?.coordinates?.longitude.toString(), // example 166.7941, could also be 2 decimal precision
+        latitude = location?.coordinates?.latitude?.toCoordinateString() ?: "null",
+        longitude = location?.coordinates?.longitude?.toCoordinateString() ?: "null",
         ageClass = seal.ageClass.alpha,
         sex = seal.sex.alpha,
         numRelatives = seal.numRelatives.label,

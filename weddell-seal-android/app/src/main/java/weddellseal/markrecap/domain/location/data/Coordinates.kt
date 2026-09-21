@@ -1,6 +1,28 @@
 package weddellseal.markrecap.domain.location.data
 
+import java.util.Locale
 import kotlin.math.*
+
+/**
+ * Five decimal places is about one meter. Device GPS is coarser than that, so extra
+ * digits are noise. Display, saved observations, and CSV export all use this width.
+ */
+private const val COORDINATE_FORMAT = "%.5f"
+
+fun Double.toCoordinateString(): String =
+    String.format(Locale.US, COORDINATE_FORMAT, this)
+
+/**
+ * Format a stored coordinate for display or CSV. Blank and non-numeric values
+ * (for example a missing location saved as "null") are left unchanged.
+ */
+fun String.toCoordinateDisplayString(): String {
+    val value = trim().toDoubleOrNull() ?: return this
+    return value.toCoordinateString()
+}
+
+fun Coordinates.toDisplayString(): String =
+    "${latitude.toCoordinateString()}    ${longitude.toCoordinateString()}"
 
 data class Coordinates(
     val latitude: Double,

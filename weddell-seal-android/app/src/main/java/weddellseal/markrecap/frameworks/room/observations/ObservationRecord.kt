@@ -32,8 +32,8 @@ data class ObservationRecord(
     @ColumnInfo(name = "date") val date: String,  // date format: yyyy-MM-dd
     @ColumnInfo(name = "time") val time: String,  // time format: hh:mm:ss
     @ColumnInfo(name = "census_id") val censusID: String,
-    @ColumnInfo(name = "latitude") val latitude: String,  // example -77.73004, could also be 4 decimal precision
-    @ColumnInfo(name = "longitude") val longitude: String,  // example 166.7941, could also be 2 decimal precision
+    @ColumnInfo(name = "latitude") val latitude: String,  // five decimal places, e.g. -77.73004
+    @ColumnInfo(name = "longitude") val longitude: String,  // five decimal places, e.g. 166.79410
     @ColumnInfo(name = "age_class") val ageClass: String, // A, P, Y
     @ColumnInfo(name = "sex") val sex: String,
     @ColumnInfo(name = "num_relatives") val numRelatives: String,

@@ -37,8 +37,8 @@ class BuildObservationRecordTest {
         assertEquals("2025 Test", record.season)
         assertEquals("Big Razor", record.colony)
         assertEquals("AB, CD", record.observerInitials)
-        assertEquals(loc.coordinates.latitude.toString(), record.latitude)
-        assertEquals(loc.coordinates.longitude.toString(), record.longitude)
+        assertEquals("-77.12340", record.latitude)
+        assertEquals("166.56780", record.longitude)
     }
 
     @Test
