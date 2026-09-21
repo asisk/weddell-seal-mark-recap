@@ -244,12 +244,21 @@ fun TagRetagHeader(
                 tint = Color(0xFFF57C00),
                 modifier = Modifier.padding(end = 8.dp),
             )
-            Text(
-                text = "Please review the data you've entered and confirm it is correct before saving.",
-                color = Color(0xFF5D4037),
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleMedium,
-            )
+            Column {
+                Text(
+                    text = "Please review the data you've entered and confirm it is correct before saving.",
+                    color = Color(0xFF5D4037),
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    modifier = Modifier.padding(top = 4.dp),
+                    text = "If you confirm a mismatch, write a note in the notebook.",
+                    color = Color(0xFF5D4037),
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
         if (uiState.validationFailureReason.isNotBlank()) {
             Text(

@@ -249,11 +249,13 @@ It sits on the path to Save and got tapped by accident.
 
 **Ask:** move comments and tissue off the direct path to Save (side of the screen).
 
-### [ ] Confirmation without a notebook note
+### [x] Confirmation without a notebook note
 
 Techs confirm and later say they “just agreed with the data.” Forced in-app notes are too slow.
 
 **Ask:** a line on the confirm/save banner: if confirming, write a note in the book.
+
+**Done:** The Confirm & Save warning banner includes “If you confirm a mismatch, write a note in the notebook.” Covered by `TagRetagHeaderTest`.
 
 ### [ ] Photos are disconnected from records
 
