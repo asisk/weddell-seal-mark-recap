@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.files.data.FileState
+import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
+import weddellseal.markrecap.frameworks.room.files.FilesRepository
 import weddellseal.markrecap.frameworks.room.observations.ObservationRecord
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.ui.UiEvent
@@ -29,6 +31,7 @@ import java.io.IOException
 class RecentObservationsViewModel(
     application: Application,
     private val observationRepo: ObservationRepository,
+    private val filesRepository: FilesRepository,
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(UiState())
@@ -270,6 +273,16 @@ class RecentObservationsViewModel(
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                     observationRepo.writeDataToStream(outputStream, observations)
                     updateStatus(observations.size, displayName)
+                    recordSuccessfulFile(
+                        fileType = when (exportType) {
+                            ExportType.CURRENT -> FileType.WEDDATACURRENT
+                            ExportType.ALL -> FileType.WEDDATAFULL
+                        },
+                        action = FileAction.EXPORT,
+                        filename = displayName ?: "WedData export",
+                        recordCount = observations.size,
+                        statusMessage = "exported",
+                    )
                 } ?: run {
                     throw IOException("Failed to write to file: $uri")
                 }
@@ -288,7 +301,39 @@ class RecentObservationsViewModel(
 
     fun markObservationsAsDeleted() {
         viewModelScope.launch {
+            val count = currentObservations.value.size
             observationRepo.softDeleteAllObservations()
+            if (count == 0) return@launch
+            recordSuccessfulFile(
+                fileType = FileType.ARCHIVE,
+                action = FileAction.ARCHIVE,
+                filename = "Current observations",
+                recordCount = count,
+                statusMessage = "archived",
+            )
+        }
+    }
+
+    private suspend fun recordSuccessfulFile(
+        fileType: FileType,
+        action: FileAction,
+        filename: String,
+        recordCount: Int,
+        statusMessage: String,
+    ) {
+        try {
+            filesRepository.insertFileUpload(
+                FileUploadEntity(
+                    fileType = fileType,
+                    fileAction = action.name,
+                    filename = filename,
+                    status = FileStatus.SUCCESS,
+                    statusMessage = statusMessage,
+                    recordCount = recordCount,
+                )
+            )
+        } catch (e: Exception) {
+            Log.e("RecentObservationsViewModel", "Could not record file history", e)
         }
     }
 

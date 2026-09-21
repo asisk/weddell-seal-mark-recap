@@ -37,6 +37,7 @@ import org.robolectric.annotation.Config
 import weddellseal.markrecap.Screens
 import weddellseal.markrecap.TestFixtures
 import weddellseal.markrecap.ui.recentobservations.DisplayObservation
+import weddellseal.markrecap.frameworks.room.files.FilesRepository
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
@@ -91,7 +92,8 @@ class TagRetagScreenTest {
             MutableStateFlow(TestFixtures.sampleMetadata()),
             MutableStateFlow(HomeViewModel.UiState(overrideColony = false)),
         )
-        recentObsViewModel = RecentObservationsViewModel(app, observationRepo)
+        val filesRepo = mockk<FilesRepository>(relaxed = true)
+        recentObsViewModel = RecentObservationsViewModel(app, observationRepo, filesRepo)
         navController = mockk(relaxed = true)
         val destination = mockk<NavDestination>()
         every { destination.route } returns Screens.TagRetag.route

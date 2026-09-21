@@ -29,5 +29,5 @@ fun DashboardScreen(
         )
     }
 
-    LastFilesImportedCard(adminViewModel.successfulUploads.collectAsState().value)
+    RecentFilesCard(adminViewModel.successfulUploads.collectAsState().value)
 }

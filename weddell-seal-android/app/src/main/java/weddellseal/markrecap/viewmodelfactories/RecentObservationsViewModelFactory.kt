@@ -11,6 +11,6 @@ class RecentObservationsViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val app =
             extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as ObservationLogApplication
-        return RecentObservationsViewModel(app, app.observationRepo) as T
+        return RecentObservationsViewModel(app, app.observationRepo, app.supportingDataRepo) as T
     }
 }

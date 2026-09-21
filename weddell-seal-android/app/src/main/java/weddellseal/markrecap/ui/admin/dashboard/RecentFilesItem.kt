@@ -14,12 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import weddellseal.markrecap.R
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.ui.utils.formatFileUploadedDateTime
 
 @Composable
-fun FileImportItem(successfulUpload: FileUploadEntity) {
+fun RecentFilesItem(file: FileUploadEntity) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -32,24 +31,25 @@ fun FileImportItem(successfulUpload: FileUploadEntity) {
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val appearance = fileHistoryAppearance(file.fileAction)
             Icon(
-                painter = painterResource(R.drawable.ic_upload_file_outlined),
-                contentDescription = null,
+                painter = painterResource(appearance.iconRes),
+                contentDescription = appearance.contentDescription,
                 tint = Color.Black,
                 modifier = Modifier
                     .size(48.dp)
                     .padding(end = 8.dp)
             )
             Text(
-                text = successfulUpload.filename,
+                text = file.filename,
                 style = MaterialTheme.typography.titleLarge,
             )
         }
 
         Text(
-            text = formatFileUploadedDateTime(successfulUpload.createdAt)
+            text = formatFileUploadedDateTime(file.createdAt)
                     + "\n" + "Records: "
-                    + successfulUpload.recordCount.toString(),
+                    + file.recordCount.toString(),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(end = 16.dp, top = 2.dp)
         )

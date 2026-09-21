@@ -269,11 +269,13 @@ She hits Export when she means Archive. Workflow is export → import/check → 
 
 **Ask:** no strong change yet. Optional visual cue / short instructions on the admin page. Date-range export was discussed; she never had to use “export all” as a recovery path. Training data is easy to delete on the backend. Revisit after she decides whether date-range export would help.
 
-### [ ] Last imported screen is import-only
+### [x] Last imported screen is import-only
 
 For Nate (and anyone less used to the process), import/export/archive gaps are easy to miss.
 
 **Ask:** recent activity / file history: import, export, and archive (another row with icons is fine).
+
+**Done:** Recent Files (formerly Last Imported) lists successful exports and archives with the export and archive icons, alongside imports.
 
 ### [ ] Admin Home tap is easy to hit by mistake
 
@@ -353,10 +355,10 @@ Use this as the talking list for what the next APK will include. Ops/hardware an
 - **GPS cold start + colony override.** Start GPS when the app opens. Show “waiting, often 2–3 minutes the first time.” Override is a secondary control with a confirm (“have you waited ~3 minutes?”). Last known coordinates may display as cached; they are never used as the colony that is saved. The enter-screen colony name stays in sync with live GPS.
 - **Consistent lat/long precision** (about 5 decimal places).
 - **Confirm & Save reminder:** if you confirm a mismatch, write a note in the notebook.
+- **Recent Files lists imports, exports, and archives** with the matching icons, so you can check that data was imported, exported, and archived.
 
 Still worth a yes/no with Parker (not assumed in this drop):
 
-- Last Imported screen also lists exports and archives (for Nate).
 - Clearer visual distinction between Export and Archive.
 - Photos attached to the record (in-app camera was removed; this is a larger build).
 - One-off “mark as untagged” after a tag is pulled — notebook note vs in-app workflow.
