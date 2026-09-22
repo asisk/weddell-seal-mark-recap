@@ -52,6 +52,8 @@ internal const val LOCATION_DISCLOSURE_CONTINUE_HINT =
     "Continue asks Android for Fine and Coarse location."
 internal const val LOCATION_DISCLOSURE_DENIED =
     "Location was not allowed. Enable it in Settings, or continue and choose a colony yourself."
+internal const val LOCATION_DISCLOSURE_APPROXIMATE_DENIED =
+    "Approximate location is not enough. Turn on Precise location in Settings, or continue and choose a colony yourself."
 
 /** Pre-prompt disclosure; [onLocationGranted] proceeds with GPS, [onSkip] continues without it. */
 @Composable
@@ -86,14 +88,14 @@ fun LocationPermissionView(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // System permission dialog; stay here and show the denied UI if the user refuses.
+    // System permission dialog. Re-check PackageManager afterward — the multi-permission
+    // result map for FINE+COARSE is unreliable (Precise + "Only this time" can look denied).
     if (requestPermissions) {
-        RequestPermissions(context.locationPermissions()) { granted ->
+        RequestPermissions(context.locationPermissions()) {
             requestPermissions = false
-            if (granted) {
-                onLocationGranted()
-            } else {
-                denied = true
+            when {
+                context.locationPermissionsGranted() -> onLocationGranted()
+                else -> denied = true
             }
         }
     }
@@ -159,7 +161,12 @@ fun LocationPermissionView(
             )
 
             Text(
-                text = if (denied) LOCATION_DISCLOSURE_DENIED else LOCATION_DISCLOSURE_CONTINUE_HINT,
+                text = when {
+                    denied && context.hasApproximateLocationOnly() ->
+                        LOCATION_DISCLOSURE_APPROXIMATE_DENIED
+                    denied -> LOCATION_DISCLOSURE_DENIED
+                    else -> LOCATION_DISCLOSURE_CONTINUE_HINT
+                },
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (denied) {

@@ -28,15 +28,20 @@ fun Context.locationPermissions(): List<String> {
     )
 }
 
+/**
+ * True when the app may use precise GPS.
+ *
+ * Fine location is what colony detect and observation stamps need. Do not require the
+ * coarse bit from the permission-result map: on some Android 12+ devices, granting
+ * Precise + "Only this time" returns an inconsistent FINE/COARSE pair and would leave
+ * the disclosure screen stuck if we required both.
+ */
 fun Context.locationPermissionsGranted(): Boolean {
-    val haveCoarse = ContextCompat.checkSelfPermission(
-        this,
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-    ) == PackageManager.PERMISSION_GRANTED
-    val haveFine = ContextCompat.checkSelfPermission(
-        this,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-    ) == PackageManager.PERMISSION_GRANTED
+    return havePermission(Manifest.permission.ACCESS_FINE_LOCATION)
+}
 
-    return haveCoarse && haveFine
+/** Coarse-only (Approximate) — not enough for this app's GPS features. */
+fun Context.hasApproximateLocationOnly(): Boolean {
+    return havePermission(Manifest.permission.ACCESS_COARSE_LOCATION) &&
+        !havePermission(Manifest.permission.ACCESS_FINE_LOCATION)
 }

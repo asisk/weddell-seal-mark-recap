@@ -145,4 +145,41 @@ class TagRetagHeaderTest {
         composeRule.onNodeWithText("Are you sure you want to start your entry over?")
             .assertDoesNotExist()
     }
+
+    @Test
+    fun confirmAndSaveBanner_remindsToWriteANotebookNote() {
+        tagRetagViewModel.checkNeedsConfirmation(listOf("Seal not in database"))
+        tagRetagViewModel.setIsSaving()
+
+        composeRule.setContent {
+            MaterialTheme {
+                TagRetagHeader(
+                    viewModel = tagRetagViewModel,
+                    homeViewModel = homeViewModel,
+                )
+            }
+        }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("If you confirm a mismatch, write a note in the notebook.")
+            .assertIsDisplayed()
+        // Material3 extended FABs clear the label's text semantics and expose the icon description.
+        composeRule.onNodeWithContentDescription("Confirm & Save").assertIsDisplayed()
+    }
+
+    @Test
+    fun confirmAndSaveBanner_notebookReminderHiddenUntilConfirmation() {
+        composeRule.setContent {
+            MaterialTheme {
+                TagRetagHeader(
+                    viewModel = tagRetagViewModel,
+                    homeViewModel = homeViewModel,
+                )
+            }
+        }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("If you confirm a mismatch, write a note in the notebook.")
+            .assertDoesNotExist()
+    }
 }

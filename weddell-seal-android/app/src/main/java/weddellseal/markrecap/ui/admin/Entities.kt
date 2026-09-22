@@ -5,12 +5,15 @@ enum class FileType(val label: String) {
     WEDDATACURRENT("WedData Current"),
     WEDDATAFULL("WedData Full"),
     OBSERVERS("Observer Initials"),
-    COLONIES("Seal Colony Locations")
+    COLONIES("Seal Colony Locations"),
+    ARCHIVE("Archive")
 }
 
 enum class FileAction(val label: String) {
     UPLOAD("Upload"),
     DOWNLOAD("Download"),
+    EXPORT("Export"),
+    ARCHIVE("Archive"),
     PENDING("Pending")
 }
 

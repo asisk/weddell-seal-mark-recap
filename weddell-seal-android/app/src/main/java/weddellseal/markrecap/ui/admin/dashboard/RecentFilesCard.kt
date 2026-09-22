@@ -22,8 +22,8 @@ import weddellseal.markrecap.R
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Composable
-fun LastFilesImportedCard(
-    successfulUploads: List<FileUploadEntity>,
+fun RecentFilesCard(
+    recentFiles: List<FileUploadEntity>,
 ) {
     Card(
         modifier = Modifier
@@ -53,13 +53,16 @@ fun LastFilesImportedCard(
                             .size(48.dp)
                             .padding(end = 12.dp)
                     )
-                    Text(text = "Last Imported", style = MaterialTheme.typography.headlineLarge)
+                    Text(text = "Recent Files", style = MaterialTheme.typography.headlineLarge)
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "This scrollable list shows files that were successfully imported.", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = "This scrollable list shows files that were successfully imported, exported, or archived.",
+                style = MaterialTheme.typography.bodyLarge
+            )
             Spacer(modifier = Modifier.height(20.dp))
-            FileImportList(successfulUploads)
+            RecentFilesList(recentFiles)
         }
     }
 }

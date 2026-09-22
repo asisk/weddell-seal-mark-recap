@@ -324,6 +324,20 @@ class SealConditionTest {
     }
 
     @Test
+    fun `tag identity change detects tag id and no-tag flips`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            tagNumber = "1234",
+            tagAlpha = "A",
+        )
+        assertTrue(original.copy(tagNumber = "5678").tagIdentityChangedFrom(original))
+        assertTrue(original.copy(tagAlpha = "B").tagIdentityChangedFrom(original))
+        assertTrue(original.copy(isNoTag = true).tagIdentityChangedFrom(original))
+        assertFalse(original.copy(condition = SealCondition.FAIR).tagIdentityChangedFrom(original))
+        assertFalse(original.tagIdentityChangedFrom(null))
+    }
+
+    @Test
     fun `field edits are recorded even when the comment also changes`() {
         val original = Seal(
             sealType = SealType.PRIMARY,
@@ -336,5 +350,38 @@ class SealConditionTest {
         val edits = updated.edits(original)
         assertTrue(edits.any { it.contains("condition") })
         assertTrue(edits.none { it.startsWith("comment") })
+    }
+
+    @Test
+    fun `sex change on a saved record requires confirmation`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            observationID = 42,
+            sex = SealSex.FEMALE,
+        )
+        val updated = original.copy(sex = SealSex.MALE)
+
+        assertTrue(updated.requiresSexChangeConfirmation(original))
+    }
+
+    @Test
+    fun `filling in sex on a new pup during edit does not require confirmation`() {
+        val original = Seal(sealType = SealType.PUPONE, observationID = 0, sex = SealSex.NONE)
+        val updated = original.copy(sex = SealSex.UNKNOWN)
+
+        assertFalse(updated.requiresSexChangeConfirmation(original))
+    }
+
+    @Test
+    fun `unchanged sex on a saved record does not require confirmation`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            observationID = 42,
+            sex = SealSex.FEMALE,
+        )
+
+        assertFalse(original.requiresSexChangeConfirmation(original))
+        assertFalse(original.copy(condition = SealCondition.FAIR)
+            .requiresSexChangeConfirmation(original))
     }
 }

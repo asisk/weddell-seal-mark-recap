@@ -84,6 +84,9 @@ class MainActivity : ComponentActivity() {
                 observersRepository
             )
         val homeViewModel: HomeViewModel by viewModels { homeViewModelFactory }
+        if (locationPermissionsGranted()) {
+            homeViewModel.onPermissionsResult(true)
+        }
 
         val tagRetagViewModelFactory =
             TagRetagViewModelFactory(
@@ -132,7 +135,10 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = startNavigation) {
                         composable(Screens.LocationPermissions.route) {
                             LocationPermissionView(
-                                onLocationGranted = { navController.leaveLocationDisclosure() },
+                                onLocationGranted = {
+                                    homeViewModel.onPermissionsResult(true)
+                                    navController.leaveLocationDisclosure()
+                                },
                                 onSkip = { navController.leaveLocationDisclosure() },
                             )
                         }

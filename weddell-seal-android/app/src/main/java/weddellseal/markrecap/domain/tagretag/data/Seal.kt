@@ -33,6 +33,7 @@ data class Seal(
     val weight: Int = 0,
     val weightTaken: Boolean = false,
     val observationID: Int = 0, // represents the record ID for an existing observation when mapping an ObservationRecord to a Seal
+    val insertedAt: Long = 0, // original insert time; 0 means "now" when writing a new row
     val observationRecordSpeno: Int = 0,
     val wedCheckMatch: WedCheckSeal? = null, // This could be null if there is no match in the database
     var flaggedForReview: Boolean = false,
@@ -266,6 +267,25 @@ data class Seal(
         return comment != original.comment || edits(original).isNotEmpty()
     }
 
+    /** True when the identity used in reciprocal relative tags changed (tag ID or No Tag). */
+    fun tagIdentityChangedFrom(original: Seal?): Boolean {
+        if (original == null) return false
+        return isNoTag != original.isNoTag ||
+            tagNumber != original.tagNumber ||
+            tagAlpha != original.tagAlpha
+    }
+
+    /**
+     * Sex change on a record that already exists. New rows (including a pup added during
+     * edit) do not need Confirm & Save for filling in sex the first time.
+     */
+    fun requiresSexChangeConfirmation(original: Seal?): Boolean {
+        if (original == null) return false
+        if (observationID == 0 || original.observationID == 0) return false
+        if (original.sex == SealSex.NONE) return false
+        return sex != original.sex
+    }
+
     /**
      * Field-level was/now strings for the Edited comment trail.
      *
@@ -319,6 +339,10 @@ data class Seal(
         return edits
     }
 }
+
+/** Shown on Confirm & Save when edit changes sex on an already-saved record. */
+const val SEX_CHANGE_ON_EDIT_CONFIRMATION_MESSAGE =
+    "Sex was already saved for this record. If this is a pee-check, write it in the notebook instead of changing the field."
 
 /** Dummy field tag used when no real tag is available (e.g. 0000D). Parker 2025 season recap. */
 fun isDummyTagId(tagNumber: String, tagAlpha: String): Boolean =

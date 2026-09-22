@@ -11,17 +11,17 @@ import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 
 @Composable
-fun FileImportList(successfulUploads: List<FileUploadEntity>) {
-    if (successfulUploads.isEmpty()) {
-        Text("No file uploads found.")
+fun RecentFilesList(recentFiles: List<FileUploadEntity>) {
+    if (recentFiles.isEmpty()) {
+        Text("No imports, exports, or archives yet.")
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             userScrollEnabled = true
         ) {
-            items(successfulUploads) { file ->
-                FileImportItem(successfulUpload = file)
+            items(recentFiles) { file ->
+                RecentFilesItem(file = file)
             }
         }
     }

@@ -27,7 +27,9 @@ import weddellseal.markrecap.ui.admin.AdminViewModel
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsViewModel
 import weddellseal.markrecap.ui.admin.ExportType
 import weddellseal.markrecap.ui.admin.FileStatus
+import weddellseal.markrecap.ui.utils.getDeviceName
 import weddellseal.markrecap.ui.utils.getFileExportDateTime
+import weddellseal.markrecap.ui.utils.observationExportSuggestedName
 
 @Composable
 fun ExportObservations(
@@ -140,13 +142,18 @@ fun ExportObservations(
 
     // set the upload handlers for each file type when the screen is loaded
     LaunchedEffect(Unit) {
+        val deviceName = getDeviceName(context)
         val fileDate = getFileExportDateTime()
 
         recentObservationsViewModel.setWedDataCurrentExportHandler {
-            createCurrentObservationsDocument.launch("observations_$fileDate.csv")
+            createCurrentObservationsDocument.launch(
+                observationExportSuggestedName(deviceName, fileDate, allRecords = false)
+            )
         }
         recentObservationsViewModel.setWedDataFullExportHandler {
-            createFullObservationsDocument.launch("all_observations_$fileDate.csv")
+            createFullObservationsDocument.launch(
+                observationExportSuggestedName(deviceName, fileDate, allRecords = true)
+            )
         }
     }
 

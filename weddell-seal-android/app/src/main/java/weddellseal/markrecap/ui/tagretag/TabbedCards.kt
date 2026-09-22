@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ import androidx.compose.ui.zIndex
 import weddellseal.markrecap.R
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealType
+import weddellseal.markrecap.ui.FieldHighlight
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
@@ -189,16 +191,18 @@ fun TabbedCards(
                     if (selectedSeal.wedCheckMatch?.comment?.isNotBlank() == true) {
                         // WEDCHECK COMMENT
                         Card(
-                            modifier = Modifier.padding(top = 10.dp),
+                            modifier = Modifier
+                                .padding(top = 10.dp)
+                                .testTag(FieldHighlight.TEST_TAG),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFFFE0B2),
+                                containerColor = FieldHighlight.Background,
+                                contentColor = FieldHighlight.Content,
                             ),
                         ) {
                             Text(
                                 text = selectedSeal.wedCheckMatch.comment,
                                 style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.padding(8.dp),
-                                color = Color(0xFFF57C00)
                             )
                         }
                     }

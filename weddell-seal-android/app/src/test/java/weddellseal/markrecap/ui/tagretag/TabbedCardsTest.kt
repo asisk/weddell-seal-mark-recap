@@ -6,8 +6,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -35,11 +38,13 @@ import weddellseal.markrecap.domain.tagretag.data.SealRelatives
 import weddellseal.markrecap.domain.tagretag.data.SealSex
 import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.domain.tagretag.data.TagEventType
+import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.frameworks.room.observations.ObservationRepository
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.testsupport.FakeLocationSource
+import weddellseal.markrecap.ui.FieldHighlight
 import weddellseal.markrecap.ui.home.HomeViewModel
 
 /**
@@ -154,6 +159,47 @@ class TabbedCardsTest {
         composeRule.onNodeWithText(SealType.PRIMARY.label).assertIsDisplayed()
         composeRule.onNodeWithText(SealType.PUPTWO.label).assertDoesNotExist()
     }
+
+    @Test
+    fun wedCheckComment_isHighlighted() {
+        composeRule.setContent {
+            MaterialTheme {
+                TabbedCards(
+                    viewModel = tagRetagViewModel,
+                    homeViewModel = homeViewModel,
+                    primarySeal = primaryWithWedCheckComment("scar on left flipper"),
+                    pupOneSeal = emptyPupTwo().copy(sealType = SealType.PUPONE),
+                    pupTwoSeal = emptyPupTwo(),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("scar on left flipper").assertIsDisplayed()
+        composeRule.onNodeWithTag(FieldHighlight.TEST_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun blankWedCheckComment_isNotHighlighted() {
+        composeRule.setContent {
+            MaterialTheme {
+                TabbedCards(
+                    viewModel = tagRetagViewModel,
+                    homeViewModel = homeViewModel,
+                    primarySeal = primaryWithWedCheckComment("   "),
+                    pupOneSeal = emptyPupTwo().copy(sealType = SealType.PUPONE),
+                    pupTwoSeal = emptyPupTwo(),
+                )
+            }
+        }
+
+        composeRule.onAllNodesWithTag(FieldHighlight.TEST_TAG).assertCountEquals(0)
+    }
+
+    private fun primaryWithWedCheckComment(comment: String) =
+        TestFixtures.completePrimaryMarkedSeal().copy(
+            notebookDataString = "Adult 123A",
+            wedCheckMatch = WedCheckSeal(speNo = 42, comment = comment),
+        )
 
     private fun primaryWithOnePup() = TestFixtures.completePrimaryMarkedSeal().copy(
         numRelatives = SealRelatives.ONE,

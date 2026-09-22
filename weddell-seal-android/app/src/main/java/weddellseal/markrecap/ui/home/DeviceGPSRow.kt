@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.domain.location.data.toLocationString
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +36,28 @@ fun DeviceGPSRow(
     modifier: Modifier = Modifier,
 ) {
     val location by viewModel.currentLocation.collectAsState()
-    val hasFix = location?.coordinates?.longitude != null && location?.coordinates?.latitude != null
+    val uiState by viewModel.uiState.collectAsState()
+    DeviceGPSRowContent(
+        locationGranted = locationGranted,
+        location = location,
+        isRefreshingGps = uiState.isRefreshingGps,
+        onEnableLocation = onEnableLocation,
+        onRefreshGps = viewModel::refreshGps,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun DeviceGPSRowContent(
+    locationGranted: Boolean,
+    location: GeoLocation?,
+    isRefreshingGps: Boolean = false,
+    onEnableLocation: () -> Unit,
+    onRefreshGps: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    val showCoords = location != null && !isRefreshingGps
+    val isLiveFix = showCoords && location?.isLiveFix == true
 
     Row(
         modifier = modifier.then(
@@ -56,59 +79,89 @@ fun DeviceGPSRow(
                 text = "Device GPS",
                 style = MaterialTheme.typography.titleLarge
             )
+            if (locationGranted) {
+                TextButton(
+                    onClick = onRefreshGps,
+                    enabled = !isRefreshingGps,
+                ) {
+                    Text(
+                        text = if (isRefreshingGps) {
+                            ColonyGpsUi.REFRESHING_GPS
+                        } else {
+                            ColonyGpsUi.REFRESH_GPS_BUTTON
+                        },
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.width(40.dp))
 
         Column {
-            if (hasFix) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_location_on),
-                    contentDescription = null,
-                    tint = Color(0xFF1D9C06),
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(36.dp),
-                )
-            } else {
-                Icon(
-                    painter = painterResource(R.drawable.ic_location_off),
-                    contentDescription = if (locationGranted) null else "Location off",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(36.dp),
-                )
+            when {
+                isLiveFix -> {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location_on),
+                        contentDescription = null,
+                        tint = Color(0xFF1D9C06),
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(36.dp),
+                    )
+                }
+                showCoords -> {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location_off),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(36.dp),
+                    )
+                }
+                else -> {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location_off),
+                        contentDescription = if (locationGranted) null else "Location off",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(36.dp),
+                    )
+                }
             }
         }
 
         Box(
-            modifier = Modifier.weight(1f)  // take the remaining space
+            modifier = Modifier.weight(1f)
         ) {
             Column {
                 Text(
                     text = when {
                         !locationGranted -> "Location off"
-                        hasFix -> location!!.toLocationString()
-                        else -> "Locating..."
+                        isRefreshingGps || !showCoords -> "Locating..."
+                        else -> location!!.toLocationString()
                     },
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Black
                 )
-                location?.updatedDate?.let {
+                if (showCoords && !isLiveFix) {
                     Text(
-                        text = it,
+                        text = ColonyGpsUi.LAST_KNOWN_LABEL,
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+                if (showCoords) {
+                    location?.updatedDate?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Black
+                        )
+                    }
                 }
             }
         }
-//                                Text(
-//                                    text = if (viewModel.hasPreciseLocation(context))
-//                                        "Using precise location"
-//                                    else
-//                                        "Using approximate location"
-//                                )
     }
 }

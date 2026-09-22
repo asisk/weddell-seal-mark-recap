@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.R
+import weddellseal.markrecap.domain.location.data.toDisplayString
 import weddellseal.markrecap.ui.home.HomeViewModel
 import weddellseal.markrecap.ui.tagretag.dialogs.RemoveDialog
 
@@ -183,8 +184,7 @@ fun TagRetagHeader(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         val editModeLocation =
-                            "${uiState.observationLocation?.coordinates?.latitude}    " +
-                                    "${uiState.observationLocation?.coordinates?.longitude}"
+                            uiState.observationLocation?.coordinates?.toDisplayString().orEmpty()
 
                         Text(
                             text = editModeLocation,
@@ -244,10 +244,29 @@ fun TagRetagHeader(
                 tint = Color(0xFFF57C00),
                 modifier = Modifier.padding(end = 8.dp),
             )
+            Column {
+                Text(
+                    text = "Please review the data you've entered and confirm it is correct before saving.",
+                    color = Color(0xFF5D4037),
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    modifier = Modifier.padding(top = 4.dp),
+                    text = "If you confirm a mismatch, write a note in the notebook.",
+                    color = Color(0xFF5D4037),
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+        }
+        if (uiState.validationFailureReason.isNotBlank()) {
             Text(
-                text = "Please review the data you've entered and confirm it is correct before saving.",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+                text = uiState.validationFailureReason,
                 color = Color(0xFF5D4037),
-                fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
             )
         }

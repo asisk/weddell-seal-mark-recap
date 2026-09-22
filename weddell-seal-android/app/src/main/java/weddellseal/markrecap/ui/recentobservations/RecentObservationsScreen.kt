@@ -20,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,8 +54,6 @@ fun RecentObservationsScreen(
     val scope = rememberCoroutineScope()
 
     val uiEventFlow = tagRetagViewModel.uiEvent
-
-    val observationToEdit by tagRetagViewModel.selectedRecentObservation.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
 
@@ -118,11 +115,11 @@ fun RecentObservationsScreen(
                         },
                         onConfirmation = {
                             showEditDialog = false
-
-                            observationToEdit?.let { record ->
-                                tagRetagViewModel.resetModelState()
-                                tagRetagViewModel.loadSealForEdit(record)
-                                navController.navigate(Screens.TagRetag.route)
+                            tagRetagViewModel.confirmEditSelectedObservation()
+                            if (navController.currentDestination?.route != Screens.TagRetag.route) {
+                                navController.navigate(Screens.TagRetag.route) {
+                                    launchSingleTop = true
+                                }
                             }
                         },
                     )

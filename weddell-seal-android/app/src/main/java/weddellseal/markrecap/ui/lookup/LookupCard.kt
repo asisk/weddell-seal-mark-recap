@@ -1,9 +1,7 @@
 package weddellseal.markrecap.ui.lookup
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,11 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import weddellseal.markrecap.domain.location.data.toCoordinateString
 import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
+import weddellseal.markrecap.domain.tagretag.data.SealCondition
 import weddellseal.markrecap.domain.tagretag.data.WedCheckSeal
 import weddellseal.markrecap.ui.DataDisplayRow
+import weddellseal.markrecap.ui.FieldHighlightBanner
 import weddellseal.markrecap.ui.PopulationMismatchBanner
 import weddellseal.markrecap.ui.home.HomeViewModel
 
@@ -51,27 +51,15 @@ fun LookupCard(
         DataDisplayRow("Sex", seal.sex.alpha)
 
         if (seal.tissueSampled == "Need") {
-            // BANNER For White Island Seals that are observed outside of White Island colony
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFFFE0B2))
-                    .padding(14.dp),
-            ) {
+            FieldHighlightBanner {
                 DataDisplayRow("Tissue Taken", seal.tissueSampled)
             }
         } else {
             DataDisplayRow("Tissue Taken", seal.tissueSampled)
         }
 
-        if (seal.condition.description == "Dead") {
-            // BANNER For White Island Seals that are observed outside of White Island colony
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFFFE0B2))
-                    .padding(14.dp),
-            ) {
+        if (seal.condition == SealCondition.DEAD) {
+            FieldHighlightBanner {
                 DataDisplayRow("Condition", seal.condition.code)
             }
         } else {
@@ -103,12 +91,12 @@ fun LookupCard(
 
         DataDisplayRow(
             "Lat",
-            if (seal.latitude == 0.0) "" else seal.latitude.toString()
+            if (seal.latitude == 0.0) "" else seal.latitude.toCoordinateString()
         )
 
         DataDisplayRow(
             "Long",
-            if (seal.longitude == 0.0) "" else seal.longitude.toString()
+            if (seal.longitude == 0.0) "" else seal.longitude.toCoordinateString()
         )
 
         DataDisplayRow("Previous Pups", seal.numPreviousPups)
@@ -119,6 +107,12 @@ fun LookupCard(
 
         DataDisplayRow("Photo Years", seal.momMassMeasurements)
 
-        DataDisplayRow("Comments", seal.comment)
+        if (seal.comment.isNotBlank()) {
+            FieldHighlightBanner {
+                DataDisplayRow("Comments", seal.comment)
+            }
+        } else {
+            DataDisplayRow("Comments", seal.comment)
+        }
     }
 }

@@ -48,6 +48,7 @@ import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
 import weddellseal.markrecap.testsupport.FakeLocationSource
 import weddellseal.markrecap.ui.home.HomeViewModel
+import weddellseal.markrecap.ui.recentobservations.DisplayObservation
 import weddellseal.markrecap.ui.utils.getCurrentYear
 
 /**
@@ -191,6 +192,38 @@ class SealCardTest {
             .assertDoesNotExist()
         composeRule.onNode(hasText("Male") and hasContentDescription("Selected"))
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun editModePrimaryWithPup_showsSexNotAgeClass() {
+        tagRetagViewModel.loadSealForEdit(
+            DisplayObservation.WithPups(
+                TestFixtures.minimalObservationRecord().copy(
+                    id = 1,
+                    sex = SealSex.FEMALE.alpha,
+                    numRelatives = "1",
+                    tagIDOne = "1234A",
+                    relativeTagIDOne = "5678B",
+                ),
+                TestFixtures.minimalObservationRecord().copy(
+                    id = 2,
+                    ageClass = SealAgeClass.PUP.alpha,
+                    sex = SealSex.UNKNOWN.alpha,
+                    numRelatives = "1",
+                    tagIDOne = "5678B",
+                    relativeTagIDOne = "1234A",
+                    sealCondition = SealCondition.NEWBORN.code,
+                ),
+                pupTwo = null,
+            ),
+        )
+        setSealCardContent(tagRetagViewModel.primarySeal.value)
+
+        composeRule.onNode(hasText("Female") and hasContentDescription("Selected"))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("Male").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Unknown").performScrollTo().assertIsDisplayed()
     }
 
     private fun setSealCardContent(seal: Seal) {

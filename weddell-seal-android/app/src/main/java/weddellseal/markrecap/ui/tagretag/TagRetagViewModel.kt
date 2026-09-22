@@ -21,6 +21,7 @@ import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
 import weddellseal.markrecap.logDebug
 import weddellseal.markrecap.domain.tagretag.data.RetagReason
+import weddellseal.markrecap.domain.tagretag.data.SEX_CHANGE_ON_EDIT_CONFIRMATION_MESSAGE
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealAgeClass
 import weddellseal.markrecap.domain.tagretag.data.SealCondition
@@ -89,7 +90,11 @@ class TagRetagViewModel(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    // extraBufferCapacity = 1 so a follow-up event is not dropped while a collector is busy.
+    // Default capacity 0 + replay 0 means emit() suspends until collect() is ready; after save,
+    // ShowSavedToast used to block that collector on snackbar duration, so ShowEditDialog never
+    // arrived until the snackbar finished (edit confirm timed out in instrumented tests).
+    private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
 
     private val _primarySeal = MutableStateFlow(Seal(sealType = SealType.PRIMARY))
@@ -178,6 +183,13 @@ class TagRetagViewModel(
                 )
             }
         }
+    }
+
+    /** Load the observation chosen in [onEditAttempt] into the enter form. */
+    fun confirmEditSelectedObservation() {
+        val record = _selectedRecentObservation.value ?: return
+        resetModelState()
+        loadSealForEdit(record)
     }
 
     fun exitEditMode() {
@@ -388,15 +400,6 @@ class TagRetagViewModel(
         _uiState.update { it.copy(isSaveInProgress = false) }
     }
 
-    private fun allSealsValid(
-        primary: Seal = _primarySeal.value,
-        pupOne: Seal = _pupOne.value,
-        pupTwo: Seal = _pupTwo.value,
-    ): Boolean =
-        primary.isValid &&
-            (!primary.hasPupOne || pupOne.isValid) &&
-            (!primary.hasPupTwo || pupTwo.isValid)
-
     /**
      * Save button entry point (fix #1 + #2).
      *
@@ -424,16 +427,13 @@ class TagRetagViewModel(
                 val pupOne = _pupOne.value
                 val pupTwo = _pupTwo.value
 
-                if (allSealsValid(primary, pupOne, pupTwo)) {
+                val confirmationReasons = confirmationReasons(primary, pupOne, pupTwo)
+                if (confirmationReasons.isEmpty()) {
                     writeObservationRecord(currentLocation)
                 } else {
-                    checkNeedsConfirmation(
-                        primary.validationErrors,
-                        pupOne.validationErrors,
-                        pupTwo.validationErrors,
-                    )
-                    // Allow Confirm & Save; persist has not started yet.
-                    clearSaveInProgress()
+                    // Banner and isSaveInProgress = false are one update, so Confirm & Save
+                    // is enabled as soon as validation asks for confirmation.
+                    checkNeedsConfirmation(confirmationReasons)
                 }
             } catch (e: Exception) {
                 clearSaveInProgress()
@@ -623,24 +623,43 @@ class TagRetagViewModel(
         }
     }
 
-    fun checkNeedsConfirmation(
-        primarySealValidationErrors: List<String>,
-        pupOneSealValidationErrors: List<String>,
-        pupTwoSealValidationErrors: List<String>
-    ) {
-        // the validation errors for a seal that isn't started will be empty
-        val validationErrorString = buildList {
-            addAll(primarySealValidationErrors)
-            addAll(pupOneSealValidationErrors)
-            addAll(pupTwoSealValidationErrors)
+    fun checkNeedsConfirmation(reasons: List<String>) {
+        _uiState.update {
+            it.copy(
+                validationFailureReason = reasons.joinToString("\n"),
+                entryNeedsConfirmation = reasons.isNotEmpty(),
+                // Same update as the banner. A separate clear lets tests (and one frame of UI)
+                // observe confirmation while Confirm & Save is still blocked.
+                isSaveInProgress = false,
+            )
         }
-        _uiState.update { it.copy(validationFailureReason = validationErrorString.joinToString()) }
+    }
 
-        if (validationErrorString.isNotEmpty()) {
-            // Needs Confirmation
-            // require the technician to save the record by confirming and saving
-            _uiState.update { it.copy(entryNeedsConfirmation = true) }
+    /**
+     * WedCheck / field validation plus a sex change on an already-saved record.
+     * Filling in sex on a newly added pup is a first save and is not included.
+     */
+    private fun confirmationReasons(
+        primary: Seal,
+        pupOne: Seal,
+        pupTwo: Seal,
+    ): List<String> = buildList {
+        addAll(primary.validationErrors)
+        if (primary.hasPupOne) addAll(pupOne.validationErrors)
+        if (primary.hasPupTwo) addAll(pupTwo.validationErrors)
+        addAll(sexChangeConfirmationReasons(primary, pupOne, pupTwo))
+    }
+
+    private fun sexChangeConfirmationReasons(
+        primary: Seal,
+        pupOne: Seal,
+        pupTwo: Seal,
+    ): List<String> {
+        if (!_uiState.value.isEditMode) return emptyList()
+        val changed = listOf(primary, pupOne, pupTwo).any { seal ->
+            seal.requiresSexChangeConfirmation(originalSealFor(seal.sealType))
         }
+        return if (changed) listOf(SEX_CHANGE_ON_EDIT_CONFIRMATION_MESSAGE) else emptyList()
     }
 
     /**
@@ -1601,18 +1620,35 @@ class TagRetagViewModel(
         when (sealName) {
             SealType.PUPONE -> {
                 _pupOne.update { it.copy(markedRemoved = true) }
-                _primarySeal.update { it.copy(pupOneRemoved = true) }
+                _primarySeal.update {
+                    it.copy(
+                        pupOneRemoved = true,
+                        numRelatives = decrementedRelatives(it.numRelatives),
+                    )
+                }
+                updateNotebookEntry(primarySeal.value)
             }
 
             SealType.PUPTWO -> {
                 _pupTwo.update { it.copy(markedRemoved = true) }
-                _primarySeal.update { it.copy(pupTwoRemoved = true) }
+                _primarySeal.update {
+                    it.copy(
+                        pupTwoRemoved = true,
+                        numRelatives = decrementedRelatives(it.numRelatives),
+                    )
+                }
+                updateNotebookEntry(primarySeal.value)
             }
 
             else -> {
                 // No action for primary seal
             }
         }
+    }
+
+    private fun decrementedRelatives(current: SealRelatives): SealRelatives {
+        if (current == SealRelatives.UNKNOWN) return current
+        return SealRelatives.fromIntVal((current.value - 1).coerceAtLeast(0))
     }
 
     fun resetSeal(sealName: SealType) {
@@ -1909,28 +1945,24 @@ class TagRetagViewModel(
                 observationRepo.deleteObservation(seal.observationID)
             }
 
-            if (primarySeal.value.pupAdded) { // TODO TEST, be wary of race condition
-                // remove the primary record and add a new observation records for mom with the pup
-                // this action supports ordering the mom and pup together
-                observationRepo.deleteObservation(primarySeal.value.observationID)
-            }
-
             // Parker 2025 season recap: editing an entry created fake untagged pups. Unused pup
             // slots default to age P with empty tags; an accidental hasEdits flag wrote a ghost
             // "P No Tag" row. Skip those unless hasPupOne / hasPupTwo and the slot is complete.
-            val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-                .filter { seal ->
-                    !seal.markedRemoved &&
-                        seal.hasChangesFrom(originalSealFor(seal.sealType)) &&
-                        seal.isEntryStarted &&
-                        seal.isComplete &&
-                        when (seal.sealType) {
-                            SealType.PRIMARY -> true
-                            SealType.PUPONE -> primarySeal.value.hasPupOne
-                            SealType.PUPTWO -> primarySeal.value.hasPupTwo
-                            SealType.UNKNOWN -> false
-                        }
-                }
+            //
+            // When any family member's tag identity changes, rewrite every active family row so
+            // reciprocal relativeTagID fields stay aligned for Recent Observations grouping.
+            // Condition-only edits still write only the changed seal.
+            val familySeals = listOf(primarySeal.value, pupOne.value, pupTwo.value)
+            val anyTagIdentityChanged = familySeals.any { seal ->
+                seal.tagIdentityChangedFrom(originalSealFor(seal.sealType))
+            }
+            val sealToUpdate = familySeals.filter { seal ->
+                isActiveFamilyMemberForEditWrite(seal) &&
+                    (
+                        seal.hasChangesFrom(originalSealFor(seal.sealType)) ||
+                            anyTagIdentityChanged
+                        )
+            }
 
             for (seal in sealToUpdate) {
                 // Recompute after pending comment/tag flush; the collector may not have run yet.
@@ -1939,10 +1971,12 @@ class TagRetagViewModel(
                 // get the tags for this seal's relatives
                 val (relOneTag, relTwoTag) = getRelativesTags(seal.sealType)
                 // Await WedCheck so speno is populated before building the record (fix #2).
-                // Force hasEdits so comment assembly skips first-save prefixes even when the
-                // collector has not yet flagged a comment-only change.
-                val sealForRecord = resolveWedCheckForSeal(seal).copy(hasEdits = true)
-                // Fix #5: append-only edit history; each edit writes a new observation row.
+                // Existing rows skip first-save prefixes even when the collector has not yet
+                // flagged a comment-only change. A pup added during edit has observationID 0
+                // and should use the first-save comment builder.
+                val sealForRecord = resolveWedCheckForSeal(seal).copy(
+                    hasEdits = seal.observationID != 0,
+                )
                 val observationRecord = buildObservationRecord(
                     uiState.value.observationLocation,
                     sealForRecord,
@@ -1992,28 +2026,41 @@ class TagRetagViewModel(
         resetModelState()
     }
 
+    /**
+     * Active, complete family slots that may be written during edit. Unused pup slots
+     * (empty defaults) are excluded so we never persist ghost "P No Tag" rows.
+     */
+    private fun isActiveFamilyMemberForEditWrite(seal: Seal): Boolean {
+        if (seal.markedRemoved || !seal.isEntryStarted || !seal.isComplete) return false
+        return when (seal.sealType) {
+            SealType.PRIMARY -> true
+            SealType.PUPONE -> primarySeal.value.hasPupOne
+            SealType.PUPTWO -> primarySeal.value.hasPupTwo
+            SealType.UNKNOWN -> false
+        }
+    }
+
     private fun getRelativesTags(sealName: SealType): Pair<String, String> {
         when (sealName) {
             SealType.PRIMARY -> {
-                val relOneTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
-                val relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
-                return Pair(relOneTagId, relTwoTagId)
+                return Pair(relativeTagId(pupOne.value), relativeTagId(pupTwo.value))
             }
 
             SealType.PUPONE -> {
-                val relOneTagId = primarySeal.value.tagNumber + primarySeal.value.tagAlpha
-                val relTwoTagId = pupTwo.value.tagNumber + pupTwo.value.tagAlpha
-                return Pair(relOneTagId, relTwoTagId)
+                return Pair(relativeTagId(primarySeal.value), relativeTagId(pupTwo.value))
             }
 
             SealType.PUPTWO -> {
-                val relOneTagId = primarySeal.value.tagNumber + primarySeal.value.tagAlpha
-                val relTwoTagId = pupOne.value.tagNumber + pupOne.value.tagAlpha
-                return Pair(relOneTagId, relTwoTagId)
+                return Pair(relativeTagId(primarySeal.value), relativeTagId(pupOne.value))
             }
 
             SealType.UNKNOWN -> return Pair("", "")
         }
+    }
+
+    private fun relativeTagId(seal: Seal): String {
+        if (seal.markedRemoved) return ""
+        return seal.tagNumber + seal.tagAlpha
     }
 }
 

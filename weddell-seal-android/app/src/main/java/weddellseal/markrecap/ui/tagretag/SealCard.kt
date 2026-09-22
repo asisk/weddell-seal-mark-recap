@@ -156,7 +156,6 @@ fun SealCard(
 
     // SEX
     SexSection(
-        isEditMode = isEditMode,
         seal = seal,
         onSelectSex = { chosen ->
             sexSelected = chosen

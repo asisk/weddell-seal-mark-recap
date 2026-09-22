@@ -15,22 +15,20 @@ fun RequestPermissions(
     onCompleted: (Boolean) -> Unit,
 ) {
     Log.i(TAG, "requesting permissions:\n${permissions.joinToString(separator = "\n")}")
-    // Create an activity result launcher using permissions contract & handle the result
     val activityResultLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        Log.i(TAG, "permissions result:\n${results.entries.joinToString(separator = "\n") { "${it.key}: ${it.value}" }}")
-        val allGranted = results.values.all { it }
-        Log.i(TAG, "All permissions granted: $allGranted")
-        if (allGranted) {
-            Log.i(TAG, "Calling onCompleted(true)")
-            onCompleted(true)
-        } else {
-            Log.i(TAG, "Calling onCompleted(false)")
-            onCompleted(false)
-        }
+        Log.i(
+            TAG,
+            "permissions result:\n${results.entries.joinToString(separator = "\n") { "${it.key}: ${it.value}" }}",
+        )
+        // Prefer "any requested permission granted" over values.all: an empty map or a
+        // partial FINE/COARSE pair should not be treated as a hard deny by itself.
+        // Callers that need a precise check should re-query PackageManager.
+        val granted = results.isNotEmpty() && results.values.any { it }
+        Log.i(TAG, "Reporting onCompleted($granted)")
+        onCompleted(granted)
     }
-    // Request permissions
     LaunchedEffect(Unit) {
         Log.i(TAG, "Launching permission request...")
         activityResultLauncher.launch(permissions.toTypedArray())

@@ -13,6 +13,12 @@ interface LocationSource {
     suspend fun requestSingleUpdate(): Result<GeoLocation>
 
     /**
+     * Last known device location, if the provider has one.
+     * Marked as not a live fix; display only.
+     */
+    suspend fun lastKnownLocation(): GeoLocation?
+
+    /**
      * Get a flow of location updates.
      */
     suspend fun locationUpdates(): Flow<GeoLocation>

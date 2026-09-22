@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import weddellseal.markrecap.domain.tagretag.data.Seal
 import weddellseal.markrecap.domain.tagretag.data.SealSex
-import weddellseal.markrecap.domain.tagretag.data.SealType
 import weddellseal.markrecap.ui.tagretag.SegmentedButtonGroup
 
 // ---- Reused constants (don’t rebuild every recomposition) ----
@@ -20,7 +19,6 @@ private val SEX_OPTIONS = SealSex.values().filter { it != SealSex.NONE }.map { i
 
 @Composable
 fun SexSection(
-    isEditMode: Boolean,
     seal: Seal,
     onSelectSex: (SealSex) -> Unit,
     modifier: Modifier
@@ -35,18 +33,10 @@ fun SexSection(
     ) {
         Text("Sex", style = MaterialTheme.typography.titleLarge)
 
-        if (isEditMode && seal.sealType == SealType.PRIMARY && seal.hasPup) {
-
-            // sex is not selectable in edit mode for the primary seal
-            Text(seal.ageClass.description, style = MaterialTheme.typography.titleLarge)
-
-        } else {
-
-            SegmentedButtonGroup(
-                options = SEX_OPTIONS,
-                selectedOption = seal.sex.description,
-                onOptionSelected = { onSelectSex(SealSex.fromSelection(it)) }
-            )
-        }
+        SegmentedButtonGroup(
+            options = SEX_OPTIONS,
+            selectedOption = seal.sex.description,
+            onOptionSelected = { onSelectSex(SealSex.fromSelection(it)) }
+        )
     }
 }
