@@ -153,6 +153,7 @@ class FusedLocationSource(
             CurrentLocationRequest.Builder().apply {
                 setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
+                setMaxUpdateAgeMillis(0L)
             }.build(),
             null,
         ).addOnSuccessListener(executor) { location ->
