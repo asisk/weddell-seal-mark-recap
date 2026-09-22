@@ -351,7 +351,6 @@ Use this as the talking list for what the next APK will include. Ops/hardware an
 - **Edits update the original record** instead of creating a second copy. Previous values stay in comments (tag event, tag number, relatives/mom, condition). Sex change still requires Confirm & Save so it is not silent.
 - **Export filename includes the tablet letter** automatically (e.g. `observations_H_20260825_155900.csv`), so you do not have to type it by hand.
 - **Harder-to-miss highlights** on lookup notes, tissue Need, Dead, and WedCheck comments: dark background with white text, matching tag/retag buttons.
-- **Tissue and comments moved off the path to Save** so they are not tapped by accident.
 - **GPS cold start + colony override.** Start GPS when the app opens. Show “waiting, often 2–3 minutes the first time.” Override is a secondary control with a confirm (“have you waited ~3 minutes?”). Last known coordinates may display as cached; they are never used as the colony that is saved. The enter-screen colony name stays in sync with live GPS.
 - **Consistent lat/long precision** (about 5 decimal places).
 - **Confirm & Save reminder:** if you confirm a mismatch, write a note in the notebook.
