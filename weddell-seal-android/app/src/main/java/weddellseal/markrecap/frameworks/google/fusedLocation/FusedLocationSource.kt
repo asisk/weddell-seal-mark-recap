@@ -16,8 +16,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import weddellseal.markrecap.domain.location.LocationSource
+import weddellseal.markrecap.domain.location.LocationUpdatePhase
 import weddellseal.markrecap.domain.location.areLocationsEquivalentForUi
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.location.locationRequestSettings
 import weddellseal.markrecap.domain.location.sampleAfterFirstLiveFix
 import weddellseal.markrecap.frameworks.google.fusedLocation.types.fromFusedLocation
 import weddellseal.markrecap.logDebug
@@ -40,6 +42,7 @@ class FusedLocationSource(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     private var isUpdating = false
+    private var updatePhase = LocationUpdatePhase.ACQUIRE
     private var locationExecutor: ExecutorService? = null
 
     init {
@@ -61,6 +64,7 @@ class FusedLocationSource(
                 CurrentLocationRequest.Builder().apply {
                     setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                     setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
+                    setMaxUpdateAgeMillis(0L)
                 }.build(),
                 null
             ).addOnSuccessListener { location ->
@@ -122,13 +126,9 @@ class FusedLocationSource(
             Thread(runnable, TAG).apply { isDaemon = true }
         }
         try {
+            updatePhase = LocationUpdatePhase.ACQUIRE
             fusedProviderClient.requestLocationUpdates(
-                LocationRequest.Builder(1000L).apply {
-                    setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-                    setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
-                    setMinUpdateDistanceMeters(0.5f)
-                    setMinUpdateIntervalMillis(0)
-                }.build(),
+                buildLocationRequest(LocationUpdatePhase.ACQUIRE),
                 executor,
                 this,
             )
@@ -158,7 +158,7 @@ class FusedLocationSource(
             null,
         ).addOnSuccessListener(executor) { location ->
             if (!isUpdating || location == null) return@addOnSuccessListener
-            locationFlow.tryEmit(GeoLocation.fromFusedLocation(location, isLiveFix = true))
+            emitLiveFix(GeoLocation.fromFusedLocation(location, isLiveFix = true))
         }
     }
 
@@ -173,15 +173,54 @@ class FusedLocationSource(
         locationExecutor?.shutdown()
         locationExecutor = null
         isUpdating = false
+        updatePhase = LocationUpdatePhase.ACQUIRE
         Log.i(TAG, "Location updates stopped successfully, isUpdating: $isUpdating")
     }
 
     override fun onLocationChanged(update: Location) {
         logDebug(TAG) { "onLocationChanged: accuracy=${update.accuracy}m" }
         try {
-            locationFlow.tryEmit(GeoLocation.fromFusedLocation(update, isLiveFix = true))
+            emitLiveFix(GeoLocation.fromFusedLocation(update, isLiveFix = true))
         } catch (e: Exception) {
             Log.e(TAG, "Error processing location update", e)
+        }
+    }
+
+    @Synchronized
+    private fun emitLiveFix(location: GeoLocation) {
+        if (!isUpdating) return
+        locationFlow.tryEmit(location)
+        switchToTrackPhaseIfNeeded()
+    }
+
+    /**
+     * After the first live fix, re-request updates at the calmer track cadence so a full
+     * field day does not keep the GPS chip at 1 Hz.
+     */
+    @SuppressLint("MissingPermission")
+    @Synchronized
+    private fun switchToTrackPhaseIfNeeded() {
+        if (!isUpdating || updatePhase == LocationUpdatePhase.TRACK) return
+        val executor = locationExecutor ?: return
+        updatePhase = LocationUpdatePhase.TRACK
+        fusedProviderClient.requestLocationUpdates(
+            buildLocationRequest(LocationUpdatePhase.TRACK),
+            executor,
+            this,
+        )
+        Log.i(TAG, "Switched location updates to TRACK phase")
+    }
+
+    companion object {
+        internal fun buildLocationRequest(phase: LocationUpdatePhase): LocationRequest {
+            val settings = locationRequestSettings(phase)
+            return LocationRequest.Builder(settings.intervalMs).apply {
+                setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
+                setMinUpdateDistanceMeters(settings.minUpdateDistanceMeters)
+                setMinUpdateIntervalMillis(settings.minUpdateIntervalMs)
+                settings.maxUpdateDelayMs?.let { setMaxUpdateDelayMillis(it) }
+            }.build()
         }
     }
 }

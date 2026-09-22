@@ -169,23 +169,35 @@ For the first week techs hit override as soon as they saw “seal colony not det
 
 Do **not** add a foreground service, background location, or coarse/network priority. No internet in the field, so assisted GPS will not help. Colony boxes need a precise fix. Cold start will still take ~2–3 minutes; this plan shaves app delay and stops early override.
 
+### GPS / battery — plain English (for Parker)
+
+GPS is eager until the first real fix (about once a second), then settles into a calmer rhythm (about every 5 seconds) for the rest of the day. That keeps cold start as fast as the hardware allows without burning the battery at high rate all day on the ice.
+
+What you should see in the field:
+
+- After GPS is live, walking seal to seal still updates the position used on Save (within a couple of seconds of when you stop).
+- Standing still doesn’t keep pinging new fixes for no reason.
+- Colony name and the coordinates that get saved only come from a live fix — not from an old “last known” spot on the screen.
+- Longer walks between colonies are still fine; GPS keeps tracking while you move.
+- A one-off “get current location” request will not treat a stale cached point as live.
+
+Bottom line: live colony + accurate save while you move between seals, with less continuous high-rate GPS so batteries hold up better through the day.
+
 Current behavior:
 
-- `HomeScreen` `ON_RESUME` → `HomeViewModel.onPermissionsResult(true)` → `startLocationUpdates()`.
-- `FusedLocationSource` uses `PRIORITY_HIGH_ACCURACY`, 5s interval, `maxUpdateDelayMillis(5000)`, then the UI flow `sample(2000L)`.
-- `getLastLocation()` is unused. `requestSingleUpdate()` exists and is never called.
-- Colony row always shows an **Override** checkbox next to Colony. One tap unlocks the dropdown. While waiting: `…detecting proximity to a known colony…`. After a fix with no bounding-box hit: `Seal colony not detected`.
-- Auto-detect writes a dummy colony with `ColonyPopulation.NOT_DETECTED` so `autoDetectedColony` is only null before the first live fix.
-- Tag/Retag header does its own `LaunchedEffect(currentLocation)` keyed on the StateFlow **object**, so the name can stay on the previous colony after a move. Save already uses current GPS.
+- GPS starts from `MainActivity` when permissions are already granted (and from Home after the disclosure grant).
+- `FusedLocationSource` uses `PRIORITY_HIGH_ACCURACY` in two phases: **acquire** (~1s interval, no max delay) until the first live fix, then **track** (5s interval, 2s min interval, 5s max delay). Min distance stays 0.5 m. UI flow still samples at 2s and keeps the latest mid-window fix.
+- Cached last-known is display-only; colony detect and Save use live fixes only.
+- `requestSingleUpdate()` / startup `getCurrentLocation` both require a fresh fix (`maxUpdateAgeMillis(0)`).
 
 Implementation:
 
 1. **Start GPS at process UI, not Home composition.** If `locationPermissionsGranted()`, call `homeViewModel.onPermissionsResult(true)` from `MainActivity.onCreate` (after the ViewModel exists). Keep Home `ON_RESUME` as a no-op if updates are already running (`isUpdating` already guards this). Still start from Home if the user grants permission on the disclosure screen then lands on Home. Do not stop GPS when leaving Home (already the case).
 
-2. **Faster first live fix (seconds, not the satellite wait).**
-   - On start: `getLastLocation()` for display only (see 3), plus `getCurrentLocation(PRIORITY_HIGH_ACCURACY)` (`requestSingleUpdate`) in parallel with `requestLocationUpdates`.
-   - LocationRequest: keep high accuracy; `setIntervalMillis(1000)` (or `setMinUpdateIntervalMillis(0)`); drop or raise `setMaxUpdateDelayMillis` so the first update is not held for 5s.
-   - Skip `sample(2000L)` until the first live fix has been delivered; sampling after that is fine.
+2. **Faster first live fix (seconds, not the satellite wait), then sustainable tracking.**
+   - On start: `getLastLocation()` for display only (see 3), plus `getCurrentLocation(PRIORITY_HIGH_ACCURACY)` in parallel with `requestLocationUpdates`.
+   - LocationRequest: high accuracy; **acquire** at ~1s until first live fix; then re-request at **track** 5s / 2s min / 5s max delay. Keep `minUpdateDistanceMeters(0.5)`.
+   - Skip `sample(2000L)` until the first live fix has been delivered; after that, sample and keep the latest mid-window fix.
    - Keep `distinctUntilChanged` at 0.5m.
 
 3. **Cached vs live location.** Add something like `isLiveFix: Boolean` on the location the UI reads (or a small `LocationUiState`: `None` / `Cached(geo)` / `Live(geo)`).

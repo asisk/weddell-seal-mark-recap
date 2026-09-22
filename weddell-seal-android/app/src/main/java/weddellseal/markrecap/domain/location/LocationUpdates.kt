@@ -10,10 +10,54 @@ import weddellseal.markrecap.domain.location.data.GeoLocation
 
 internal const val LOCATION_SAMPLE_PERIOD_MS = 2000L
 
+/**
+ * Provider intervals for continuous GPS.
+ *
+ * Acquire: eager until the first live fix (cold start).
+ * Track: calmer cadence for the rest of the field day (battery).
+ */
+internal const val LOCATION_ACQUIRE_INTERVAL_MS = 1000L
+internal const val LOCATION_ACQUIRE_MIN_INTERVAL_MS = 0L
+internal const val LOCATION_TRACK_INTERVAL_MS = 5000L
+internal const val LOCATION_TRACK_MIN_INTERVAL_MS = 2000L
+internal const val LOCATION_TRACK_MAX_UPDATE_MS = 5000L
+internal const val LOCATION_MIN_UPDATE_DISTANCE_METERS = 0.5f
+
 /** Colony miss ("not detected") is only shown once the live fix is this accurate. */
 internal const val COLONY_DETECT_MAX_ACCURACY_METERS = 50f
 
 internal const val LOCATION_EQUIVALENCE_METERS = 0.5
+
+enum class LocationUpdatePhase {
+    /** High-rate request until the first live fix. */
+    ACQUIRE,
+
+    /** Sustainable request after GPS is live. */
+    TRACK,
+}
+
+data class LocationRequestSettings(
+    val intervalMs: Long,
+    val minUpdateIntervalMs: Long,
+    /** Null means do not set max update delay (no provider batching). */
+    val maxUpdateDelayMs: Long?,
+    val minUpdateDistanceMeters: Float,
+)
+
+fun locationRequestSettings(phase: LocationUpdatePhase): LocationRequestSettings = when (phase) {
+    LocationUpdatePhase.ACQUIRE -> LocationRequestSettings(
+        intervalMs = LOCATION_ACQUIRE_INTERVAL_MS,
+        minUpdateIntervalMs = LOCATION_ACQUIRE_MIN_INTERVAL_MS,
+        maxUpdateDelayMs = null,
+        minUpdateDistanceMeters = LOCATION_MIN_UPDATE_DISTANCE_METERS,
+    )
+    LocationUpdatePhase.TRACK -> LocationRequestSettings(
+        intervalMs = LOCATION_TRACK_INTERVAL_MS,
+        minUpdateIntervalMs = LOCATION_TRACK_MIN_INTERVAL_MS,
+        maxUpdateDelayMs = LOCATION_TRACK_MAX_UPDATE_MS,
+        minUpdateDistanceMeters = LOCATION_MIN_UPDATE_DISTANCE_METERS,
+    )
+}
 
 fun areLocationsEquivalentForUi(old: GeoLocation, new: GeoLocation): Boolean {
     if (old.isLiveFix != new.isLiveFix) return false

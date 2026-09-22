@@ -182,4 +182,21 @@ class LocationUpdatesTest {
         runCurrent()
         assertEquals(listOf(liveA, liveC), emitted)
     }
+
+    @Test
+    fun locationRequestSettings_acquireIsEager_trackIsCalmer() {
+        val acquire = locationRequestSettings(LocationUpdatePhase.ACQUIRE)
+        assertEquals(LOCATION_ACQUIRE_INTERVAL_MS, acquire.intervalMs)
+        assertEquals(LOCATION_ACQUIRE_MIN_INTERVAL_MS, acquire.minUpdateIntervalMs)
+        assertEquals(null, acquire.maxUpdateDelayMs)
+        assertEquals(LOCATION_MIN_UPDATE_DISTANCE_METERS, acquire.minUpdateDistanceMeters)
+
+        val track = locationRequestSettings(LocationUpdatePhase.TRACK)
+        assertEquals(LOCATION_TRACK_INTERVAL_MS, track.intervalMs)
+        assertEquals(LOCATION_TRACK_MIN_INTERVAL_MS, track.minUpdateIntervalMs)
+        assertEquals(LOCATION_TRACK_MAX_UPDATE_MS, track.maxUpdateDelayMs)
+        assertEquals(LOCATION_MIN_UPDATE_DISTANCE_METERS, track.minUpdateDistanceMeters)
+
+        assertTrue(track.intervalMs > acquire.intervalMs)
+    }
 }
