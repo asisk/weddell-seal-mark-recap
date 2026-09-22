@@ -15,18 +15,19 @@ fun observationExportSuggestedName(
 }
 
 internal fun sanitizeDeviceNameForFilename(deviceName: String): String {
-    if (deviceName.isBlank() || deviceName.equals("Unknown Device", ignoreCase = true)) {
+    val normalized = deviceName.trim()
+    if (normalized.isEmpty() || normalized.equals("Unknown Device", ignoreCase = true)) {
         return "tablet"
     }
 
-    val replaced = buildString(deviceName.length) {
-        deviceName.forEach { ch ->
+    val replaced = buildString(normalized.length) {
+        normalized.forEach { ch ->
             append(
                 if (ch.isLetterOrDigit() || ch == '.' || ch == '_' || ch == '-') ch else '_'
             )
         }
     }
     val collapsed = replaced.replace(Regex("_+"), "_")
-    val trimmed = collapsed.trim('_', ' ')
-    return trimmed.ifEmpty { "tablet" }
+    val trimmed = collapsed.trim('_', '.', '-')
+    return trimmed.takeIf { value -> value.any { it.isLetterOrDigit() } } ?: "tablet"
 }
