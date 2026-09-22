@@ -51,6 +51,7 @@ class HomeViewModel(
         val isFollowingLocation: Boolean = false,
         val lastKnownCoordinates: Coordinates? = null,
         val overrideColony: Boolean = false,
+        val isRefreshingGps: Boolean = false,
         val latitudeDegrees: Int = -77,
         val latitudeDecimals: Int = 0,
         val longitudeDegrees: Int = 166,
@@ -147,6 +148,49 @@ class HomeViewModel(
         _currentLocation.value = geoLocation
     }
 
+    /**
+     * One-shot high-accuracy refresh (fresh fix only). Does not change the continuous
+     * acquire/track cadence; use when a technician wants an immediate update.
+     *
+     * Clears displayed coordinates (and auto-detected colony when not overriding) while
+     * the request is in flight so Refresh feels like an update even when the new fix
+     * matches the old one.
+     */
+    fun refreshGps() {
+        if (_uiState.value.isRefreshingGps) return
+        viewModelScope.launch {
+            val previousLocation = _currentLocation.value
+            val previousAutoColony = _autoDetectedColony.value
+            val previousSelectedColony = metadata.value.selectedColony
+            val clearingAutoColony = !_uiState.value.overrideColony
+
+            _uiState.update { it.copy(isRefreshingGps = true) }
+            _currentLocation.value = null
+            if (clearingAutoColony) {
+                setAutoDetectedColony(null)
+                syncSelectedColonyFromAutoDetect()
+            }
+            try {
+                locationSource.requestSingleUpdate()
+                    .onSuccess { applyIncomingLocation(it) }
+                    .onFailure { e ->
+                        Log.w(TAG, "refreshGps: failed to get current location", e)
+                        if (_currentLocation.value == null && previousLocation != null) {
+                            _currentLocation.value = previousLocation
+                        }
+                        if (clearingAutoColony && _autoDetectedColony.value == null) {
+                            setAutoDetectedColony(previousAutoColony)
+                            if (!_uiState.value.overrideColony) {
+                                _metadata.update { it.copy(selectedColony = previousSelectedColony) }
+                            }
+                        }
+                    }
+            } finally {
+                _uiState.update { it.copy(isRefreshingGps = false) }
+            }
+        }.storeIn(jobs)
+    }
+
     private fun observeColonyUpdates() {
         viewModelScope.launch {
             currentLocation
@@ -155,6 +199,24 @@ class HomeViewModel(
                     updateColonyForLocation(geoLocation)
                 }
         }.storeIn(jobs)
+    }
+
+    /**
+     * Colony auto-detect only runs when location changes. If colonies are imported after a
+     * live fix (common: empty DB at launch, then upload Baxter Meadows), re-query the boxes
+     * against the current live position so Home / Save pick up the new catalog.
+     */
+    private fun observeColonyCatalogChanges() {
+        viewModelScope.launch {
+            sealColonyRepository.coloniesList.collect {
+                reevaluateColonyForCurrentLocation()
+            }
+        }.storeIn(jobs)
+    }
+
+    private suspend fun reevaluateColonyForCurrentLocation() {
+        val live = currentLocation.value?.takeIf { it.isLiveFix } ?: return
+        updateColonyForLocation(live)
     }
 
     // Initialize the ViewModel
@@ -172,6 +234,7 @@ class HomeViewModel(
         // Only start colony observation - location collection starts after permissions are granted
         // This prevents trying to collect from a flow that isn't emitting yet
         observeColonyUpdates()
+        observeColonyCatalogChanges()
     }
 
     // User Selection for Observers
@@ -192,6 +255,12 @@ class HomeViewModel(
     // User Selection for Colony
     fun setOverrideColonyCheckbox(value: Boolean) {
         _uiState.update { it.copy(overrideColony = value) }
+    }
+
+    /** Leave override mode and restore the GPS-detected colony into metadata for save. */
+    fun useGpsColony() {
+        setOverrideColonyCheckbox(false)
+        syncSelectedColonyFromAutoDetect()
     }
 
     fun updateSelectedColony(observationSiteSelected: String) {
@@ -234,12 +303,14 @@ class HomeViewModel(
         val matched = findColony(geoLocation.coordinates)
         if (matched != null) {
             setAutoDetectedColony(matched)
+            syncSelectedColonyFromAutoDetect()
             return
         }
 
         // A poor fix that misses every box is still "waiting", not "not detected".
         if (!isAccurateEnoughForColonyMiss(geoLocation.accuracyMeters)) {
             setAutoDetectedColony(null)
+            syncSelectedColonyFromAutoDetect()
             return
         }
 
@@ -257,6 +328,21 @@ class HomeViewModel(
                 fileUploadId = 0
             )
         )
+        syncSelectedColonyFromAutoDetect()
+    }
+
+    /**
+     * Keep [ObservationMetadata.selectedColony] in sync with GPS auto-detect when not
+     * overriding. Save validation and CSV colony name read selectedColony; the Home row
+     * displays autoDetectedColony — both must agree.
+     */
+    private fun syncSelectedColonyFromAutoDetect() {
+        if (_uiState.value.overrideColony) return
+        val detected = _autoDetectedColony.value
+        val forSave = detected?.takeUnless {
+            it.location == ColonyPopulation.NOT_DETECTED
+        }
+        _metadata.update { it.copy(selectedColony = forSave) }
     }
 
     // get the colony by coordinates
@@ -272,12 +358,16 @@ class HomeViewModel(
         return sealColonyRepository.findColonyByName(colonyName)
     }
 
-    // This uses coordinates from the auto-detected colony or
-    // from a colony that the user selects, including "Other"
-    // and then uses the coordinates that the user enters
+    /**
+     * Coordinates written on Save.
+     *
+     * Override mode: use the hand-picked colony center, or manual Other decimals.
+     * GPS mode: always the live device fix (never last-known, never colony-box center).
+     */
     fun getColonyLocation(): GeoLocation? {
-        val colony = metadata.value.selectedColony?.let {
-            if (it.location == "Other") {
+        if (_uiState.value.overrideColony) {
+            val colony = metadata.value.selectedColony ?: return null
+            return if (colony.location == "Other") {
                 // Home UI shows "{degrees}." + up to 5 fractional digits (e.g. "-77." + "12345").
                 // For negative degrees, subtract the fraction: -77 + 0.12345 = -76.87655 (wrong).
                 val lat = composeManualCoordinate(
@@ -288,13 +378,12 @@ class HomeViewModel(
                     uiState.value.longitudeDegrees,
                     uiState.value.longitudeDecimals,
                 )
-
                 GeoLocation(Coordinates(lat, long))
             } else {
-                GeoLocation(Coordinates(it.adjLat, it.adjLong))
+                GeoLocation(Coordinates(colony.adjLat, colony.adjLong))
             }
-        } ?: currentLocation.value?.takeIf { it.isLiveFix }
-        return colony
+        }
+        return currentLocation.value?.takeIf { it.isLiveFix }
     }
 
     /**

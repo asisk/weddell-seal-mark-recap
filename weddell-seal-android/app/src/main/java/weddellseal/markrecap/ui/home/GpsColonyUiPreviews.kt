@@ -38,6 +38,7 @@ private fun PreviewLastKnownWhileColonyWaits() {
             locationGranted = true,
             location = SAMPLE_LAST_KNOWN,
             onEnableLocation = {},
+            onRefreshGps = {},
         )
         Spacer(Modifier.height(24.dp))
         ColonyPreviewRow(autoDetectedColony = null)

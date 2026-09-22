@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,10 +36,13 @@ fun DeviceGPSRow(
     modifier: Modifier = Modifier,
 ) {
     val location by viewModel.currentLocation.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     DeviceGPSRowContent(
         locationGranted = locationGranted,
         location = location,
+        isRefreshingGps = uiState.isRefreshingGps,
         onEnableLocation = onEnableLocation,
+        onRefreshGps = viewModel::refreshGps,
         modifier = modifier,
     )
 }
@@ -47,11 +51,13 @@ fun DeviceGPSRow(
 internal fun DeviceGPSRowContent(
     locationGranted: Boolean,
     location: GeoLocation?,
+    isRefreshingGps: Boolean = false,
     onEnableLocation: () -> Unit,
+    onRefreshGps: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val hasCoords = location != null
-    val isLiveFix = location?.isLiveFix == true
+    val showCoords = location != null && !isRefreshingGps
+    val isLiveFix = showCoords && location?.isLiveFix == true
 
     Row(
         modifier = modifier.then(
@@ -73,6 +79,20 @@ internal fun DeviceGPSRowContent(
                 text = "Device GPS",
                 style = MaterialTheme.typography.titleLarge
             )
+            if (locationGranted) {
+                TextButton(
+                    onClick = onRefreshGps,
+                    enabled = !isRefreshingGps,
+                ) {
+                    Text(
+                        text = if (isRefreshingGps) {
+                            ColonyGpsUi.REFRESHING_GPS
+                        } else {
+                            ColonyGpsUi.REFRESH_GPS_BUTTON
+                        },
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.width(40.dp))
@@ -89,7 +109,7 @@ internal fun DeviceGPSRowContent(
                             .size(36.dp),
                     )
                 }
-                hasCoords -> {
+                showCoords -> {
                     Icon(
                         painter = painterResource(R.drawable.ic_location_off),
                         contentDescription = null,
@@ -119,25 +139,27 @@ internal fun DeviceGPSRowContent(
                 Text(
                     text = when {
                         !locationGranted -> "Location off"
-                        hasCoords -> location!!.toLocationString()
-                        else -> "Locating..."
+                        isRefreshingGps || !showCoords -> "Locating..."
+                        else -> location!!.toLocationString()
                     },
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Black
                 )
-                if (hasCoords && !isLiveFix) {
+                if (showCoords && !isLiveFix) {
                     Text(
                         text = ColonyGpsUi.LAST_KNOWN_LABEL,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                location?.updatedDate?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black
-                    )
+                if (showCoords) {
+                    location?.updatedDate?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Black
+                        )
+                    }
                 }
             }
         }

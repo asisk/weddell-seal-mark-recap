@@ -153,7 +153,7 @@ Do not change archive filenames or import filename checks (`observers`, `Colony_
 
 GPS itself was “great” after the first week. Problems were mostly cold start and UI prominence.
 
-### [ ] Override used too early / GPS slow on cold start
+### [x] Override used too early / GPS slow on cold start
 
 For the first week techs hit override as soon as they saw “seal colony not detected” (cold start or no-man’s-land). After coaching, GPS was fine. First fix ~2–3 minutes, mainly first time outside / after driving / indoors.
 
@@ -169,6 +169,8 @@ For the first week techs hit override as soon as they saw “seal colony not det
 
 Do **not** add a foreground service, background location, or coarse/network priority. No internet in the field, so assisted GPS will not help. Colony boxes need a precise fix. Cold start will still take ~2–3 minutes; this plan shaves app delay and stops early override.
 
+**Done:** GPS starts at app open; acquiring / wait copy; Override is a secondary control with confirm; last-known is display-only; acquire→track intervals for battery (see Parker note below). Colony header follows live GPS (folded in from the next item).
+
 ### GPS / battery — plain English (for Parker)
 
 GPS is eager until the first real fix (about once a second), then settles into a calmer rhythm (about every 5 seconds) for the rest of the day. That keeps cold start as fast as the hardware allows without burning the battery at high rate all day on the ice.
@@ -180,6 +182,7 @@ What you should see in the field:
 - Colony name and the coordinates that get saved only come from a live fix — not from an old “last known” spot on the screen.
 - Longer walks between colonies are still fine; GPS keeps tracking while you move.
 - A one-off “get current location” request will not treat a stale cached point as live.
+- **Refresh GPS** on the Device GPS row requests a fresh fix immediately (without turning the continuous rate back up for the whole day). While it runs, coordinates clear to “Locating…” and the auto-detected colony clears to waiting; a hand-picked Override colony is left alone.
 
 Bottom line: live colony + accurate save while you move between seals, with less continuous high-rate GPS so batteries hold up better through the day.
 
@@ -227,13 +230,13 @@ Tests:
 - `TagRetagAppBar`: header follows `autoDetectedColony` after a second live colony (not stuck on the first).
 - Keep existing `onPermissionsResult_startsAndStopsLocationUpdates` / `onCleared_stopsLocationUpdates`.
 
-### [ ] Colony header stays on the old colony after a move
+### [x] Colony header stays on the old colony after a move
 
 On the enter screen, the top still showed the previous colony (e.g. Hutton Cliffs) while GPS had already updated. Techs thought they were in the wrong colony. Actual save used current GPS.
 
 **Ask:** keep the header in sync with the GPS used on save. Optional (later): tap colony to refresh GPS / colony; tap observers to return home and re-select. Parker also liked editing observer and colony from the tag/retag summary.
 
-**Plan:** Folded into the GPS cold-start / override item (step 5). Header collects live `autoDetectedColony` (or override selection). Do not add tap-to-refresh or in-header observer/colony edit in this drop.
+**Done:** Tag/Retag header collects live `autoDetectedColony` (and override selection). Home **Refresh GPS** requests a fresh fix on demand and clears coordinates / auto-colony while waiting (Override selection is kept). Tap colony / in-header observer-colony edit stay out of this drop.
 
 ### [x] Inconsistent lat/long precision
 
@@ -350,7 +353,7 @@ Keep these stable unless a P0/P1 fix requires a change.
 3. ~~Validation: false positives, persist confirmation in export.~~ Missed-validation: still collect Parker’s record if it happens again.
 4. ~~`0000` Delta exception; retag reason in export.~~ ~~In-place edit vs duplicate records.~~
 5. ~~Census prefill switch.~~ ~~Tablet letter in filename;~~ ~~yellow contrast;~~ tissue placement.
-6. GPS cold start (start earlier, acquiring copy) + quieter override with confirm; colony header follows live GPS.
+6. ~~GPS cold start (start earlier, acquiring copy) + quieter override with confirm; colony header follows live GPS.~~
 7. File history, photo linking, confirmation banner copy.
 8. Map / tracks / handover docs if time remains before the 2027 season.
 

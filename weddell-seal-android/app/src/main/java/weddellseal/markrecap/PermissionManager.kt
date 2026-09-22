@@ -48,14 +48,14 @@ class PermissionManager(private val context: Context) {
     }
 
     private fun hasLocationAccess(): Boolean {
-        return hasAccess(ACCESS_FINE_LOCATION) && hasAccess(ACCESS_COARSE_LOCATION)
+        // Precise GPS is what the field workflows need; fine implies usable location.
+        return hasAccess(ACCESS_FINE_LOCATION)
     }
 
     fun onPermissionChange(permissions: Map<String, Boolean>) {
         val hasFine = permissions[ACCESS_FINE_LOCATION] ?: hasAccess(ACCESS_FINE_LOCATION)
-        val hasCoarse = permissions[ACCESS_COARSE_LOCATION] ?: hasAccess(ACCESS_COARSE_LOCATION)
         _state.value = State(
-            hasLocationAccess = hasFine && hasCoarse
+            hasLocationAccess = hasFine
         )
     }
 

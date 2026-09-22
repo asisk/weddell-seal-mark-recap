@@ -76,10 +76,7 @@ fun ColonyRow(
                         )
                     }
                     TextButton(
-                        onClick = {
-                            viewModel.setOverrideColonyCheckbox(false)
-                            viewModel.clearColony()
-                        }
+                        onClick = { viewModel.useGpsColony() }
                     ) {
                         Text(
                             text = ColonyGpsUi.USE_GPS_BUTTON,

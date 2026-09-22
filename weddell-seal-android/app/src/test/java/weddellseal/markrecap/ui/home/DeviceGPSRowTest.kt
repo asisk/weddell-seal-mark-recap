@@ -83,6 +83,7 @@ class DeviceGPSRowTest {
 
         composeRule.onNodeWithText(ColonyGpsUi.LAST_KNOWN_LABEL).assertIsDisplayed()
         composeRule.onNodeWithText("-77.50000    166.50000").assertIsDisplayed()
+        composeRule.onNodeWithText(ColonyGpsUi.REFRESH_GPS_BUTTON).assertIsDisplayed()
     }
 
     @Test

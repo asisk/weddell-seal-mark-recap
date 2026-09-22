@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -202,6 +203,141 @@ class HomeViewModelTest {
 
         assertEquals("Hutton Cliffs", vm.autoDetectedColony.value?.location)
         assertEquals(live, vm.getColonyLocation())
+        assertEquals(
+            "Auto-detect must populate selectedColony for Save / CSV colony name",
+            "Hutton Cliffs",
+            vm.metadata.value.selectedColony?.location,
+        )
+    }
+
+    @Test
+    fun refreshGps_appliesFreshLiveFixAndDetectsColony() = runBlocking {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        val colony = TestFixtures.sampleColony(location = "Hutton Cliffs")
+        coEvery { sealRepo.findColony(-77.51, 166.51) } returns colony
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        locationSource.emit(
+            GeoLocation(
+                coordinates = Coordinates(-77.5, 166.5),
+                isLiveFix = false,
+            )
+        )
+        assertNull(vm.autoDetectedColony.value)
+
+        val refreshed = GeoLocation(
+            coordinates = Coordinates(-77.51, 166.51),
+            accuracyMeters = 10f,
+            isLiveFix = true,
+        )
+        locationSource.nextSingleUpdate = Result.success(refreshed)
+        vm.refreshGps()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, locationSource.singleUpdateCount)
+        assertEquals(refreshed, vm.currentLocation.value)
+        assertEquals("Hutton Cliffs", vm.autoDetectedColony.value?.location)
+        assertEquals("Hutton Cliffs", vm.metadata.value.selectedColony?.location)
+        assertEquals(refreshed, vm.getColonyLocation())
+        assertEquals(false, vm.uiState.value.isRefreshingGps)
+    }
+
+    @Test
+    fun refreshGps_clearsCoordinatesAndAutoColonyWhileRequestInFlight() = runBlocking {
+        val locationSource = FakeLocationSource()
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        locationSource.singleUpdateGate = gate
+        val sealRepo = mockSealColonyRepository()
+        val colony = TestFixtures.sampleColony(location = "Baxter Meadows")
+        coEvery { sealRepo.findColony(any(), any()) } returns colony
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        val previous = GeoLocation(
+            coordinates = Coordinates(-77.5, 166.5),
+            accuracyMeters = 10f,
+            isLiveFix = true,
+        )
+        locationSource.emit(previous)
+        assertEquals("Baxter Meadows", vm.autoDetectedColony.value?.location)
+        assertEquals("Baxter Meadows", vm.metadata.value.selectedColony?.location)
+
+        val refreshed = previous.copy(accuracyMeters = 8f)
+        locationSource.nextSingleUpdate = Result.success(refreshed)
+        vm.refreshGps()
+        testDispatcher.scheduler.runCurrent()
+
+        assertEquals(true, vm.uiState.value.isRefreshingGps)
+        assertNull(vm.currentLocation.value)
+        assertNull(vm.autoDetectedColony.value)
+        assertNull(vm.metadata.value.selectedColony)
+
+        gate.complete(Unit)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(refreshed, vm.currentLocation.value)
+        assertEquals("Baxter Meadows", vm.autoDetectedColony.value?.location)
+        assertEquals("Baxter Meadows", vm.metadata.value.selectedColony?.location)
+        assertEquals(false, vm.uiState.value.isRefreshingGps)
+    }
+
+    @Test
+    fun refreshGps_keepsOverrideColonyWhileRefreshing() = runBlocking {
+        val locationSource = FakeLocationSource()
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        locationSource.singleUpdateGate = gate
+        val sealRepo = mockSealColonyRepository()
+        val handPicked = TestFixtures.sampleColony(location = "Turtle Rock")
+        coEvery { sealRepo.findColony(any(), any()) } returns
+            TestFixtures.sampleColony(location = "Baxter Meadows")
+        coEvery { sealRepo.findColonyByName("Turtle Rock") } returns handPicked
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        locationSource.emit(
+            GeoLocation(
+                coordinates = Coordinates(-77.5, 166.5),
+                accuracyMeters = 10f,
+                isLiveFix = true,
+            )
+        )
+        vm.setOverrideColonyCheckbox(true)
+        vm.updateSelectedColony("Turtle Rock")
+        vm.metadata.first { it.selectedColony?.location == "Turtle Rock" }
+
+        locationSource.nextSingleUpdate = Result.success(
+            GeoLocation(
+                coordinates = Coordinates(-77.6, 166.6),
+                accuracyMeters = 8f,
+                isLiveFix = true,
+            )
+        )
+        vm.refreshGps()
+        testDispatcher.scheduler.runCurrent()
+
+        assertNull(vm.currentLocation.value)
+        assertEquals("Turtle Rock", vm.metadata.value.selectedColony?.location)
+
+        gate.complete(Unit)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals("Turtle Rock", vm.metadata.value.selectedColony?.location)
     }
 
     @Test
@@ -225,7 +361,50 @@ class HomeViewModelTest {
         locationSource.emit(live)
 
         assertNull(vm.autoDetectedColony.value)
+        assertNull(vm.metadata.value.selectedColony)
         assertEquals(live, vm.getColonyLocation())
+    }
+
+    @Test
+    fun overrideColony_keepsHandPickedSelectionWhenGpsMoves() = runBlocking {
+        val locationSource = FakeLocationSource()
+        val sealRepo = mockSealColonyRepository()
+        val gpsColony = TestFixtures.sampleColony(location = "Hutton Cliffs")
+        val handPicked = TestFixtures.sampleColony(location = "Turtle Rock")
+            .copy(adjLat = -77.9, adjLong = 166.9)
+        coEvery { sealRepo.findColony(any(), any()) } returns gpsColony
+        coEvery { sealRepo.findColonyByName("Turtle Rock") } returns handPicked
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        locationSource.emit(
+            GeoLocation(
+                coordinates = Coordinates(-77.5, 166.5),
+                accuracyMeters = 10f,
+                isLiveFix = true,
+            )
+        )
+        assertEquals("Hutton Cliffs", vm.metadata.value.selectedColony?.location)
+
+        vm.setOverrideColonyCheckbox(true)
+        vm.updateSelectedColony("Turtle Rock")
+        vm.metadata.first { it.selectedColony?.location == "Turtle Rock" }
+
+        locationSource.emit(
+            GeoLocation(
+                coordinates = Coordinates(-77.6, 166.6),
+                accuracyMeters = 10f,
+                isLiveFix = true,
+            )
+        )
+
+        assertEquals("Turtle Rock", vm.metadata.value.selectedColony?.location)
+        assertEquals(-77.9, vm.getColonyLocation()!!.coordinates.latitude, 0.000_001)
     }
 
     @Test
@@ -249,6 +428,7 @@ class HomeViewModelTest {
         locationSource.emit(live)
 
         assertEquals(ColonyPopulation.NOT_DETECTED, vm.autoDetectedColony.value?.location)
+        assertNull(vm.metadata.value.selectedColony)
         assertEquals(live, vm.getColonyLocation())
     }
 
@@ -307,6 +487,39 @@ class HomeViewModelTest {
         assertEquals(live, vm.currentLocation.value)
         assertEquals(live, vm.getColonyLocation())
         assertEquals("Hutton Cliffs", vm.autoDetectedColony.value?.location)
+    }
+
+    @Test
+    fun colonyCatalogUpdate_reDetectsAgainstCurrentLiveFix() {
+        val locationSource = FakeLocationSource()
+        val coloniesFlow = MutableStateFlow<List<String>>(emptyList())
+        val sealRepo = mockk<SealColonyRepository>()
+        every { sealRepo.coloniesList } returns coloniesFlow
+        coEvery { sealRepo.findColony(any(), any()) } returns null
+        val vm = HomeViewModel(
+            ApplicationProvider.getApplicationContext(),
+            locationSource,
+            sealRepo,
+            mockObserversRepository(),
+        )
+        vm.onPermissionsResult(granted = true)
+
+        val live = GeoLocation(
+            coordinates = Coordinates(-77.5, 166.5),
+            accuracyMeters = 12f,
+            isLiveFix = true,
+        )
+        locationSource.emit(live)
+        assertEquals(ColonyPopulation.NOT_DETECTED, vm.autoDetectedColony.value?.location)
+        assertNull(vm.metadata.value.selectedColony)
+
+        val baxter = TestFixtures.sampleColony(location = "Baxter Meadows")
+        coEvery { sealRepo.findColony(-77.5, 166.5) } returns baxter
+        coloniesFlow.value = listOf("Baxter Meadows")
+
+        assertEquals("Baxter Meadows", vm.autoDetectedColony.value?.location)
+        assertEquals("Baxter Meadows", vm.metadata.value.selectedColony?.location)
+        assertEquals(live, vm.getColonyLocation())
     }
 
     private fun mockSealColonyRepository(): SealColonyRepository {

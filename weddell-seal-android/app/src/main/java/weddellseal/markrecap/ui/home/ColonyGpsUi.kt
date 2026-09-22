@@ -12,4 +12,6 @@ object ColonyGpsUi {
         "Have you left app GPS on for about 3 minutes? Only override if the colony is still missing or wrong."
     const val OVERRIDE_CONFIRM_ACTION = "Override"
     const val LAST_KNOWN_LABEL = "Last known (not current)"
+    const val REFRESH_GPS_BUTTON = "Refresh GPS"
+    const val REFRESHING_GPS = "Refreshing…"
 }
