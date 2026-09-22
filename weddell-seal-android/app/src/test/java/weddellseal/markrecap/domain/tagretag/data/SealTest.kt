@@ -324,6 +324,20 @@ class SealConditionTest {
     }
 
     @Test
+    fun `tag identity change detects tag id and no-tag flips`() {
+        val original = Seal(
+            sealType = SealType.PRIMARY,
+            tagNumber = "1234",
+            tagAlpha = "A",
+        )
+        assertTrue(original.copy(tagNumber = "5678").tagIdentityChangedFrom(original))
+        assertTrue(original.copy(tagAlpha = "B").tagIdentityChangedFrom(original))
+        assertTrue(original.copy(isNoTag = true).tagIdentityChangedFrom(original))
+        assertFalse(original.copy(condition = SealCondition.FAIR).tagIdentityChangedFrom(original))
+        assertFalse(original.tagIdentityChangedFrom(null))
+    }
+
+    @Test
     fun `field edits are recorded even when the comment also changes`() {
         val original = Seal(
             sealType = SealType.PRIMARY,

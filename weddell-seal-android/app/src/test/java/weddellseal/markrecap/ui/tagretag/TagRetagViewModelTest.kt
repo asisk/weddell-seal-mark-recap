@@ -1412,6 +1412,86 @@ class TagRetagViewModelTest {
     }
 
     /**
+     * Changing a pup's tag must also rewrite the mom so relativeTagIDOne points at the
+     * new pup tag; otherwise Recent Observations grouping breaks.
+     */
+    @Test
+    fun writeObservationRecord_editPupTag_rewritesMomRelativeTag() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        vm.enterMomAndPup(momTag = "1234" to "A", pupTag = "5678" to "B")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }
+            .copy(id = 1, insertedAt = 1_000L)
+        val pup = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        assertEquals("5678B", mom.relativeTagIDOne)
+        assertEquals("1234A", pup.relativeTagIDOne)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pup, pupTwo = null))
+        vm.updateTagNumber(SealType.PUPONE, "9012")
+        vm.updateTagAlpha(SealType.PUPONE, "C")
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val savedMom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }
+        val savedPup = written.single { it.ageClass == SealAgeClass.PUP.alpha }
+        assertEquals(1, savedMom.id)
+        assertEquals(2, savedPup.id)
+        assertEquals("9012C", savedMom.relativeTagIDOne)
+        assertEquals("9012C", savedPup.tagIDOne)
+        assertEquals("1234A", savedPup.relativeTagIDOne)
+        assertFalse(
+            "Mom rewritten only for relative tags should not get an Edited trail",
+            savedMom.comments.contains("Edited"),
+        )
+        assertTrue(savedPup.comments.contains("Edited"))
+        assertTrue(savedPup.comments.contains("tagID"))
+    }
+
+    /**
+     * Changing the mom's tag must also rewrite the pup so its relative tag points back
+     * at the new mom tag.
+     */
+    @Test
+    fun writeObservationRecord_editMomTag_rewritesPupRelativeTag() = runTest {
+        val written = mutableListOf<ObservationRecord>()
+        val vm = tagRetagViewModel(written)
+
+        vm.enterMomAndPup(momTag = "1234" to "A", pupTag = "5678" to "B")
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val mom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }
+            .copy(id = 1, insertedAt = 1_000L)
+        val pup = written.single { it.ageClass == SealAgeClass.PUP.alpha }.copy(id = 2)
+        written.clear()
+
+        vm.loadSealForEdit(DisplayObservation.WithPups(mom, pup, pupTwo = null))
+        vm.updateTagNumber(SealType.PRIMARY, "3456")
+        vm.updateTagAlpha(SealType.PRIMARY, "Z")
+        vm.hasEdits.first { it }
+
+        vm.writeObservationRecord(TestFixtures.sampleGeoLocation())
+
+        val savedMom = written.single { it.ageClass == SealAgeClass.ADULT.alpha }
+        val savedPup = written.single { it.ageClass == SealAgeClass.PUP.alpha }
+        assertEquals(1, savedMom.id)
+        assertEquals(2, savedPup.id)
+        assertEquals("3456Z", savedMom.tagIDOne)
+        assertEquals("5678B", savedMom.relativeTagIDOne)
+        assertEquals("3456Z", savedPup.relativeTagIDOne)
+        assertFalse(
+            "Pup rewritten only for relative tags should not get an Edited trail",
+            savedPup.comments.contains("Edited"),
+        )
+        assertTrue(savedMom.comments.contains("Edited"))
+        assertTrue(savedMom.comments.contains("tagID"))
+    }
+
+    /**
      * When the parent is unchanged and only the pup is edited, write the pup with an
      * Edited was/now trail and do not rewrite the parent.
      */

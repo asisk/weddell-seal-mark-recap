@@ -267,6 +267,14 @@ data class Seal(
         return comment != original.comment || edits(original).isNotEmpty()
     }
 
+    /** True when the identity used in reciprocal relative tags changed (tag ID or No Tag). */
+    fun tagIdentityChangedFrom(original: Seal?): Boolean {
+        if (original == null) return false
+        return isNoTag != original.isNoTag ||
+            tagNumber != original.tagNumber ||
+            tagAlpha != original.tagAlpha
+    }
+
     /**
      * Sex change on a record that already exists. New rows (including a pup added during
      * edit) do not need Confirm & Save for filling in sex the first time.

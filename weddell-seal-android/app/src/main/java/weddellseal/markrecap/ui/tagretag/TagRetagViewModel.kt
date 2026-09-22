@@ -1948,19 +1948,21 @@ class TagRetagViewModel(
             // Parker 2025 season recap: editing an entry created fake untagged pups. Unused pup
             // slots default to age P with empty tags; an accidental hasEdits flag wrote a ghost
             // "P No Tag" row. Skip those unless hasPupOne / hasPupTwo and the slot is complete.
-            val sealToUpdate = listOf(primarySeal.value, pupOne.value, pupTwo.value)
-                .filter { seal ->
-                    !seal.markedRemoved &&
-                        seal.hasChangesFrom(originalSealFor(seal.sealType)) &&
-                        seal.isEntryStarted &&
-                        seal.isComplete &&
-                        when (seal.sealType) {
-                            SealType.PRIMARY -> true
-                            SealType.PUPONE -> primarySeal.value.hasPupOne
-                            SealType.PUPTWO -> primarySeal.value.hasPupTwo
-                            SealType.UNKNOWN -> false
-                        }
-                }
+            //
+            // When any family member's tag identity changes, rewrite every active family row so
+            // reciprocal relativeTagID fields stay aligned for Recent Observations grouping.
+            // Condition-only edits still write only the changed seal.
+            val familySeals = listOf(primarySeal.value, pupOne.value, pupTwo.value)
+            val anyTagIdentityChanged = familySeals.any { seal ->
+                seal.tagIdentityChangedFrom(originalSealFor(seal.sealType))
+            }
+            val sealToUpdate = familySeals.filter { seal ->
+                isActiveFamilyMemberForEditWrite(seal) &&
+                    (
+                        seal.hasChangesFrom(originalSealFor(seal.sealType)) ||
+                            anyTagIdentityChanged
+                        )
+            }
 
             for (seal in sealToUpdate) {
                 // Recompute after pending comment/tag flush; the collector may not have run yet.
@@ -2022,6 +2024,20 @@ class TagRetagViewModel(
 
         // Safe to reset only after awaited WedCheck resolution and DB writes complete.
         resetModelState()
+    }
+
+    /**
+     * Active, complete family slots that may be written during edit. Unused pup slots
+     * (empty defaults) are excluded so we never persist ghost "P No Tag" rows.
+     */
+    private fun isActiveFamilyMemberForEditWrite(seal: Seal): Boolean {
+        if (seal.markedRemoved || !seal.isEntryStarted || !seal.isComplete) return false
+        return when (seal.sealType) {
+            SealType.PRIMARY -> true
+            SealType.PUPONE -> primarySeal.value.hasPupOne
+            SealType.PUPTWO -> primarySeal.value.hasPupTwo
+            SealType.UNKNOWN -> false
+        }
     }
 
     private fun getRelativesTags(sealName: SealType): Pair<String, String> {
