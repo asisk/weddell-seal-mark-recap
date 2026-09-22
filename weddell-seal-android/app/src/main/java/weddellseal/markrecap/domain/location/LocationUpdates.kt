@@ -13,6 +13,9 @@ internal const val LOCATION_EQUIVALENCE_METERS = 0.5
 
 fun areLocationsEquivalentForUi(old: GeoLocation, new: GeoLocation): Boolean {
     if (old.isLiveFix != new.isLiveFix) return false
+    if (isAccurateEnoughForColonyMiss(old.accuracyMeters) !=
+        isAccurateEnoughForColonyMiss(new.accuracyMeters)
+    ) return false
     return old.coordinates.distanceTo(new.coordinates) < LOCATION_EQUIVALENCE_METERS
 }
 
