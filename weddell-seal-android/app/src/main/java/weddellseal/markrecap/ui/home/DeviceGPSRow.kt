@@ -92,7 +92,7 @@ internal fun DeviceGPSRowContent(
                 hasCoords -> {
                     Icon(
                         painter = painterResource(R.drawable.ic_location_off),
-                        contentDescription = ColonyGpsUi.LAST_KNOWN_LABEL,
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .padding(end = 8.dp)
