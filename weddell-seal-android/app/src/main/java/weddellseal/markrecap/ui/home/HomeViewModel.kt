@@ -237,8 +237,9 @@ class HomeViewModel(
             return
         }
 
-        // A poor first fix that misses every box is still "waiting", not "not detected".
+        // A poor fix that misses every box is still "waiting", not "not detected".
         if (!isAccurateEnoughForColonyMiss(geoLocation.accuracyMeters)) {
+            setAutoDetectedColony(null)
             return
         }
 
