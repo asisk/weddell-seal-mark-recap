@@ -1,8 +1,11 @@
 package weddellseal.markrecap.domain.location
 
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -10,6 +13,7 @@ import org.junit.Test
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LocationUpdatesTest {
 
     private val cached = GeoLocation(
@@ -37,6 +41,13 @@ class LocationUpdatesTest {
     @Test
     fun twoLiveFixesAtSameCoordinates_areEquivalent() {
         assertTrue(areLocationsEquivalentForUi(liveA, liveA.copy(accuracyMeters = 8f)))
+    }
+
+    @Test
+    fun accuracyCrossingColonyThreshold_isNotEquivalent() {
+        val poor = liveA.copy(accuracyMeters = 180f)
+        val good = liveA.copy(accuracyMeters = 15f)
+        assertFalse(areLocationsEquivalentForUi(poor, good))
     }
 
     @Test
@@ -96,17 +107,79 @@ class LocationUpdatesTest {
     }
 
     @Test
-    fun sampleAfterFirstLiveFix_emitsFirstLiveWithoutWaiting() = runBlocking {
-        var now = 0L
-        val emitted = flow {
-            emit(cached)
-            emit(liveA)
-            now = 500L
-            emit(liveB)
-            now = 2500L
-            emit(liveC)
-        }.sampleAfterFirstLiveFix(samplePeriodMs = 2000L) { now }.toList()
+    fun sampleAfterFirstLiveFix_emitsFirstLiveWithoutWaiting() = runTest {
+        val nowMs = { testScheduler.currentTime }
+        val source = MutableSharedFlow<GeoLocation>(extraBufferCapacity = 8)
+        val emitted = mutableListOf<GeoLocation>()
+        backgroundScope.launch {
+            source.sampleAfterFirstLiveFix(samplePeriodMs = 2000L, nowMs = nowMs)
+                .collect { emitted += it }
+        }
+        runCurrent()
 
+        source.emit(cached)
+        source.emit(liveA)
+        runCurrent()
+        assertEquals(listOf(cached, liveA), emitted)
+
+        // After the sample window with nothing buffered, the next live fix emits immediately.
+        advanceTimeBy(2000)
+        source.emit(liveC)
+        runCurrent()
         assertEquals(listOf(cached, liveA, liveC), emitted)
+    }
+
+    @Test
+    fun sampleAfterFirstLiveFix_emitsLatestBufferedFixWhenWindowExpires() = runTest {
+        val nowMs = { testScheduler.currentTime }
+        val source = MutableSharedFlow<GeoLocation>(extraBufferCapacity = 8)
+        val emitted = mutableListOf<GeoLocation>()
+        backgroundScope.launch {
+            source.sampleAfterFirstLiveFix(samplePeriodMs = 2000L, nowMs = nowMs)
+                .collect { emitted += it }
+        }
+        runCurrent()
+
+        source.emit(liveA)
+        runCurrent()
+        assertEquals(listOf(liveA), emitted)
+
+        advanceTimeBy(500)
+        source.emit(liveB)
+        runCurrent()
+        assertEquals(listOf(liveA), emitted)
+
+        // No further provider callbacks — the buffered fix must still flush.
+        advanceTimeBy(1500)
+        runCurrent()
+        assertEquals(listOf(liveA, liveB), emitted)
+    }
+
+    @Test
+    fun sampleAfterFirstLiveFix_keepsOnlyLatestFixInsideWindow() = runTest {
+        val nowMs = { testScheduler.currentTime }
+        val source = MutableSharedFlow<GeoLocation>(extraBufferCapacity = 8)
+        val emitted = mutableListOf<GeoLocation>()
+        backgroundScope.launch {
+            source.sampleAfterFirstLiveFix(samplePeriodMs = 2000L, nowMs = nowMs)
+                .collect { emitted += it }
+        }
+        runCurrent()
+
+        source.emit(liveA)
+        runCurrent()
+
+        advanceTimeBy(200)
+        source.emit(liveB)
+        runCurrent()
+        advanceTimeBy(200)
+        source.emit(liveC)
+        runCurrent()
+        assertEquals(listOf(liveA), emitted)
+
+        // Window opened at t=0; flush is due at t=2000 regardless of later overwrites.
+        advanceTimeBy(1600)
+        runCurrent()
+        assertEquals(listOf(liveA, liveC), emitted)
     }
 }

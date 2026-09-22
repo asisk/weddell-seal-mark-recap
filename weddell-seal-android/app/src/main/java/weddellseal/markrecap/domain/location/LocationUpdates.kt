@@ -1,7 +1,11 @@
 package weddellseal.markrecap.domain.location
 
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
 import weddellseal.markrecap.domain.location.data.GeoLocation
 
 internal const val LOCATION_SAMPLE_PERIOD_MS = 2000L
@@ -42,26 +46,57 @@ fun isAccurateEnoughForColonyMiss(
 
 /**
  * Cached locations and the first live fix are emitted immediately.
- * Later live fixes are sampled so the UI is not flooded.
+ * Later live fixes are sampled: only the latest fix in each [samplePeriodMs] window is kept,
+ * and it is emitted when that window expires (even if no further provider callbacks arrive).
  */
 fun Flow<GeoLocation>.sampleAfterFirstLiveFix(
     samplePeriodMs: Long = LOCATION_SAMPLE_PERIOD_MS,
     nowMs: () -> Long = { System.currentTimeMillis() },
-): Flow<GeoLocation> = flow {
-    var hasEmittedLiveFix = false
-    var lastEmitAt = 0L
-    collect { location ->
-        val elapsed = nowMs() - lastEmitAt
-        if (shouldEmitSampledLocation(
-                isLiveFix = location.isLiveFix,
-                hasEmittedLiveFix = hasEmittedLiveFix,
-                elapsedSinceLastEmitMs = elapsed,
-                samplePeriodMs = samplePeriodMs,
-            )
-        ) {
+): Flow<GeoLocation> = channelFlow {
+    coroutineScope {
+        var hasEmittedLiveFix = false
+        var lastEmitAt = 0L
+        var pendingLive: GeoLocation? = null
+        var flushJob: Job? = null
+
+        suspend fun emitNow(location: GeoLocation) {
+            flushJob?.cancel()
+            flushJob?.join()
+            flushJob = null
+            pendingLive = null
             if (location.isLiveFix) hasEmittedLiveFix = true
             lastEmitAt = nowMs()
-            emit(location)
+            send(location)
+        }
+
+        fun schedulePendingFlush() {
+            if (flushJob?.isActive == true) return
+            flushJob = launch {
+                val remainingMs = (samplePeriodMs - (nowMs() - lastEmitAt)).coerceAtLeast(0L)
+                delay(remainingMs)
+                val toEmit = pendingLive ?: return@launch
+                pendingLive = null
+                flushJob = null
+                if (toEmit.isLiveFix) hasEmittedLiveFix = true
+                lastEmitAt = nowMs()
+                send(toEmit)
+            }
+        }
+
+        collect { location ->
+            if (shouldEmitSampledLocation(
+                    isLiveFix = location.isLiveFix,
+                    hasEmittedLiveFix = hasEmittedLiveFix,
+                    elapsedSinceLastEmitMs = nowMs() - lastEmitAt,
+                    samplePeriodMs = samplePeriodMs,
+                )
+            ) {
+                emitNow(location)
+            } else {
+                // Throttled live fix: keep the latest and emit when the sample window expires.
+                pendingLive = location
+                schedulePendingFlush()
+            }
         }
     }
 }
