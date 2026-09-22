@@ -18,6 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import weddellseal.markrecap.domain.location.data.Coordinates
 import weddellseal.markrecap.domain.location.data.GeoLocation
+import weddellseal.markrecap.domain.location.data.toDisplayString
 import weddellseal.markrecap.frameworks.room.files.FileUploadEntity
 import weddellseal.markrecap.frameworks.room.observers.ObserversRepository
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
@@ -53,7 +54,10 @@ class LastKnownLocationInstrumentedTest {
             accuracyMeters = 12f,
             isLiveFix = true,
         )
-        private const val COORD_TEXT = "-77.5    166.5"
+        private val COORD_TEXT = Coordinates(
+            latitude = -77.5,
+            longitude = 166.5,
+        ).toDisplayString()
     }
 
     @get:Rule

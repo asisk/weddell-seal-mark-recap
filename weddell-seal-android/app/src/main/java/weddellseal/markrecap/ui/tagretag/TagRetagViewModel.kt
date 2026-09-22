@@ -431,9 +431,9 @@ class TagRetagViewModel(
                 if (confirmationReasons.isEmpty()) {
                     writeObservationRecord(currentLocation)
                 } else {
+                    // Banner and isSaveInProgress = false are one update, so Confirm & Save
+                    // is enabled as soon as validation asks for confirmation.
                     checkNeedsConfirmation(confirmationReasons)
-                    // Allow Confirm & Save; persist has not started yet.
-                    clearSaveInProgress()
                 }
             } catch (e: Exception) {
                 clearSaveInProgress()
@@ -628,6 +628,9 @@ class TagRetagViewModel(
             it.copy(
                 validationFailureReason = reasons.joinToString("\n"),
                 entryNeedsConfirmation = reasons.isNotEmpty(),
+                // Same update as the banner. A separate clear lets tests (and one frame of UI)
+                // observe confirmation while Confirm & Save is still blocked.
+                isSaveInProgress = false,
             )
         }
     }

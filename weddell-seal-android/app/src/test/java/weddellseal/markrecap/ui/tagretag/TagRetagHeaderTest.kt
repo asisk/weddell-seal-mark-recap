@@ -163,7 +163,8 @@ class TagRetagHeaderTest {
 
         composeRule.onNodeWithText("If you confirm a mismatch, write a note in the notebook.")
             .assertIsDisplayed()
-        composeRule.onNodeWithText("Confirm & Save").assertIsDisplayed()
+        // Material3 extended FABs clear the label's text semantics and expose the icon description.
+        composeRule.onNodeWithContentDescription("Confirm & Save").assertIsDisplayed()
     }
 
     @Test

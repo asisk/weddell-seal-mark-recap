@@ -13,7 +13,10 @@ class FakeLocationSource : LocationSource {
 
     var lastKnown: GeoLocation? = null
 
-    private val updates = MutableSharedFlow<GeoLocation>(extraBufferCapacity = 16)
+    // Replay the latest fix so a collector that starts after emit still receives it.
+    // Instrumented tests emit on the main thread in the same turn as onPermissionsResult,
+    // which can run before viewModelScope starts collecting.
+    private val updates = MutableSharedFlow<GeoLocation>(replay = 1, extraBufferCapacity = 16)
 
     override suspend fun requestSingleUpdate(): Result<GeoLocation> =
         Result.failure(IllegalStateException("not used in test"))
