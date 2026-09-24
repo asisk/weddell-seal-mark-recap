@@ -1,0 +1,1492 @@
+{
+  "type": "FeatureCollection",
+  "name": "Colony_Locations_sept_2025",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "B.Razorback Is",
+        "category": "Inside",
+        "n_limit": -77.675,
+        "s_limit": -77.69,
+        "w_limit": 166.45,
+        "e_limit": 166.55,
+        "adj_lat": -77.684,
+        "adj_long": 166.48
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.45,
+              -77.69
+            ],
+            [
+              166.55,
+              -77.69
+            ],
+            [
+              166.55,
+              -77.675
+            ],
+            [
+              166.45,
+              -77.675
+            ],
+            [
+              166.45,
+              -77.69
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Evans",
+        "category": "Inside",
+        "n_limit": -77.63,
+        "s_limit": -77.65,
+        "w_limit": 166.333,
+        "e_limit": 166.433,
+        "adj_lat": -77.642,
+        "adj_long": 166.4
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.333,
+              -77.65
+            ],
+            [
+              166.433,
+              -77.65
+            ],
+            [
+              166.433,
+              -77.63
+            ],
+            [
+              166.333,
+              -77.63
+            ],
+            [
+              166.333,
+              -77.65
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hut Pt",
+        "category": "Inside",
+        "n_limit": -77.84,
+        "s_limit": -77.87,
+        "w_limit": 166.6,
+        "e_limit": 166.7,
+        "adj_lat": -77.848,
+        "adj_long": 166.64
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.6,
+              -77.87
+            ],
+            [
+              166.7,
+              -77.87
+            ],
+            [
+              166.7,
+              -77.84
+            ],
+            [
+              166.6,
+              -77.84
+            ],
+            [
+              166.6,
+              -77.87
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hutton Cliffs",
+        "category": "Inside",
+        "n_limit": -77.72,
+        "s_limit": -77.74,
+        "w_limit": 166.82,
+        "e_limit": 166.88,
+        "adj_lat": -77.727,
+        "adj_long": 166.85
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.82,
+              -77.74
+            ],
+            [
+              166.88,
+              -77.74
+            ],
+            [
+              166.88,
+              -77.72
+            ],
+            [
+              166.82,
+              -77.72
+            ],
+            [
+              166.82,
+              -77.74
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Inacessable Is",
+        "category": "Inside",
+        "n_limit": -77.65,
+        "s_limit": -77.67,
+        "w_limit": 166.3,
+        "e_limit": 166.4,
+        "adj_lat": -77.66,
+        "adj_long": 166.32
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.3,
+              -77.67
+            ],
+            [
+              166.4,
+              -77.67
+            ],
+            [
+              166.4,
+              -77.65
+            ],
+            [
+              166.3,
+              -77.65
+            ],
+            [
+              166.3,
+              -77.67
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Knob Pt",
+        "category": "Inside",
+        "n_limit": -77.79,
+        "s_limit": -77.81,
+        "w_limit": 166.6,
+        "e_limit": 166.7,
+        "adj_lat": -77.802,
+        "adj_long": 166.66
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.6,
+              -77.81
+            ],
+            [
+              166.7,
+              -77.81
+            ],
+            [
+              166.7,
+              -77.79
+            ],
+            [
+              166.6,
+              -77.79
+            ],
+            [
+              166.6,
+              -77.81
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "L.Razorback Is",
+        "category": "Inside",
+        "n_limit": -77.66,
+        "s_limit": -77.675,
+        "w_limit": 166.45,
+        "e_limit": 166.55,
+        "adj_lat": -77.67,
+        "adj_long": 166.52
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.45,
+              -77.675
+            ],
+            [
+              166.55,
+              -77.675
+            ],
+            [
+              166.55,
+              -77.66
+            ],
+            [
+              166.45,
+              -77.66
+            ],
+            [
+              166.45,
+              -77.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "North Base",
+        "category": "Inside",
+        "n_limit": -77.657,
+        "s_limit": -77.69,
+        "w_limit": 166.83,
+        "e_limit": 167.0,
+        "adj_lat": -77.671,
+        "adj_long": 166.85
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.83,
+              -77.69
+            ],
+            [
+              167.0,
+              -77.69
+            ],
+            [
+              167.0,
+              -77.657
+            ],
+            [
+              166.83,
+              -77.657
+            ],
+            [
+              166.83,
+              -77.69
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Scott Base",
+        "category": "Inside",
+        "n_limit": -77.84,
+        "s_limit": -77.87,
+        "w_limit": 166.7,
+        "e_limit": 166.8,
+        "adj_lat": -77.852,
+        "adj_long": 166.77
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.7,
+              -77.87
+            ],
+            [
+              166.8,
+              -77.87
+            ],
+            [
+              166.8,
+              -77.84
+            ],
+            [
+              166.7,
+              -77.84
+            ],
+            [
+              166.7,
+              -77.87
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "South Base",
+        "category": "Inside",
+        "n_limit": -77.7,
+        "s_limit": -77.72,
+        "w_limit": 166.88,
+        "e_limit": 167.0,
+        "adj_lat": -77.706,
+        "adj_long": 166.92
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.88,
+              -77.72
+            ],
+            [
+              167.0,
+              -77.72
+            ],
+            [
+              167.0,
+              -77.7
+            ],
+            [
+              166.88,
+              -77.7
+            ],
+            [
+              166.88,
+              -77.72
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tent Is",
+        "category": "Inside",
+        "n_limit": -77.67,
+        "s_limit": -77.7,
+        "w_limit": 166.3,
+        "e_limit": 166.4,
+        "adj_lat": -77.685,
+        "adj_long": 166.37
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.3,
+              -77.7
+            ],
+            [
+              166.4,
+              -77.7
+            ],
+            [
+              166.4,
+              -77.67
+            ],
+            [
+              166.3,
+              -77.67
+            ],
+            [
+              166.3,
+              -77.7
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Trygve Pt",
+        "category": "Inside",
+        "n_limit": -77.657,
+        "s_limit": -77.675,
+        "w_limit": 166.68,
+        "e_limit": 166.733,
+        "adj_lat": -77.662,
+        "adj_long": 166.7
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.68,
+              -77.675
+            ],
+            [
+              166.733,
+              -77.675
+            ],
+            [
+              166.733,
+              -77.657
+            ],
+            [
+              166.68,
+              -77.657
+            ],
+            [
+              166.68,
+              -77.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Turks Head",
+        "category": "Inside",
+        "n_limit": -77.657,
+        "s_limit": -77.675,
+        "w_limit": 166.733,
+        "e_limit": 166.83,
+        "adj_lat": -77.67,
+        "adj_long": 166.77
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.733,
+              -77.675
+            ],
+            [
+              166.83,
+              -77.675
+            ],
+            [
+              166.83,
+              -77.657
+            ],
+            [
+              166.733,
+              -77.657
+            ],
+            [
+              166.733,
+              -77.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Turtle Rock",
+        "category": "Inside",
+        "n_limit": -77.73,
+        "s_limit": -77.76,
+        "w_limit": 166.74,
+        "e_limit": 166.82,
+        "adj_lat": -77.744,
+        "adj_long": 166.77
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.74,
+              -77.76
+            ],
+            [
+              166.82,
+              -77.76
+            ],
+            [
+              166.82,
+              -77.73
+            ],
+            [
+              166.74,
+              -77.73
+            ],
+            [
+              166.74,
+              -77.76
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Backdoor Bay",
+        "category": "Outside",
+        "n_limit": -77.55,
+        "s_limit": -77.567,
+        "w_limit": 166.117,
+        "e_limit": 166.25,
+        "adj_lat": -77.556,
+        "adj_long": 166.193
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.117,
+              -77.567
+            ],
+            [
+              166.25,
+              -77.567
+            ],
+            [
+              166.25,
+              -77.55
+            ],
+            [
+              166.117,
+              -77.55
+            ],
+            [
+              166.117,
+              -77.567
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Barne Glacier",
+        "category": "Outside",
+        "n_limit": -77.588,
+        "s_limit": -77.625,
+        "w_limit": 166.217,
+        "e_limit": 166.417,
+        "adj_lat": -77.612,
+        "adj_long": 166.28
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.217,
+              -77.625
+            ],
+            [
+              166.417,
+              -77.625
+            ],
+            [
+              166.417,
+              -77.588
+            ],
+            [
+              166.217,
+              -77.588
+            ],
+            [
+              166.217,
+              -77.625
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bay of Sails",
+        "category": "Outside",
+        "n_limit": -77.321,
+        "s_limit": -77.383,
+        "w_limit": 163.5,
+        "e_limit": 163.75,
+        "adj_lat": -77.35,
+        "adj_long": 163.566
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              163.5,
+              -77.383
+            ],
+            [
+              163.75,
+              -77.383
+            ],
+            [
+              163.75,
+              -77.321
+            ],
+            [
+              163.5,
+              -77.321
+            ],
+            [
+              163.5,
+              -77.383
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Beaufort Is",
+        "category": "Outside",
+        "n_limit": -76.906,
+        "s_limit": -77.0,
+        "w_limit": 166.8,
+        "e_limit": 167.05,
+        "adj_lat": -76.926,
+        "adj_long": 166.89
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.8,
+              -77.0
+            ],
+            [
+              167.05,
+              -77.0
+            ],
+            [
+              167.05,
+              -76.906
+            ],
+            [
+              166.8,
+              -76.906
+            ],
+            [
+              166.8,
+              -77.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bratina Is",
+        "category": "Outside",
+        "n_limit": -78.0,
+        "s_limit": -78.033,
+        "w_limit": 165.45,
+        "e_limit": 165.617,
+        "adj_lat": -78.017,
+        "adj_long": 165.533
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              165.45,
+              -78.033
+            ],
+            [
+              165.617,
+              -78.033
+            ],
+            [
+              165.617,
+              -78.0
+            ],
+            [
+              165.45,
+              -78.0
+            ],
+            [
+              165.45,
+              -78.033
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Butter Pt",
+        "category": "Outside",
+        "n_limit": -77.633,
+        "s_limit": -77.708,
+        "w_limit": 164.0,
+        "e_limit": 164.5,
+        "adj_lat": -77.65,
+        "adj_long": 164.233
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              164.0,
+              -77.708
+            ],
+            [
+              164.5,
+              -77.708
+            ],
+            [
+              164.5,
+              -77.633
+            ],
+            [
+              164.0,
+              -77.633
+            ],
+            [
+              164.0,
+              -77.708
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Barne",
+        "category": "Outside",
+        "n_limit": -77.567,
+        "s_limit": -77.588,
+        "w_limit": 166.167,
+        "e_limit": 166.333,
+        "adj_lat": -77.583,
+        "adj_long": 166.233
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.167,
+              -77.588
+            ],
+            [
+              166.333,
+              -77.588
+            ],
+            [
+              166.333,
+              -77.567
+            ],
+            [
+              166.167,
+              -77.567
+            ],
+            [
+              166.167,
+              -77.588
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Chocolate",
+        "category": "Outside",
+        "n_limit": -77.917,
+        "s_limit": -77.95,
+        "w_limit": 164.5,
+        "e_limit": 164.667,
+        "adj_lat": -77.933,
+        "adj_long": 164.583
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              164.5,
+              -77.95
+            ],
+            [
+              164.667,
+              -77.95
+            ],
+            [
+              164.667,
+              -77.917
+            ],
+            [
+              164.5,
+              -77.917
+            ],
+            [
+              164.5,
+              -77.95
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Roberts",
+        "category": "Outside",
+        "n_limit": -77.025,
+        "s_limit": -77.058,
+        "w_limit": 163.117,
+        "e_limit": 163.283,
+        "adj_lat": -77.033,
+        "adj_long": 163.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              163.117,
+              -77.058
+            ],
+            [
+              163.283,
+              -77.058
+            ],
+            [
+              163.283,
+              -77.025
+            ],
+            [
+              163.117,
+              -77.025
+            ],
+            [
+              163.117,
+              -77.058
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Royds",
+        "category": "Outside",
+        "n_limit": -77.533,
+        "s_limit": -77.55,
+        "w_limit": 166.083,
+        "e_limit": 166.217,
+        "adj_lat": -77.54,
+        "adj_long": 166.14
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.083,
+              -77.55
+            ],
+            [
+              166.217,
+              -77.55
+            ],
+            [
+              166.217,
+              -77.533
+            ],
+            [
+              166.083,
+              -77.533
+            ],
+            [
+              166.083,
+              -77.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Washington",
+        "category": "Outside",
+        "n_limit": -74.633,
+        "s_limit": -74.683,
+        "w_limit": 165.167,
+        "e_limit": 165.5,
+        "adj_lat": -74.65,
+        "adj_long": 165.416
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              165.167,
+              -74.683
+            ],
+            [
+              165.5,
+              -74.683
+            ],
+            [
+              165.5,
+              -74.633
+            ],
+            [
+              165.167,
+              -74.633
+            ],
+            [
+              165.167,
+              -74.683
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Dailey Is",
+        "category": "Outside",
+        "n_limit": -77.85,
+        "s_limit": -77.917,
+        "w_limit": 164.833,
+        "e_limit": 165.417,
+        "adj_lat": -77.883,
+        "adj_long": 165.1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              164.833,
+              -77.917
+            ],
+            [
+              165.417,
+              -77.917
+            ],
+            [
+              165.417,
+              -77.85
+            ],
+            [
+              164.833,
+              -77.85
+            ],
+            [
+              164.833,
+              -77.917
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Dunlop Is",
+        "category": "Outside",
+        "n_limit": -77.225,
+        "s_limit": -77.258,
+        "w_limit": 163.417,
+        "e_limit": 163.583,
+        "adj_lat": -77.233,
+        "adj_long": 163.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              163.417,
+              -77.258
+            ],
+            [
+              163.583,
+              -77.258
+            ],
+            [
+              163.583,
+              -77.225
+            ],
+            [
+              163.417,
+              -77.225
+            ],
+            [
+              163.417,
+              -77.258
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gneiss Pt",
+        "category": "Outside",
+        "n_limit": -77.383,
+        "s_limit": -77.419,
+        "w_limit": 163.55,
+        "e_limit": 163.817,
+        "adj_lat": -77.4,
+        "adj_long": 163.75
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              163.55,
+              -77.419
+            ],
+            [
+              163.817,
+              -77.419
+            ],
+            [
+              163.817,
+              -77.383
+            ],
+            [
+              163.55,
+              -77.383
+            ],
+            [
+              163.55,
+              -77.419
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Horseshoe Bay",
+        "category": "Outside",
+        "n_limit": -77.517,
+        "s_limit": -77.533,
+        "w_limit": 166.117,
+        "e_limit": 166.233,
+        "adj_lat": -77.529,
+        "adj_long": 166.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.117,
+              -77.533
+            ],
+            [
+              166.233,
+              -77.533
+            ],
+            [
+              166.233,
+              -77.517
+            ],
+            [
+              166.117,
+              -77.517
+            ],
+            [
+              166.117,
+              -77.533
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Lewis Bay.E",
+        "category": "Outside",
+        "n_limit": -77.358,
+        "s_limit": -77.425,
+        "w_limit": 167.583,
+        "e_limit": 168.083,
+        "adj_lat": -77.401,
+        "adj_long": 167.97
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              167.583,
+              -77.425
+            ],
+            [
+              168.083,
+              -77.425
+            ],
+            [
+              168.083,
+              -77.358
+            ],
+            [
+              167.583,
+              -77.358
+            ],
+            [
+              167.583,
+              -77.425
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Lewis Bay.W",
+        "category": "Outside",
+        "n_limit": -77.333,
+        "s_limit": -77.417,
+        "w_limit": 167.083,
+        "e_limit": 167.583,
+        "adj_lat": -77.378,
+        "adj_long": 167.3
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              167.083,
+              -77.417
+            ],
+            [
+              167.583,
+              -77.417
+            ],
+            [
+              167.583,
+              -77.333
+            ],
+            [
+              167.083,
+              -77.333
+            ],
+            [
+              167.083,
+              -77.417
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Marble Pt",
+        "category": "Outside",
+        "n_limit": -77.419,
+        "s_limit": -77.446,
+        "w_limit": 163.7,
+        "e_limit": 163.917,
+        "adj_lat": -77.433,
+        "adj_long": 163.833
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              163.7,
+              -77.446
+            ],
+            [
+              163.917,
+              -77.446
+            ],
+            [
+              163.917,
+              -77.419
+            ],
+            [
+              163.7,
+              -77.419
+            ],
+            [
+              163.7,
+              -77.446
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Markham Is",
+        "category": "Outside",
+        "n_limit": -74.575,
+        "s_limit": -74.608,
+        "w_limit": 164.783,
+        "e_limit": 165.05,
+        "adj_lat": -74.6,
+        "adj_long": 164.916
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              164.783,
+              -74.608
+            ],
+            [
+              165.05,
+              -74.608
+            ],
+            [
+              165.05,
+              -74.575
+            ],
+            [
+              164.783,
+              -74.575
+            ],
+            [
+              164.783,
+              -74.608
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Spike Cape",
+        "category": "Outside",
+        "n_limit": -77.296,
+        "s_limit": -77.321,
+        "w_limit": 163.5,
+        "e_limit": 163.625,
+        "adj_lat": -77.3,
+        "adj_long": 163.566
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              163.5,
+              -77.321
+            ],
+            [
+              163.625,
+              -77.321
+            ],
+            [
+              163.625,
+              -77.296
+            ],
+            [
+              163.5,
+              -77.296
+            ],
+            [
+              163.5,
+              -77.321
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Strand Moraines",
+        "category": "Outside",
+        "n_limit": -77.708,
+        "s_limit": -77.767,
+        "w_limit": 164.417,
+        "e_limit": 164.667,
+        "adj_lat": -77.75,
+        "adj_long": 164.516
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              164.417,
+              -77.767
+            ],
+            [
+              164.667,
+              -77.767
+            ],
+            [
+              164.667,
+              -77.708
+            ],
+            [
+              164.417,
+              -77.708
+            ],
+            [
+              164.417,
+              -77.767
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Wolschlag Bay",
+        "category": "Outside",
+        "n_limit": -77.258,
+        "s_limit": -77.517,
+        "w_limit": 166.117,
+        "e_limit": 166.75,
+        "adj_lat": -77.419,
+        "adj_long": 166.333
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              166.117,
+              -77.517
+            ],
+            [
+              166.75,
+              -77.517
+            ],
+            [
+              166.75,
+              -77.258
+            ],
+            [
+              166.117,
+              -77.258
+            ],
+            [
+              166.117,
+              -77.517
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Baxter Meadows",
+        "category": "Local",
+        "n_limit": 45.7031,
+        "s_limit": 45.702,
+        "w_limit": -111.089,
+        "e_limit": -111.087,
+        "adj_lat": 45.70255,
+        "adj_long": -111.088
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -111.089,
+              45.702
+            ],
+            [
+              -111.087,
+              45.702
+            ],
+            [
+              -111.087,
+              45.7031
+            ],
+            [
+              -111.089,
+              45.7031
+            ],
+            [
+              -111.089,
+              45.702
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

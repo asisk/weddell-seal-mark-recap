@@ -38,6 +38,9 @@ interface SealColoniesDao {
     @Query("SELECT location FROM sealColonies")
     fun getSealColonyNames(): Flow<List<String>>
 
+    @Query("SELECT * FROM sealColonies")
+    fun getAllColonies(): Flow<List<SealColony>>
+
     @Query("SELECT * FROM sealColonies WHERE fileUploadId = :fileUploadId")
     suspend fun getRecordsByFileUploadId(fileUploadId: Long): List<SealColony>
 

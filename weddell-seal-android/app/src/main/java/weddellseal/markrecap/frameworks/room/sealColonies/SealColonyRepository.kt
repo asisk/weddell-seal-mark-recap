@@ -9,6 +9,8 @@ class SealColonyRepository(
 ) {
     val coloniesList: Flow<List<String>> = sealColoniesDao.getSealColonyNames()
 
+    val colonies: Flow<List<SealColony>> = sealColoniesDao.getAllColonies()
+
     // used to refresh the database with a current list of locations
     suspend fun insertColoniesData(fileUploadId: Long, csvData: List<SealColony>): Int {
         return withContext(Dispatchers.IO) {

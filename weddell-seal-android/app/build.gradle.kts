@@ -38,9 +38,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Field fleet: Samsung Galaxy Tab Active3 (SM-T570) — 64-bit only.
+            ndk {
+                abiFilters += listOf("arm64-v8a")
+            }
         }
         debug {
             isDebuggable = true
+            // Keep x86_64 for CI emulator (android-tests.yml) and local emulators.
         }
     }
     compileOptions {
@@ -103,6 +108,7 @@ dependencies {
 
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.play.services.location)
+    implementation(libs.maplibre.android)
     implementation(libs.opencsv)
     implementation(libs.commons.io)
 

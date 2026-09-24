@@ -7,6 +7,7 @@ package weddellseal.markrecap
  */
 
 import android.app.Application
+import org.maplibre.android.MapLibre
 import weddellseal.markrecap.frameworks.room.AppDatabase
 import weddellseal.markrecap.frameworks.room.files.FilesRepository
 import weddellseal.markrecap.frameworks.room.wedCheck.WedCheckRepository
@@ -26,6 +27,11 @@ class ObservationLogApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        try {
+            MapLibre.getInstance(this)
+        } catch (_: UnsatisfiedLinkError) {
+            // JVM unit tests (Robolectric) do not load MapLibre native libs.
+        }
         db = AppDatabase.getDatabase(applicationContext)
         observationRepo = ObservationRepository(db.observationDao())
         wedCheckRepo = WedCheckRepository(db.wedCheckDao(), db.fileUploadDao())

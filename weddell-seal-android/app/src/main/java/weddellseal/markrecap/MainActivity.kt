@@ -44,6 +44,9 @@ import weddellseal.markrecap.ui.permissions.locationPermissionsGranted
 import weddellseal.markrecap.ui.recentobservations.ObservationViewer
 import weddellseal.markrecap.ui.recentobservations.RecentObservationsScreen
 import weddellseal.markrecap.ui.lookup.SealLookupScreen
+import weddellseal.markrecap.ui.map.MapScreen
+import weddellseal.markrecap.ui.map.WarmMapNavHost
+import weddellseal.markrecap.ui.map.WarmMapViewModel
 import weddellseal.markrecap.ui.theme.WeddellSealMarkRecapTheme
 
 
@@ -118,6 +121,8 @@ class MainActivity : ComponentActivity() {
             ObserversViewModelFactory(application, observersRepository, filesRepository)
         val observersViewModel: ObserversViewModel by viewModels { observersViewModelFactory }
 
+        val warmMapViewModel: WarmMapViewModel by viewModels()
+
         // Set up the UI
         enableEdgeToEdge()
         setContent {
@@ -132,66 +137,85 @@ class MainActivity : ComponentActivity() {
                     } else {
                         Screens.LocationPermissions.route
                     }
-                    NavHost(navController = navController, startDestination = startNavigation) {
-                        composable(Screens.LocationPermissions.route) {
-                            LocationPermissionView(
-                                onLocationGranted = {
-                                    homeViewModel.onPermissionsResult(true)
-                                    navController.leaveLocationDisclosure()
-                                },
-                                onSkip = { navController.leaveLocationDisclosure() },
-                            )
-                        }
-                        composable(Screens.Home.route) {
-                            HomeScreen(
-                                navController,
-                                homeViewModel
-                            )
-                        }
-                        composable(Screens.TagRetag.route) {
-                            TagRetagScreen(
-                                navController,
-                                tagRetagViewModel,
-                                homeViewModel,
-                                recentObservationsViewModel
-                            )
-                        }
-                        composable(Screens.Census.route) {
-                            CensusScreen(
-                                navController,
-                                homeViewModel
-                            )
-                        }
-                        composable(Screens.RecentObservations.route) {
-                            RecentObservationsScreen(
-                                navController,
-                                recentObservationsViewModel,
-                                tagRetagViewModel
-                            )
-                        }
-                        composable(Screens.SealLookupScreen.route) {
-                            SealLookupScreen(
-                                navController,
-                                sealLookupViewModel,
-                                homeViewModel,
-                                tagRetagViewModel
-                            )
-                        }
-                        composable(Screens.ObservationViewer.route) {
-                            ObservationViewer(
-                                navController,
-                                tagRetagViewModel
-                            )
-                        }
-                        composable(Screens.Admin.route) {
-                            AdminScreen(
-                                navController,
-                                wedCheckViewModel,
-                                sealColoniesViewModel,
-                                observersViewModel,
-                                adminViewModel,
-                                recentObservationsViewModel
-                            )
+                    WarmMapNavHost(
+                        navController = navController,
+                        homeViewModel = homeViewModel,
+                        sealColonyRepository = sealColonyRepository,
+                        warmMap = warmMapViewModel,
+                    ) { mapContent ->
+                        NavHost(
+                            navController = navController,
+                            startDestination = startNavigation,
+                        ) {
+                            composable(Screens.LocationPermissions.route) {
+                                LocationPermissionView(
+                                    onLocationGranted = {
+                                        homeViewModel.onPermissionsResult(true)
+                                        navController.leaveLocationDisclosure()
+                                    },
+                                    onSkip = { navController.leaveLocationDisclosure() },
+                                )
+                            }
+                            composable(Screens.Home.route) {
+                                HomeScreen(
+                                    navController,
+                                    homeViewModel
+                                )
+                            }
+                            composable(Screens.TagRetag.route) {
+                                TagRetagScreen(
+                                    navController,
+                                    tagRetagViewModel,
+                                    homeViewModel,
+                                    recentObservationsViewModel
+                                )
+                            }
+                            composable(Screens.Census.route) {
+                                CensusScreen(
+                                    navController,
+                                    homeViewModel
+                                )
+                            }
+                            composable(Screens.Map.route) {
+                                MapScreen(
+                                    navController,
+                                    homeViewModel,
+                                    sealColonyRepository,
+                                    warmMapViewModel,
+                                    mapContent = mapContent,
+                                )
+                            }
+                            composable(Screens.RecentObservations.route) {
+                                RecentObservationsScreen(
+                                    navController,
+                                    recentObservationsViewModel,
+                                    tagRetagViewModel
+                                )
+                            }
+                            composable(Screens.SealLookupScreen.route) {
+                                SealLookupScreen(
+                                    navController,
+                                    sealLookupViewModel,
+                                    homeViewModel,
+                                    tagRetagViewModel
+                                )
+                            }
+                            composable(Screens.ObservationViewer.route) {
+                                ObservationViewer(
+                                    navController,
+                                    tagRetagViewModel
+                                )
+                            }
+                            composable(Screens.Admin.route) {
+                                AdminScreen(
+                                    navController,
+                                    wedCheckViewModel,
+                                    sealColoniesViewModel,
+                                    observersViewModel,
+                                    adminViewModel,
+                                    recentObservationsViewModel
+                                )
+                            }
                         }
                     }
                 }
@@ -213,6 +237,7 @@ sealed class Screens(val route: String) {
     object Admin : Screens("admin")
     object TagRetag : Screens("tag_retag")
     object Census : Screens("census")
+    object Map : Screens("map")
     object RecentObservations : Screens("recent_entries")
     object SealLookupScreen : Screens("seal_lookup")
     object ObservationViewer : Screens("observation_viewer")

@@ -1,0 +1,681 @@
+{
+  "version": 8,
+  "name": "Weddell Seal Pack (Quantarctica)",
+  "metadata": {
+    "maplibre:attribution": "Basemap derived from Quantarctica / Norwegian Polar Institute and included datasets. Colonies overlay \u00a9 project.",
+    "weddell:pack_root_token": "__PACK_ROOT__"
+  },
+  "center": [
+    165.6,
+    -76.305
+  ],
+  "zoom": 8,
+  "bearing": 0,
+  "pitch": 0,
+  "glyphs": "file://__PACK_ROOT__/glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "hillshade": {
+      "type": "raster",
+      "url": "mbtiles://__PACK_ROOT__/hillshade.mbtiles",
+      "tileSize": 256,
+      "minzoom": 5,
+      "maxzoom": 12
+    },
+    "basemap": {
+      "type": "vector",
+      "url": "mbtiles://__PACK_ROOT__/region.mbtiles",
+      "minzoom": 5,
+      "maxzoom": 14
+    },
+    "bozeman": {
+      "type": "vector",
+      "url": "mbtiles://__PACK_ROOT__/bozeman.mbtiles",
+      "minzoom": 9,
+      "maxzoom": 16
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#d9e6ef"
+      }
+    },
+    {
+      "id": "bozeman-parks",
+      "type": "fill",
+      "source": "bozeman",
+      "source-layer": "parks",
+      "paint": {
+        "fill-color": "#c5d9b8",
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "bozeman-water",
+      "type": "fill",
+      "source": "bozeman",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "#a8c8e0",
+        "fill-opacity": 0.85
+      }
+    },
+    {
+      "id": "bozeman-waterways",
+      "type": "line",
+      "source": "bozeman",
+      "source-layer": "waterways",
+      "paint": {
+        "line-color": "#6fa3c7",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          0.6,
+          16,
+          2.0
+        ],
+        "line-opacity": 0.85
+      }
+    },
+    {
+      "id": "bozeman-roads-major-casing",
+      "type": "line",
+      "source": "bozeman",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "highway"
+        ],
+        [
+          "literal",
+          [
+            "motorway",
+            "trunk",
+            "primary",
+            "secondary",
+            "tertiary"
+          ]
+        ]
+      ],
+      "paint": {
+        "line-color": "#9aa3ab",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          2.2,
+          16,
+          7
+        ]
+      }
+    },
+    {
+      "id": "bozeman-roads-major",
+      "type": "line",
+      "source": "bozeman",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "highway"
+        ],
+        [
+          "literal",
+          [
+            "motorway",
+            "trunk",
+            "primary",
+            "secondary",
+            "tertiary"
+          ]
+        ]
+      ],
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          1.2,
+          16,
+          5
+        ]
+      }
+    },
+    {
+      "id": "bozeman-roads-minor",
+      "type": "line",
+      "source": "bozeman",
+      "source-layer": "roads",
+      "minzoom": 12,
+      "filter": [
+        "in",
+        [
+          "get",
+          "highway"
+        ],
+        [
+          "literal",
+          [
+            "residential",
+            "unclassified",
+            "service",
+            "living_street"
+          ]
+        ]
+      ],
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          0.8,
+          16,
+          2.5
+        ],
+        "line-opacity": 0.9
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "raster",
+      "source": "hillshade",
+      "maxzoom": 14,
+      "paint": {
+        "raster-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          0.85,
+          9,
+          0.7,
+          12,
+          0.5,
+          14,
+          0.35
+        ],
+        "raster-fade-duration": 0,
+        "raster-resampling": "nearest"
+      }
+    },
+    {
+      "id": "coastline-fill-med",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "coastline_med",
+      "maxzoom": 10,
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "SURFACE"
+          ],
+          "land",
+          "#f4f1ea",
+          "ice shelf",
+          "#cfe0ec",
+          "ice tongue",
+          "#d7e6f0",
+          "#e8eef3"
+        ],
+        "fill-opacity": [
+          "match",
+          [
+            "get",
+            "SURFACE"
+          ],
+          "land",
+          0.35,
+          "ice shelf",
+          0.5,
+          "ice tongue",
+          0.45,
+          0.35
+        ]
+      }
+    },
+    {
+      "id": "coastline-fill-high",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "coastline_high_poly",
+      "minzoom": 9,
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "SURFACE"
+          ],
+          "land",
+          "#f7f4ee",
+          "ice shelf",
+          "#d5e6f0",
+          "ice tongue",
+          "#dceaf2",
+          "#eef3f6"
+        ],
+        "fill-opacity": 0.92
+      }
+    },
+    {
+      "id": "coastline-shore-line",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "coastline_high_line",
+      "minzoom": 8,
+      "paint": {
+        "line-color": [
+          "match",
+          [
+            "get",
+            "SURFACE"
+          ],
+          "grounding line",
+          "#5a7a8a",
+          "ice shelf",
+          "#7a9aaa",
+          "#4a6575"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          0.6,
+          14,
+          1.4
+        ],
+        "line-opacity": 0.9
+      }
+    },
+    {
+      "id": "rock-fill",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "rock_med",
+      "paint": {
+        "fill-color": "#8b7355",
+        "fill-opacity": 0.85
+      }
+    },
+    {
+      "id": "moraines-fill",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "moraines_med",
+      "paint": {
+        "fill-color": "#a89070",
+        "fill-opacity": 0.55
+      }
+    },
+    {
+      "id": "lakes-fill",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "lakes_high",
+      "paint": {
+        "fill-color": "#7eb6d9",
+        "fill-opacity": 0.75
+      }
+    },
+    {
+      "id": "streams",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "streams_high",
+      "paint": {
+        "line-color": "#4a90b8",
+        "line-width": 1.2,
+        "line-opacity": 0.8
+      }
+    },
+    {
+      "id": "contours-low",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "contours_low",
+      "minzoom": 5,
+      "maxzoom": 10,
+      "paint": {
+        "line-color": "#6b5e4e",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          0.6,
+          10,
+          1.0
+        ],
+        "line-opacity": 0.7
+      }
+    },
+    {
+      "id": "contours-med",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "contours_med",
+      "minzoom": 8,
+      "paint": {
+        "line-color": [
+          "case",
+          [
+            "==",
+            [
+              "%",
+              [
+                "to-number",
+                [
+                  "get",
+                  "cnt01hgt"
+                ]
+              ],
+              400
+            ],
+            0
+          ],
+          "#5a4a3a",
+          "#8a7b6a"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          [
+            "case",
+            [
+              "==",
+              [
+                "%",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "cnt01hgt"
+                  ]
+                ],
+                400
+              ],
+              0
+            ],
+            0.9,
+            0.4
+          ],
+          14,
+          [
+            "case",
+            [
+              "==",
+              [
+                "%",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "cnt01hgt"
+                  ]
+                ],
+                400
+              ],
+              0
+            ],
+            1.6,
+            0.7
+          ]
+        ],
+        "line-opacity": 0.75
+      }
+    },
+    {
+      "id": "graticule",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "graticule",
+      "minzoom": 5,
+      "paint": {
+        "line-color": "#5a6a78",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          0.4,
+          12,
+          0.8
+        ],
+        "line-opacity": 0.45,
+        "line-dasharray": [
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "id": "comnap-facilities",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "comnap",
+      "layout": {
+        "icon-image": "research-station",
+        "icon-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7, 0.45,
+          10, 0.7,
+          14, 1.0
+        ],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "icon-anchor": "center"
+      }
+    },
+    {
+      "id": "contour-labels",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "contours_med",
+      "minzoom": 11,
+      "filter": [
+        "==",
+        [
+          "%",
+          [
+            "to-number",
+            [
+              "get",
+              "cnt01hgt"
+            ]
+          ],
+          400
+        ],
+        0
+      ],
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": [
+          "to-string",
+          [
+            "get",
+            "cnt01hgt"
+          ]
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": 10,
+        "text-pitch-alignment": "viewport",
+        "text-max-angle": 30
+      },
+      "paint": {
+        "text-color": "#4a3f32",
+        "text-halo-color": "#f5f0e8",
+        "text-halo-width": 1.2
+      }
+    },
+    {
+      "id": "graticule-labels",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "graticule",
+      "minzoom": 7,
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": [
+          "get",
+          "label"
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": 11,
+        "text-pitch-alignment": "viewport",
+        "text-rotation-alignment": "map",
+        "text-max-angle": 15,
+        "text-padding": 2
+      },
+      "paint": {
+        "text-color": "#3d4a55",
+        "text-halo-color": "#f0f4f7",
+        "text-halo-width": 1.3,
+        "text-opacity": 0.85
+      }
+    },
+    {
+      "id": "bozeman-places",
+      "type": "symbol",
+      "source": "bozeman",
+      "source-layer": "places",
+      "minzoom": 10,
+      "layout": {
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": [
+          "match",
+          [
+            "get",
+            "place"
+          ],
+          "city",
+          16,
+          "town",
+          14,
+          "suburb",
+          12,
+          11
+        ],
+        "text-optional": true,
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#2c3a45",
+        "text-halo-color": "#f4f7f9",
+        "text-halo-width": 1.4
+      }
+    },
+    {
+      "id": "comnap-labels",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "comnap",
+      "minzoom": 6,
+      "layout": {
+        "text-field": [
+          "coalesce",
+          [
+            "get",
+            "name_eng"
+          ],
+          [
+            "get",
+            "name_off"
+          ]
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          11,
+          14,
+          14
+        ],
+        "text-offset": [
+          0,
+          1.1
+        ],
+        "text-anchor": "top",
+        "text-optional": true,
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#1a1a1a",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.4
+      }
+    }
+  ]
+}

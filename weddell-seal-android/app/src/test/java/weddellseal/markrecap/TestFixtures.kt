@@ -18,15 +18,22 @@ object TestFixtures {
     fun sampleColony(
         location: String = "TestColony",
         fileUploadId: Long = 1L,
+        inOut: String = "in",
+        n: Double = 45.0,
+        s: Double = 40.0,
+        w: Double = 30.0,
+        e: Double = 35.0,
+        adjLat: Double = -77.5,
+        adjLong: Double = 166.5,
     ) = SealColony(
-        inOut = "in",
+        inOut = inOut,
         location = location,
-        nLimit = 45.0,
-        sLimit = 40.0,
-        wLimit = 30.0,
-        eLimit = 35.0,
-        adjLat = -77.5,
-        adjLong = 166.5,
+        nLimit = n,
+        sLimit = s,
+        wLimit = w,
+        eLimit = e,
+        adjLat = adjLat,
+        adjLong = adjLong,
         fileUploadId = fileUploadId
     )
 

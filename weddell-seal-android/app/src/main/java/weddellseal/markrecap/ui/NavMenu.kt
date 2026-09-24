@@ -123,6 +123,30 @@ fun NavMenu(navController: NavHostController) {
 
             Spacer(Modifier.height(24.dp))
 
+            NavigationDrawerItem(
+                label = {
+                    Text(
+                        "Map", style = MaterialTheme.typography.displaySmall,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                },
+                selected = false,
+                icon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_explore),
+                        contentDescription = "Go to Map Screen",
+                        modifier = Modifier.size(36.dp)
+                    )
+                },
+                onClick = {
+                    navController.navigate(Screens.Map.route) {
+                        launchSingleTop = true
+                    }
+                }
+            )
+
+            Spacer(Modifier.height(24.dp))
+
 
             NavigationDrawerItem(
                 label = {
