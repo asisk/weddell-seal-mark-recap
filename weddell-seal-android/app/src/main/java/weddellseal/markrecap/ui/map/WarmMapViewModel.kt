@@ -31,6 +31,7 @@ class WarmMapViewModel : ViewModel() {
     private var loadedStylePath: String? = null
     private var mapConfigured: Boolean = false
     private var cameraMoveListener: MapLibreMap.OnCameraMoveStartedListener? = null
+    private var cameraIdleBearingListener: MapLibreMap.OnCameraMoveListener? = null
 
     /** Once true, the map layer stays in composition for the Activity lifetime. */
     var keepAlive by mutableStateOf(false)
@@ -53,6 +54,12 @@ class WarmMapViewModel : ViewModel() {
     var zoomInRequest by mutableIntStateOf(0)
         private set
     var zoomOutRequest by mutableIntStateOf(0)
+        private set
+    var resetNorthRequest by mutableIntStateOf(0)
+        private set
+
+    /** Current map bearing in degrees (0 = north-up). For the compass control. */
+    var mapBearing by mutableStateOf(0.0)
         private set
 
     /** Updated each composition so the retained listener stays current. */
@@ -108,6 +115,10 @@ class WarmMapViewModel : ViewModel() {
         zoomOutRequest++
     }
 
+    fun requestResetNorth() {
+        resetNorthRequest++
+    }
+
     fun obtainMapView(activity: ComponentActivity): MapView {
         val identity = System.identityHashCode(activity)
         val existing = mapView
@@ -150,14 +161,23 @@ class WarmMapViewModel : ViewModel() {
     }
 
     fun ensureCameraMoveListener(map: MapLibreMap) {
-        if (cameraMoveListener != null) return
-        val listener = MapLibreMap.OnCameraMoveStartedListener { reason ->
-            if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
-                onCameraMovedByUser()
+        if (cameraMoveListener == null) {
+            val listener = MapLibreMap.OnCameraMoveStartedListener { reason ->
+                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
+                    onCameraMovedByUser()
+                }
             }
+            cameraMoveListener = listener
+            map.addOnCameraMoveStartedListener(listener)
         }
-        cameraMoveListener = listener
-        map.addOnCameraMoveStartedListener(listener)
+        if (cameraIdleBearingListener == null) {
+            val bearingListener = MapLibreMap.OnCameraMoveListener {
+                mapBearing = map.cameraPosition.bearing
+            }
+            cameraIdleBearingListener = bearingListener
+            map.addOnCameraMoveListener(bearingListener)
+            mapBearing = map.cameraPosition.bearing
+        }
     }
 
     fun setMapVisible(visible: Boolean) {
@@ -177,10 +197,16 @@ class WarmMapViewModel : ViewModel() {
         if (map != null && listener != null) {
             map.removeOnCameraMoveStartedListener(listener)
         }
+        val bearingListener = cameraIdleBearingListener
+        if (map != null && bearingListener != null) {
+            map.removeOnCameraMoveListener(bearingListener)
+        }
         cameraMoveListener = null
+        cameraIdleBearingListener = null
         mapLibreMap = null
         loadedStylePath = null
         mapConfigured = false
+        mapBearing = 0.0
         mapView?.onDestroy()
         mapView = null
         hostIdentity = 0

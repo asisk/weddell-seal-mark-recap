@@ -18,14 +18,14 @@ URLs resolve on-device.
 |------|-------|---------|
 | `PACK_VERSION` | — | Stamp; bump whenever any pack file below changes |
 | `style.json` | ~15 KB | MapLibre style with **no HTTP** glyph/sprite/tile URLs |
-| `region.mbtiles` | ~56 MB | Antarctica vectors (tippecanoe) |
+| `region.mbtiles` | ~51 MB | Antarctica vectors (tippecanoe) |
 | `hillshade.mbtiles` | ~60 MB | Land-clipped RAMP2 hillshade (EPSG:3857) |
 | `bathymetry.mbtiles` | ~86 MB | Ocean depth colors (ETOPO1 elevation → RGBA) |
 | `bozeman.mbtiles` | ~11 MB | Gallatin Valley / Bozeman OSM (local testing) |
 | `glyphs/Open Sans Regular/` | ~230 KB | Label glyphs (folder name uses a real space) |
 | `icons/` | ~8 KB | COMNAP `research-station` PNG (+ `@2x`) |
 
-**APK impact:** this pack is ~**213 MB** uncompressed in assets (dominates install size).
+**APK impact:** this pack is ~**209 MB** uncompressed in assets (dominates install size).
 Largest levers: bathymetry → hillshade → region → bozeman. Colony rectangles are
 **not** in this pack (Room / CSV import). Runtime overlays (colonies, GPS) are added
 in `MapLibreMapView.kt`, not `style.json`.
@@ -38,7 +38,7 @@ Build / clip steps: [`map_pack_build/README.md`](../../../../../map_pack_build/R
 |-------------------|------|------|-----------------|
 | `bathymetry` | raster | `bathymetry.mbtiles` | — |
 | `hillshade` | raster | `hillshade.mbtiles` | — |
-| `basemap` | vector | `region.mbtiles` | `coastline_high_poly`, `coastline_high_line`, `rock_med`, `moraines_med`, `lakes_high`, `contours_med`, `graticule`, `comnap` |
+| `basemap` | vector | `region.mbtiles` | `coastline_high_poly`, `coastline_high_line`, `moraines_med`, `lakes_high`, `contours_med`, `graticule`, `comnap` |
 | `bozeman` | vector | `bozeman.mbtiles` | `parks`, `waterways`, `roads`, `places` |
 
 Glyphs: `file://__PACK_ROOT__/glyphs/{fontstack}/{range}.pbf` → **Open Sans Regular** only.
@@ -55,12 +55,11 @@ Layers are listed **bottom → top** (paint order). Change colors / opacity / zo
 | QGIS Basemap panel | Tippecanoe / raster | Style layer `id` | Type | Zoom | Key paint / layout (what to tweak) |
 |--------------------|---------------------|------------------|------|------|--------------------------------------|
 | *(none — ocean base)* | — | `background` | background | all | `background-color` `#b8d1e4` |
-| ETOPO1 Elevation → bathymetry | `bathymetry` source | `bathymetry` | raster | ≤14 | Mute ocean: `raster-opacity` `0.5`, `raster-saturation` `-0.45`, `raster-contrast` `-0.15`. Rebuild tiles to change the deep→shallow ramp. |
-| RAMP2 Hillshade | `hillshade` source | `hillshade` | raster | ≤14 | Relief: `raster-opacity` `0.85→0.55` (z5→14), `raster-contrast` `0.28`. Sits **under** translucent coastline fills. |
-| Coastlines (polygon) | `coastline_high_poly` | `coastline-fill-med` | fill | ≤10 | `SURFACE` colors: land `#d4d2cc`, ice shelf `#f7fbff`, ice tongue `#c9d3e2`, else `#e8eef3`. Opacity ~`0.5`–`0.55` so hillshade keeps definition. |
+| ETOPO1 Elevation → bathymetry | `bathymetry` source | `bathymetry` | raster | ≤14 | Mute ocean; fades out by z13 (`raster-opacity` → 0) so tile edges don’t fight the coastline. |
+| RAMP2 Hillshade | `hillshade` source | `hillshade` | raster | ≤14 | Strong at overview; fades by z13. Land-clip is coarse — don’t leave it opaque under thin fills at close zoom. |
+| Coastlines (polygon) | `coastline_high_poly` | `coastline-fill-med` | fill | ≤10 | Colors: land `#d4d2cc`, ice shelf `#f7fbff`, ice tongue `#c9d3e2`. Opacity ~`0.82`–`0.88` masks jagged hillshade/bathymetry clip edges. |
 | Coastlines (polygon) | `coastline_high_poly` | `coastline-fill-high` | fill | ≥9 | Same colors/opacity as med (crossfade band z9–10). |
 | Coastlines (line) | `coastline_high_line` | `coastline-shore-line` | line | ≥8 | `SURFACE`: grounding line `#3d5a73`, ice shelf / default `#547eb6`. Width z8→14: `0.5→1.1`. |
-| Rock_outcrop | `rock_med` | `rock-fill` | fill | all | `#8c693a` fill + outline, opacity `1`. |
 | Moraines | `moraines_med` | `moraines-fill` | fill | all | `#e6e1dc` fill + outline, opacity `1`. |
 | Lakes | `lakes_high` | `lakes-fill` | fill | all | Fill `#377eb8`, outline `#265980`. |
 | Contours | `contours_med` | `contours-med` | line | ≥6 | Attribute **`HEIGHT`**. Index every 400 m → `#7a5f48` (thicker); others `#8f7057`. Width scales with zoom. |
@@ -71,8 +70,8 @@ Layers are listed **bottom → top** (paint order). Change colors / opacity / zo
 | COMNAP listed facilities | `comnap` | `comnap-facilities` | symbol | all | Icon `research-station` from `icons/` (loaded in Kotlin). Size scales z7→14. |
 | COMNAP listed facilities | `comnap` | `comnap-labels` | symbol | ≥6 | `name_eng` / `name_off`; offset below icon. |
 
-**Not in `style.json` / pack** (QGIS-only alternates): RAMP2 Hillshade 2× v. exag.;
-ETOPO1…Hillshade 5× (low/high). See `map_pack_build/README.md` § “Hillshade rasters”.
+**Not in `style.json` / pack** (QGIS-only or dropped): RAMP2 Hillshade 2× v. exag.;
+ETOPO1…Hillshade 5× (low/high); **Rock_outcrop**. See `map_pack_build/README.md`.
 
 ### Bozeman / local testing
 
@@ -110,9 +109,9 @@ There is **no** `water` polygon layer in `bozeman.mbtiles` (do not re-add
    bathymetry from Int16 ETOPO1; export vectors to GeoJSON (EPSG:4326).
 3. tippecanoe → `region.mbtiles`; gdal2tiles / MBTiles for rasters.
 4. Keep `style.json` on `mbtiles://__PACK_ROOT__/…` and local glyphs/icons only.
-5. Bump `PACK_VERSION` (current: `2025.10.01i`) after any pack or style change.
+5. Bump `PACK_VERSION` (current: `2025.10.01l`) after any pack or style change.
 6. Verify airplane mode: tiles and labels still render.
-7. Prefer Git LFS for `*.mbtiles` (~213 MB total).
+7. Prefer Git LFS for `*.mbtiles` (~209 MB total).
 
 ### Known detail limits
 

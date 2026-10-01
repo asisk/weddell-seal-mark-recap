@@ -60,6 +60,7 @@ fun WarmMapNavHost(
                     centerBozemanRequest = warmMap.centerBozemanRequest,
                     zoomInRequest = warmMap.zoomInRequest,
                     zoomOutRequest = warmMap.zoomOutRequest,
+                    resetNorthRequest = warmMap.resetNorthRequest,
                     mapVisible = visible,
                     onCameraMovedByUser = { warmMap.followLive = false },
                     modifier = Modifier.fillMaxSize(),

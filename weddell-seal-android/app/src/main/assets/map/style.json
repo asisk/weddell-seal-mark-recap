@@ -55,10 +55,28 @@
       "source": "bathymetry",
       "maxzoom": 14,
       "paint": {
-        "raster-opacity": 0.5,
+        "raster-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          0.55,
+          8,
+          0.45,
+          10,
+          0.28,
+          12,
+          0.12,
+          13,
+          0.0
+        ],
         "raster-saturation": -0.45,
         "raster-contrast": -0.15,
-        "raster-fade-duration": 0,
+        "raster-fade-duration": 300,
         "raster-resampling": "linear"
       }
     },
@@ -230,16 +248,16 @@
           5,
           0.85,
           8,
-          0.78,
+          0.72,
           10,
-          0.7,
-          12,
-          0.62,
-          14,
-          0.55
+          0.5,
+          11.5,
+          0.22,
+          13,
+          0.05
         ],
         "raster-contrast": 0.28,
-        "raster-fade-duration": 0,
+        "raster-fade-duration": 300,
         "raster-resampling": "linear"
       }
     },
@@ -271,12 +289,12 @@
             "SURFACE"
           ],
           "land",
-          0.5,
+          0.82,
           "ice shelf",
-          0.55,
+          0.88,
           "ice tongue",
-          0.55,
-          0.55
+          0.85,
+          0.85
         ]
       }
     },
@@ -308,12 +326,12 @@
             "SURFACE"
           ],
           "land",
-          0.5,
+          0.82,
           "ice shelf",
-          0.55,
+          0.88,
           "ice tongue",
-          0.55,
-          0.55
+          0.85,
+          0.85
         ]
       }
     },
@@ -350,17 +368,6 @@
           1.1
         ],
         "line-opacity": 0.95
-      }
-    },
-    {
-      "id": "rock-fill",
-      "type": "fill",
-      "source": "basemap",
-      "source-layer": "rock_med",
-      "paint": {
-        "fill-color": "#8c693a",
-        "fill-opacity": 1,
-        "fill-outline-color": "#8c693a"
       }
     },
     {

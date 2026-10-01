@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
@@ -65,6 +66,7 @@ fun MapLibreMapView(
     centerBozemanRequest: Int,
     zoomInRequest: Int,
     zoomOutRequest: Int,
+    resetNorthRequest: Int,
     mapVisible: Boolean,
     onCameraMovedByUser: () -> Unit,
     modifier: Modifier = Modifier,
@@ -136,7 +138,11 @@ fun MapLibreMapView(
         if (warmMap.isStyleLoaded(file)) {
             val map = warmMap.mapLibreMap()
             mapRef = map
-            if (map != null) warmMap.ensureCameraMoveListener(map)
+            if (map != null) {
+                map.uiSettings.isRotateGesturesEnabled = true
+                map.uiSettings.isTiltGesturesEnabled = false
+                warmMap.ensureCameraMoveListener(map)
+            }
             styleReady = true
             return@LaunchedEffect
         }
@@ -148,11 +154,12 @@ fun MapLibreMapView(
                 map.setMaxZoomPreference(
                     maxOf(MapTileEnvelope.MAX_ZOOM, BozemanMapEnvelope.MAX_ZOOM),
                 )
-                map.uiSettings.isRotateGesturesEnabled = false
-                map.uiSettings.isTiltGesturesEnabled = false
                 map.setLatLngBoundsForCameraTarget(packCameraBounds())
                 warmMap.markMapConfigured()
             }
+            // Gestures: allow rotate (two-finger); keep tilt off. Re-apply on warm revisit.
+            map.uiSettings.isRotateGesturesEnabled = true
+            map.uiSettings.isTiltGesturesEnabled = false
             warmMap.ensureCameraMoveListener(map)
 
             map.setStyle(Style.Builder().fromUri(OfflineMapAssets.styleUri(file))) { style ->
@@ -249,6 +256,15 @@ fun MapLibreMapView(
     LaunchedEffect(zoomOutRequest, styleReady) {
         if (zoomOutRequest == 0 || !styleReady) return@LaunchedEffect
         mapRef?.animateCamera(CameraUpdateFactory.zoomOut())
+    }
+
+    LaunchedEffect(resetNorthRequest, styleReady) {
+        if (resetNorthRequest == 0 || !styleReady) return@LaunchedEffect
+        val map = mapRef ?: return@LaunchedEffect
+        val northUp = CameraPosition.Builder(map.cameraPosition)
+            .bearing(0.0)
+            .build()
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(northUp))
     }
 }
 

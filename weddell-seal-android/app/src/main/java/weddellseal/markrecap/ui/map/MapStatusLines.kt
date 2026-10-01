@@ -14,6 +14,7 @@ object MapScreenUi {
         "Basemap pack not installed. Add style.json and region.mbtiles under assets/map."
     const val MY_LOCATION = "My location"
     const val NORTH = "North"
+    const val RESET_NORTH = "Reset north"
     const val CENTER_MCMURDO = "McMurdo"
     const val CENTER_BOZEMAN = "Bozeman"
     const val MY_LOCATION_ZOOM = 16.0

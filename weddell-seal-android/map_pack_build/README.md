@@ -235,9 +235,13 @@ every 800 m at z7–10 and every 400 m at z≥10). Optional low (1000 m) contour
 | | |
 |--|--|
 | Source | `clipped_ADD Rock outcrop (med).gpkg` (or high if regenerating detail) |
-| Export | `$GEO/rock_med.geojson` |
-| Tippecanoe layer | `rock_med` |
-| App layer | `rock-fill` |
+| Export | `$GEO/rock_med.geojson` (optional keep for QGIS) |
+| Tippecanoe layer | — |
+| App layer | **Removed** — not in `style.json` or `region.mbtiles` |
+
+Rock outcrop fills competed with hillshade/land tint; left out of the shipped pack.
+Re-add only if you restore a `rock-fill` style layer and include `-L rock_med:…` in
+tippecanoe.
 
 ---
 
@@ -317,7 +321,6 @@ tippecanoe -o "$BUILD/region.mbtiles" --force \
   --clip-bounding-box=161.4,-78.35,171.1,-74.40 \
   -L coastline_high_poly:$GEO/coastline_high_poly.geojson \
   -L coastline_high_line:$GEO/coastline_high_line.geojson \
-  -L rock_med:$GEO/rock_med.geojson \
   -L lakes_high:$GEO/lakes_high.geojson \
   -L contours_med:$GEO/contours_med.geojson \
   -L moraines_med:$GEO/moraines_med.geojson \
@@ -328,8 +331,8 @@ cp "$BUILD/region.mbtiles" "$ASSETS/region.mbtiles"
 ```
 
 `-L <name>:file` **must** match `source-layer` names in `style.json`. Do **not**
-add `coastline_med` or `contours_low` unless you also add matching style layers
-(current pack / style use high poly + med contours only).
+add `coastline_med`, `contours_low`, or `rock_med` unless you also add matching
+style layers (current pack omits those).
 
 ---
 
@@ -359,7 +362,7 @@ size, and attribution.
 | 6 | Coastlines (line) | `coastline_high_line.geojson` | Yes |
 | 7 | Contours | `contours_med` (+ optional `contours_low`) | Yes |
 | 8 | Moraines | `moraines_med.geojson` | Yes |
-| 9 | Rock_outcrop | `rock_med.geojson` | Yes |
+| 9 | Rock_outcrop | `rock_med.geojson` (QGIS only) | No |
 | 10 | Coastlines (polygon) | `coastline_high_poly` | Yes (+ hillshade cutline) |
 | 11 | ETOPO1 Hillshade 5× (low) | — | No — see below |
 | 12 | ETOPO1 Hillshade 5× (high) | — | No — see below |
