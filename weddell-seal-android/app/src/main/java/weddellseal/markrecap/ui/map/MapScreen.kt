@@ -5,36 +5,43 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,10 +56,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weddellseal.markrecap.R
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColonyRepository
 import weddellseal.markrecap.ui.CenteredAppBar
 import weddellseal.markrecap.ui.NavMenu
@@ -63,10 +72,10 @@ import weddellseal.markrecap.ui.utils.scaffoldContentInsets
 private val MapControlSize = 40.dp
 private val MapControlShape = RoundedCornerShape(8.dp)
 
-/** Matches MapLibre colony fill/outline colors in [MapLibreMapView]. */
+/** Matches MapLibre colony *outline* colors in [MapLibreMapView]. */
 private object ColonyLegendColors {
-    val Inside = Color(0xE32196F3)
-    val Outside = Color(0xE39E9E9E)
+    val Inside = Color(0xFF1976D2) // rgb(25, 118, 210)
+    val Outside = Color(0xFF757575) // rgb(117, 117, 117)
     val Active = Color(0xFFFF9800)
 }
 
@@ -193,12 +202,39 @@ fun MapScreen(
                             )
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { warmMap.requestMcMurdo() }) {
-                            Text(MapScreenUi.CENTER_MCMURDO)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        ColonyFlyDropDown(
+                            colonies = drawable,
+                            selectedName = warmMap.lastFlownColonyName,
+                            onColonySelected = { warmMap.requestFlyToColony(it) },
+                            modifier = Modifier.widthIn(min = 140.dp, max = 200.dp),
+                        )
+                        MapControlButton(
+                            onClick = { warmMap.requestMcMurdo() },
+                            contentDescription = MapScreenUi.CENTER_MCMURDO,
+                            modifier = Modifier.height(MapControlSize),
+                        ) {
+                            Text(
+                                text = MapScreenUi.CENTER_MCMURDO,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                            )
                         }
-                        Button(onClick = { warmMap.requestBozeman() }) {
-                            Text(MapScreenUi.CENTER_BOZEMAN)
+                        MapControlButton(
+                            onClick = { warmMap.requestBozeman() },
+                            contentDescription = MapScreenUi.CENTER_BOZEMAN,
+                            modifier = Modifier.height(MapControlSize),
+                        ) {
+                            Text(
+                                text = MapScreenUi.CENTER_BOZEMAN,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                            )
                         }
                     }
                 }
@@ -245,30 +281,39 @@ fun MapScreen(
                                     bearingDegrees = warmMap.mapBearing,
                                     onClick = { warmMap.requestResetNorth() },
                                 )
-                                MapZoomButton(
-                                    label = MapScreenUi.ZOOM_IN,
+                                MapControlButton(
                                     onClick = { warmMap.requestZoomIn() },
-                                )
-                                MapZoomButton(
-                                    label = MapScreenUi.ZOOM_OUT,
+                                    contentDescription = MapScreenUi.ZOOM_IN,
+                                ) {
+                                    Text(
+                                        text = MapScreenUi.ZOOM_IN,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                                MapControlButton(
                                     onClick = { warmMap.requestZoomOut() },
-                                )
-                                IconButton(
+                                    contentDescription = MapScreenUi.ZOOM_OUT,
+                                ) {
+                                    Text(
+                                        text = MapScreenUi.ZOOM_OUT,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                                MapControlButton(
                                     onClick = {
                                         warmMap.requestMyLocation()
                                         if (location?.isLiveFix != true) {
                                             homeViewModel.refreshGps()
                                         }
                                     },
-                                    modifier = Modifier.size(MapControlSize),
-                                    colors = IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                                    ),
+                                    contentDescription = MapScreenUi.MY_LOCATION,
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.ic_location_on),
-                                        contentDescription = MapScreenUi.MY_LOCATION,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.size(22.dp),
                                     )
                                 }
@@ -296,24 +341,114 @@ fun MapScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ColonyFlyDropDown(
+    colonies: List<SealColony>,
+    selectedName: String?,
+    onColonySelected: (SealColony) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val options = remember(colonies) {
+        colonies.drawableColonies().sortedBy { it.location.lowercase() }
+    }
+    val enabled = options.isNotEmpty()
+    val label = selectedName?.takeIf { it.isNotBlank() }
+        ?: MapScreenUi.FLY_TO_COLONY_PLACEHOLDER
+
+    ExposedDropdownMenuBox(
+        expanded = expanded && enabled,
+        onExpandedChange = { if (enabled) expanded = it },
+        modifier = modifier,
+    ) {
+        TextField(
+            readOnly = true,
+            enabled = enabled,
+            value = label,
+            onValueChange = {},
+            label = {
+                Text(
+                    MapScreenUi.FLY_TO_COLONY,
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                )
+            },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled)
+            },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded && enabled,
+            onDismissRequest = { expanded = false },
+        ) {
+            options.forEach { colony ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            colony.location,
+                            style = MaterialTheme.typography.bodyLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    onClick = {
+                        onColonySelected(colony)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MapControlButton(
+    onClick: () -> Unit,
+    contentDescription: String,
+    modifier: Modifier = Modifier.size(MapControlSize),
+    content: @Composable () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .clip(MapControlShape)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MapControlShape)
+            .semantics {
+                role = Role.Button
+                this.contentDescription = contentDescription
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+        content = { content() },
+    )
+}
+
 @Composable
 private fun NorthIndicator(
     bearingDegrees: Double,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .size(MapControlSize)
-            .clip(MapControlShape)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MapControlShape)
-            .semantics {
-                role = Role.Button
-                contentDescription = MapScreenUi.RESET_NORTH
-            }
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+    MapControlButton(
+        onClick = onClick,
+        contentDescription = MapScreenUi.RESET_NORTH,
+        modifier = modifier.size(MapControlSize),
     ) {
         // Draw under a canvas rotate (not Modifier.rotate on a bitmap) so edges stay anti-aliased.
         Canvas(modifier = Modifier.size(24.dp)) {
@@ -344,26 +479,6 @@ private fun NorthIndicator(
 }
 
 @Composable
-private fun MapZoomButton(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.size(MapControlSize),
-        shape = MapControlShape,
-        contentPadding = PaddingValues(0.dp),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-        )
-    }
-}
-
-@Composable
 private fun ColonyMapLegend(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
@@ -377,21 +492,29 @@ private fun ColonyMapLegend(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        LegendRow(color = ColonyLegendColors.Inside, label = MapScreenUi.LEGEND_INSIDE)
-        LegendRow(color = ColonyLegendColors.Outside, label = MapScreenUi.LEGEND_OUTSIDE)
         LegendRow(
-            color = Color.Transparent,
-            label = MapScreenUi.LEGEND_ACTIVE,
+            fill = Color.Transparent,
+            borderColor = ColonyLegendColors.Inside,
+            label = MapScreenUi.LEGEND_INSIDE,
+        )
+        LegendRow(
+            fill = Color.Transparent,
+            borderColor = ColonyLegendColors.Outside,
+            label = MapScreenUi.LEGEND_OUTSIDE,
+        )
+        LegendRow(
+            fill = Color.Transparent,
             borderColor = ColonyLegendColors.Active,
+            label = MapScreenUi.LEGEND_ACTIVE,
         )
     }
 }
 
 @Composable
 private fun LegendRow(
-    color: Color,
+    fill: Color,
     label: String,
-    borderColor: Color = Color(0xFF424242),
+    borderColor: Color,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -401,7 +524,7 @@ private fun LegendRow(
             modifier = Modifier
                 .size(14.dp)
                 .border(1.5.dp, borderColor, RoundedCornerShape(2.dp))
-                .background(color, RoundedCornerShape(2.dp)),
+                .background(fill, RoundedCornerShape(2.dp)),
         )
         Text(
             text = label,

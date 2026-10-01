@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import weddellseal.markrecap.frameworks.map.OfflineMapAssets
+import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 import java.io.File
 
 /**
@@ -56,6 +57,16 @@ class WarmMapViewModel : ViewModel() {
     var zoomOutRequest by mutableIntStateOf(0)
         private set
     var resetNorthRequest by mutableIntStateOf(0)
+        private set
+    var flyToColonyRequest by mutableIntStateOf(0)
+        private set
+
+    /** Target for [flyToColonyRequest]; consumed by the map view. */
+    var pendingColonyCamera by mutableStateOf<ColonyCameraTarget?>(null)
+        private set
+
+    /** Last colony the user flew to (dropdown label). */
+    var lastFlownColonyName by mutableStateOf<String?>(null)
         private set
 
     /** Current map bearing in degrees (0 = north-up). For the compass control. */
@@ -117,6 +128,14 @@ class WarmMapViewModel : ViewModel() {
 
     fun requestResetNorth() {
         resetNorthRequest++
+    }
+
+    fun requestFlyToColony(colony: SealColony) {
+        val target = colonyCameraTarget(colony) ?: return
+        followLive = false
+        lastFlownColonyName = colony.location
+        pendingColonyCamera = target
+        flyToColonyRequest++
     }
 
     fun obtainMapView(activity: ComponentActivity): MapView {
@@ -215,4 +234,41 @@ class WarmMapViewModel : ViewModel() {
     override fun onCleared() {
         destroyMapView()
     }
+}
+
+/** Camera destination for flying to a colony box (adj point + region-aware zoom). */
+data class ColonyCameraTarget(
+    val latitude: Double,
+    val longitude: Double,
+    val zoom: Double,
+)
+
+fun colonyCameraTarget(colony: SealColony): ColonyCameraTarget? {
+    if (!colony.isDrawableOnMap()) return null
+    val lat = when {
+        colony.adjLat != 0.0 -> colony.adjLat
+        else -> (colony.nLimit + colony.sLimit) / 2.0
+    }
+    val lon = when {
+        colony.adjLong != 0.0 -> colony.adjLong
+        else -> (colony.eLimit + colony.wLimit) / 2.0
+    }
+    val latSpan = (colony.nLimit - colony.sLimit).coerceAtLeast(0.005)
+    val lonSpan = (colony.eLimit - colony.wLimit).coerceAtLeast(0.005)
+    val span = maxOf(latSpan, lonSpan)
+    val rawZoom = when {
+        span > 0.45 -> 10.0
+        span > 0.2 -> 11.0
+        span > 0.08 -> 12.0
+        span > 0.03 -> 13.0
+        else -> 14.0
+    }
+    val zoom = when {
+        BozemanMapEnvelope.contains(lat, lon) ->
+            rawZoom.coerceIn(BozemanMapEnvelope.MIN_ZOOM, BozemanMapEnvelope.MAX_ZOOM)
+        MapTileEnvelope.contains(lat, lon) ->
+            rawZoom.coerceIn(MapTileEnvelope.MIN_ZOOM, MapTileEnvelope.MAX_ZOOM)
+        else -> MapScreenUi.COLONY_FLY_ZOOM
+    }
+    return ColonyCameraTarget(latitude = lat, longitude = lon, zoom = zoom)
 }

@@ -145,3 +145,33 @@ class MapStatusLinesTest {
         )
     }
 }
+
+class ColonyCameraTargetTest {
+
+    @Test
+    fun usesAdjPointAndRegionZoom() {
+        val colony = TestFixtures.sampleColony(
+            location = "Hutton Cliffs",
+            n = -77.60,
+            s = -77.72,
+            w = 166.40,
+            e = 166.55,
+            adjLat = -77.65,
+            adjLong = 166.50,
+        )
+        val target = colonyCameraTarget(colony)!!
+        assertEquals(-77.65, target.latitude, 1e-9)
+        assertEquals(166.50, target.longitude, 1e-9)
+        assertTrue(target.zoom in MapTileEnvelope.MIN_ZOOM..MapTileEnvelope.MAX_ZOOM)
+    }
+
+    @Test
+    fun skipsNonDrawableColonies() {
+        assertEquals(
+            null,
+            colonyCameraTarget(
+                TestFixtures.sampleColony(location = ColonyPopulation.NOT_DETECTED),
+            ),
+        )
+    }
+}

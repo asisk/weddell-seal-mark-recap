@@ -61,6 +61,7 @@ fun WarmMapNavHost(
                     zoomInRequest = warmMap.zoomInRequest,
                     zoomOutRequest = warmMap.zoomOutRequest,
                     resetNorthRequest = warmMap.resetNorthRequest,
+                    flyToColonyRequest = warmMap.flyToColonyRequest,
                     mapVisible = visible,
                     onCameraMovedByUser = { warmMap.followLive = false },
                     modifier = Modifier.fillMaxSize(),

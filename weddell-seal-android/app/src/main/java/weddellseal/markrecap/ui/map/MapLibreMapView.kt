@@ -67,6 +67,7 @@ fun MapLibreMapView(
     zoomInRequest: Int,
     zoomOutRequest: Int,
     resetNorthRequest: Int,
+    flyToColonyRequest: Int,
     mapVisible: Boolean,
     onCameraMovedByUser: () -> Unit,
     modifier: Modifier = Modifier,
@@ -141,6 +142,7 @@ fun MapLibreMapView(
             if (map != null) {
                 map.uiSettings.isRotateGesturesEnabled = true
                 map.uiSettings.isTiltGesturesEnabled = false
+                map.uiSettings.isCompassEnabled = false
                 warmMap.ensureCameraMoveListener(map)
             }
             styleReady = true
@@ -157,9 +159,11 @@ fun MapLibreMapView(
                 map.setLatLngBoundsForCameraTarget(packCameraBounds())
                 warmMap.markMapConfigured()
             }
-            // Gestures: allow rotate (two-finger); keep tilt off. Re-apply on warm revisit.
+            // Gestures: allow rotate (two-finger); keep tilt off. Hide MapLibre's
+            // built-in compass — we use the Compose north control instead.
             map.uiSettings.isRotateGesturesEnabled = true
             map.uiSettings.isTiltGesturesEnabled = false
+            map.uiSettings.isCompassEnabled = false
             warmMap.ensureCameraMoveListener(map)
 
             map.setStyle(Style.Builder().fromUri(OfflineMapAssets.styleUri(file))) { style ->
@@ -266,6 +270,19 @@ fun MapLibreMapView(
             .build()
         map.animateCamera(CameraUpdateFactory.newCameraPosition(northUp))
     }
+
+    LaunchedEffect(flyToColonyRequest, styleReady) {
+        if (flyToColonyRequest == 0 || !styleReady) return@LaunchedEffect
+        val map = mapRef ?: return@LaunchedEffect
+        val target = warmMap.pendingColonyCamera ?: return@LaunchedEffect
+        flyToRegion(
+            map = map,
+            latitude = target.latitude,
+            longitude = target.longitude,
+            zoom = target.zoom,
+            region = regionFor(target.latitude, target.longitude),
+        )
+    }
 }
 
 private fun addResearchStationIcon(style: Style, packRoot: File?) {
@@ -307,27 +324,15 @@ private fun ensureOverlayLayers(style: Style) {
     if (style.getLayer(LAYER_FILL) == null) {
         addOverlayLayer(
             style,
-            FillLayer(LAYER_FILL, SOURCE_COLONIES).withProperties(
-                PropertyFactory.fillColor(
-                    Expression.match(
-                        Expression.get("category"),
-                        Expression.literal("Inside"), Expression.color(Color.argb(90, 33, 150, 243)),
-                        Expression.literal("Outside"), Expression.color(Color.argb(50, 158, 158, 158)),
-                        Expression.literal("Local"), Expression.color(Color.argb(70, 156, 39, 176)),
-                        Expression.color(Color.argb(40, 96, 125, 139)),
-                    ),
-                ),
-                PropertyFactory.fillOpacity(
-                    Expression.match(
-                        Expression.get("active"),
-                        Expression.literal("true"), Expression.literal(0.55f),
-                        Expression.literal(0.28f),
-                    ),
-                ),
-            ),
+            FillLayer(LAYER_FILL, SOURCE_COLONIES),
             belowLayerId = belowGraticule,
         )
     }
+    // Outline-only boxes (legend matches stroke colors). Re-apply so warm maps pick up the change.
+    style.getLayerAs<FillLayer>(LAYER_FILL)?.setProperties(
+        PropertyFactory.fillColor(Color.TRANSPARENT),
+        PropertyFactory.fillOpacity(0f),
+    )
     if (style.getLayer(LAYER_LINE) == null) {
         addOverlayLayer(
             style,

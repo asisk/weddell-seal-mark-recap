@@ -17,13 +17,16 @@ object MapScreenUi {
     const val RESET_NORTH = "Reset north"
     const val CENTER_MCMURDO = "McMurdo"
     const val CENTER_BOZEMAN = "Bozeman"
+    const val FLY_TO_COLONY = "Colony"
+    const val FLY_TO_COLONY_PLACEHOLDER = "Go to…"
     const val MY_LOCATION_ZOOM = 16.0
+    const val COLONY_FLY_ZOOM = 13.0
     const val ZOOM_IN = "+"
     const val ZOOM_OUT = "−"
     const val LEGEND_TITLE = "Colony"
     const val LEGEND_INSIDE = "Inside"
     const val LEGEND_OUTSIDE = "Outside"
-    const val LEGEND_ACTIVE = "Active (GPS)"
+    const val LEGEND_ACTIVE = "Current"
 
     /** COMNAP McMurdo Station (US). */
     const val MCMURDO_LATITUDE = -77.848209
