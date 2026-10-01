@@ -32,11 +32,14 @@ URLs resolve on-device.
 
 ## Production notes
 
+Layer-by-layer clip → GeoJSON / hillshade → MBTiles steps (QGIS Basemap panel
+order) live in [`map_pack_build/README.md`](../../../../../map_pack_build/README.md).
+
 1. Clip Quantarctica Detailed basemap (+ COMNAP / place names) to the envelope in QGIS.
-2. Warp hillshade to EPSG:3857; export vectors to GeoJSON (EPSG:4326).
-3. Build vector tiles with tippecanoe → `region.mbtiles`; raster tiles via gdal2tiles.
+2. Warp RAMP2 hillshade to EPSG:3857, land-clip to high coastline polygons; export vectors to GeoJSON (EPSG:4326).
+3. Build vector tiles with tippecanoe → `region.mbtiles`; raster tiles via gdal2tiles / MBTiles.
 4. Author a fully local `style.json` using `mbtiles://__PACK_ROOT__/…` (rewritten at install).
-5. Bump `PACK_VERSION` (current: `2025.09.24d`).
+5. Bump `PACK_VERSION` (current: `2025.10.01a`).
 6. Verify airplane mode / no `INTERNET` permission: tiles and labels still render.
 7. If pack assets exceed ~15–20 MB, prefer Git LFS for `*.mbtiles`
    (`region` ~25 MB + `hillshade` ~30 MB + `bozeman` ~11 MB).

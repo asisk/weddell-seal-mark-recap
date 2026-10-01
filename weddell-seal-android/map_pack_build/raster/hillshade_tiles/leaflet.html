@@ -54,7 +54,7 @@ var lyr = L.tileLayer('./{z}/{x}/{y}.png', {tms: 0, opacity: 0.7, attribution: "
 
 // Map
 var map = L.map('map', {
-    center: [-76.376099325602809, 166.19808590612973],
+    center: [-76.375057560197149, 166.25000421896129],
     zoom: 12,
     minZoom: 5,
     maxZoom: 12,
@@ -94,7 +94,7 @@ title.addTo(map);
 L.control.layers(basemaps, overlaymaps, {collapsed: false}).addTo(map);
 
 // Fit to overlay bounds (SW and NE points with (lat, lon))
-map.fitBounds([[-78.339804851070227, 171.01407211602046], [-74.412393800135376, 161.38209969623898]]);
+map.fitBounds([[-78.350115120394278, 171.10000843792258], [-74.400000000000006, 161.39999999999998]]);
 
 </script>
 

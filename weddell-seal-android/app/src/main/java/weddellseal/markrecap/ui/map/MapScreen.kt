@@ -58,7 +58,6 @@ private val MapControlShape = RoundedCornerShape(8.dp)
 private object ColonyLegendColors {
     val Inside = Color(0xE32196F3)
     val Outside = Color(0xE39E9E9E)
-    val Local = Color(0xE39C27B0)
     val Active = Color(0xFFFF9800)
 }
 
@@ -335,7 +334,6 @@ private fun ColonyMapLegend(modifier: Modifier = Modifier) {
         )
         LegendRow(color = ColonyLegendColors.Inside, label = MapScreenUi.LEGEND_INSIDE)
         LegendRow(color = ColonyLegendColors.Outside, label = MapScreenUi.LEGEND_OUTSIDE)
-        LegendRow(color = ColonyLegendColors.Local, label = MapScreenUi.LEGEND_LOCAL)
         LegendRow(
             color = Color.Transparent,
             label = MapScreenUi.LEGEND_ACTIVE,

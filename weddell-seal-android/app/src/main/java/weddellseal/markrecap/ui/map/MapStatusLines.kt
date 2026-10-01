@@ -22,7 +22,6 @@ object MapScreenUi {
     const val LEGEND_TITLE = "Colony"
     const val LEGEND_INSIDE = "Inside"
     const val LEGEND_OUTSIDE = "Outside"
-    const val LEGEND_LOCAL = "Local"
     const val LEGEND_ACTIVE = "Active (GPS)"
 
     /** COMNAP McMurdo Station (US). */
