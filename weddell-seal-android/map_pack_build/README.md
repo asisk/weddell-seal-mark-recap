@@ -184,8 +184,11 @@ cp "$RASTER/hillshade.mbtiles" "$ASSETS/hillshade.mbtiles"
 | Source | `_clippedRAMP2 Hillshade 2x v. exag..tif` |
 | App | **Not used** by current `style.json` |
 
-Optional alternate exaggerated relief. Same pipeline as step 4 if you switch the
-hillshade source; otherwise skip.
+Same RAMP2 DEM as step 4, with **2× vertical exaggeration**. Kept in the QGIS
+Basemap for punchier on-desktop relief; **not** tiled into the app pack (would
+duplicate ~`hillshade.mbtiles` size for a style that already has one land
+hillshade). Switch the step-4 source to this file only if you intentionally want
+exaggerated relief on-device.
 
 ---
 
@@ -207,15 +210,12 @@ Keep `SURFACE` (`grounding line`, `ice shelf`, …).
 | | |
 |--|--|
 | Source (med) | `clipped_ADD v6 Contours (med).gpkg` → `$GEO/contours_med.geojson` |
-| Source (low) | `clipped_ADD Contours (low, 1000m).gpkg` → `$GEO/contours_low.geojson` |
-| Tippecanoe | `contours_med`, `contours_low` |
-| App layers | `contours-med`, `contours-low`, `contour-labels` |
+| Tippecanoe | `contours_med` |
+| App layers | `contours-med`, `contour-labels-major`, `contour-labels` |
 
-- Med contours must keep **`cnt01hgt`** (style indexes every 400 m for emphasis/labels).
-- Low contours must keep **`HEIGHT`**.
-
-If the QGIS panel only shows one Contours layer, still export **both** low and med
-clips for the pack (low for z5–10, med from z8 up).
+Med contours must keep **`HEIGHT`** (style indexes every 400 m for emphasis; labels
+every 800 m at z7–10 and every 400 m at z≥10). Optional low (1000 m) contours are
+**not** in the current pack — add a style layer before tippecanoe-including them.
 
 ---
 
@@ -265,8 +265,13 @@ Export polygons **before** finishing the hillshade land-clip if rebuilding both.
 | Source | `clipped_ETOPO1_IBCSO_RAMP2 Hillshade (5x v. exag.) (low).tif`, `_clippedETOPO1_…_high….tif` |
 | App | **Not used** by current `style.json` |
 
-The shipped pack uses **RAMP2** hillshade (step 4), not ETOPO1 hillshades. Keep these
-clips for QGIS reference or as a future alternate raster source.
+Coarser ETOPO1/IBCSO-derived hillshades with **5×** exaggeration (low/high
+variants in QGIS). The shipped pack uses **RAMP2** for land shading (step 4), not
+these. Keep the clips for QGIS reference or a future alternate raster; do not
+pack them alongside `hillshade.mbtiles` unless replacing RAMP2 entirely.
+
+ETOPO1 **elevation** (step 14) *is* used — for `bathymetry.mbtiles` (ocean colors),
+not as a land hillshade.
 
 ---
 
@@ -286,17 +291,15 @@ clips for QGIS reference or as a future alternate raster source.
 | | |
 |--|--|
 | Source | `clipped_ETOPO1_IBCSO_RAMP2 Elevation model.tif` (**Int16** meters, NoData `32767`) |
-| App | **Not used** by current `style.json` |
+| App | **Bathymetry only** → `bathymetry.mbtiles` (not a land hillshade) |
 
-Elevation is for QGIS / analysis only today. Topography in the app comes from
-**hillshade + contours**.
+Land topography in the app still comes from **RAMP2 hillshade + ADD contours**.
+This DEM feeds the **ocean** color ramp: warp to EPSG:3857, map negative
+elevations to RGBA (land transparent), tile z5–12 → `$ASSETS/bathymetry.mbtiles`.
 
-If you later add a colored DEM:
-
-1. Keep Int16 (do not export Byte / render).
-2. Clip from the full Quantarctica `ETOPO1_IBCSO_RAMP2_2000m.tif`, not a rendered image.
-3. Warp to EPSG:3857, style to RGBA (or pre-render), tile like hillshade, add a
-   raster source + layer in `style.json`.
+Do **not** use this file as a drop-in replacement for RAMP2 hillshade (different
+product / resolution). Keep Int16 (do not export Byte / a rendered preview).
+Clip from the full Quantarctica `ETOPO1_IBCSO_RAMP2_2000m.tif`, not a screenshot.
 
 After reclips in QGIS, **remove and re-add** the layer (or Change Data Source) so
 cached raster dimensions do not cause `RasterIO() … Access window out of range`.
@@ -311,12 +314,11 @@ Once GeoJSONs for every **used** layer exist under `$GEO/`:
 tippecanoe -o "$BUILD/region.mbtiles" --force \
   --minimum-zoom=5 --maximum-zoom=14 \
   --drop-densest-as-needed --extend-zooms-if-still-dropping \
-  -L coastline_med:$GEO/coastline_med.geojson \
+  --clip-bounding-box=161.4,-78.35,171.1,-74.40 \
   -L coastline_high_poly:$GEO/coastline_high_poly.geojson \
   -L coastline_high_line:$GEO/coastline_high_line.geojson \
   -L rock_med:$GEO/rock_med.geojson \
   -L lakes_high:$GEO/lakes_high.geojson \
-  -L contours_low:$GEO/contours_low.geojson \
   -L contours_med:$GEO/contours_med.geojson \
   -L moraines_med:$GEO/moraines_med.geojson \
   -L graticule:$GEO/graticule.geojson \
@@ -325,7 +327,9 @@ tippecanoe -o "$BUILD/region.mbtiles" --force \
 cp "$BUILD/region.mbtiles" "$ASSETS/region.mbtiles"
 ```
 
-`-L <name>:file` **must** match `source-layer` names in `style.json`.
+`-L <name>:file` **must** match `source-layer` names in `style.json`. Do **not**
+add `coastline_med` or `contours_low` unless you also add matching style layers
+(current pack / style use high poly + med contours only).
 
 ---
 
@@ -337,8 +341,9 @@ cp "$BUILD/region.mbtiles" "$ASSETS/region.mbtiles"
 3. Keep `style.json` free of `http(s):` glyph/sprite/tile URLs.
 4. Verify on device/emulator in airplane mode (app has no `INTERNET` permission for tiles).
 
-See also `app/src/main/assets/map/README.md` for pack layout, zoom ranges, and
-attribution.
+See also `app/src/main/assets/map/README.md` for pack layout, **style layer
+mappings** (QGIS → `source-layer` → style `id` + paint knobs), zoom ranges, APK
+size, and attribution.
 
 ---
 
@@ -349,17 +354,30 @@ attribution.
 | 1 | COMNAP listed facilities | `geojson/comnap.geojson` → `region.mbtiles` | Yes |
 | 2 | 15-min latitude | → `graticule.geojson` | Yes |
 | 3 | 30-min longitude | → `graticule.geojson` | Yes |
-| 4 | RAMP2 Hillshade | → `hillshade.mbtiles` | Yes (primary) |
-| 5 | RAMP2 Hillshade 2× | (optional alt hillshade) | No |
+| 4 | RAMP2 Hillshade | → `hillshade.mbtiles` | Yes (primary land relief) |
+| 5 | RAMP2 Hillshade 2× | (optional alt hillshade) | No — see below |
 | 6 | Coastlines (line) | `coastline_high_line.geojson` | Yes |
-| 7 | Contours | `contours_med` + `contours_low` | Yes |
+| 7 | Contours | `contours_med` (+ optional `contours_low`) | Yes |
 | 8 | Moraines | `moraines_med.geojson` | Yes |
 | 9 | Rock_outcrop | `rock_med.geojson` | Yes |
-| 10 | Coastlines (polygon) | `coastline_high_poly` + `coastline_med` | Yes (+ hillshade cutline) |
-| 11 | ETOPO1 Hillshade 5× (low) | — | No |
-| 12 | ETOPO1 Hillshade 5× (high) | — | No |
+| 10 | Coastlines (polygon) | `coastline_high_poly` | Yes (+ hillshade cutline) |
+| 11 | ETOPO1 Hillshade 5× (low) | — | No — see below |
+| 12 | ETOPO1 Hillshade 5× (high) | — | No — see below |
 | 13 | Lakes | `lakes_high.geojson` | Yes |
-| 14 | ETOPO1 Elevation model | Int16 GeoTIFF only | No (QGIS only) |
+| 14 | ETOPO1 Elevation model | → `bathymetry.mbtiles` (ocean RGBA) | Yes (bathymetry only) |
+
+### Hillshade rasters: what ships
+
+QGIS stacks several hillshade variants for desktop comparison. The app pack
+ships **one** land hillshade to avoid duplicate ~50–60 MB rasters and competing
+relief styles:
+
+| Raster | Role in pack |
+|--------|----------------|
+| **RAMP2 Hillshade** (step 4) | **Shipped** as `hillshade.mbtiles` — land/ice topography under translucent coastline fills |
+| **RAMP2 Hillshade 2× v. exag.** (step 5) | **Not packed** — same DEM, stronger vertical exaggeration; QGIS-only unless you swap it in for step 4 |
+| **ETOPO1…Hillshade 5× (low/high)** (steps 11–12) | **Not packed** — coarser ETOPO1 relief; land shading stays on RAMP2 |
+| **ETOPO1 Elevation model** (step 14) | **Shipped as bathymetry**, not hillshade — Int16 DEM → ocean-only RGBA → `bathymetry.mbtiles` |
 
 ---
 
