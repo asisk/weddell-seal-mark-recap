@@ -149,7 +149,7 @@ class MapStatusLinesTest {
 class ColonyCameraTargetTest {
 
     @Test
-    fun usesAdjPointAndRegionZoom() {
+    fun centersOnColonyBoxNotAdjPoint() {
         val colony = TestFixtures.sampleColony(
             location = "Hutton Cliffs",
             n = -77.60,
@@ -160,9 +160,14 @@ class ColonyCameraTargetTest {
             adjLong = 166.50,
         )
         val target = colonyCameraTarget(colony)!!
-        assertEquals(-77.65, target.latitude, 1e-9)
-        assertEquals(166.50, target.longitude, 1e-9)
-        assertTrue(target.zoom in MapTileEnvelope.MIN_ZOOM..MapTileEnvelope.MAX_ZOOM)
+        // Box midpoint — not the adj label point.
+        assertEquals((-77.60 + -77.72) / 2.0, target.centerLatitude, 1e-9)
+        assertEquals((166.40 + 166.55) / 2.0, target.centerLongitude, 1e-9)
+        // Expanded beyond the colony box so fit-bounds zooms out with context.
+        assertTrue(target.north > colony.nLimit)
+        assertTrue(target.south < colony.sLimit)
+        assertTrue(target.east > colony.eLimit)
+        assertTrue(target.west < colony.wLimit)
     }
 
     @Test

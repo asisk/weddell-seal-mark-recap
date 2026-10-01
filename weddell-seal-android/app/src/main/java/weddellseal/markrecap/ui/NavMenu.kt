@@ -133,7 +133,7 @@ fun NavMenu(navController: NavHostController) {
                 selected = false,
                 icon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_explore),
+                        painter = painterResource(R.drawable.ic_location_on),
                         contentDescription = "Go to Map Screen",
                         modifier = Modifier.size(36.dp)
                     )

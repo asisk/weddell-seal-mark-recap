@@ -236,39 +236,33 @@ class WarmMapViewModel : ViewModel() {
     }
 }
 
-/** Camera destination for flying to a colony box (adj point + region-aware zoom). */
+/**
+ * Camera destination for flying to a colony: the drawable box itself (not the adj label
+ * point), expanded slightly so MapLibre can fit-bounds at a lower zoom with context.
+ */
 data class ColonyCameraTarget(
-    val latitude: Double,
-    val longitude: Double,
-    val zoom: Double,
-)
+    val north: Double,
+    val south: Double,
+    val east: Double,
+    val west: Double,
+) {
+    val centerLatitude: Double get() = (north + south) / 2.0
+    val centerLongitude: Double get() = (east + west) / 2.0
+}
+
+/** Expand each half-span so the colony box isn't edge-to-edge after fit-bounds. */
+private const val COLONY_FLY_BOUNDS_EXPAND = 1.45
 
 fun colonyCameraTarget(colony: SealColony): ColonyCameraTarget? {
     if (!colony.isDrawableOnMap()) return null
-    val lat = when {
-        colony.adjLat != 0.0 -> colony.adjLat
-        else -> (colony.nLimit + colony.sLimit) / 2.0
-    }
-    val lon = when {
-        colony.adjLong != 0.0 -> colony.adjLong
-        else -> (colony.eLimit + colony.wLimit) / 2.0
-    }
-    val latSpan = (colony.nLimit - colony.sLimit).coerceAtLeast(0.005)
-    val lonSpan = (colony.eLimit - colony.wLimit).coerceAtLeast(0.005)
-    val span = maxOf(latSpan, lonSpan)
-    val rawZoom = when {
-        span > 0.45 -> 10.0
-        span > 0.2 -> 11.0
-        span > 0.08 -> 12.0
-        span > 0.03 -> 13.0
-        else -> 14.0
-    }
-    val zoom = when {
-        BozemanMapEnvelope.contains(lat, lon) ->
-            rawZoom.coerceIn(BozemanMapEnvelope.MIN_ZOOM, BozemanMapEnvelope.MAX_ZOOM)
-        MapTileEnvelope.contains(lat, lon) ->
-            rawZoom.coerceIn(MapTileEnvelope.MIN_ZOOM, MapTileEnvelope.MAX_ZOOM)
-        else -> MapScreenUi.COLONY_FLY_ZOOM
-    }
-    return ColonyCameraTarget(latitude = lat, longitude = lon, zoom = zoom)
+    val centerLat = (colony.nLimit + colony.sLimit) / 2.0
+    val centerLon = (colony.eLimit + colony.wLimit) / 2.0
+    val latHalf = ((colony.nLimit - colony.sLimit) / 2.0).coerceAtLeast(0.0025)
+    val lonHalf = ((colony.eLimit - colony.wLimit) / 2.0).coerceAtLeast(0.0025)
+    return ColonyCameraTarget(
+        north = centerLat + latHalf * COLONY_FLY_BOUNDS_EXPAND,
+        south = centerLat - latHalf * COLONY_FLY_BOUNDS_EXPAND,
+        east = centerLon + lonHalf * COLONY_FLY_BOUNDS_EXPAND,
+        west = centerLon - lonHalf * COLONY_FLY_BOUNDS_EXPAND,
+    )
 }

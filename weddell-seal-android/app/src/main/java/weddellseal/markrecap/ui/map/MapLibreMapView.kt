@@ -275,13 +275,7 @@ fun MapLibreMapView(
         if (flyToColonyRequest == 0 || !styleReady) return@LaunchedEffect
         val map = mapRef ?: return@LaunchedEffect
         val target = warmMap.pendingColonyCamera ?: return@LaunchedEffect
-        flyToRegion(
-            map = map,
-            latitude = target.latitude,
-            longitude = target.longitude,
-            zoom = target.zoom,
-            region = regionFor(target.latitude, target.longitude),
-        )
+        flyToColonyBox(map = map, target = target)
     }
 }
 
@@ -513,7 +507,6 @@ private fun flyToRegion(
     animate: Boolean = true,
     onComplete: (() -> Unit)? = null,
 ) {
-    val target = LatLng(latitude, longitude)
     val clampedZoom = when (region) {
         CameraRegion.Antarctic ->
             zoom.coerceIn(MapTileEnvelope.MIN_ZOOM, MapTileEnvelope.MAX_ZOOM)
@@ -521,7 +514,41 @@ private fun flyToRegion(
             zoom.coerceIn(BozemanMapEnvelope.MIN_ZOOM, BozemanMapEnvelope.MAX_ZOOM)
         CameraRegion.Unlocked -> zoom
     }
-    val update = CameraUpdateFactory.newLatLngZoom(target, clampedZoom)
+    flyWithCameraUpdate(
+        map = map,
+        update = CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), clampedZoom),
+        region = region,
+        animate = animate,
+        onComplete = onComplete,
+    )
+}
+
+/** Fit the colony box so the whole region is visible at a lower zoom. */
+private fun flyToColonyBox(
+    map: MapLibreMap,
+    target: ColonyCameraTarget,
+    animate: Boolean = true,
+) {
+    val bounds = LatLngBounds.Builder()
+        .include(LatLng(target.north, target.west))
+        .include(LatLng(target.south, target.east))
+        .build()
+    // Screen padding so the box isn't flush against zoom/compass chrome.
+    flyWithCameraUpdate(
+        map = map,
+        update = CameraUpdateFactory.newLatLngBounds(bounds, /* padding */ 72),
+        region = regionFor(target.centerLatitude, target.centerLongitude),
+        animate = animate,
+    )
+}
+
+private fun flyWithCameraUpdate(
+    map: MapLibreMap,
+    update: org.maplibre.android.camera.CameraUpdate,
+    region: CameraRegion,
+    animate: Boolean = true,
+    onComplete: (() -> Unit)? = null,
+) {
     val camera = map.cameraPosition.target
     val crossingRegions = camera == null ||
         regionFor(camera.latitude, camera.longitude) != region
