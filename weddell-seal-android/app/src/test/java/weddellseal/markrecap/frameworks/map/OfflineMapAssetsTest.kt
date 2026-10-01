@@ -21,7 +21,7 @@ class OfflineMapAssetsTest {
         val prepared = OfflineMapAssets.ensureCopied(context)
         assertNotNull(prepared)
         assertTrue(prepared!!.styleFile.isFile)
-        assertEquals("2025.10.01i", prepared.packVersion)
+        assertEquals("2025.10.01j", prepared.packVersion)
         // Absolute paths must be baked in for MapLibre Native.
         val styleText = prepared.styleFile.readText()
         assertFalse(styleText.contains(OfflineMapAssets.PACK_ROOT_TOKEN))

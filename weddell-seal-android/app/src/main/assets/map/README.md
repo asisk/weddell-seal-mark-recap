@@ -56,8 +56,8 @@ Layers are listed **bottom → top** (paint order). Change colors / opacity / zo
 |--------------------|---------------------|------------------|------|------|--------------------------------------|
 | *(none — ocean base)* | — | `background` | background | all | `background-color` `#b8d1e4` |
 | ETOPO1 Elevation → bathymetry | `bathymetry` source | `bathymetry` | raster | ≤14 | Mute ocean: `raster-opacity` `0.5`, `raster-saturation` `-0.45`, `raster-contrast` `-0.15`. Rebuild tiles to change the deep→shallow ramp. |
-| RAMP2 Hillshade | `hillshade` source | `hillshade` | raster | ≤14 | Relief strength: `raster-opacity` zoom ramp `0.7→0.28` (z5→14). Sits **under** translucent coastline fills. |
-| Coastlines (polygon) | `coastline_high_poly` | `coastline-fill-med` | fill | ≤10 | `SURFACE` colors: land `#d4d2cc`, ice shelf `#f7fbff`, ice tongue `#c9d3e2`, else `#e8eef3`. Opacity: land `0.65`, ice shelf `0.72`, ice tongue / else `0.7` (lets hillshade show through). |
+| RAMP2 Hillshade | `hillshade` source | `hillshade` | raster | ≤14 | Relief: `raster-opacity` `0.85→0.55` (z5→14), `raster-contrast` `0.28`. Sits **under** translucent coastline fills. |
+| Coastlines (polygon) | `coastline_high_poly` | `coastline-fill-med` | fill | ≤10 | `SURFACE` colors: land `#d4d2cc`, ice shelf `#f7fbff`, ice tongue `#c9d3e2`, else `#e8eef3`. Opacity ~`0.5`–`0.55` so hillshade keeps definition. |
 | Coastlines (polygon) | `coastline_high_poly` | `coastline-fill-high` | fill | ≥9 | Same colors/opacity as med (crossfade band z9–10). |
 | Coastlines (line) | `coastline_high_line` | `coastline-shore-line` | line | ≥8 | `SURFACE`: grounding line `#3d5a73`, ice shelf / default `#547eb6`. Width z8→14: `0.5→1.1`. |
 | Rock_outcrop | `rock_med` | `rock-fill` | fill | all | `#8c693a` fill + outline, opacity `1`. |
