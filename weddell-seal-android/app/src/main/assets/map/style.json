@@ -496,11 +496,60 @@
       }
     },
     {
+      "id": "contour-labels-major",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "contours_med",
+      "minzoom": 7,
+      "maxzoom": 10,
+      "filter": [
+        "==",
+        [
+          "%",
+          [
+            "to-number",
+            [
+              "get",
+              "HEIGHT"
+            ]
+          ],
+          800
+        ],
+        0
+      ],
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-spacing": 400,
+        "text-field": [
+          "to-string",
+          [
+            "get",
+            "HEIGHT"
+          ]
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": 11,
+        "text-pitch-alignment": "viewport",
+        "text-rotation-alignment": "map",
+        "text-max-angle": 25,
+        "text-padding": 2,
+        "text-optional": true
+      },
+      "paint": {
+        "text-color": "#5c4635",
+        "text-halo-color": "#f7fbff",
+        "text-halo-width": 1.4,
+        "text-halo-blur": 0.2
+      }
+    },
+    {
       "id": "contour-labels",
       "type": "symbol",
       "source": "basemap",
       "source-layer": "contours_med",
-      "minzoom": 11,
+      "minzoom": 10,
       "filter": [
         "==",
         [
@@ -518,24 +567,53 @@
       ],
       "layout": {
         "symbol-placement": "line",
+        "symbol-spacing": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          280,
+          13,
+          160
+        ],
         "text-field": [
           "to-string",
           [
             "get",
-              "HEIGHT"
+            "HEIGHT"
           ]
         ],
         "text-font": [
           "Open Sans Regular"
         ],
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          10,
+          13,
+          12
+        ],
         "text-pitch-alignment": "viewport",
-        "text-max-angle": 30
+        "text-rotation-alignment": "map",
+        "text-max-angle": 30,
+        "text-padding": 1,
+        "text-optional": true
       },
       "paint": {
-        "text-color": "#8f7057",
+        "text-color": "#5c4635",
         "text-halo-color": "#f7fbff",
-        "text-halo-width": 1.2
+        "text-halo-width": 1.4,
+        "text-halo-blur": 0.2
       }
     },
     {
