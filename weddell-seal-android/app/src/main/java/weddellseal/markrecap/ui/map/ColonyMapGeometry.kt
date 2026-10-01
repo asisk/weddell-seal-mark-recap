@@ -3,12 +3,12 @@ package weddellseal.markrecap.ui.map
 import weddellseal.markrecap.domain.tagretag.data.ColonyPopulation
 import weddellseal.markrecap.frameworks.room.sealColonies.SealColony
 
-/** Tile / camera envelope matching the locked Antarctic pack (incl Capes). */
+/** Tile / camera envelope matching packed Antarctic MBTiles (region / hillshade / bathymetry). */
 object MapTileEnvelope {
-    const val SOUTH = -78.08
-    const val NORTH = -74.53
-    const val WEST = 163.07
-    const val EAST = 168.13
+    const val SOUTH = -78.35
+    const val NORTH = -74.4
+    const val WEST = 161.4
+    const val EAST = 171.1
 
     /** Camera floor; vector/hillshade tiles start at 5 (detail best from ~8). */
     const val MIN_ZOOM = 6.0
@@ -25,12 +25,12 @@ object MapTileEnvelope {
     }
 }
 
-/** Gallatin Valley / Bozeman local testing envelope (includes Baxter Meadows). */
+/** Gallatin Valley / Bozeman envelope matching `bozeman.mbtiles` bounds. */
 object BozemanMapEnvelope {
-    const val SOUTH = 45.58
-    const val NORTH = 45.88
-    const val WEST = -111.28
-    const val EAST = -110.90
+    const val SOUTH = 45.512238
+    const val NORTH = 45.988852
+    const val WEST = -111.460107
+    const val EAST = -110.822678
 
     const val MIN_ZOOM = 9.0
     const val MAX_ZOOM = 16.0

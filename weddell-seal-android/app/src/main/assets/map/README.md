@@ -5,12 +5,16 @@ Bundled under `assets/map/` and copied to `filesDir/map/` on Map open when
 `__PACK_ROOT__` is rewritten to the absolute pack directory so `mbtiles://`
 URLs resolve on-device.
 
-## Locked tile envelope (Colony_Locations_sept_2025.csv)
+## Locked tile envelope (MBTiles bounds)
 
-- **Lat:** [-78.08, -74.53]
-- **Lon:** [163.07, 168.13]
+Matches `region` / `hillshade` / `bathymetry` metadata (colony CSV sites sit inside this):
+
+- **Lat:** [-78.35, -74.4]
+- **Lon:** [161.4, 171.1]
 - **Includes:** Cape Washington, Markham Is, Erebus Bay Inside/Outside sites
 - **Excludes from pack:** `Other`, `Baxter Meadows` (Bozeman Local — drawn as overlay only)
+
+Camera lock (`MapTileEnvelope`) uses these same bounds so panning can’t leave empty tiles.
 
 ## Required files (APK / assets)
 

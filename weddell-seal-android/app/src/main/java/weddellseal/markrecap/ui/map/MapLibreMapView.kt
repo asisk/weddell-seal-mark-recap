@@ -28,6 +28,8 @@ import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.FillLayer
@@ -112,6 +114,25 @@ fun MapLibreMapView(
         warmMap.setMapVisible(mapVisible)
     }
 
+    // Keep center-target bounds inset as zoom changes so the *viewport* stays in tiles
+    // (setLatLngBoundsForCameraTarget alone only pins the center).
+    DisposableEffect(mapRef, styleReady) {
+        val map = mapRef
+        if (map == null || !styleReady) {
+            return@DisposableEffect onDispose { }
+        }
+        val listener = MapLibreMap.OnCameraIdleListener {
+            if (viewportLockSuspended.get()) return@OnCameraIdleListener
+            when (viewportLockRegion.get()) {
+                CameraRegion.Antarctic -> applyAntarcticCameraLock(map)
+                CameraRegion.Bozeman -> applyBozemanCameraLock(map)
+                CameraRegion.Unlocked -> Unit
+            }
+        }
+        map.addOnCameraIdleListener(listener)
+        onDispose { map.removeOnCameraIdleListener(listener) }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = { mapView },
@@ -152,11 +173,9 @@ fun MapLibreMapView(
             warmMap.setMapLibreMap(map)
             mapRef = map
             if (!warmMap.isMapConfigured()) {
-                map.setMinZoomPreference(MapTileEnvelope.MIN_ZOOM)
                 map.setMaxZoomPreference(
                     maxOf(MapTileEnvelope.MAX_ZOOM, BozemanMapEnvelope.MAX_ZOOM),
                 )
-                map.setLatLngBoundsForCameraTarget(packCameraBounds())
                 warmMap.markMapConfigured()
             }
             // Gestures: allow rotate (two-finger); keep tilt off. Hide MapLibre's
@@ -171,9 +190,14 @@ fun MapLibreMapView(
                 ensureOverlayLayers(style)
                 warmMap.markStyleLoaded(file)
                 styleReady = true
+                applyAntarcticCameraLock(map)
                 map.animateCamera(
                     CameraUpdateFactory.newLatLngBounds(packCameraBounds(), 48),
                     1,
+                    object : MapLibreMap.CancelableCallback {
+                        override fun onFinish() = applyAntarcticCameraLock(map)
+                        override fun onCancel() = applyAntarcticCameraLock(map)
+                    },
                 )
             }
         }
@@ -468,6 +492,12 @@ private fun bozemanCameraBounds(): LatLngBounds =
 
 private enum class CameraRegion { Antarctic, Bozeman, Unlocked }
 
+/** Active regional viewport lock; refreshed on camera idle as zoom changes. */
+private val viewportLockRegion = AtomicReference(CameraRegion.Antarctic)
+
+/** True while a cross-region fly has cleared bounds mid-animation. */
+private val viewportLockSuspended = AtomicBoolean(false)
+
 private fun regionFor(latitude: Double, longitude: Double): CameraRegion = when {
     MapTileEnvelope.contains(latitude, longitude) -> CameraRegion.Antarctic
     BozemanMapEnvelope.contains(latitude, longitude) -> CameraRegion.Bozeman
@@ -557,18 +587,14 @@ private fun flyWithCameraUpdate(
         when (region) {
             CameraRegion.Antarctic -> applyAntarcticCameraLock(map)
             CameraRegion.Bozeman -> applyBozemanCameraLock(map)
-            CameraRegion.Unlocked -> {
-                map.setMinZoomPreference(0.0)
-                map.setMaxZoomPreference(
-                    maxOf(MapTileEnvelope.MAX_ZOOM, BozemanMapEnvelope.MAX_ZOOM),
-                )
-                map.setLatLngBoundsForCameraTarget(null)
-            }
+            CameraRegion.Unlocked -> clearCameraViewportLock(map)
         }
+        viewportLockSuspended.set(false)
     }
 
     // Previous regional lock rejects targets outside its envelope (e.g. McMurdo → Baxter).
     if (crossingRegions) {
+        viewportLockSuspended.set(true)
         map.setLatLngBoundsForCameraTarget(null)
     }
 
@@ -599,16 +625,87 @@ private fun flyWithCameraUpdate(
     }
 }
 
+/**
+ * Constrain panning so the visible viewport stays over [layerBounds].
+ *
+ * MapLibre Android only exposes center-target bounds, so we inset that box by half
+ * the current viewport. Min zoom stays at [minZoom] (not "fit pack") so colony /
+ * overview zoom-out still works; at very low zoom the inset collapses to the pack
+ * center and a little empty margin may show.
+ */
+private fun applyLayerViewportLock(
+    map: MapLibreMap,
+    layerBounds: LatLngBounds,
+    minZoom: Double,
+    maxZoom: Double,
+    region: CameraRegion,
+) {
+    viewportLockRegion.set(region)
+    map.setMinZoomPreference(minZoom)
+    map.setMaxZoomPreference(maxZoom)
+    map.setLatLngBoundsForCameraTarget(
+        cameraTargetBoundsKeepingViewportInside(map, layerBounds),
+    )
+}
+
+/**
+ * Shrink [layerBounds] by half the visible span so the screen edges stay inside the pack
+ * when the camera center is clamped to the result.
+ */
+private fun cameraTargetBoundsKeepingViewportInside(
+    map: MapLibreMap,
+    layerBounds: LatLngBounds,
+): LatLngBounds {
+    val visible = map.projection.visibleRegion.latLngBounds
+    val halfLat = visible.latitudeSpan / 2.0
+    val halfLon = visible.longitudeSpan / 2.0
+
+    var south = layerBounds.latitudeSouth + halfLat
+    var north = layerBounds.latitudeNorth - halfLat
+    var west = layerBounds.longitudeWest + halfLon
+    var east = layerBounds.longitudeEast - halfLon
+
+    if (south > north) {
+        val mid = (layerBounds.latitudeSouth + layerBounds.latitudeNorth) / 2.0
+        south = mid
+        north = mid
+    }
+    if (west > east) {
+        val mid = (layerBounds.longitudeWest + layerBounds.longitudeEast) / 2.0
+        west = mid
+        east = mid
+    }
+
+    return LatLngBounds.from(north, east, south, west)
+}
+
 private fun applyAntarcticCameraLock(map: MapLibreMap) {
-    map.setMinZoomPreference(MapTileEnvelope.MIN_ZOOM)
-    map.setMaxZoomPreference(MapTileEnvelope.MAX_ZOOM)
-    map.setLatLngBoundsForCameraTarget(packCameraBounds())
+    applyLayerViewportLock(
+        map = map,
+        layerBounds = packCameraBounds(),
+        minZoom = MapTileEnvelope.MIN_ZOOM,
+        maxZoom = MapTileEnvelope.MAX_ZOOM,
+        region = CameraRegion.Antarctic,
+    )
 }
 
 private fun applyBozemanCameraLock(map: MapLibreMap) {
-    map.setMinZoomPreference(BozemanMapEnvelope.MIN_ZOOM)
-    map.setMaxZoomPreference(BozemanMapEnvelope.MAX_ZOOM)
-    map.setLatLngBoundsForCameraTarget(bozemanCameraBounds())
+    applyLayerViewportLock(
+        map = map,
+        layerBounds = bozemanCameraBounds(),
+        minZoom = BozemanMapEnvelope.MIN_ZOOM,
+        maxZoom = BozemanMapEnvelope.MAX_ZOOM,
+        region = CameraRegion.Bozeman,
+    )
+}
+
+private fun clearCameraViewportLock(map: MapLibreMap) {
+    viewportLockRegion.set(CameraRegion.Unlocked)
+    map.setMinZoomPreference(0.0)
+    map.setMaxZoomPreference(
+        maxOf(MapTileEnvelope.MAX_ZOOM, BozemanMapEnvelope.MAX_ZOOM),
+    )
+    map.setLatLngBoundsForCameraTarget(null)
 }
 
 internal tailrec fun android.content.Context.findActivity(): android.app.Activity? = when (this) {

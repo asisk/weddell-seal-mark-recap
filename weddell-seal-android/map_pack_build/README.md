@@ -37,10 +37,10 @@ CLIPPED=~/Desktop/map_pack_large_clipped   # adjust if needed
 
 ### Locked geographic envelope
 
-Match `app/src/main/assets/map/README.md` (colony CSV extent):
+Match `app/src/main/assets/map/README.md` (packed layer / MBTiles bounds):
 
-- **Lat:** [-78.08, -74.53]
-- **Lon:** [163.07, 168.13]
+- **Lat:** [-78.35, -74.4]
+- **Lon:** [161.4, 171.1]
 
 Typical polar-stereographic clip window used for this pack (EPSG:3031):
 
