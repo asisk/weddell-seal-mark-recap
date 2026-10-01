@@ -14,6 +14,13 @@
   "pitch": 0,
   "glyphs": "file://__PACK_ROOT__/glyphs/{fontstack}/{range}.pbf",
   "sources": {
+    "bathymetry": {
+      "type": "raster",
+      "url": "mbtiles://__PACK_ROOT__/bathymetry.mbtiles",
+      "tileSize": 256,
+      "minzoom": 5,
+      "maxzoom": 12
+    },
     "hillshade": {
       "type": "raster",
       "url": "mbtiles://__PACK_ROOT__/hillshade.mbtiles",
@@ -39,7 +46,18 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#d9e6ef"
+        "background-color": "#b8d1e4"
+      }
+    },
+    {
+      "id": "bathymetry",
+      "type": "raster",
+      "source": "bathymetry",
+      "maxzoom": 14,
+      "paint": {
+        "raster-opacity": 1,
+        "raster-fade-duration": 0,
+        "raster-resampling": "linear"
       }
     },
     {
@@ -218,15 +236,15 @@
             "zoom"
           ],
           5,
-          0.75,
+          0.45,
           8,
-          0.55,
-          10,
           0.35,
+          10,
+          0.28,
           12,
-          0.2,
+          0.22,
           14,
-          0.1
+          0.15
         ],
         "raster-fade-duration": 0,
         "raster-resampling": "linear"
@@ -246,27 +264,14 @@
             "SURFACE"
           ],
           "land",
-          "#f4f1ea",
+          "#c3c4c0",
           "ice shelf",
-          "#cfe0ec",
+          "#f7fbff",
           "ice tongue",
-          "#d7e6f0",
+          "#c9d3e2",
           "#e8eef3"
         ],
-        "fill-opacity": [
-          "match",
-          [
-            "get",
-            "SURFACE"
-          ],
-          "land",
-          0.35,
-          "ice shelf",
-          0.5,
-          "ice tongue",
-          0.45,
-          0.35
-        ]
+        "fill-opacity": 1
       }
     },
     {
@@ -283,14 +288,14 @@
             "SURFACE"
           ],
           "land",
-          "#f7f4ee",
+          "#c3c4c0",
           "ice shelf",
-          "#d5e6f0",
+          "#f7fbff",
           "ice tongue",
-          "#dceaf2",
-          "#eef3f6"
+          "#c9d3e2",
+          "#e8eef3"
         ],
-        "fill-opacity": 1.0
+        "fill-opacity": 1
       }
     },
     {
@@ -307,10 +312,10 @@
             "SURFACE"
           ],
           "grounding line",
-          "#5a7a8a",
+          "#3d5a73",
           "ice shelf",
-          "#7a9aaa",
-          "#4a6575"
+          "#547eb6",
+          "#547eb6"
         ],
         "line-width": [
           "interpolate",
@@ -321,11 +326,11 @@
             "zoom"
           ],
           8,
-          0.6,
+          0.5,
           14,
-          1.4
+          1.1
         ],
-        "line-opacity": 0.9
+        "line-opacity": 0.95
       }
     },
     {
@@ -334,8 +339,9 @@
       "source": "basemap",
       "source-layer": "rock_med",
       "paint": {
-        "fill-color": "#8b7355",
-        "fill-opacity": 0.85
+        "fill-color": "#8c693a",
+        "fill-opacity": 1,
+        "fill-outline-color": "#8c693a"
       }
     },
     {
@@ -344,8 +350,9 @@
       "source": "basemap",
       "source-layer": "moraines_med",
       "paint": {
-        "fill-color": "#a89070",
-        "fill-opacity": 0.55
+        "fill-color": "#e6e1dc",
+        "fill-opacity": 1,
+        "fill-outline-color": "#e6e1dc"
       }
     },
     {
@@ -354,8 +361,9 @@
       "source": "basemap",
       "source-layer": "lakes_high",
       "paint": {
-        "fill-color": "#7eb6d9",
-        "fill-opacity": 0.75
+        "fill-color": "#377eb8",
+        "fill-opacity": 1,
+        "fill-outline-color": "#265980"
       }
     },
     {
@@ -382,8 +390,8 @@
             ],
             0
           ],
-          "#5a4a3a",
-          "#8a7b6a"
+          "#7a5f48",
+          "#8f7057"
         ],
         "line-width": [
           "interpolate",
@@ -411,8 +419,8 @@
               ],
               0
             ],
-            0.9,
-            0.35
+            0.7,
+            0.3
           ],
           14,
           [
@@ -432,11 +440,11 @@
               ],
               0
             ],
-            1.6,
-            0.7
+            1.2,
+            0.55
           ]
         ],
-        "line-opacity": 0.75
+        "line-opacity": 0.9
       }
     },
     {
@@ -446,7 +454,7 @@
       "source-layer": "graticule",
       "minzoom": 5,
       "paint": {
-        "line-color": "#5a6a78",
+        "line-color": "#000000",
         "line-width": [
           "interpolate",
           [
@@ -456,11 +464,11 @@
             "zoom"
           ],
           5,
-          0.4,
+          0.3,
           12,
-          0.8
+          0.55
         ],
-        "line-opacity": 0.45,
+        "line-opacity": 0.4,
         "line-dasharray": [
           2,
           2
@@ -525,8 +533,8 @@
         "text-max-angle": 30
       },
       "paint": {
-        "text-color": "#4a3f32",
-        "text-halo-color": "#f5f0e8",
+        "text-color": "#8f7057",
+        "text-halo-color": "#f7fbff",
         "text-halo-width": 1.2
       }
     },
@@ -552,10 +560,10 @@
         "text-padding": 2
       },
       "paint": {
-        "text-color": "#3d4a55",
-        "text-halo-color": "#f0f4f7",
-        "text-halo-width": 1.3,
-        "text-opacity": 0.85
+        "text-color": "#333333",
+        "text-halo-color": "#f7fbff",
+        "text-halo-width": 1.2,
+        "text-opacity": 0.8
       }
     },
     {

@@ -20,6 +20,7 @@ URLs resolve on-device.
 | `style.json` | MapLibre style with **no HTTP** glyph/sprite/tile URLs |
 | `region.mbtiles` | Vector MBTiles for the envelope (Quantarctica-derived) |
 | `hillshade.mbtiles` | Optional raster hillshade (RAMP2 clip → EPSG:3857) |
+| `bathymetry.mbtiles` | Optional ocean depth colors (ETOPO1 elevation → RGBA) |
 | `bozeman.mbtiles` | Local Gallatin Valley / Bozeman OSM basemap (Baxter Meadows) |
 | `glyphs/` | Bundled Open Sans Regular/Bold PBF glyphs for labels |
 | `sprites/` | Optional; only if the style uses icons |
