@@ -36,6 +36,7 @@ object MapScreenUi {
 data class MapStatusLines(
     val primary: String,
     val secondary: String? = null,
+    val tertiary: String? = null,
 )
 
 fun mapStatusLines(
@@ -66,16 +67,18 @@ fun mapStatusLines(
         else -> autoDetectedColony.location
     }
 
-    val primary = "$coords · $gpsColony"
-
-    val secondary = if (overrideColony) {
+    val overrideLine = if (overrideColony) {
         val name = selectedColony?.location ?: "—"
         "${MapScreenUi.OVERRIDE_PREFIX}$name (set on Home)"
     } else {
         null
     }
 
-    return MapStatusLines(primary = primary, secondary = secondary)
+    return MapStatusLines(
+        primary = coords,
+        secondary = gpsColony,
+        tertiary = overrideLine,
+    )
 }
 
 fun activeGpsColonyName(autoDetectedColony: SealColony?): String? {

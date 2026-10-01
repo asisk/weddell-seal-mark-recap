@@ -166,6 +166,12 @@ fun MapScreen(
                             Text(
                                 text = it,
                                 style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                        status.tertiary?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.tertiary,
                             )
                         }

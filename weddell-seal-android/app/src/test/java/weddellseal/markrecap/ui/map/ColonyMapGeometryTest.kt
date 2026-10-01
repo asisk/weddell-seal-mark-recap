@@ -105,10 +105,11 @@ class MapStatusLinesTest {
             overrideColony = true,
             selectedColony = selected,
         )
-        assertTrue(lines.primary.contains("Hutton Cliffs"))
+        assertFalse(lines.primary.contains("Hutton Cliffs"))
+        assertEquals("Hutton Cliffs", lines.secondary)
         assertEquals(
             "${MapScreenUi.OVERRIDE_PREFIX}Tent Is (set on Home)",
-            lines.secondary,
+            lines.tertiary,
         )
     }
 
@@ -126,8 +127,8 @@ class MapStatusLinesTest {
             selectedColony = null,
         )
         assertTrue(lines.primary.contains(ColonyGpsUi.LAST_KNOWN_LABEL))
-        assertTrue(lines.primary.contains(ColonyGpsUi.WAITING_FOR_GPS_SHORT))
-        assertEquals(null, lines.secondary)
+        assertEquals(ColonyGpsUi.WAITING_FOR_GPS_SHORT, lines.secondary)
+        assertEquals(null, lines.tertiary)
     }
 
     @Test
