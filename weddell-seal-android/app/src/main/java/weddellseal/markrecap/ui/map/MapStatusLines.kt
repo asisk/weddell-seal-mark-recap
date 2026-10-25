@@ -22,10 +22,11 @@ object MapScreenUi {
     const val MY_LOCATION_ZOOM = 16.0
     const val ZOOM_IN = "+"
     const val ZOOM_OUT = "−"
-    const val LEGEND_TITLE = "Colony"
+    const val LEGEND_TITLE = "Legend"
     const val LEGEND_INSIDE = "Inside"
     const val LEGEND_OUTSIDE = "Outside"
     const val LEGEND_ACTIVE = "Current"
+    const val LEGEND_ASPA = "ASPA"
 
     /** COMNAP McMurdo Station (US). */
     const val MCMURDO_LATITUDE = -77.848209

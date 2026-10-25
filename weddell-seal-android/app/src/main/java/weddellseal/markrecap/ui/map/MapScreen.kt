@@ -79,6 +79,12 @@ private object ColonyLegendColors {
     val Active = Color(0xFFFF9800)
 }
 
+/** Matches ASPA fill/outline in assets/map/style.json (`aspas-fill` / `aspas-outline`). */
+private object AspaLegendColors {
+    val Fill = Color(0x1FFF0000) // #ff0000 @ ~0.12
+    val Outline = Color(0xFFFF0000)
+}
+
 @Composable
 fun MapScreen(
     navController: NavHostController,
@@ -506,6 +512,11 @@ private fun ColonyMapLegend(modifier: Modifier = Modifier) {
             fill = Color.Transparent,
             borderColor = ColonyLegendColors.Active,
             label = MapScreenUi.LEGEND_ACTIVE,
+        )
+        LegendRow(
+            fill = AspaLegendColors.Fill,
+            borderColor = AspaLegendColors.Outline,
+            label = MapScreenUi.LEGEND_ASPA,
         )
     }
 }

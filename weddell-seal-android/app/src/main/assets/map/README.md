@@ -27,7 +27,7 @@ Camera lock (`MapTileEnvelope`) uses these same bounds so panning can’t leave 
 | `bathymetry.mbtiles` | ~86 MB | Ocean depth colors (ETOPO1 elevation → RGBA) |
 | `bozeman.mbtiles` | ~11 MB | Gallatin Valley / Bozeman OSM (local testing) |
 | `glyphs/Open Sans Regular/` | ~230 KB | Label glyphs (folder name uses a real space) |
-| `icons/` | ~8 KB | COMNAP `research-station` PNG (+ `@2x`) |
+| `icons/` | ~8 KB | COMNAP `research-station` + ASPA `aspa-marker` PNGs (+ `@2x`) |
 
 **APK impact:** this pack is ~**209 MB** uncompressed in assets (dominates install size).
 Largest levers: bathymetry → hillshade → region → bozeman. Colony rectangles are
@@ -42,7 +42,7 @@ Build / clip steps: [`map_pack_build/README.md`](../../../../../map_pack_build/R
 |-------------------|------|------|-----------------|
 | `bathymetry` | raster | `bathymetry.mbtiles` | — |
 | `hillshade` | raster | `hillshade.mbtiles` | — |
-| `basemap` | vector | `region.mbtiles` | `coastline_high_poly`, `coastline_high_line`, `moraines_med`, `lakes_high`, `contours_med`, `graticule`, `comnap` |
+| `basemap` | vector | `region.mbtiles` | `coastline_high_poly`, `coastline_high_line`, `moraines_med`, `lakes_high`, `contours_med`, `graticule`, `comnap`, `aspas_polygons`, `aspas_points` |
 | `bozeman` | vector | `bozeman.mbtiles` | `parks`, `waterways`, `roads`, `places` |
 
 Glyphs: `file://__PACK_ROOT__/glyphs/{fontstack}/{range}.pbf` → **Open Sans Regular** only.
@@ -73,6 +73,10 @@ Layers are listed **bottom → top** (paint order). Change colors / opacity / zo
 | 15-min lat + 30-min lon | `graticule` | `graticule-labels` | symbol | ≥7 | `text-field` ← `label` (e.g. `76°30'S`). |
 | COMNAP listed facilities | `comnap` | `comnap-facilities` | symbol | all | Icon `research-station` from `icons/` (loaded in Kotlin). Size scales z7→14. |
 | COMNAP listed facilities | `comnap` | `comnap-labels` | symbol | ≥6 | `name_eng` / `name_off`; offset below icon. |
+| ASPAs (polygons) | `aspas_polygons` | `aspas-fill` | fill | all | Red `#ff0000` @ 0.12 (Quantarctica-style protected-area wash). |
+| ASPAs (polygons) | `aspas_polygons` | `aspas-outline` | line | all | Red outline; width eases with zoom. |
+| ASPAs (points) | `aspas_points` | `aspas-points` | symbol | all | Icon `aspa-marker` (red triangle). McMurdo envelope only. |
+| ASPAs (labels) | `aspas_points` | `aspas-labels` | symbol | ≥7 | `ASPA {ASPA_No}`; from z9 includes `: {NAME}`. |
 
 **Not in `style.json` / pack** (QGIS-only or dropped): RAMP2 Hillshade 2× v. exag.;
 ETOPO1…Hillshade 5× (low/high); **Rock_outcrop**. See `map_pack_build/README.md`.
@@ -113,7 +117,7 @@ There is **no** `water` polygon layer in `bozeman.mbtiles` (do not re-add
    bathymetry from Int16 ETOPO1; export vectors to GeoJSON (EPSG:4326).
 3. tippecanoe → `region.mbtiles`; gdal2tiles / MBTiles for rasters.
 4. Keep `style.json` on `mbtiles://__PACK_ROOT__/…` and local glyphs/icons only.
-5. Bump `PACK_VERSION` (current: `2025.10.01l`) after any pack or style change.
+5. Bump `PACK_VERSION` (current: `2025.10.25a`) after any pack or style change.
 6. Verify airplane mode: tiles and labels still render.
 7. Prefer Git LFS for `*.mbtiles` (~209 MB total).
 

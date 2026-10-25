@@ -54,6 +54,7 @@ private const val LAYER_GRATICULE = "graticule"
 private const val LAYER_COMNAP_FACILITIES = "comnap-facilities"
 private const val LAYER_COMNAP_LABELS = "comnap-labels"
 private const val ICON_RESEARCH_STATION = "research-station"
+private const val ICON_ASPA_MARKER = "aspa-marker"
 
 @Composable
 fun MapLibreMapView(
@@ -186,7 +187,8 @@ fun MapLibreMapView(
             warmMap.ensureCameraMoveListener(map)
 
             map.setStyle(Style.Builder().fromUri(OfflineMapAssets.styleUri(file))) { style ->
-                addResearchStationIcon(style, file.parentFile)
+                addPackIcon(style, file.parentFile, "research-station", ICON_RESEARCH_STATION)
+                addPackIcon(style, file.parentFile, "aspa-marker", ICON_ASPA_MARKER)
                 ensureOverlayLayers(style)
                 warmMap.markStyleLoaded(file)
                 styleReady = true
@@ -303,11 +305,12 @@ fun MapLibreMapView(
     }
 }
 
-private fun addResearchStationIcon(style: Style, packRoot: File?) {
+/** Load a pack PNG icon (`name.png` / `name@2x.png`) into the style under [imageId]. */
+private fun addPackIcon(style: Style, packRoot: File?, name: String, imageId: String) {
     if (packRoot == null) return
     val iconsDir = File(packRoot, "icons")
-    val hiRes = File(iconsDir, "research-station@2x.png")
-    val loRes = File(iconsDir, "research-station.png")
+    val hiRes = File(iconsDir, "$name@2x.png")
+    val loRes = File(iconsDir, "$name.png")
     val file = when {
         hiRes.isFile -> hiRes
         loRes.isFile -> loRes
@@ -320,7 +323,7 @@ private fun addResearchStationIcon(style: Style, packRoot: File?) {
     } else {
         bitmap.density = 160
     }
-    style.addImage(ICON_RESEARCH_STATION, bitmap)
+    style.addImage(imageId, bitmap)
 }
 
 private fun ensureOverlayLayers(style: Style) {

@@ -502,6 +502,58 @@
       }
     },
     {
+      "id": "aspas-fill",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "aspas_polygons",
+      "paint": {
+        "fill-color": "#ff0000",
+        "fill-opacity": 0.12
+      }
+    },
+    {
+      "id": "aspas-outline",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "aspas_polygons",
+      "paint": {
+        "line-color": "#ff0000",
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6,
+          0.8,
+          12,
+          1.6
+        ],
+        "line-opacity": 0.95
+      }
+    },
+    {
+      "id": "aspas-points",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "aspas_points",
+      "layout": {
+        "icon-image": "aspa-marker",
+        "icon-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6,
+          0.35,
+          10,
+          0.55,
+          14,
+          0.75
+        ],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "icon-anchor": "center"
+      }
+    },
+    {
       "id": "comnap-facilities",
       "type": "symbol",
       "source": "basemap",
@@ -519,6 +571,52 @@
         "icon-allow-overlap": true,
         "icon-ignore-placement": true,
         "icon-anchor": "center"
+      }
+    },
+    {
+      "id": "aspas-labels",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "aspas_points",
+      "minzoom": 7,
+      "layout": {
+        "text-field": [
+          "step",
+          ["zoom"],
+          [
+            "concat",
+            "ASPA ",
+            ["to-string", ["get", "ASPA_No"]]
+          ],
+          9,
+          [
+            "concat",
+            "ASPA ",
+            ["to-string", ["get", "ASPA_No"]],
+            ": ",
+            ["coalesce", ["get", "NAME"], ""]
+          ]
+        ],
+        "text-font": ["Open Sans Regular"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7,
+          10,
+          12,
+          12
+        ],
+        "text-offset": [0, 1.15],
+        "text-anchor": "top",
+        "text-max-width": 14,
+        "text-optional": true,
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#1a1a1a",
+        "text-halo-color": "#ffe5e5",
+        "text-halo-width": 1.4
       }
     },
     {

@@ -92,6 +92,36 @@ ogr2ogr -overwrite -f GeoJSON -t_srs EPSG:4326 \
 
 ---
 
+### 1b. Antarctic Specially Protected Areas (ASPAs)
+
+| | |
+|--|--|
+| Source | Quantarctica `EnvironmentalManagement/ASPAs_ASMAs/ASPAs_points.shp` + `ASPAs_polygons.shp` |
+| Export | `$GEO/aspas_points.geojson`, `$GEO/aspas_polygons.geojson` (clip to pack envelope) |
+| Tippecanoe layers | `aspas_points`, `aspas_polygons` |
+| App layers | `aspas-fill`, `aspas-outline`, `aspas-points`, `aspas-labels` |
+
+Clip in destination WGS84 to the locked lon/lat envelope (McMurdo extent only):
+
+```bash
+ASPA_SRC=~/Downloads/Quantarctica3/EnvironmentalManagement/ASPAs_ASMAs
+
+ogr2ogr -overwrite -f GeoJSON -t_srs EPSG:4326 \
+  -clipdst 161.4 -78.35 171.1 -74.40 \
+  "$GEO/aspas_points.geojson" \
+  "$ASPA_SRC/ASPAs_points.shp"
+
+ogr2ogr -overwrite -f GeoJSON -t_srs EPSG:4326 \
+  -clipdst 161.4 -78.35 171.1 -74.40 \
+  "$GEO/aspas_polygons.geojson" \
+  "$ASPA_SRC/ASPAs_polygons.shp"
+```
+
+Style uses `ASPA_No` + `NAME` for labels and the `aspa-marker` triangle icon in
+`assets/map/icons/`.
+
+---
+
 ### 2–3. 15-min latitude + 30-min longitude
 
 | | |
@@ -325,7 +355,9 @@ tippecanoe -o "$BUILD/region.mbtiles" --force \
   -L contours_med:$GEO/contours_med.geojson \
   -L moraines_med:$GEO/moraines_med.geojson \
   -L graticule:$GEO/graticule.geojson \
-  -L comnap:$GEO/comnap.geojson
+  -L comnap:$GEO/comnap.geojson \
+  -L aspas_polygons:$GEO/aspas_polygons.geojson \
+  -L aspas_points:$GEO/aspas_points.geojson
 
 cp "$BUILD/region.mbtiles" "$ASSETS/region.mbtiles"
 ```
@@ -355,6 +387,7 @@ size, and attribution.
 | # | QGIS Basemap layer | Intermediate | In app? |
 |---|--------------------|--------------|---------|
 | 1 | COMNAP listed facilities | `geojson/comnap.geojson` → `region.mbtiles` | Yes |
+| 1b | ASPAs (points + polygons) | `aspas_*.geojson` → `region.mbtiles` | Yes (McMurdo clip) |
 | 2 | 15-min latitude | → `graticule.geojson` | Yes |
 | 3 | 30-min longitude | → `graticule.geojson` | Yes |
 | 4 | RAMP2 Hillshade | → `hillshade.mbtiles` | Yes (primary land relief) |
