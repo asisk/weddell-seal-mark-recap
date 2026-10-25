@@ -32,7 +32,8 @@ object MapScreenUi {
     const val MCMURDO_LATITUDE = -77.848209
     const val MCMURDO_LONGITUDE = 166.668422
     const val MCMURDO_ZOOM = 11.0
-    const val ATTRIBUTION = "Basemap: Quantarctica + © OSM (Bozeman)"
+    const val ATTRIBUTION =
+        "Basemap: Quantarctica + Antarctic Treaty Secretariat ASPA/ASMA 2024 + © OSM (Bozeman)"
     const val ATTRIBUTION_URL = "https://www.openstreetmap.org/copyright"
     const val OVERRIDE_PREFIX = "Override: "
 }

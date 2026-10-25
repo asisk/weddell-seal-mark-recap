@@ -2,7 +2,7 @@
   "version": 8,
   "name": "Weddell Seal Pack (Quantarctica)",
   "metadata": {
-    "maplibre:attribution": "Basemap derived from Quantarctica / Norwegian Polar Institute and included datasets. Colonies overlay \u00a9 project.",
+    "maplibre:attribution": "Basemap: Quantarctica + Antarctic Treaty Secretariat ASPA/ASMA 2024 + \u00a9 OSM (Bozeman). Colonies overlay \u00a9 project.",
     "weddell:pack_root_token": "__PACK_ROOT__"
   },
   "center": [
